@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flashcard Generator — A4 PDF (5mm margins)</title>
+<style>
+  :root{--muted:#6b7280;--accent:#0f172a}
+  body{font-family:Inter,system-ui,Arial;margin:18px;background:#f7fafc;color:var(--accent)}
+  .card {border:1px solid #111827;border-radius:2px;padding:0;box-sizing:border-box}
+  .app{max-width:980px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  h1{margin:0;font-size:20px}
+  .muted{color:var(--muted);font-size:13px}
+  .controls{margin-top:14px;display:grid;gap:12px}
+  .panel{background:#fbfdff;border:1px solid #eef2f7;padding:12px;border-radius:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{background:#111827;color:white;border:0;padding:10px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+  button.secondary{background:transparent;color:var(--accent);border:1px solid #e6e9ee}
+  textarea{width:100%;min-height:220px;padding:10px;border-radius:8px;border:1px solid #e6e9ee;font-size:15px;resize:vertical}
+  input[type=number]{width:110px;padding:8px;border-radius:8px;border:1px solid #e6e9ee}
+  label{font-size:13px;color:var(--muted);min-width:110px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .right{margin-left:auto;display:flex;gap:8px}
+  .status{font-size:13px;color:var(--muted);margin-top:6px}
+  .small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="app" role="application">
+    <header>
+      <div>
+        <h1>Flashcard Generator — A4 landscape (5 mm margins)</h1>
+        <div class="muted">Exact card sizes; thin cut lines; auto-download PDF</div>
+      </div>
+      <div class="small muted">4 × 4 cards per page • 71.75 mm × 50.00 mm per card</div>
+    </header>
+
+    <div class="controls">
+      <div class="panel">
+        <div class="row">
+          <label for="csvBtn">CSV (first column)</label>
+          <button id="csvBtn" class="secondary">Choose CSV</button>
+          <input id="csvInput" type="file" accept=".csv" style="display:none">
+          <div id="fileInfo" class="muted">No file selected</div>
+        </div>
+
+        <div class="row">
+          <label>Limit (0 = all)</label>
+          <input id="limit" type="number" min="0" value="0">
+          <label style="display:flex;align-items:center;gap:6px"><input id="shuffle" type="checkbox"> Shuffle</label>
+          <div class="right">
+            <button id="genCsv">Generate PDF (CSV)</button>
+            <button id="genText">Generate PDF (Text)</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted">Or paste words / phrases below (one per line). The text will be used exactly as entered.</div>
+          <div class="muted">Printer margin: 5 mm each side</div>
+        </div>
+        <textarea id="textArea" placeholder="One word or phrase per line — exact case preserved"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <button id="clearText" class="secondary">Clear Text</button>
+          <button id="example" class="secondary">Load Example</button>
+          <div id="status" class="status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jsPDF from CDN (required for PDF generation). If you need fully offline single-file, reply and I'll inline the minified lib. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+(function(){
+  const { jsPDF } = window.jspdf || {};
+  const csvBtn = document.getElementById('csvBtn');
+  const csvInput = document.getElementById('csvInput');
+  const fileInfo = document.getElementById('fileInfo');
+  const genCsv = document.getElementById('genCsv');
+  const genText = document.getElementById('genText');
+  const textArea = document.getElementById('textArea');
+  const limitInput = document.getElementById('limit');
+  const shuffleCheckbox = document.getElementById('shuffle');
+  const clearText = document.getElementById('clearText');
+  const exampleBtn = document.getElementById('example');
+  const status = document.getElementById('status');
+
+  let csvWords = [];
+  csvBtn.addEventListener('click', ()=> csvInput.click());
+  csvInput.addEventListener('change', async (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if (!f) { fileInfo.textContent = 'No file selected'; csvWords = []; return; }
+    fileInfo.textContent = `Loading ${f.name} ...`;
+    try {
+      csvWords = await readCsvFirstColumn(f);
+      fileInfo.textContent = `${f.name} (${csvWords.length} items)`;
+      status.textContent = '';
+    } catch(err) {
+      csvWords = [];
+      fileInfo.textContent = 'Error reading file';
+      status.textContent = 'Error reading CSV: ' + (err.message || err);
+    }
+  });
+
+  function readCsvFirstColumn(file){
+    return new Promise((resolve,reject)=>{
+      const r = new FileReader();
+      r.onload = (e)=>{
+        const txt = e.target.result;
+        const lines = txt.split(/\r?\n/);
+        const out = [];
+        for (const raw of lines){
+          const line = raw.trim();
+          if (!line) continue;
+          // extract first column (handle simple quoted fields)
+          let first = line;
+          if (line.includes(',')){
+            if (line.startsWith('"')) {
+              const m = line.match(/^"((?:[^"]|"")*)"(?:,|$)/);
+              if (m) first = m[1].replace(/""/g,'"');
+              else first = line.split(',')[0];
+            } else {
+              first = line.split(',')[0];
+            }
+          }
+          if (first.trim().length) out.push(first);
+        }
+        resolve(out);
+      };
+      r.onerror = (e)=> reject(e);
+      r.readAsText(file, 'utf-8');
+    });
+  }
+
+  function sampleList(list, limit, shuffle){
+    const arr = list.slice();
+    if (shuffle){
+      for (let i=arr.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+    if (limit>0) return arr.slice(0, Math.min(limit,arr.length));
+    return arr;
+  }
+
+  function mm(n){ return n; } // units in mm for jsPDF when using 'mm'
+
+  // Layout constants for Option B (5mm margins)
+  const PAGE_W = 297; // mm
+  const PAGE_H = 210; // mm
+  const MARGIN = 5; // mm each side
+  const PRINT_W = PAGE_W - 2*MARGIN; // 287
+  const PRINT_H = PAGE_H - 2*MARGIN; // 200
+  const COLS = 4;
+  const ROWS = 4;
+  const CARD_W = PRINT_W / COLS; // 71.75
+  const CARD_H = PRINT_H / ROWS; // 50
+
+  // Thin cutting line width in mm
+  const CUT_LINE_WIDTH = 0.15; // hairline
+
+  function createPdfAndDownload(words){
+    if (!jsPDF) {
+      status.textContent = "PDF library (jsPDF) not loaded. Allow network or request offline build.";
+      return;
+    }
+    if (!words || words.length===0){
+      status.textContent = 'No words provided.';
+      return;
+    }
+    status.textContent = 'Generating PDF...';
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+
+    // set a neutral font size based on card height
+    const fontSize = Math.max(10, Math.min(20, CARD_H * 0.22)); // heuristic
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSize);
+
+    const cardsPerPage = COLS * ROWS;
+    const pages = Math.ceil(words.length / cardsPerPage);
+
+    for (let p = 0; p < pages; p++){
+      if (p > 0) doc.addPage();
+
+      // draw thin cut grid lines across the PRINTABLE area
+      doc.setLineWidth(CUT_LINE_WIDTH);
+      doc.setDrawColor(0,0,0);
+
+      // vertical lines (between columns)
+      for (let c = 0; c <= COLS; c++){
+        const x = MARGIN + c * CARD_W;
+        doc.line(x, MARGIN, x, MARGIN + PRINT_H);
+      }
+      // horizontal lines (between rows)
+      for (let r = 0; r <= ROWS; r++){
+        const y = MARGIN + r * CARD_H;
+        doc.line(MARGIN, y, MARGIN + PRINT_W, y);
+      }
+
+      // write content centered in each card (no extra padding between words & cut line)
+      for (let i = 0; i < cardsPerPage; i++){
+        const globalIndex = p * cardsPerPage + i;
+        const text = words[globalIndex] || '';
+        // compute col,row
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        const x0 = MARGIN + col * CARD_W;
+        const y0 = MARGIN + row * CARD_H;
+
+        // center point
+        const cx = x0 + CARD_W/2;
+        const cy = y0 + CARD_H/2;
+
+        if (text) {
+          // Wrap text if too long: split into lines at spaces to fit width
+          const maxTextWidth = CARD_W - 4; // small inset to avoid clipping
+          const wordsArr = String(text).split(/\s+/);
+          const lines = [];
+          let cur = '';
+          for (const w of wordsArr){
+            const trial = cur ? (cur + ' ' + w) : w;
+            const tw = doc.getTextDimensions(trial).w;
+            if (tw > maxTextWidth && cur){
+              lines.push(cur);
+              cur = w;
+            } else {
+              cur = trial;
+            }
+          }
+          if (cur) lines.push(cur);
+
+          // adjust font size down if too many lines
+          const maxLines = Math.floor(CARD_H / (fontSize * 0.8));
+          let useFontSize = fontSize;
+          if (lines.length > maxLines) {
+            useFontSize = Math.max(7, fontSize * (maxLines / lines.length));
+            doc.setFontSize(useFontSize);
+          } else {
+            doc.setFontSize(fontSize);
+          }
+
+          // compute total height of text block
+          const lineHeight = useFontSize * 0.85;
+          const totalH = lines.length * lineHeight;
+          // starting y for vertically centered block
+          let startY = cy - totalH / 2 + lineHeight * 0.3;
+
+          // draw each line centered
+          doc.setTextColor(0,0,0);
+          for (const ln of lines){
+            doc.text(ln, cx, startY, { align: 'center', baseline: 'middle', maxWidth: maxTextWidth });
+            startY += lineHeight;
+          }
+
+          // restore font size for next card
+          doc.setFontSize(fontSize);
+        }
+      }
+    }
+
+    // Trigger download
+    const filename = 'flashcards.pdf';
+    try {
+      doc.save(filename);
+      status.textContent = `PDF generated: ${filename}`;
+    } catch (e) {
+      status.textContent = 'PDF generation failed: ' + (e.message || e);
+    }
+  }
+
+  genText.addEventListener('click', ()=>{
+    const raw = textArea.value.split(/\r?\n/).map(s => s.replace(/\r/g,'').trim()).filter(s => s.length>0);
+    if (raw.length === 0) { status.textContent = 'Text area is empty.'; return; }
+    const limit = Math.max(0, parseInt(limitInput.value) || 0);
+    let list = raw.slice();
+    list = sampleList(list, limit, shuffleCheckbox.checked);
+    createPdfAndDownload(list);
+  });
+
+  genCsv.addEventListener('click', ()=>{
+    if (!csvWords || csvWords.length === 0) { status.textContent = 'No CSV loaded.'; return; }
+    const limit = Math.max(0, parseInt(limitInput.value) || 0);
+    let list = csvWords.slice();
+    list = sampleList(list, limit, shuffleCheckbox.checked);
+    createPdfAndDownload(list);
+  });
+
+  clearText.addEventListener('click', ()=> { textArea.value = ''; status.textContent = ''; });
+
+  exampleBtn.addEventListener('click', ()=>{
+    const ex = [
+      'abandon', 'absurd', 'accomplish', 'adapt',
+      'ambitious', 'anxious', 'articulate', 'astonish',
+      'bewilder', 'capable', 'charismatic', 'coherent',
+      'compassionate', 'conscientious', 'contemplate', 'conventional'
+    ];
+    textArea.value = ex.join('\n');
+    status.textContent = 'Example loaded.';
+  });
+
+})();
+</script>
+</body>
+</html>

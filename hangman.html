@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e5e7eb; /* Very Light Gray Background */
+            min-height: 100vh;
+        }
+        #game-container {
+            max-width: 900px;
+            background-color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        /* Style for word display dashes */
+        .guess-letter {
+            width: 45px; /* Slightly wider */
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem; /* Larger text */
+            font-weight: 800;
+            border-bottom: 4px solid #1f2937; /* Dark border */
+            margin: 0 6px;
+        }
+        
+        /* --- Keyboard Key Styling (Larger, Fixed Size) --- */
+        .keyboard-key {
+            /* Fixed width/height for large touch target, preventing shrink/grow */
+            width: 55px; 
+            height: 55px;
+            font-size: 1.25rem; /* Make letter inside bigger */
+            @apply p-0 m-2 font-extrabold shadow-md transition duration-150 transform active:scale-95; 
+            background-color: #1f2937; /* Dark Slate */
+            color: white;
+            text-transform: uppercase;
+            border-radius: 6px; /* Slightly squarer rounded */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Styling for picked keys (maintain size/square shape) */
+        .keyboard-key:disabled,
+        .correct-guess,
+        .incorrect-guess {
+            width: 55px;
+            height: 55px;
+            padding: 0;
+            margin: 8px; /* Consistent margin */
+            font-size: 1.25rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+        }
+
+        .keyboard-key:disabled {
+            background-color: #374151; /* Darker disabled */
+            color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .correct-guess {
+            background-color: #10b981; /* Green */
+            color: white;
+        }
+        .incorrect-guess {
+            background-color: #ef4444; /* Red */
+            color: white;
+        }
+
+        /* Adjust margin for row divs */
+        .keyboard-row {
+            margin-bottom: 12px;
+        }
+
+        /* Style for the back button */
+        #back-to-main-button {
+            background-color: #4b5563; /* Darker Gray */
+            color: white;
+            border-radius: 8px;
+        }
+        #back-to-main-button:hover {
+            background-color: #374151;
+        }
+        /* Custom Button for New Game/Source */
+        .game-control-btn {
+            @apply px-8 py-3 text-lg font-bold rounded-xl shadow-lg transition duration-150;
+        }
+        
+        /* Win/Loss Message Styling */
+        .win-message {
+            animation: pulse-win 1s infinite;
+        }
+        @keyframes pulse-win {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex justify-center">
+
+    <div id="game-container" class="w-full bg-white rounded-xl p-6 md:p-10">
+
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <button id="back-to-main-button" onclick="window.location.href = 'index.html'"
+                    class="px-4 py-2 font-bold shadow-md transition duration-300 transform hover:scale-[1.02] active:scale-95">
+                ← Back to Main
+            </button>
+            <h1 class="text-3xl font-extrabold text-gray-900">Hangman Game</h1>
+            <div></div> <!-- Spacer -->
+        </div>
+
+        <!-- Word Source Controls (Hidden after start) -->
+        <div id="word-source-controls" class="controls mt-4 p-4 bg-gray-200 rounded-lg mb-6">
+            <h3 class="text-xl font-bold mb-3 text-gray-800">Select Word Source</h3>
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- CSV Load -->
+                <div class="flex-1">
+                    <button id="file-button" class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800">Load Words (CSV)</button>
+                    <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                    <p id="file-status" class="mt-2 text-sm text-gray-600 text-center">No file loaded.</p>
+                </div>
+                <!-- Type Word -->
+                <div class="flex-1">
+                    <textarea id="typed-word-input" placeholder="Type words/phrases (separate by comma or line break)" 
+                              class="w-full p-2 border border-gray-400 rounded-lg uppercase text-gray-800 h-20"></textarea>
+                    <button id="start-typed-button" class="w-full mt-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800" disabled>Start Custom Game</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hangman Display and Word -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
+            
+            <!-- SVG Hangman Gallow -->
+            <div id="hangman-gallow" class="w-full md:w-1/2 h-64 flex justify-center items-center">
+                <svg viewBox="0 0 250 250" class="w-full h-full text-gray-700" id="hangman-svg">
+                    <!-- Initial Gallow drawn by JS -->
+                </svg>
+            </div>
+            
+            <!-- Word Display and Info -->
+            <div class="w-full md:w-1/2 flex flex-col items-center justify-center text-center">
+                <div id="word-display" class="flex justify-center text-4xl mb-6 font-mono font-bold">
+                    <!-- Dashes here -->
+                </div>
+                <div id="message" class="text-xl font-bold text-gray-800 mb-4">Select a word source or click "New Game" for a default word!</div>
+                <div id="guesses-left" class="text-md text-red-500 font-semibold"></div>
+                <div id="guessed-letters" class="mt-4 text-sm text-gray-500">Guessed: </div>
+                
+                <button id="new-game-button" class="game-control-btn mt-6 bg-gray-800 text-white hover:bg-gray-900">
+                    New Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Virtual Keyboard -->
+        <div id="keyboard" class="mt-8 pt-6 border-t border-gray-300 flex flex-wrap justify-center">
+            <!-- Keys generated by JS -->
+        </div>
+    </div>
+
+    <script>
+        // --- Game State ---
+        let wordToGuess = '';
+        let guessedLetters = new Set();
+        const maxErrors = 9; 
+        let errors = 0;
+        let gameActive = false;
+        let fileWordList = [];
+
+        // --- Word List (Default Fallback) ---
+        const defaultWordList = [
+            "JUMBLE", "LEXICON", "EXERCISE", "QUICKLY", "DICTIONARY", "PHONICS", "ADJECTIVE", "TEACHER", "STUDENT"
+        ];
+
+        // --- DOM Elements ---
+        const wordDisplayEl = document.getElementById('word-display');
+        const messageEl = document.getElementById('message');
+        const keyboardEl = document.getElementById('keyboard');
+        const newGameButton = document.getElementById('new-game-button');
+        const guessesLeftEl = document.getElementById('guesses-left');
+        const guessedLettersEl = document.getElementById('guessed-letters');
+        const hangmanSvg = document.getElementById('hangman-svg');
+        const fileButton = document.getElementById('file-button');
+        const csvFileInput = document.getElementById('csv-file-input');
+        const fileStatusEl = document.getElementById('file-status');
+        const typedWordInput = document.getElementById('typed-word-input');
+        const startTypedButton = document.getElementById('start-typed-button');
+        const wordSourceControlsEl = document.getElementById('word-source-controls');
+        
+        // --- Hangman Parts (0-indexed for 9 steps) ---
+        const hangmanParts = [
+            // Error 1: Head
+            '<circle cx="180" cy="75" r="25" fill="none" stroke="currentColor" stroke-width="4"/>',
+            // Error 2: Body
+            '<line x1="180" y1="100" x2="180" y2="170" stroke="currentColor" stroke-width="4"/>',
+            // Error 3: Left Arm
+            '<line x1="180" y1="120" x2="150" y2="150" stroke="currentColor" stroke-width="4"/>',
+            // Error 4: Right Arm
+            '<line x1="180" y1="120" x2="210" y2="150" stroke="currentColor" stroke-width="4"/>',
+            // Error 5: Left Leg
+            '<line x1="180" y1="170" x2="150" y2="210" stroke="currentColor" stroke-width="4"/>',
+            // Error 6: Right Leg
+            '<line x1="180" y1="170" x2="210" y2="210" stroke="currentColor" stroke-width="4"/>',
+            // Error 7: Left Eye (X shape)
+            '<line x1="170" y1="65" x2="175" y2="70" stroke="currentColor" stroke-width="2"/><line x1="175" y1="65" x2="170" y2="70" stroke="currentColor" stroke-width="2"/>',
+            // Error 8: Right Eye (X shape)
+            '<line x1="185" y1="65" x2="190" y2="70" stroke="currentColor" stroke-width="2"/><line x1="190" y1="65" x2="185" y2="70" stroke="currentColor" stroke-width="2"/>',
+            // Error 9: Frown (Mouth) - Final part before loss (FIXED PATH)
+            '<path d="M170,85 C175,80 185,80 190,85" fill="none" stroke="currentColor" stroke-width="2"/>'
+        ];
+
+        // --- Utility Functions ---
+
+        /** Loads vocabulary from a selected CSV File object (first column only). */
+        function loadVocabulary(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const lines = content.split('\n').filter(line => line.trim().length > 0);
+                    const words = lines.map(line => line.split(',')[0].trim().toUpperCase()).filter(word => word.match(/^[A-Z\s]+$/)); // Only clean words with A-Z and space
+                    resolve(words);
+                };
+                reader.onerror = (e) => {
+                    console.error("Error reading file:", e);
+                    reject("An error occurred during file loading.");
+                };
+                reader.readAsText(file);
+            });
+        }
+        
+        // --- Core Functions ---
+
+        /** Initializes the game state and UI for a new word. */
+        function newGame(wordOverride = null) {
+            // Reset state
+            guessedLetters.clear();
+            errors = 0;
+            gameActive = true;
+            
+            // 1. Determine the word source
+            if (wordOverride && wordOverride.length > 0) {
+                wordToGuess = wordOverride.toUpperCase().replace(/[^A-Z ]/g, ''); // Clean non-alpha/space characters
+                typedWordInput.value = '';
+                startTypedButton.disabled = true;
+                // Hide source controls since a custom word was provided
+                wordSourceControlsEl.classList.add('hidden');
+            } else if (fileWordList.length > 0) {
+                // Use a random word from the file list
+                wordToGuess = fileWordList[Math.floor(Math.random() * fileWordList.length)];
+                // Hide source controls since a file was loaded
+                wordSourceControlsEl.classList.add('hidden');
+            } else {
+                // Fallback to default list (don't hide controls if we fallback)
+                wordToGuess = defaultWordList[Math.floor(Math.random() * defaultWordList.length)];
+            }
+            
+            // 2. Initial Checks
+            if (wordToGuess.length === 0) {
+                 messageEl.textContent = 'Error: Cannot start game, no valid word selected.';
+                 gameActive = false;
+                 return;
+            }
+
+            // 3. Reset UI
+            messageEl.textContent = 'Guess a letter!';
+            messageEl.classList.remove('text-red-600', 'text-green-600', 'win-message');
+            messageEl.classList.add('text-gray-800'); // Neutral color for game messages
+            newGameButton.textContent = 'New Game';
+            
+            drawWord();
+            drawKeyboard(false); // Reset keyboard state
+            drawHangman();
+            updateGuessesLeft();
+            updateGuessedLettersDisplay();
+        }
+
+        /** Draws the current state of the word (dashes and revealed letters). */
+        function drawWord() {
+            let html = '';
+            
+            for (const letter of wordToGuess) {
+                if (letter === ' ') {
+                    html += `<div class="guess-letter border-none"></div>`;
+                } else {
+                    if (guessedLetters.has(letter)) {
+                        html += `<div class="guess-letter">${letter}</div>`;
+                    } else {
+                        html += `<div class="guess-letter"></div>`;
+                    }
+                }
+            }
+            wordDisplayEl.innerHTML = html;
+
+            // --- BUG FIX IMPLEMENTATION: Check if ALL unique required letters have been guessed ---
+            const requiredLetters = new Set(wordToGuess.replace(/ /g, '').split(''));
+            // Check if every required letter exists in the set of guessed letters
+            const allGuessed = Array.from(requiredLetters).every(letter => guessedLetters.has(letter));
+
+            if (allGuessed && gameActive) {
+                endGame(true);
+            }
+        }
+
+        /** Draws the Hangman graphic based on current errors. */
+        function drawHangman() {
+            const staticGallow = `
+                <!-- Base -->
+                <line x1="10" y1="240" x2="240" y2="240" stroke="currentColor" stroke-width="8"/>
+                <!-- Upright -->
+                <line x1="50" y1="240" x2="50" y2="10" stroke="currentColor" stroke-width="8"/>
+                <!-- Top Beam -->
+                <line x1="50" y1="10" x2="180" y2="10" stroke="currentColor" stroke-width="8"/>
+                <!-- Rope -->
+                <line x1="180" y1="10" x2="180" y2="50" stroke="currentColor" stroke-width="4"/>
+            `;
+            
+            let partsHtml = '';
+            // Only draw parts up to the number of errors committed
+            for (let i = 0; i < errors && i < hangmanParts.length; i++) {
+                partsHtml += hangmanParts[i];
+            }
+            hangmanSvg.innerHTML = staticGallow + partsHtml;
+        }
+
+        /** Updates the count of remaining guesses. */
+        function updateGuessesLeft() {
+            const remaining = maxErrors - errors;
+            guessesLeftEl.textContent = `Attempts Remaining: ${remaining}`;
+        }
+
+        /** Handles a letter guess from the user. */
+        function handleGuess(letter) {
+            if (!gameActive || guessedLetters.has(letter)) return;
+            
+            guessedLetters.add(letter);
+            const keyEl = document.getElementById(`key-${letter}`);
+            keyEl.disabled = true;
+
+            const isCorrect = wordToGuess.includes(letter);
+            
+            if (isCorrect) {
+                keyEl.classList.remove('keyboard-key');
+                keyEl.classList.add('correct-guess');
+                messageEl.textContent = 'Correct guess!';
+            } else {
+                keyEl.classList.remove('keyboard-key');
+                keyEl.classList.add('incorrect-guess');
+                errors++;
+                messageEl.textContent = 'Wrong guess!';
+                
+                if (errors >= maxErrors) {
+                    endGame(false);
+                }
+            }
+            
+            drawWord();
+            drawHangman();
+            updateGuessesLeft();
+            updateGuessedLettersDisplay();
+        }
+
+        /** Updates the list of all guessed letters. */
+        function updateGuessedLettersDisplay() {
+            const sortedGuesses = Array.from(guessedLetters).sort().join(', ');
+            guessedLettersEl.textContent = `Guessed: ${sortedGuesses}`;
+        }
+        
+        /** Draws the clickable keyboard buttons (Alphabetical, 2 rows). */
+        function drawKeyboard(disableAll = false) {
+            keyboardEl.innerHTML = '';
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const rows = [
+                alphabet.substring(0, 13), // A-M (13 letters)
+                alphabet.substring(13)     // N-Z (13 letters)
+            ];
+            
+            rows.forEach(rowString => {
+                const rowDiv = document.createElement('div');
+                // Center the row and add margin/spacing
+                rowDiv.className = 'flex justify-center w-full keyboard-row'; 
+                
+                for (const letter of rowString) {
+                    const button = document.createElement('button');
+                    button.id = `key-${letter}`;
+                    button.textContent = letter;
+                    
+                    let baseClass = 'keyboard-key';
+                    
+                    if (guessedLetters.has(letter)) {
+                         const isCorrect = wordToGuess.includes(letter);
+                         baseClass = isCorrect ? 'correct-guess' : 'incorrect-guess';
+                         button.disabled = true;
+                    } else {
+                         button.disabled = disableAll;
+                    }
+
+                    button.className = baseClass;
+                    button.onclick = () => handleGuess(letter);
+                    
+                    rowDiv.appendChild(button);
+                }
+                keyboardEl.appendChild(rowDiv);
+            });
+        }
+        
+        /** Ends the current game session. */
+        function endGame(won) {
+            gameActive = false;
+            
+            // Disable all keys and redraw to finalize colors
+            drawKeyboard(true);
+            
+            if (won) {
+                // Celebrate Win
+                messageEl.textContent = 'YOU WON! 🥳 Great Job!';
+                messageEl.classList.remove('text-gray-800');
+                messageEl.classList.add('text-green-600', 'win-message');
+                newGameButton.textContent = 'Try Another Word';
+            } else {
+                // Show Loss
+                messageEl.textContent = `GAME OVER! The word was: ${wordToGuess}`;
+                messageEl.classList.remove('text-gray-800');
+                messageEl.classList.add('text-red-600');
+                newGameButton.textContent = 'Try Another Word';
+            }
+        }
+
+        // --- Event Listeners and Initialization ---
+        
+        // 1. New Game Button
+        newGameButton.addEventListener('click', () => newGame());
+        
+        // 2. CSV File Loading
+        fileButton.addEventListener('click', () => {
+            csvFileInput.click();
+        });
+
+        csvFileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    fileWordList = await loadVocabulary(file);
+                    if (fileWordList.length > 0) {
+                        fileStatusEl.textContent = `Loaded ${fileWordList.length} words from file.`;
+                        newGame(); // Start game with new pool, hides controls inside newGame
+                    } else {
+                        fileStatusEl.textContent = `File loaded, but no valid words found.`;
+                        fileWordList = [];
+                        wordSourceControlsEl.classList.remove('hidden'); // Ensure controls are visible on failure
+                    }
+                } catch (error) {
+                    fileStatusEl.textContent = `Error loading file.`;
+                    console.error(error);
+                    wordSourceControlsEl.classList.remove('hidden'); // Ensure controls are visible on failure
+                }
+            }
+        });
+        
+        // 3. Custom Word Input
+        typedWordInput.addEventListener('input', () => {
+            // Enable button if any non-whitespace text exists
+            startTypedButton.disabled = typedWordInput.value.trim().length === 0;
+        });
+
+        startTypedButton.addEventListener('click', () => {
+            const rawInput = typedWordInput.value.trim();
+            if (rawInput.length > 0) {
+                // Split input by comma or newline, clean, and filter
+                const words = rawInput.split(/[\n,]/)
+                                     .map(w => w.trim().toUpperCase().replace(/[^A-Z\s]/g, ''))
+                                     .filter(w => w.length > 0);
+                                     
+                if (words.length > 0) {
+                    // Pick a random word from the typed list
+                    const word = words[Math.floor(Math.random() * words.length)];
+                    newGame(word); 
+                } else {
+                    // Handle case where input was invalid after cleaning
+                    messageEl.textContent = 'Error: No valid word found in your input.';
+                }
+            }
+        });
+
+        // 4. Handle keyboard presses
+        document.addEventListener('keydown', (event) => {
+            if (!gameActive) return;
+            const letter = event.key.toUpperCase();
+            if (letter.match(/[A-Z]/) && letter.length === 1) {
+                handleGuess(letter);
+            }
+        });
+
+        // Initial setup
+        window.onload = drawKeyboard;
+    </script>
+</body>
+</html>

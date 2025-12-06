@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matching Race: Speed and Accuracy</title>
+    <!-- Load Tailwind CSS for utility classes --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tone.js for dynamic sound effects --><script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Global & Layout Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1); /* Cyan Blue Theme */
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        #game-container {
+            width: 95vw;
+            max-width: 1000px;
+            min-height: 80vh;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Game Board Grid (Responsive for touch) */
+        #game-board {
+            width: 100%;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* Card Styles (Always visible style) */
+        .card {
+            aspect-ratio: 1 / 1; 
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: opacity 0.3s, transform 0.3s;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            font-size: 1.1rem;
+            font-weight: 700;
+            user-select: none;
+            touch-action: manipulation;
+            border: 4px solid #00BCD4; /* Cyan border */
+        }
+        
+        /* NEW: Selected Card Style */
+        .card-selected {
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.9), 0 4px 10px rgba(0, 0, 0, 0.3); /* Bright yellow shadow */
+            border-color: #ffc107 !important; /* Yellow border */
+            z-index: 10;
+        }
+
+        .card-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #e0f7fa; /* Light cyan background */
+            color: #00838f;
+            word-break: break-word;
+            line-height: 1.2;
+            transform-style: preserve-3d;
+        }
+
+        .card-match {
+            opacity: 0.3;
+            transform: scale(0.95);
+            cursor: default;
+            transition: transform 0.5s, opacity 0.5s;
+            border-color: #00e676 !important; /* Green match color */
+            background-color: #e8f5e9 !important;
+        }
+        
+        /* Scoreboard Timer Style */
+        #timer-display {
+            @apply text-4xl font-extrabold text-blue-800;
+        }
+        
+        .timer-label-box {
+            @apply p-3 bg-yellow-100 rounded-xl shadow-md flex-1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-6 text-center">Matching Race: Find the Pairs Fast!</h1>
+
+        <!-- Back to Tools Button -->
+        <a href="index.html" class="mb-4 text-blue-500 hover:text-blue-700 font-medium">← Back to Tools Selector</a>
+
+        <!-- File Loading and Start Screen -->
+        <div id="start-screen" class="space-y-6 w-full max-w-lg mb-8 p-6 bg-gray-100 rounded-lg shadow-inner">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">1. Load Card Content (CSV)</h2>
+            <div class="flex flex-col items-center">
+                <button onclick="document.getElementById('file-upload').click()" 
+                        class="px-6 py-3 bg-blue-500 text-white rounded-xl shadow-lg hover:bg-blue-600 transition duration-150">
+                    Upload CSV/TXT File
+                </button>
+                <input type="file" id="file-upload" accept=".csv, .txt" style="display: none;" onchange="window.handleFileUpload(event)">
+                <p id="file-status" class="mt-3 text-sm text-gray-600">No file loaded.</p>
+            </div>
+
+            <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">2. Start Race</h2>
+            <button id="start-race-btn" disabled onclick="window.startGame()"
+                    class="w-full px-4 py-3 bg-green-500 text-white rounded-xl shadow-lg hover:bg-green-600 transition duration-150 disabled:opacity-50 text-2xl font-black">
+                Start Matching Race
+            </button>
+        </div>
+
+        <!-- Game Info and Reset -->
+        <div id="game-info" class="w-full max-w-lg mb-6 hidden">
+            <div class="flex justify-between items-center bg-gray-200 p-3 rounded-xl shadow-md mb-4 gap-4">
+                
+                <!-- Time Elapsed (Stopwatch) -->
+                <div class="timer-label-box">
+                    <p class="text-sm font-semibold text-gray-600">TIME ELAPSED</p>
+                    <div id="timer-display">00:00</div>
+                </div>
+
+                <!-- Pairs Found -->
+                <div class="timer-label-box bg-blue-100">
+                    <p class="text-sm font-semibold text-gray-600">PAIRS FOUND</p>
+                    <p class="text-4xl font-extrabold text-blue-800"><span id="score">0</span> / <span id="total-pairs">0</span></p>
+                </div>
+            </div>
+
+            <button id="reset-game-btn" onclick="window.resetGameToStart()"
+                    class="w-full px-4 py-2 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition">
+                Reset & Load New File
+            </button>
+        </div>
+
+        <!-- Game Board -->
+        <div id="game-board" class="hidden">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Win/Message Modal -->
+        <div id="win-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center z-50">
+            <div class="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md">
+                <h3 id="win-title" class="text-4xl font-extrabold text-green-600 mb-4">🏆 Race Finished! 🏆</h3>
+                <p class="text-xl text-gray-700 mb-3">Your time:</p>
+                <p id="win-message" class="text-5xl font-black text-blue-600 mb-8">--:--</p>
+                <button onclick="window.resetGameToStart()"
+                        class="px-6 py-3 bg-indigo-500 text-white font-bold rounded-lg hover:bg-indigo-600 transition">
+                    Try Again / New File
+                </button>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        // --- Global State ---
+        let CARDS = []; // Array of card objects: {id: 1, text: 'Apple', matchId: 2}
+        let cardContentPairs = []; // Loaded data: [['Apple', 'Manzana'], ['Dog', 'Perro']]
+        let cardsFlipped = []; // Indices of currently flipped cards
+        let pairsFound = 0;
+        let isProcessing = false; // Prevent rapid clicking
+        let isGameStarted = false; // Tracks if the first card has been clicked
+
+        // --- Stopwatch State ---
+        let timeElapsed = 0;
+        let stopwatchInterval = null;
+        
+        // --- Configuration ---
+        const MAX_PAIRS = 12; 
+
+        // --- Sound Effects Setup (Using Tone.js) ---
+        let toneLoaded = false;
+        try {
+            if (typeof Tone !== 'undefined') {
+                toneLoaded = true;
+            }
+        } catch(e) {
+            console.warn("Tone.js not available.");
+        }
+
+        const POSITIVE_SOUND = () => {
+            if (!toneLoaded) return;
+            try {
+                if (Tone.context.state !== 'running') { Tone.context.resume(); }
+                const synth = new Tone.MembraneSynth().toDestination();
+                synth.triggerAttackRelease("G5", "8n", Tone.now(), 0.5);
+            } catch (e) { console.error("Tone.js error:", e); }
+        };
+
+        const MATCH_SOUND = () => {
+            if (!toneLoaded) return;
+            try {
+                if (Tone.context.state !== 'running') { Tone.context.resume(); }
+                const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.triggerAttackRelease(["C5", "E5", "G5"], "4n");
+            } catch (e) { console.error("Tone.js error:", e); }
+        };
+
+        const ERROR_SOUND = () => {
+            if (!toneLoaded) return;
+            try {
+                if (Tone.context.state !== 'running') { Tone.context.resume(); }
+                const synth = new Tone.NoiseSynth().toDestination();
+                synth.triggerAttackRelease("16n", Tone.now(), 0.8, 0.5);
+            } catch (e) { console.error("Tone.js error:", e); }
+        };
+        
+        // --- UI Elements ---
+        const ui = {
+            startScreen: document.getElementById('start-screen'),
+            gameInfo: document.getElementById('game-info'),
+            gameBoard: document.getElementById('game-board'),
+            score: document.getElementById('score'),
+            totalPairs: document.getElementById('total-pairs'),
+            timerDisplay: document.getElementById('timer-display'),
+            fileStatus: document.getElementById('file-status'),
+            startRaceBtn: document.getElementById('start-race-btn'),
+            winModal: document.getElementById('win-modal'),
+            winMessage: document.getElementById('win-message')
+        };
+        
+        // --- Stopwatch Logic ---
+        
+        function secondsToDisplay(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+        
+        function updateStopwatchDisplay() {
+            ui.timerDisplay.textContent = secondsToDisplay(timeElapsed);
+        }
+
+        function startStopwatch() {
+            if (stopwatchInterval) return;
+
+            stopwatchInterval = setInterval(() => {
+                timeElapsed += 1;
+                updateStopwatchDisplay();
+            }, 1000);
+        }
+
+        function stopStopwatch() {
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval);
+                stopwatchInterval = null;
+            }
+        }
+        
+        function resetStopwatch() {
+            stopStopwatch();
+            timeElapsed = 0;
+            updateStopwatchDisplay();
+        }
+
+        /** Shows a simple, transient notification (Toast). */
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) return;
+
+            const colors = {
+                info: 'bg-blue-500', 
+                success: 'bg-green-500', 
+                error: 'bg-red-500'
+            };
+            const color = colors[type] || colors.info;
+
+            const toast = document.createElement('div');
+            toast.className = `p-3 text-white rounded-lg shadow-xl ${color} transition-opacity duration-300`;
+            toast.textContent = message;
+            
+            toastContainer.appendChild(toast);
+
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
+        // --- File Loading ---
+
+        /**
+         * Handles the file upload event, reads CSV content, and prepares pairs.
+         */
+        window.handleFileUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                cardContentPairs = [];
+                
+                const lines = content.split('\n').filter(line => line.trim().length > 0);
+                
+                lines.forEach(line => {
+                    const parts = line.split(',').map(p => p.trim());
+                    
+                    if (parts.length >= 2 && parts[0] && parts[1]) {
+                        cardContentPairs.push([parts[0], parts[1]]);
+                    } else if (parts.length === 1 && parts[0]) {
+                        cardContentPairs.push([parts[0], parts[0]]);
+                    }
+                });
+
+                if (cardContentPairs.length > 0) {
+                    ui.fileStatus.textContent = `Loaded ${cardContentPairs.length} unique pairs. Ready!`;
+                    ui.startRaceBtn.disabled = false;
+                } else {
+                    ui.fileStatus.textContent = "Error: No valid data found. Check your CSV format (Col 1, Col 2).";
+                    ui.startRaceBtn.disabled = true;
+                }
+            };
+            reader.readAsText(file);
+        };
+        
+        // --- Game Setup ---
+
+        /**
+         * Initializes and starts the game.
+         */
+        window.startGame = function() {
+            if (cardContentPairs.length === 0) {
+                showToast('Please upload a valid CSV file first!', 'error');
+                return;
+            }
+            
+            resetStopwatch();
+            
+            // --- Enforce 24 Card Limit (12 Pairs) ---
+            let pairsToUse = [...cardContentPairs]; 
+
+            if (pairsToUse.length > MAX_PAIRS) {
+                pairsToUse.sort(() => Math.random() - 0.5);
+                pairsToUse = pairsToUse.slice(0, MAX_PAIRS);
+                showToast(`Game limited to ${MAX_PAIRS * 2} cards. Randomly selected ${MAX_PAIRS} pairs.`, 'info');
+            } else {
+                 showToast(`Starting race with ${pairsToUse.length * 2} cards.`, 'success');
+            }
+            // --- END NEW LOGIC ---
+
+            pairsFound = 0;
+            cardsFlipped = [];
+            isGameStarted = false;
+            
+            // 1. Prepare card array
+            const cardData = [];
+            let cardId = 0;
+            pairsToUse.forEach(pair => {
+                const [val1, val2] = pair;
+                cardData.push({ id: cardId++, text: val1, matchId: cardId });
+                cardData.push({ id: cardId++, text: val2, matchId: cardId - 2 });
+            });
+
+            // 2. Shuffle cards
+            CARDS = cardData.sort(() => Math.random() - 0.5);
+
+            // 3. Update UI visibility
+            ui.startScreen.classList.add('hidden');
+            ui.gameInfo.classList.remove('hidden');
+            ui.gameBoard.classList.remove('hidden');
+            
+            // 4. Update Scoreboard
+            ui.totalPairs.textContent = pairsToUse.length;
+            updateScoreboard();
+
+            // 5. Draw the board (always visible style)
+            renderBoard();
+        };
+        
+        /**
+         * Resets the game to the initial file loading screen.
+         */
+        window.resetGameToStart = function() {
+            stopStopwatch();
+            ui.gameInfo.classList.add('hidden');
+            ui.gameBoard.classList.add('hidden');
+            ui.startScreen.classList.remove('hidden');
+            ui.winModal.classList.add('hidden');
+            
+            ui.startRaceBtn.disabled = cardContentPairs.length === 0;
+
+            CARDS = [];
+            ui.gameBoard.innerHTML = '';
+        };
+
+        /**
+         * Renders the cards onto the board grid (in visible style).
+         */
+        function renderBoard() {
+            ui.gameBoard.innerHTML = '';
+            
+            const totalCards = CARDS.length;
+            let columns = 4;
+            if (totalCards > 20) { columns = 6; }
+            else if (totalCards > 12) { columns = 5; }
+            else if (totalCards > 8) { columns = 4; }
+            else { columns = 3; }
+
+            ui.gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+
+            CARDS.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+                cardElement.dataset.index = index;
+                cardElement.onclick = () => window.handleClick(index);
+
+                // Determine base background color for the card front based on the match ID parity
+                const baseColor = (card.matchId % 2 === 0) ? '#e0f7fa' : '#ffe0b2'; // Light Cyan or Light Orange
+                const borderColor = (card.matchId % 2 === 0) ? '#00BCD4' : '#FF9800'; // Cyan or Orange
+
+                // Cards are always face up
+                cardElement.style.borderColor = borderColor;
+                cardElement.innerHTML = `
+                    <div class="card-inner" style="background-color: ${baseColor}; color: ${borderColor};">
+                        ${card.text}
+                    </div>
+                `;
+
+                ui.gameBoard.appendChild(cardElement);
+            });
+        }
+        
+        /**
+         * Updates the score displayed on the screen.
+         */
+        function updateScoreboard() {
+            ui.score.textContent = pairsFound;
+        }
+
+        // --- Game Logic ---
+
+        /**
+         * Handles a card click event.
+         */
+        window.handleClick = function(index) {
+            const cardElement = ui.gameBoard.children[index];
+            const card = CARDS[index];
+
+            // 1. Start the stopwatch on the very first click
+            if (!isGameStarted) {
+                startStopwatch();
+                isGameStarted = true;
+            }
+
+            // Ignore if card is matched, currently processing, or already selected
+            if (cardElement.classList.contains('card-match') || isProcessing || cardsFlipped.includes(index)) {
+                return;
+            }
+            
+            isProcessing = true; // Lock controls
+
+            // 2. Select the card
+            cardsFlipped.push(index);
+            cardElement.classList.add('card-selected'); // <-- ADD VISUAL FEEDBACK
+            POSITIVE_SOUND();
+
+            if (cardsFlipped.length === 2) {
+                // 3. We have two cards flipped, check for match
+                const index1 = cardsFlipped[0];
+                const index2 = cardsFlipped[1];
+                const card1 = CARDS[index1];
+                const card2 = CARDS[index2];
+
+                if (card1.matchId === card2.id) {
+                    // Match Found!
+                    MATCH_SOUND();
+                    pairsFound++;
+
+                    // 4a. REMOVE SELECTION VISUALS before dimming
+                    ui.gameBoard.children[index1].classList.remove('card-selected');
+                    ui.gameBoard.children[index2].classList.remove('card-selected');
+                    
+                    // 4b. Mark cards as matched (visually dim them)
+                    ui.gameBoard.children[index1].classList.add('card-match');
+                    ui.gameBoard.children[index2].classList.add('card-match');
+
+                    cardsFlipped = []; // Clear flipped list
+                    isProcessing = false; // Unlock controls immediately
+                    
+                    updateScoreboard();
+
+                    // Check for win condition
+                    if (pairsFound === parseInt(ui.totalPairs.textContent)) { 
+                        stopStopwatch();
+                        setTimeout(showWinScreen, 500);
+                        return;
+                    }
+
+                } else {
+                    // No Match (Brief error visual feedback, then reset)
+                    ERROR_SOUND();
+                    
+                    // Briefly flash the mis-matched cards (optional but fun)
+                    ui.gameBoard.children[index1].style.transform = 'scale(1.02)';
+                    ui.gameBoard.children[index2].style.transform = 'scale(1.02)';
+                    
+                    setTimeout(() => {
+                        // 4c. Remove selection and flash effects
+                        ui.gameBoard.children[index1].classList.remove('card-selected'); // <-- REMOVE CLASS
+                        ui.gameBoard.children[index2].classList.remove('card-selected'); // <-- REMOVE CLASS
+                        ui.gameBoard.children[index1].style.transform = 'scale(1)';
+                        ui.gameBoard.children[index2].style.transform = 'scale(1)';
+                        
+                        cardsFlipped = [];
+                        isProcessing = false; // Unlock controls
+                    }, 800);
+                }
+            } else {
+                // Only one card flipped, wait for the second click
+                isProcessing = false; // Unlock immediately for the next click
+            }
+        };
+        
+        /**
+         * Displays the end-of-game modal.
+         */
+        function showWinScreen() {
+            const finalTimeDisplay = secondsToDisplay(timeElapsed);
+            ui.winMessage.textContent = finalTimeDisplay;
+            ui.winModal.classList.remove('hidden');
+        }
+
+        // --- Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+             if (typeof Tone !== 'undefined') {
+                 toneLoaded = true;
+             }
+        });
+    </script>
+</body>
+</html>

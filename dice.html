@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller</title>
+    <!-- Load Tailwind CSS for utility classes (used only for basic layout and button consistency) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS Variables for Dice Sizing and Dots --- */
+        :root {
+            --dice-size: 100px;
+            --dot-color: #333;
+            --dot-size: 12%;
+            --dot-pos-a: 25%;
+            --dot-pos-b: 50%;
+            --dot-pos-c: 75%;
+        }
+
+        /* --- General Setup (Dark Theme) --- */
+        body {
+            display: flex;
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #333; /* Dark Background */
+            perspective: 1000px;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: #eee;
+        }
+
+        /* --- Control Styling --- */
+        #controls {
+            margin-bottom: 30px;
+            padding: 10px 20px;
+            background-color: #222;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        #controls button {
+            padding: 10px 15px;
+            background-color: #2ecc71; /* Green Button */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        #controls button:hover {
+            background-color: #27ae60;
+        }
+
+        #controls select {
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #444;
+            color: white;
+            border: 1px solid #555;
+        }
+        
+        .total-display {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2ecc71; /* Bright Green Text */
+            padding: 10px 20px;
+            background-color: #222;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Dice Set Layout --- */
+        #dice-set {
+            display: flex;
+            flex-wrap: nowrap; /* Prevents wrapping on large screens */
+            gap: 60px; /* Increased space between dice */
+            max-width: 90vw; 
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .dice-container {
+            width: var(--dice-size);
+            height: var(--dice-size);
+            cursor: pointer;
+            perspective: 500px; /* Added perspective back for 3D view */
+            transform-style: preserve-3d;
+            flex-shrink: 0;
+        }
+
+        .dice {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s ease-out; /* Long transition for the spinning effect */
+        }
+        
+        /* Utility for hiding dice not in use (re-adapted from old style) */
+        .hidden-dice {
+            display: none;
+        }
+
+        /* Dice Faces */
+        .face {
+            position: absolute;
+            width: var(--dice-size);
+            height: var(--dice-size);
+            border: 3px solid #000;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0; /* Hides the numerical content */
+            color: transparent;
+            border-radius: 8px;
+        }
+
+        /* Positioning of the faces to form a cube */
+        .front { transform: rotateY(0deg) translateZ(calc(var(--dice-size) / 2)); }
+        .back { transform: rotateY(180deg) translateZ(calc(var(--dice-size) / 2)); }
+        .right { transform: rotateY(90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .left { transform: rotateY(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .top { transform: rotateX(90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .bottom { transform: rotateX(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+
+        /* Dice Dot Patterns (using radial-gradient) */
+        #dice-set .front { /* Face 1 */
+            background-image: radial-gradient(circle at var(--dot-pos-b) var(--dot-pos-b), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%));
+        }
+        #dice-set .bottom { /* Face 2 */
+            background-image: radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%));
+        }
+        #dice-set .right { /* Face 3 */
+            background-image: radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-b) var(--dot-pos-b), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%));
+        }
+        #dice-set .left { /* Face 4 */
+            background-image: radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%));
+        }
+        #dice-set .top { /* Face 5 */
+            background-image: radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-b) var(--dot-pos-b), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%));
+        }
+        #dice-set .back { /* Face 6 */
+            background-image: radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-b), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-a) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-a), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-b), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%)),
+                            radial-gradient(circle at var(--dot-pos-c) var(--dot-pos-c), var(--dot-color) var(--dot-size), transparent calc(var(--dot-size) + 1%));
+        }
+
+        /* --- DICE COLORS (Using specific colors per die) --- */
+        #dice-1 .face { background-color: #e74c3c; } /* Red */ 
+        #dice-2 .face { background-color: #3498db; } /* Blue */
+        #dice-3 .face { background-color: #2ecc71; } /* Green */
+        #dice-4 .face { background-color: #f1c40f; } /* Yellow */ 
+        #dice-5 .face { background-color: #9b59b6; } /* Purple */
+        #dice-6 .face { background-color: #e67e22; } /* Orange */
+    </style>
+</head>
+<body>
+
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-extrabold text-white">Click on the Dice to roll</h1>
+        <p class="text-gray-400 mt-2">TEFL Tools</p>
+    </header>
+
+    
+    <!-- Controls Section -->
+    <div id="controls">
+        <label for="dice-count" class="font-medium">Number of Dice:</label>
+        <select id="dice-count" onchange="window.updateDiceCount()">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6" selected>6</option>
+        </select>
+        <button onclick="window.throwAllDice()">Throw All</button>
+        <button onclick="window.location.href = 'index.html'" class="bg-gray-700 hover:bg-gray-600">Back to Tools</button>
+    </div>
+
+    <!-- Dice Display Area (Up to 6 containers) -->
+    <div id="dice-set">
+        <!-- Dice 1 (Red) -->
+        <div class="dice-container" id="container-1" onclick="window.rollDice(this, 'dice-1')">
+            <div id="dice-1" class="dice">
+                <div class="face front">1</div><div class="face back">6</div>
+                <div class="face right">3</div><div class="face left">4</div>
+                <div class="face top">5</div><div class="face bottom">2</div>
+            </div>
+        </div>
+        
+        <!-- Dice 2 (Blue) -->
+        <div class="dice-container" id="container-2" onclick="window.rollDice(this, 'dice-2')">
+            <div id="dice-2" class="dice">
+                <div class="face front">1</div><div class="face back">6</div>
+                <div class="face right">3</div><div class="face left">4</div>
+                <div class="face top">5</div><div class="face bottom">2</div>
+            </div>
+        </div>
+
+        <!-- Dice 3 (Green) -->
+        <div class="dice-container" id="container-3" onclick="window.rollDice(this, 'dice-3')">
+            <div id="dice-3" class="dice">
+                <div class="face front">1</div><div class="face back">6</div>
+                <div class="face right">3</div><div class="face left">4</div>
+                <div class="face top">5</div><div class="face bottom">2</div>
+            </div>
+        </div>
+
+        <!-- Dice 4 (Yellow) -->
+        <div class="dice-container" id="container-4" onclick="window.rollDice(this, 'dice-4')">
+            <div id="dice-4" class="dice">
+                <div class="face front">1</div><div class="face back">6</div>
+                <div class="face right">3</div><div class="face left">4</div>
+                <div class="face top">5</div><div class="face bottom">2</div>
+            </div>
+        </div>
+
+        <!-- Dice 5 (Purple) -->
+        <div class="dice-container" id="container-5" onclick="window.rollDice(this, 'dice-5')">
+            <div id="dice-5" class="dice">
+                <div class="face front">1</div><div class="face back">6</div>
+                <div class="face right">3</div><div class="face left">4</div>
+                <div class="face top">5</div><div class="face bottom">2</div>
+            </div>
+        </div>
+
+        <!-- Dice 6 (Orange) -->
+        <div class="dice-container" id="container-6" onclick="window.rollDice(this, 'dice-6')">
+            <div id="dice-6" class="dice">
+                <div class="face front">1</div><div class="face back">6</div>
+                <div class="face right">3</div><div class="face left">4</div>
+                <div class="face top">5</div><div class="face bottom">2</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define the rotations needed to show each face (1-6) on the front
+        const faceRotations = {
+            // [X-Axis Rotation, Y-Axis Rotation]
+            1: [0, 0],    // Front (1)
+            2: [-90, 0],  // Bottom (2)
+            3: [0, 90],   // Right (3)
+            4: [0, -90],  // Left (4)
+            5: [90, 0],   // Top (5)
+            6: [180, 0]   // Back (6)
+        };
+
+        // Tracks the total rotation of each dice to make rolls appear continuous
+        const currentRotations = {
+            'dice-1': [0, 0], 'dice-2': [0, 0], 'dice-3': [0, 0],
+            'dice-4': [0, 0], 'dice-5': [0, 0], 'dice-6': [0, 0]
+        };
+        
+        // Tracks the numerical value of each dice for the Total display
+        const currentValues = {
+            'dice-1': 1, 'dice-2': 1, 'dice-3': 1,
+            'dice-4': 1, 'dice-5': 1, 'dice-6': 1
+        };
+
+
+        /**
+         * Calculates the total value of all currently visible dice.
+         */
+        function calculateTotal() {
+            const diceContainers = document.querySelectorAll('.dice-container');
+            let total = 0;
+            
+            diceContainers.forEach(container => {
+                // Only sum dice that are not hidden
+                if (container.style.display !== 'none') {
+                    const diceId = container.id.replace('container', 'dice');
+                    total += currentValues[diceId];
+                }
+            });
+            
+            // Update the total display element
+            const totalDisplay = document.getElementById('total-result');
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total: ${total}`;
+            }
+        }
+
+        /**
+         * Rolls a single die and applies a continuous 3D rotation transformation.
+         * @param {HTMLElement} container The dice container element.
+         * @param {string} diceId The ID of the 3D dice element (e.g., 'dice-1').
+         */
+        function rollDice(container, diceId) {
+            const dice = document.getElementById(diceId);
+            if (!dice || container.style.pointerEvents === 'none') {
+                return; 
+            }
+
+            // Disable clicks during the roll
+            container.style.pointerEvents = 'none';
+
+            // 1. Determine the result (1 to 6)
+            const result = Math.floor(Math.random() * 6) + 1;
+            currentValues[diceId] = result; // Store the new value
+            
+            const baseRot = faceRotations[result];
+            
+            // 2. Create large random spin (at least 4 full rotations)
+            const spinOffset = 1440;
+            const randomSpinX = Math.floor(Math.random() * 4) * 360 + spinOffset;
+            const randomSpinY = Math.floor(Math.random() * 4) * 360 + spinOffset;
+            
+            // 3. Calculate the final rotation by adding current rotations, base rotation, and random spin
+            let [prevX, prevY] = currentRotations[diceId];
+
+            const finalRotX = prevX + baseRot[0] + randomSpinX;
+            const finalRotY = prevY + baseRot[1] + randomSpinY;
+            
+            // 4. Apply the transformation
+            dice.style.transform = `rotateX(${finalRotX}deg) rotateY(${finalRotY}deg)`;
+            
+            // 5. Store the final rotation values for the next roll
+            currentRotations[diceId] = [finalRotX, finalRotY];
+
+            // 6. Re-enable clicks and update total after the transition finishes (1500ms from CSS)
+            setTimeout(() => {
+                container.style.pointerEvents = 'auto';
+                calculateTotal(); 
+            }, 1500); 
+        }
+
+        /**
+         * Throws all currently visible dice.
+         */
+        function throwAllDice() {
+            // Get all dice containers (whether hidden or not, we check visibility later)
+            const diceContainers = document.querySelectorAll('.dice-container');
+            
+            diceContainers.forEach((container, index) => {
+                // Only throw visible dice
+                if (container.style.display !== 'none') {
+                    // Introduce a small delay for staggered throwing effect
+                    setTimeout(() => {
+                        const diceId = container.id.replace('container', 'dice');
+                        rollDice(container, diceId);
+                    }, index * 100); 
+                }
+            });
+        }
+
+        /**
+         * Updates the number of visible dice based on the dropdown selection.
+         */
+        function updateDiceCount() {
+            const selectElement = document.getElementById('dice-count');
+            const count = parseInt(selectElement.value, 10);
+            
+            for (let i = 1; i <= 6; i++) {
+                const container = document.getElementById(`container-${i}`);
+                if (container) {
+                    // Show dice if its index is less than or equal to the selected count
+                    if (i <= count) {
+                        container.classList.remove('hidden-dice');
+                        container.style.display = 'block'; // Ensure visibility
+                    } else {
+                        // Hide the rest
+                        container.classList.add('hidden-dice');
+                        container.style.display = 'none'; // Ensure invisibility
+                    }
+                }
+            }
+            // Recalculate total after visibility changes
+            calculateTotal();
+        }
+
+        // Initialize the dice display when the page loads
+        window.onload = function() {
+            // Expose functions globally for the onclick attributes
+            window.rollDice = rollDice;
+            window.throwAllDice = throwAllDice;
+            window.updateDiceCount = updateDiceCount;
+            window.calculateTotal = calculateTotal; 
+            
+            // Ensure initial setup is run
+            updateDiceCount(); 
+            throwAllDice();
+        }
+    </script>
+</body>
+</html>

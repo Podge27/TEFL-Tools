@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Cloud Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+        #app-container {
+            max-width: 1000px;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        .control-button {
+            @apply px-4 py-2 font-bold rounded-lg transition duration-200 transform hover:scale-[1.02] active:scale-95;
+        }
+        .btn-main {
+            @apply bg-indigo-600 text-white hover:bg-indigo-700;
+        }
+        .btn-secondary {
+            @apply bg-gray-500 text-white hover:bg-gray-600;
+        }
+        #word-cloud {
+            min-height: 400px;
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 1rem;
+            
+            /* KEY CHANGE: Use position: relative for children's absolute positioning */
+            position: relative; 
+            /* Removed: display: flex; flex-wrap: wrap; */
+        }
+        .cloud-word {
+            display: inline-block;
+            /* KEY CHANGE: Use absolute positioning for random scatter */
+            position: absolute; 
+            
+            /* Margins and transitions are kept, but position is now controlled by JS top/left */
+            padding: 4px 8px;
+            font-weight: 800;
+            font-size: 1.5rem; /* Fixed size for all words */
+            cursor: default;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        .cloud-word:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex justify-center">
+
+    <div id="app-container" class="w-full p-6 md:p-10">
+
+        <!-- Header and Back Button -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <button onclick="window.location.href = 'index.html'" class="control-button btn-secondary">
+                ← Back to Menu
+            </button>
+            <h1 class="text-3xl font-extrabold text-gray-900">Word Cloud Generator</h1>
+            <div></div> <!-- Spacer -->
+        </div>
+
+        <!-- Input Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- 1. Text Area Input -->
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-semibold mb-2 text-gray-700">Paste Words/Phrases:</h3>
+                <textarea id="word-input" 
+                          placeholder="Type words or phrases separated by commas or new lines (e.g., 'look after, take off, phrasal verb, great idea')"
+                          class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 resize-y" 
+                          rows="6"></textarea>
+            </div>
+            
+            <!-- 2. CSV Load -->
+            <div class="md:col-span-1 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-gray-700">Load from CSV (Column A):</h3>
+                    <button id="file-button" class="control-button btn-main w-full">Select CSV File</button>
+                    <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                    <p id="file-status" class="mt-2 text-sm text-gray-600">No file loaded.</p>
+                </div>
+                <!-- 3. Generate Button -->
+                <button id="generate-button" class="control-button btn-main w-full mt-4 py-3 text-xl">
+                    Generate Word Cloud
+                </button>
+            </div>
+        </div>
+        
+        <!-- Word Cloud Display -->
+        <div id="word-cloud-container">
+            <h3 class="text-xl font-bold mb-3 text-gray-800">Your Cloud:</h3>
+            <div id="word-cloud" class="p-8">
+                <p class="text-gray-400 text-lg">Type words or load a file and click 'Generate'.</p>
+            </div>
+        </div>
+        
+        <!-- Utility Message Box -->
+        <div id="message-box" class="mt-4 p-3 hidden rounded-lg text-white font-semibold transition duration-300"></div>
+
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const colorPalette = [
+            '#4c51bf', // Indigo
+            '#38a169', // Green
+            '#dd6b20', // Orange
+            '#e53e3e', // Red
+            '#00bcd4', // Cyan
+            '#7b3372', // Purple
+        ];
+        
+        // --- DOM Elements ---
+        const wordInput = document.getElementById('word-input');
+        const fileButton = document.getElementById('file-button');
+        const csvFileInput = document.getElementById('csv-file-input');
+        const fileStatus = document.getElementById('file-status');
+        const generateButton = document.getElementById('generate-button');
+        const wordCloudEl = document.getElementById('word-cloud');
+        const messageBox = document.getElementById('message-box');
+        
+        let loadedWords = [];
+
+        // --- Utility Functions ---
+
+        /** Shows a temporary message at the bottom. */
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+            
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-500');
+            } else {
+                messageBox.classList.add('bg-green-500');
+            }
+
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000);
+        }
+
+        /** Processes raw text input (from textarea or CSV) into a clean list of phrases. */
+        function processInput(rawText) {
+            // Split by commas or newlines
+            const words = rawText.split(/[\n,]/)
+                .map(w => w.trim()) // Trim whitespace
+                .filter(w => w.length > 0) // Remove empty strings
+                .map(w => w.toUpperCase()); // Convert to uppercase for consistency
+            
+            return words;
+        }
+
+        /** Loads vocabulary from a selected CSV File object (first column only). */
+        function loadVocabulary(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    
+                    // Extract words only from the first column (index 0)
+                    const words = lines.map(line => {
+                        const trimmed = line.split(',')[0].trim();
+                        return trimmed.toUpperCase();
+                    }).filter(word => word.length > 0);
+                    
+                    resolve(words);
+                };
+                reader.onerror = (e) => {
+                    console.error("Error reading file:", e);
+                    reject("An error occurred during file loading.");
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        /** Draws the word cloud with fixed size, multiple colors, and phrase handling. */
+        function generateCloud(wordList) {
+            if (wordList.length === 0) {
+                wordCloudEl.innerHTML = '<p class="text-gray-400 text-lg">No words provided.</p>';
+                return;
+            }
+
+            wordCloudEl.innerHTML = ''; // Clear previous content
+            
+            // Get boundaries for random placement. We subtract margins/padding for safety.
+            // We rely on the 400px min-height in CSS for the vertical boundary.
+            const containerWidth = wordCloudEl.clientWidth;
+            const containerHeight = wordCloudEl.clientHeight; 
+            
+            // Randomize the order of words for a better cloud distribution
+            wordList.sort(() => 0.5 - Math.random());
+
+            wordList.forEach((phrase, index) => {
+                const wordEl = document.createElement('span');
+                
+                // 1. Color: Cycle through the color palette
+                const color = colorPalette[index % colorPalette.length];
+                wordEl.style.color = color;
+
+                // 2. Phrase Handling: Replace spaces with a hyphen for visual "sticking"
+                const displayedText = phrase.replace(/\s+/g, '-'); 
+                
+                wordEl.textContent = displayedText;
+                wordEl.className = 'cloud-word';
+                
+                // Add the word to the DOM first to estimate its width before positioning
+                wordCloudEl.appendChild(wordEl);
+                
+                // Get the size of the word element
+                const wordWidth = wordEl.offsetWidth;
+                const wordHeight = wordEl.offsetHeight;
+
+                // --- APPLY RANDOM SCATTERING EFFECTS ---
+                const rotation = (Math.random() * 16) - 8; // Wider rotation range (-8deg to 8deg)
+                
+                // Calculate random top/left positions within container bounds
+                // Subtract word size to keep the element fully inside the visible area
+                const randomLeft = Math.floor(Math.random() * (containerWidth - wordWidth - 20)); // -20 for padding safety
+                const randomTop = Math.floor(Math.random() * (containerHeight - wordHeight - 20)); // -20 for padding safety
+                
+                // Apply absolute positioning and rotation
+                wordEl.style.left = `${Math.max(10, randomLeft)}px`; // Ensure min 10px margin
+                wordEl.style.top = `${Math.max(10, randomTop)}px`;  // Ensure min 10px margin
+                wordEl.style.transform = `rotate(${rotation}deg)`;
+                // ------------------------------------------
+            });
+            
+            showMessage(`Generated cloud with ${wordList.length} unique items.`, 'success');
+        }
+
+        // --- Event Handlers ---
+
+        generateButton.addEventListener('click', () => {
+            const rawText = wordInput.value;
+            let currentWords = processInput(rawText);
+            
+            // If text input is empty, but we have a file loaded, use the file words
+            if (currentWords.length === 0 && loadedWords.length > 0) {
+                 currentWords = loadedWords;
+                 showMessage(`Using ${loadedWords.length} words from the loaded CSV file.`, 'info');
+            } else if (currentWords.length === 0 && loadedWords.length === 0) {
+                 showMessage('Please enter text or load a CSV file.', 'error');
+                 wordCloudEl.innerHTML = '<p class="text-gray-400 text-lg">No words provided.</p>';
+                 return;
+            }
+
+            // Remove duplicates using a Set, then convert back to Array
+            const uniqueWords = Array.from(new Set(currentWords));
+
+            generateCloud(uniqueWords);
+        });
+
+        // CSV File Loading
+        fileButton.addEventListener('click', () => {
+            csvFileInput.click();
+        });
+
+        csvFileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const words = await loadVocabulary(file);
+                    loadedWords = words;
+                    fileStatus.textContent = `Loaded ${words.length} items. Click 'Generate' to use them.`;
+                    wordInput.value = ''; // Clear text input when loading a file
+                    showMessage(`Successfully loaded ${words.length} items from CSV.`, 'success');
+                } catch (error) {
+                    fileStatus.textContent = `Error loading file.`;
+                    loadedWords = [];
+                    showMessage('Could not read CSV file.', 'error');
+                }
+            }
+        });
+        
+    </script>
+</body>
+</html>

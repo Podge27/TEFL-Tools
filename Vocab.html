@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Trainer</title>
+    <!-- Load Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base Styles and Layout (Enhanced with Tailwind aesthetics) */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 0;
+            padding: 20px;
+            background-color: #e2e8f0; /* Soft Gray-Blue Background */
+            min-height: 100vh;
+        }
+
+        #vocabulary-trainer {
+            /* Corresponds to QVBoxLayout */
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1150px; /* INCREASED MAX WIDTH */
+            padding: 30px;
+            gap: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Word Display Label */
+        #word-label {
+            /* Matches #WordLabel QSS, made responsive */
+            background-color: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 180px; /* Increased height for content visibility */
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e293b;
+            display: flex;
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            white-space: pre-wrap; /* Allows multiple lines to wrap */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        /* Frames (QHBoxLayout equivalent) */
+        .controls-frame, .action-frame, .nav-frame, .timer-frame {
+            display: flex;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 5px 0;
+            border-radius: 8px;
+        }
+        .controls-frame {
+            background-color: #f1f5f9;
+        }
+        .timer-frame {
+            background-color: #fef3c7;
+            border: 1px dashed #f59e0b;
+        }
+
+        /* Button Styling (Tailwind enhanced) */
+        button {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            min-width: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        }
+
+        /* Default Blue Button */
+        #file-button, #cycle-button, #start-timer-button {
+            background-color: #3b82f6; /* Blue */
+            color: white;
+        }
+        #file-button:hover:not(:disabled), #cycle-button:hover:not(:disabled), #start-timer-button:hover:not(:disabled) {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        /* Navigation Buttons */
+        .nav-frame button {
+            background-color: #64748b; /* Slate Gray */
+            color: white;
+        }
+        .nav-frame button:hover:not(:disabled) {
+            background-color: #475569;
+        }
+
+        /* Back Button Specific Style (Gray-500) */
+        #back-to-main-button {
+            background-color: #6b7280;
+            color: white;
+        }
+        #back-to-main-button:hover:not(:disabled) {
+            background-color: #4b5563;
+        }
+
+        button:disabled {
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Action Button (Random Button) */
+        .action-btn {
+            background-color: #10b981; /* Green */
+            font-size: 18px;
+            padding: 15px 30px;
+            min-width: 150px;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background-color: #059669;
+        }
+
+        /* Dropdowns and Labels */
+        select {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px;
+            min-width: 60px;
+            background-color: white;
+            font-size: 15px;
+        }
+
+        label {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Timer Label */
+        #timer-label {
+            color: #dc2626; /* Red */
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Toast Container */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            opacity: 1;
+            transition: opacity 0.3s ease-out;
+            min-width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div id="vocabulary-trainer">
+        
+        <div id="word-label">Select a vocabulary file to start.</div>
+        
+        <div class="controls-frame">
+            <!-- NEW BACK BUTTON -->
+            <button id="back-to-main-button" onclick="window.location.href = 'index.html'">Back to Main</button>
+            
+            <button id="file-button">Select Vocabulary</button>
+            <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+
+            <label>Words:</label>
+            <select id="word-count-combo">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+            
+            <label>Display:</label>
+            <select id="display-column-combo">
+                <option value="word">word</option>
+                <option value="example">example</option>
+                <option value="definition">definition</option>
+            </select>
+        </div>
+
+        <div class="action-frame">
+            <button id="random-button" class="action-btn" disabled>Show Random Word(s)</button>
+            <button id="cycle-button">Switch Column</button>
+        </div>
+
+        <div class="nav-frame">
+            <button id="prev-button" disabled>← Back</button>
+            <button id="next-button" disabled>Next →</button>
+        </div>
+        
+        <div class="timer-frame">
+            <label id="timer-label">Timer: 0 sec</label>
+            <label>Duration (sec):</label>
+            <select id="timer-combo">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="60">60</option>
+                <option value="120">120</option>
+            </select>
+            <button id="start-timer-button">Start Timer</button>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification Area -->
+    <div id="toast-container"></div>
+
+    <script>
+        // --- 0. Toast Implementation (Replaces alert()) ---
+        function showToast(message, type = 'info') {
+            const colors = {
+                info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500'
+            };
+            const color = colors[type] || colors.info;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${color}`;
+            toast.textContent = message;
+            
+            document.getElementById('toast-container').appendChild(toast);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Global Variables (Equivalent to Python Globals) ---
+            let vocabulary_list = [];
+            let used_vocabulary_list = [];
+            let history = [];
+            let history_index = -1;
+            let current_column_index = 0;
+            const COLUMN_NAMES = ["word", "example", "definition"];
+            let timerInterval = null; // For QTimer equivalent
+            let timeLeft = 0;
+
+            // --- 1. Get DOM Elements ---
+            const wordLabel = document.getElementById('word-label');
+            const fileButton = document.getElementById('file-button');
+            const csvFileInput = document.getElementById('csv-file-input');
+            const wordCountCombo = document.getElementById('word-count-combo');
+            const displayColumnCombo = document.getElementById('display-column-combo');
+            const randomButton = document.getElementById('random-button');
+            const cycleButton = document.getElementById('cycle-button');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const timerLabel = document.getElementById('timer-label');
+            const timerCombo = document.getElementById('timer-combo');
+            const startTimerButton = document.getElementById('start-timer-button');
+
+            // --- 2. Utility Functions ---
+
+            /**
+             * Loads vocabulary from a selected CSV File object.
+             * @param {File} file The selected CSV file.
+             * @returns {Promise<Array<Object>>} A promise resolving to the vocabulary array.
+             */
+            function loadVocabulary(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const content = e.target.result;
+                        const lines = content.split('\n');
+                        const vocabData = [];
+
+                        for (const line of lines) {
+                            if (line.trim() === '') continue;
+                            
+                            // Simple CSV parsing: assumes comma delimiter
+                            const row = line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
+                            
+                            const word = row[0] || "";
+                            const example = row[1] || "";
+                            const definition = row[2] || "";
+
+                            vocabData.push({ 'word': word, 'example': example, 'definition': definition });
+                        }
+                        resolve(vocabData);
+                    };
+                    reader.onerror = (e) => {
+                        console.error("Error reading file:", e);
+                        reject("An error occurred during file loading.");
+                    };
+                    reader.readAsText(file);
+                });
+            }
+
+            /**
+             * Gets unique word data and updates the used list.
+             * @param {number} numItems Number of words to select.
+             * @param {string} columnName The column to check for non-empty value.
+             * @returns {Array<Object>} Selected word data.
+             */
+            function getUniqueWords(numItems, columnName) {
+                if (vocabulary_list.length === 0) return [];
+
+                // Filter out entries where the target column is empty
+                const validVocab = vocabulary_list.filter(d => d[columnName]);
+                
+                // Identify unused words (full dictionary objects) - Simple object comparison is enough here
+                const unusedWordsData = validVocab.filter(d => !used_vocabulary_list.includes(d));
+
+                if (unusedWordsData.length === 0) {
+                    used_vocabulary_list = [];
+                    console.log("All words used. Resetting word pool.");
+                    // Re-identify unused (now all valid words)
+                    const allValidWords = vocabulary_list.filter(d => d[columnName]);
+                    if (allValidWords.length === 0) return []; // No valid words at all
+                    
+                    const numItemsToSelect = Math.min(numItems, allValidWords.length);
+                    const selectedWordsData = randomSample(allValidWords, numItemsToSelect);
+                    used_vocabulary_list.push(...selectedWordsData);
+                    return selectedWordsData;
+                }
+
+                const numItemsToSelect = Math.min(numItems, unusedWordsData.length);
+                
+                // Select random full dictionaries from the unused list
+                const selectedWordsData = randomSample(unusedWordsData, numItemsToSelect);
+
+                // Update used list
+                used_vocabulary_list.push(...selectedWordsData);
+
+                return selectedWordsData;
+            }
+
+            /** Helper function for random sampling */
+            function randomSample(array, size) {
+                const shuffled = array.slice(0).sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, size);
+            }
+
+            /** Helper to display the current history item using the current column. */
+            function _displayHistoryItem() {
+                if (history_index === -1) {
+                    prevButton.disabled = true;
+                    nextButton.disabled = true;
+                    return;
+                }
+
+                const currentColumn = COLUMN_NAMES[current_column_index];
+                const currentWordsData = history[history_index];
+                
+                const display_text_list = currentWordsData.map(word_data => word_data[currentColumn]);
+                wordLabel.textContent = display_text_list.join('\n');
+                
+                // Sync the dropdown
+                displayColumnCombo.value = currentColumn;
+                
+                // Update navigation button states
+                prevButton.disabled = history_index === 0;
+                nextButton.disabled = history_index === history.length - 1;
+            }
+
+            // --- 3. Core Logic Methods (Event Handlers) ---
+
+            // Simulates QFileDialog and select_vocabulary_file()
+            fileButton.addEventListener('click', () => {
+                csvFileInput.click();
+            });
+
+            csvFileInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    try {
+                        // Load vocabulary
+                        vocabulary_list = await loadVocabulary(file);
+                        used_vocabulary_list = [];
+                        history = [];
+                        history_index = -1;
+                        
+                        wordLabel.textContent = "Vocabulary Loaded! Click 'Show Random Word(s)'";
+                        randomButton.disabled = false;
+                        showToast(`${vocabulary_list.length} words loaded from file.`, 'success');
+                    } catch (error) {
+                        wordLabel.textContent = "Error loading file.";
+                        showToast(`Error: ${error}`, 'error');
+                        randomButton.disabled = true;
+                    }
+                } else {
+                    wordLabel.textContent = "No file selected.";
+                    randomButton.disabled = true;
+                }
+            });
+
+            // Simulates display_random_word()
+            randomButton.addEventListener('click', () => {
+                // Ensure timer is stopped before showing a new word
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerLabel.textContent = "Timer: 0 sec";
+                }
+
+                if (vocabulary_list.length === 0) {
+                    wordLabel.textContent = "No words loaded! Select a file first.";
+                    return;
+                }
+
+                const numWords = parseInt(wordCountCombo.value, 10);
+                const displayColumn = displayColumnCombo.value;
+
+                const selectedWordsData = getUniqueWords(numWords, displayColumn);
+                
+                if (selectedWordsData.length > 0) {
+                    // Truncate history if a new word is shown after navigating back
+                    if (history_index < history.length - 1 && history_index !== -1) {
+                        history = history.slice(0, history_index + 1);
+                    } else if (history_index === -1) {
+                        history = [];
+                    }
+
+                    // Update history
+                    history.push(selectedWordsData);
+                    history_index = history.length - 1;
+                    
+                    // Reset display column state for the new word set
+                    current_column_index = COLUMN_NAMES.indexOf(displayColumn);
+                    
+                    _displayHistoryItem(); // Display the word
+                } else {
+                    wordLabel.textContent = "No unique words left! Resetting word pool.";
+                }
+            });
+
+            // Simulates cycle_display_column()
+            cycleButton.addEventListener('click', () => {
+                if (history_index === -1) {
+                    wordLabel.textContent = "Load and show a word first to cycle columns.";
+                    return;
+                }
+                
+                current_column_index = (current_column_index + 1) % COLUMN_NAMES.length;
+                _displayHistoryItem();
+            });
+            
+            // Handles changing the combo box manually
+            displayColumnCombo.addEventListener('change', () => {
+                 if (history_index === -1) return;
+                 current_column_index = COLUMN_NAMES.indexOf(displayColumnCombo.value);
+                 _displayHistoryItem();
+            });
+
+            // Simulates display_previous_word()
+            prevButton.addEventListener('click', () => {
+                if (history_index > 0) {
+                    history_index--;
+                    _displayHistoryItem();
+                } else {
+                    showToast("No previous words!", 'info');
+                }
+            });
+
+            // Simulates display_next_word()
+            nextButton.addEventListener('click', () => {
+                if (history_index < history.length - 1) {
+                    history_index++;
+                    _displayHistoryItem();
+                } else {
+                    showToast("No next words!", 'info');
+                }
+            });
+
+            // --- 4. Timer Methods ---
+
+            // Simulates start_timer()
+            startTimerButton.addEventListener('click', () => {
+                // Clear any existing timer
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    startTimerButton.textContent = "Start Timer";
+                    timerLabel.textContent = `Timer: 0 sec`;
+                    return; // Toggle stop functionality
+                }
+                
+                timeLeft = parseInt(timerCombo.value, 10);
+                timerLabel.textContent = `Time Left: ${timeLeft} sec`;
+                startTimerButton.textContent = "Stop Timer";
+
+                // Start QTimer equivalent (setInterval)
+                timerInterval = setInterval(timeUp, 1000);
+            });
+
+            // Simulates time_up()
+            function timeUp() {
+                timeLeft--;
+                
+                if (timeLeft > 0) {
+                    timerLabel.textContent = `Time Left: ${timeLeft} sec`;
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    startTimerButton.textContent = "Start Timer";
+                    timerLabel.textContent = "Time's up!";
+                    
+                    showToast("Time's Up! Your time for this round has ended.", 'info');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

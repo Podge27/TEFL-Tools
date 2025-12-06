@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Reader Tool</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+        #app-container {
+            max-width: 900px;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        /* Custom font for word display for better reading focus */
+        #display-label {
+            font-family: 'Roboto Mono', monospace;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: font-size 0.1s;
+        }
+
+        /* Styling for the main action buttons */
+        .action-btn {
+            @apply px-6 py-3 font-bold rounded-lg shadow-md transition duration-200 transform hover:scale-[1.02] active:scale-95;
+        }
+        .btn-go {
+            @apply bg-green-500 text-white hover:bg-green-600;
+        }
+        .btn-clear {
+            @apply bg-red-500 text-white hover:bg-red-600;
+        }
+        .btn-pause {
+            @apply bg-amber-500 text-black hover:bg-amber-600;
+        }
+        .btn-back {
+            @apply bg-gray-500 text-white hover:bg-gray-600;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex justify-center">
+
+    <div id="app-container" class="w-full p-6 md:p-10">
+
+        <!-- Header and Back Button -->
+        <div id="header-section" class="flex justify-between items-center mb-6">
+            <button id="back-to-menu-button" onclick="window.location.href = 'index.html'"
+                    class="btn-back px-4 py-2 text-sm">
+                ← Back to Menu
+            </button>
+            <h1 class="text-3xl font-extrabold text-gray-900 ml-4">Speed Reader</h1>
+            <div></div> <!-- Spacer -->
+        </div>
+
+        <!-- Input Section -->
+        <div id="input-section">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">Paste or Type Text:</h3>
+            <textarea id="text-input-area" 
+                      placeholder="Paste the text you want to read here..."
+                      class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 bg-yellow-50 resize-y" 
+                      rows="10"></textarea>
+            
+            <p id="word-count-label" class="text-center mt-2 text-gray-600 font-medium">Words: 0</p>
+            
+            <div id="button-frame" class="flex justify-center gap-4 mt-6">
+                <button id="go-button" class="action-btn btn-go">Go!</button>
+                <button id="clear-all-button" class="action-btn btn-clear">Clear All</button>
+            </div>
+        </div>
+
+        <!-- Display and Controls Section (Hidden initially) -->
+        <div id="reading-section" class="hidden">
+            
+            <!-- Main Word Display -->
+            <div id="display-label" 
+                 class="text-4xl font-extrabold text-gray-900 text-center border-2 border-gray-400 bg-amber-50 rounded-lg p-5 mb-8">
+                Ready to read...
+            </div>
+
+            <!-- Controls (WPS, WPD, Font Size) -->
+            <div id="controls-frame" class="flex flex-wrap justify-center gap-6 p-4 border rounded-lg bg-gray-100 mb-6">
+                
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium text-gray-700 mb-1">Words per display:</label>
+                    <select id="words-per-display-combobox" class="p-2 border rounded-md text-center">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                
+                <div class="flex flex-col items-center w-full max-w-xs">
+                    <label class="text-sm font-medium text-gray-700 mb-1">Words per second: <span id="wps-value">5.0</span></label>
+                    <input type="range" id="words-per-second-scale" min="1.0" max="30.0" step="0.5" value="5.0" class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer">
+                </div>
+                
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium text-gray-700 mb-1">Font Size: <span id="font-size-value">20</span></label>
+                    <input type="number" id="font-size-spinbox" value="20" min="10" max="40" step="2" class="p-2 border rounded-md text-center w-20">
+                </div>
+            </div>
+
+            <!-- Pause/Play/Back Controls -->
+            <div id="control-buttons-frame" class="flex justify-center gap-4">
+                <button id="pause-play-button" class="action-btn btn-pause">Play</button>
+                <button id="back-button" class="action-btn btn-back">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global State ---
+        let text = "";
+        let wordList = [];
+        let running = false;
+        let paused = true; 
+        let currentTimeout = null;
+        
+        let wordsPerSecond = 5.0;
+        let wordsPerDisplay = 1;
+        let currentIndex = 0;
+        let fontSize = 20;
+
+        // --- DOM Elements ---
+        const inputSection = document.getElementById('input-section');
+        const readingSection = document.getElementById('reading-section');
+        const textInputArea = document.getElementById('text-input-area');
+        const wordCountLabel = document.getElementById('word-count-label');
+        const goButton = document.getElementById('go-button');
+        const clearAllButton = document.getElementById('clear-all-button');
+        const displayLabel = document.getElementById('display-label');
+        const pausePlayButton = document.getElementById('pause-play-button');
+        const backButton = document.getElementById('back-button');
+        
+        const wpsScale = document.getElementById('words-per-second-scale');
+        const wpsValueDisplay = document.getElementById('wps-value');
+        const wpdCombobox = document.getElementById('words-per-display-combobox');
+        const fontSizeSpinbox = document.getElementById('font-size-spinbox');
+        const fontSizeValueDisplay = document.getElementById('font-size-value');
+        
+        // --- Utility Functions ---
+
+        /** Updates the word count label based on text input. */
+        function updateWordCount() {
+            const currentText = textInputArea.value.trim();
+            const count = currentText ? currentText.split(/\s+/).length : 0;
+            wordCountLabel.textContent = `Words: ${count}`;
+        }
+
+        /** Clears the input area. */
+        function clearAll() {
+            textInputArea.value = "";
+            updateWordCount();
+        }
+
+        /** Hides input/shows reading controls and starts the sequence. */
+        function startReading() {
+            text = textInputArea.value.trim();
+            if (!text) return;
+
+            // Simple tokenization (like Python's split())
+            wordList = text.split(/\s+/).filter(w => w.length > 0);
+            if (wordList.length === 0) return;
+            
+            // UI Toggle
+            inputSection.classList.add('hidden');
+            readingSection.classList.remove('hidden');
+
+            running = true;
+            paused = true; // Start paused as in Python code
+            pausePlayButton.textContent = "Play";
+            currentIndex = 0;
+            displayLabel.textContent = "Click 'Play' to begin...";
+            
+            // Set initial font size on display label
+            displayLabel.style.fontSize = `${fontSize}px`;
+        }
+
+        /** Gets the chunk of words for the current display index. */
+        function getNextWords() {
+            const start = currentIndex;
+            const end = Math.min(currentIndex + wordsPerDisplay, wordList.length);
+            return wordList.slice(start, end);
+        }
+        
+        /** The main asynchronous reading loop using setTimeout. */
+        function readWords() {
+            if (!running) {
+                return;
+            }
+
+            if (currentIndex >= wordList.length) {
+                // End of reading
+                resetAndShowInput();
+                return;
+            }
+
+            if (!paused) {
+                const words = getNextWords();
+                const displayText = words.join(' ');
+                displayLabel.textContent = displayText;
+
+                currentIndex += wordsPerDisplay;
+
+                // Calculate the delay (in milliseconds)
+                // WPS is words per SECOND. WPD is words PER DISPLAY.
+                // Delay = 1000ms / (WordsPerSecond * WordsPerDisplay)
+                const delayMs = 1000 / wordsPerSecond;
+                
+                // Use the constant delayMs regardless of WPD, as the word count in the Python calculation was effectively
+                // controlling the *frequency* of display events, which is simpler if we just use the raw time per word (1/WPS).
+                // If WPD=1, display delay is (1/WPS) seconds. If WPD=5, display delay is (1/WPS) seconds per word * 5 words per display.
+                // Replicating Python logic: time.sleep(1 / (self.words_per_second * (self.words_per_display or 1)))
+                // This means the delay is based on the *total word count* displayed, not the WPS speed.
+                const actualDelay = 1000 / (wordsPerSecond * wordsPerDisplay); // Correctly implements Python's delay logic
+
+                currentTimeout = setTimeout(readWords, actualDelay);
+            } else {
+                // If paused, wait a short moment and check again
+                currentTimeout = setTimeout(readWords, 100);
+            }
+        }
+
+        /** Toggles pause/play state. */
+        function pausePlay() {
+            if (!running) return;
+
+            paused = !paused;
+            if (paused) {
+                pausePlayButton.textContent = "Play";
+            } else {
+                pausePlayButton.textContent = "Pause";
+                // Start the reading thread only if we just unpaused or are starting
+                if (currentIndex === 0) {
+                    readWords();
+                } else if (currentTimeout === null) {
+                    // Resume reading
+                    readWords(); 
+                }
+            }
+        }
+
+        /** Stops reading and returns to input screen. */
+        function resetAndShowInput() {
+            running = false;
+            paused = false;
+            currentIndex = 0;
+            
+            if (currentTimeout) {
+                clearTimeout(currentTimeout);
+                currentTimeout = null;
+            }
+
+            // UI Toggle
+            readingSection.classList.add('hidden');
+            inputSection.classList.remove('hidden');
+            
+            // Reset button text
+            pausePlayButton.textContent = "Play";
+            
+            updateWordCount();
+        }
+        
+        // --- Control Handlers ---
+
+        wpsScale.addEventListener('input', (e) => {
+            wordsPerSecond = parseFloat(e.target.value);
+            wpsValueDisplay.textContent = wordsPerSecond.toFixed(1);
+        });
+
+        wpdCombobox.addEventListener('change', (e) => {
+            wordsPerDisplay = parseInt(e.target.value);
+        });
+
+        fontSizeSpinbox.addEventListener('input', (e) => {
+            let size = parseInt(e.target.value);
+            if (size < 10) size = 10;
+            if (size > 40) size = 40;
+            
+            fontSize = size;
+            fontSizeValueDisplay.textContent = fontSize;
+            displayLabel.style.fontSize = `${fontSize}px`;
+            e.target.value = size; // Reflect constrained value in input
+        });
+
+        // --- Event Listeners ---
+        textInputArea.addEventListener('input', updateWordCount);
+        goButton.addEventListener('click', startReading);
+        clearAllButton.addEventListener('click', clearAll);
+        pausePlayButton.addEventListener('click', pausePlay);
+        backButton.addEventListener('click', resetAndShowInput); // Back button resets state before showing input
+
+        // Initial setup
+        window.onload = () => {
+            updateWordCount();
+            displayLabel.style.fontSize = `${fontSize}px`;
+            wpdCombobox.value = wordsPerDisplay;
+        };
+
+        // Note: Clipboard (copy/paste) is handled natively by the browser for the textarea.
+    </script>
+</body>
+</html>

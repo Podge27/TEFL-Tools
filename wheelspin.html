@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vocabulary Spinner — Full Screen Edition</title>
+
+<style>
+:root {
+    --bg: #eef7ff;
+    --panel: #ffffff;
+    --accent: #ff3b3b;
+    --accent2: #ffcc00;
+    --blue: #4aa8ff;
+    --text: #1b2a41;
+}
+* { box-sizing:border-box; }
+body {
+    margin:0;
+    background:var(--bg);
+    font-family:"Segoe UI", Tahoma, sans-serif;
+    color:var(--text);
+    overflow-y:auto;
+}
+
+/* -------- BACK BUTTON (now normal, not fixed) -------- */
+#back a {
+    text-decoration:none;
+    font-weight:700;
+    color:var(--blue);
+    background:white;
+    padding:6px 12px;
+    border-radius:8px;
+    box-shadow:0 3px 6px rgba(0,0,0,0.1);
+}
+
+/* -------- TOP BAR -------- */
+.topbar {
+    width:100%;
+    background:#fff;
+    padding:10px 20px;
+    display:flex;
+    align-items:center;
+    gap:15px;
+    border-bottom:4px solid #dce6ef;
+    box-shadow:0 4px 12px rgba(0,0,0,0.06);
+    flex-wrap:wrap;
+}
+
+/* Buttons */
+button {
+    padding:10px 18px;
+    border-radius:10px;
+    border:none;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    color:white;
+    background:var(--accent);
+    box-shadow:0 3px 8px rgba(255,59,59,0.3);
+}
+button:hover { background:#e53232; }
+
+.ghost {
+    background:#ffffff;
+    color:var(--text);
+    border:2px solid #cfd9e2;
+    box-shadow:none;
+}
+.ghost:hover { background:#f3f6f9; }
+
+/* -------- MAIN AREA -------- */
+.main {
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+}
+
+#wheelCanvas {
+    max-width:90vmin;
+    max-height:90vmin;
+    width:90vmin;
+    height:90vmin;
+    border-radius:50%;
+    background:#fff;
+    border:12px solid var(--blue);
+    box-shadow:inset 0 0 20px rgba(0,0,0,0.12), 0 0 20px rgba(0,0,0,0.18);
+}
+
+.pointer {
+    width:0;height:0;
+    border-left:30px solid transparent;
+    border-right:30px solid transparent;
+    border-bottom:50px solid var(--accent2);
+    filter:drop-shadow(0 0 8px rgba(255,204,0,0.6));
+    margin-bottom:-20px;
+}
+
+#result {
+    margin-top:20px;
+    font-size:4rem;
+    font-weight:900;
+    text-align:center;
+    color:var(--accent);
+    line-height:1.1;
+    min-height:4.5rem;
+}
+
+.winner-flash {
+    animation:flash 0.6s infinite alternate;
+}
+@keyframes flash {
+    from { transform:scale(1); opacity:1; }
+    to { transform:scale(1.18); opacity:0.65; }
+}
+</style>
+</head>
+<body>
+
+<!-- BACK BUTTON MOVED HERE INTO TOPBAR -->
+<div class="topbar">
+    <div id="back"><a href="index.html">← Back</a></div>
+
+    <input id="csvInput" type="file" accept=".csv">
+    <button id="spinBtn">SPIN!</button>
+    <button id="removeBtn" class="ghost" style="display:none;">Remove</button>
+    <button id="shuffleBtn" class="ghost">Shuffle</button>
+    <button id="soundTestBtn" class="ghost">Sound Test</button>
+</div>
+
+<div class="main">
+    <div class="pointer"></div>
+    <canvas id="wheelCanvas" width="800" height="800"></canvas>
+    <div id="result"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+<script>
+/* -------------------- YOUR ORIGINAL WORKING JS -------------------- */
+
+let audioCtx;
+function playBeep(frequency, duration, type = 'sine') {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+  const now = audioCtx.currentTime;
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.start();
+  osc.stop(now + duration);
+}
+function playSpinStart(){ playBeep(220,0.1,'sawtooth'); }
+function playWin(){ playBeep(440,0.2,'square'); }
+
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+
+const spinBtn = document.getElementById('spinBtn');
+const removeBtn = document.getElementById('removeBtn');
+const csvInput = document.getElementById('csvInput');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const result = document.getElementById('result');
+
+const MAX_VISIBLE = 12;
+let items = [];
+let visible = [];
+let rotation = 0;
+let spinning = false;
+let chosenItem = null;
+
+function shuffle(a){ return a.slice().sort(()=>Math.random()-0.5); }
+
+function updateVisible(){
+  visible = items.length <= MAX_VISIBLE ? items.slice() : shuffle(items).slice(0,MAX_VISIBLE);
+}
+
+function degToRad(d){ return d*Math.PI/180; }
+function radToDeg(r){ return r*180/Math.PI; }
+
+function palette(i,n){
+  const hue = (i*(360/n)+180)%360;
+  return `hsl(${hue},70%,75%)`;
+}
+
+function draw(){
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const cx = w/2, cy = h/2;
+  const r = Math.min(w,h)/2 - 8;
+
+  if(visible.length===0){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.04)';
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  const n = visible.length;
+  const angle = 2*Math.PI/n;
+
+  for(let i=0;i<n;i++){
+    const start = i*angle + degToRad(rotation);
+    const end = start + angle;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,end);
+    ctx.closePath();
+    ctx.fillStyle = palette(i,n);
+    ctx.fill();
+
+    ctx.strokeStyle='rgba(0,0,0,0.1)';
+    ctx.lineWidth=2;
+    ctx.stroke();
+
+    const mid = (start+end)/2;
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(mid);
+    ctx.fillStyle = "#1b2a41";
+    ctx.font='700 18px sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    const text = visible[i].word;
+    const short = text.length>40 ? text.slice(0,37)+'...' : text;
+    ctx.fillText(short, r*0.55, 0);
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,r*0.22,0,Math.PI*2);
+  ctx.fillStyle='#fff';
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.1)';
+  ctx.stroke();
+}
+
+function indexUnderPointer(){
+  if(visible.length===0) return -1;
+  const span = 360/visible.length;
+  const pointer = 270;
+  let best = 0, bestDiff = 9999;
+  for(let i=0;i<visible.length;i++){
+    const mid = i*span + span/2;
+    const displayed = (mid + rotation)%360;
+    const d = Math.abs(((displayed-pointer+540)%360)-180);
+    if(d<bestDiff){ bestDiff=d; best=i; }
+  }
+  if(bestDiff <= span/2 + 0.5) return best;
+  return -1;
+}
+
+function easeOutCubic(t){ return 1 - Math.pow(1-t,3); }
+
+function animateSpin(targetRotation, duration=4200){
+  const start = performance.now();
+  const from = rotation;
+  const delta = targetRotation - from;
+
+  return new Promise(resolve=>{
+    function frame(now){
+      const t = Math.min(1,(now-start)/duration);
+      const eased = easeOutCubic(t);
+      rotation = from + delta*eased;
+      draw();
+      if(t<1) requestAnimationFrame(frame); else resolve();
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+async function spin(){
+  if(spinning || items.length===0) return;
+
+  spinning = true;
+  result.textContent='Spinning...';
+  result.classList.remove('winner-flash');
+
+  playSpinStart();
+
+  chosenItem = items[Math.floor(Math.random()*items.length)];
+
+  if(!visible.some(v=>v.word===chosenItem.word)){
+    if(visible.length<MAX_VISIBLE) visible.push(chosenItem);
+    else visible[Math.floor(Math.random()*visible.length)] = chosenItem;
+  }
+
+  draw();
+
+  const idx = visible.findIndex(v=>v.word===chosenItem.word);
+  const span = 360/visible.length;
+  const mid = idx*span + span/2;
+  let target = (270-mid)%360;
+  if(target<0) target+=360;
+
+  const spins = 6;
+  const targetRotation = rotation + spins*360 + target;
+
+  await animateSpin(targetRotation);
+
+  playWin();
+
+  rotation = ((rotation%360)+360)%360;
+  draw();
+
+  const idxFinal = indexUnderPointer();
+  const finalText = idxFinal===-1 ? chosenItem.word : visible[idxFinal].word;
+
+  result.textContent = finalText;
+  result.classList.add('winner-flash');
+  removeBtn.style.display='inline-block';
+
+  spinning = false;
+}
+
+spinBtn.addEventListener('click', spin);
+canvas.addEventListener('click', spin);
+
+removeBtn.addEventListener('click', ()=>{
+  if(!result.textContent) return;
+  items = items.filter(x=>x.word!==result.textContent);
+  updateVisible();
+  draw();
+  result.textContent='';
+  removeBtn.style.display='none';
+  result.classList.remove('winner-flash');
+});
+
+csvInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  Papa.parse(f,{
+    skipEmptyLines:true,
+    complete(res){
+      items = res.data
+        .map(r=>({word:String(Array.isArray(r)?r[0]:r)}))
+        .filter(x=>x.word.trim()!=='');
+      updateVisible();
+      draw();
+      result.textContent = `Loaded ${items.length} items`;
+      removeBtn.style.display='none';
+      result.classList.remove('winner-flash');
+    }
+  });
+});
+
+shuffleBtn.addEventListener('click', ()=>{ updateVisible(); draw(); });
+
+document.getElementById('soundTestBtn').addEventListener('click', ()=>{
+  playSpinStart();
+  setTimeout(playWin,300);
+});
+
+updateVisible();
+draw();
+
+/* -------------------- END JS -------------------- */
+</script>
+
+</body>
+</html>

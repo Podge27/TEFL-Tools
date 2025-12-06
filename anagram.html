@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anagram Generator</title>
+    <!-- Load Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light background */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Game Container */
+        #game-area {
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            min-height: 500px;
+            position: relative; 
+        }
+
+        /* Letter Slots (Target) */
+        #slots-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            min-height: 100px;
+        }
+
+        .slot {
+            width: 70px;
+            height: 70px;
+            border: 3px dashed #9ca3af; 
+            border-radius: 8px;
+            background-color: #e5e7eb;
+            flex-shrink: 0;
+            transition: background-color 0.1s;
+        }
+
+        /* Letter Balls (Draggable Elements) */
+        #letters-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            min-height: 150px;
+            border-top: 2px dashed #ddd;
+            padding-top: 30px;
+            position: relative;
+        }
+
+        .letter-ball {
+            position: absolute; 
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            border-radius: 50%;
+            cursor: grab;
+            transition: box-shadow 0.1s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            touch-action: none;
+        }
+
+        .letter-ball:active {
+            cursor: grabbing;
+        }
+        
+        /* Dragging state */
+        .dragging {
+            z-index: 1000;
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Feedback styling */
+        .feedback-win {
+            color: #10b981; 
+            font-weight: 800;
+        }
+        .feedback-try {
+            color: #f59e0b; 
+            font-weight: 700;
+        }
+        
+        .nav-button {
+            transition: transform 0.1s;
+        }
+        .nav-button:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Setup Panel */
+        #setup-panel {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        #setup-panel h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+
+        /* File Input Style */
+        #vocab-file {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            background-color: white;
+        }
+        
+        /* Paste Area Style */
+        #vocab-paste {
+            width: 100%;
+            height: 100px; /* Reduced size */
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        /* Win animation */
+        @keyframes win-flash {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px #10b981, 0 0 10px #10b981; }
+        }
+        .win-animate {
+            animation: win-flash 0.5s ease-in-out 3;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-area">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-800">Anagram Puzzle</h1>
+            <button id="back-button" onclick="window.location.href = 'index.html'" 
+                    class="nav-button px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600">
+                Back to Tools
+            </button>
+        </header>
+        
+        <!-- === 1. Setup Panel (Visible to teacher/user only) === -->
+        <div id="setup-panel">
+            <h2>Setup Your Vocabulary List</h2>
+            
+            <label for="vocab-file" class="block text-sm font-medium text-gray-700 mb-2">
+                **1. Upload your CSV or Text File:**
+            </label>
+            <!-- File Input for CSV/TXT Upload -->
+            <input type="file" id="vocab-file" accept=".csv, .txt" class="mb-4">
+
+            <p class="text-center font-bold text-gray-400 my-4">--- OR ---</p>
+
+            <label for="vocab-paste" class="block text-sm font-medium text-gray-700 mb-2">
+                **2. Paste words here (comma or line separated):**
+            </label>
+            <!-- Paste Area for quick entry (Fallback) -->
+            <textarea id="vocab-paste" placeholder="e.g., BALLOON, PYRAMID, ELEPHANT, GIRAFFE, ICE CREAM" class="mb-4">BALLOON, PYRAMID, ELEPHANT, GIRAFFE, ICE CREAM, PUPPY, SUMMER</textarea>
+            
+            <p class="text-sm text-gray-500 mt-2 mb-4">
+                The words will be automatically shuffled and presented one by one.
+            </p>
+            
+            <div class="mt-3 text-right">
+                <button id="load-words-button" onclick="window.processVocabSource()"
+                        class="nav-button px-6 py-3 bg-yellow-500 text-white rounded-xl shadow-lg hover:bg-yellow-600 font-medium">
+                    Start Game with Vocabulary
+                </button>
+            </div>
+        </div>
+
+        <!-- === 2. Game Play Area (Hidden until words are loaded) === -->
+        <div id="game-play-area" class="hidden">
+            
+            <!-- Feedback and Controls -->
+            <div class="flex justify-between items-center mb-8">
+                <p id="feedback-label" class="text-xl text-gray-700 font-medium">Arrange the letters!</p>
+                <div class="flex space-x-4">
+                    <button id="hint-button"
+                            onclick="window.giveHint()"
+                            class="nav-button px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 disabled:opacity-50">
+                        Place 1 Letter Hint
+                    </button>
+                    <button id="skip-button" disabled
+                            onclick="window.skipWord()"
+                            class="nav-button px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 disabled:opacity-50">
+                        Skip Word
+                    </button>
+                    <button id="next-button" disabled
+                            onclick="window.newRound()"
+                            class="nav-button px-6 py-3 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next Word &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- 1. Target Slots -->
+            <div id="slots-container">
+                <!-- Slots will be injected here by JavaScript -->
+            </div>
+
+            <!-- 2. Draggable Letter Pool -->
+            <div id="letters-container">
+                <!-- Letter Balls will be injected here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BALL_SIZE = 70;
+        const colors = [
+            '#FF5733', '#33FF57', '#3357FF', '#F333FF', '#33FFF3', '#FF8C33', '#8C33FF', '#FF0077', '#00CCFF', '#CCFF00'
+        ];
+        
+        let vocabList = []; 
+        let currentWordIndex = -1;
+
+        const state = {
+            currentWord: "",
+            slots: [],
+            balls: [],
+            isDragging: false,
+            activeBall: null,
+            startX: 0,
+            startY: 0,
+            initialX: 0,
+            initialY: 0,
+            slotMap: new Map(), // Maps slot ID to the ball occupying it
+            originalPosMap: new Map(), // Maps ball ID to its original X/Y in the pool
+        };
+
+        const elements = {
+            setupPanel: document.getElementById('setup-panel'),
+            gamePlayArea: document.getElementById('game-play-area'),
+            slotsContainer: document.getElementById('slots-container'),
+            lettersContainer: document.getElementById('letters-container'),
+            feedbackLabel: document.getElementById('feedback-label'),
+            nextButton: document.getElementById('next-button'),
+            hintButton: document.getElementById('hint-button'),
+            skipButton: document.getElementById('skip-button'),
+            vocabFile: document.getElementById('vocab-file'), // New File Input Element
+            vocabPaste: document.getElementById('vocab-paste'), // Paste Area Element
+        };
+
+        // --- View Visibility Toggle ---
+        function showSetup() {
+            elements.setupPanel.classList.remove('hidden');
+            elements.gamePlayArea.classList.add('hidden');
+        }
+
+        function showGame() {
+            elements.setupPanel.classList.add('hidden');
+            elements.gamePlayArea.classList.remove('hidden');
+        }
+
+        // --- Utility Functions ---
+
+        /** Scrambles a word, ensuring it's not the same as the original, if possible. */
+        function scrambleWord(word) {
+            let chars = Array.from(word.replace(/\s/g, ' '));
+            if (chars.length <= 1) return word;
+
+            let scrambled;
+            do {
+                scrambled = [...chars].sort(() => Math.random() - 0.5);
+            } while (scrambled.join('') === word.replace(/\s/g, ' '));
+            
+            return scrambled.join('');
+        }
+
+        /** Returns the appropriate display character for the letter. */
+        function getDisplayChar(char) {
+            return char === ' ' ? '␣' : char; 
+        }
+
+        /** Gets the X/Y coordinates from a mouse or touch event. */
+        function getCoords(e) {
+            if (e.touches) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+        
+        /** Parses the content (from file or paste) and starts the game. 
+         * Updated to only take the first column/word per line.
+        */
+        function parseAndStartGame(content) {
+            // 1. Split content by newlines to get rows
+            const lines = content.split('\n').filter(line => line.trim().length > 0);
+            
+            // 2. Process each line: take only the first column
+            vocabList = lines
+                .map(line => {
+                    // Split by the first comma (standard CSV column separator) or treat the whole line as the word
+                    const firstColumn = line.split(',')[0];
+                    return firstColumn.trim().toUpperCase();
+                })
+                .filter(word => word.length > 0 && /^[A-Z\s]+$/.test(word)); // 3. Clean and filter
+
+            if (vocabList.length === 0) {
+                elements.feedbackLabel.textContent = "No valid words found in the source!";
+                elements.feedbackLabel.className = 'text-xl feedback-try';
+                return;
+            }
+            
+            // Randomly shuffle the loaded list
+            vocabList.sort(() => Math.random() - 0.5);
+            currentWordIndex = -1; // Reset index to start from the beginning of the new shuffled list
+
+            showGame();
+            elements.feedbackLabel.textContent = `Loaded ${vocabList.length} words. Starting game...`;
+            elements.feedbackLabel.className = 'text-xl text-gray-700 font-medium';
+            
+            newRound();
+        }
+
+
+        /** Determines the vocabulary source (File Upload or Paste Area) and loads it. */
+        function processVocabSource() {
+            const fileInput = elements.vocabFile;
+            const pasteInput = elements.vocabPaste;
+            
+            // 1. Prioritize File Upload
+            if (fileInput.files && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const fileContent = e.target.result;
+                    parseAndStartGame(fileContent);
+                };
+
+                reader.onerror = function() {
+                    elements.feedbackLabel.textContent = "Error reading file!";
+                    elements.feedbackLabel.className = 'text-xl feedback-try';
+                };
+
+                reader.readAsText(file);
+                
+            } 
+            // 2. Fallback to Paste Area
+            else {
+                const pasteContent = pasteInput.value;
+                if (pasteContent) {
+                    parseAndStartGame(pasteContent);
+                } else {
+                    elements.feedbackLabel.textContent = "Please upload a file or paste words to start!";
+                    elements.feedbackLabel.className = 'text-xl feedback-try';
+                }
+            }
+        }
+        
+        // --- Core Game Functions ---
+
+        /** Renders the slots and draggable letters for a new word. */
+        function renderRound(word) {
+            // Reset state and containers
+            state.slots = [];
+            state.balls = [];
+            state.slotMap.clear();
+            state.originalPosMap.clear();
+            elements.slotsContainer.innerHTML = '';
+            elements.lettersContainer.innerHTML = '';
+
+            state.currentWord = word.toUpperCase();
+            
+            const scrambledWord = scrambleWord(state.currentWord);
+            const chars = Array.from(scrambledWord);
+            
+            // Re-enable hint and skip buttons
+            elements.hintButton.disabled = false;
+            elements.skipButton.disabled = false;
+            elements.nextButton.disabled = true;
+
+            // Calculate layout metrics (needs to be inside renderRound for responsive sizing)
+            const containerWidth = elements.gamePlayArea.clientWidth - 60; // Game Area Width minus padding
+            const itemWidth = BALL_SIZE + 20; // 20px buffer for gap
+            const itemsPerRow = Math.floor(containerWidth / itemWidth);
+            const numRows = Math.ceil(chars.length / itemsPerRow);
+            const gap = (containerWidth - itemsPerRow * BALL_SIZE) / (itemsPerRow + 1);
+            
+            // 1. Create Slots (Targets)
+            let slotId = 0;
+            Array.from(state.currentWord).forEach((char) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.dataset.target = char;
+                slot.dataset.id = slotId++;
+                elements.slotsContainer.appendChild(slot);
+                state.slots.push(slot);
+            });
+            
+            // 2. Create Balls (Draggable Letters)
+            chars.forEach((char, i) => {
+                const ball = document.createElement('div');
+                ball.className = 'letter-ball';
+                ball.textContent = getDisplayChar(char);
+                ball.dataset.char = char;
+                ball.dataset.id = `ball-${i}`;
+                ball.style.backgroundColor = colors[i % colors.length];
+
+                // Calculate position in the pool grid
+                const row = Math.floor(i / itemsPerRow);
+                const col = i % itemsPerRow;
+                
+                // Position relative to the lettersContainer
+                const baseX = gap + col * itemWidth;
+                const baseY = 20 + row * itemWidth;
+                
+                // Add slight randomness for a scattered look
+                const offsetX = Math.random() * 20 - 10;
+                const offsetY = Math.random() * 20 - 10;
+
+                const finalX = baseX + offsetX;
+                const finalY = baseY + offsetY;
+                
+                ball.style.left = `${finalX}px`;
+                ball.style.top = `${finalY}px`;
+                
+                // Store original position relative to lettersContainer
+                state.originalPosMap.set(ball.dataset.id, { x: finalX, y: finalY });
+                
+                // Add event listeners for mouse and touch
+                ball.addEventListener('mousedown', startDrag);
+                ball.addEventListener('touchstart', startDrag);
+
+                elements.lettersContainer.appendChild(ball);
+                state.balls.push(ball);
+            });
+            
+            // Adjust lettersContainer height dynamically
+            elements.lettersContainer.style.height = `${20 + numRows * itemWidth + 20}px`;
+        }
+
+        /** Checks if the letters currently in the slots match the target word. */
+        function checkSolution() {
+            let guessedWord = '';
+            let allFull = true;
+            
+            state.slots.forEach(slot => {
+                const ball = state.slotMap.get(slot.dataset.id);
+                if (ball) {
+                    guessedWord += ball.dataset.char;
+                } else {
+                    guessedWord += '_';
+                    allFull = false;
+                }
+            });
+
+            if (allFull) {
+                if (guessedWord === state.currentWord) {
+                    handleWin();
+                } else {
+                    elements.feedbackLabel.textContent = "Not quite, keep trying!";
+                    elements.feedbackLabel.className = 'text-xl feedback-try';
+                }
+            } else {
+                elements.feedbackLabel.textContent = "Arrange the letters!";
+                elements.feedbackLabel.className = 'text-xl text-gray-700 font-medium';
+            }
+        }
+
+        /** Handles the win condition. */
+        function handleWin() {
+            elements.feedbackLabel.textContent = `WELL DONE! The word is ${state.currentWord}!`;
+            elements.feedbackLabel.className = 'text-xl feedback-win';
+            elements.nextButton.disabled = false;
+            elements.hintButton.disabled = true;
+            elements.skipButton.disabled = true;
+
+            // Apply win animation and permanently disable dragging
+            state.balls.forEach(ball => {
+                ball.classList.add('win-animate');
+                ball.style.cursor = 'default';
+                ball.removeEventListener('mousedown', startDrag);
+                ball.removeEventListener('touchstart', startDrag);
+                ball.style.backgroundColor = '#10b981'; // Turn green
+                ball.style.boxShadow = '0 0 30px #10b981'; 
+            });
+            
+            // Remove animation class after it finishes
+            setTimeout(() => {
+                 state.balls.forEach(ball => ball.classList.remove('win-animate'));
+            }, 1500); // 0.5s * 3 iterations
+        }
+        
+        /** Starts a new round, cycling through the loaded vocabulary list. */
+        function newRound() {
+            if (vocabList.length === 0) {
+                showSetup(); // Go back to setup if list is empty
+                return;
+            }
+            
+            // Get the next word in the list (or loop back)
+            currentWordIndex = (currentWordIndex + 1) % vocabList.length;
+            const newWord = vocabList[currentWordIndex];
+            
+            renderRound(newWord);
+        }
+        
+        /** Skips the current word and moves to the next one. */
+        function skipWord() {
+            elements.feedbackLabel.textContent = `Skipped: The word was ${state.currentWord}.`;
+            elements.feedbackLabel.className = 'text-xl feedback-try';
+            // Disable buttons temporarily to prevent quick skips
+            elements.skipButton.disabled = true;
+            elements.hintButton.disabled = true; 
+            setTimeout(newRound, 1000); 
+        }
+
+        /** Places the correct letter in the next available empty slot. */
+        function giveHint() {
+            // 1. Find the first empty slot
+            let targetSlot = null;
+            let targetSlotIndex = -1;
+
+            for (let i = 0; i < state.slots.length; i++) {
+                if (!state.slotMap.has(state.slots[i].dataset.id)) {
+                    targetSlot = state.slots[i];
+                    targetSlotIndex = i;
+                    break;
+                }
+            }
+
+            if (!targetSlot) {
+                elements.feedbackLabel.textContent = "No empty slots left!";
+                return;
+            }
+
+            const targetChar = state.currentWord[targetSlotIndex];
+
+            // 2. Find an unplaced ball with the matching character
+            let availableBall = null;
+            for (const ball of state.balls) {
+                // Check if the ball is unplaced and matches the target character
+                if (!ball.dataset.slotId && ball.dataset.char === targetChar) {
+                    availableBall = ball;
+                    break;
+                }
+            }
+            
+            if (availableBall) {
+                // 3. Snap the ball into the slot
+                const slotRect = targetSlot.getBoundingClientRect();
+                const lettersRect = elements.lettersContainer.getBoundingClientRect();
+                
+                const slotRelativeX = slotRect.left - lettersRect.left;
+                const slotRelativeY = slotRect.top - lettersRect.top;
+                
+                availableBall.style.left = `${slotRelativeX}px`;
+                availableBall.style.top = `${slotRelativeY}px`;
+                
+                // 4. Update maps and disable interaction for the hinted ball
+                state.slotMap.set(targetSlot.dataset.id, availableBall);
+                availableBall.dataset.slotId = targetSlot.dataset.id;
+                
+                // Remove drag listeners to lock it in place
+                availableBall.removeEventListener('mousedown', startDrag);
+                availableBall.removeEventListener('touchstart', startDrag);
+                availableBall.style.cursor = 'default';
+                
+                // 5. Check if the hint completed the word
+                checkSolution();
+
+            } else {
+                 elements.feedbackLabel.textContent = "Error: Could not find matching unplaced ball!";
+            }
+        }
+
+
+        // --- Drag & Drop Handlers (Touch and Mouse) ---
+        
+        function startDrag(e) {
+            e.preventDefault(); 
+            
+            const ball = e.currentTarget;
+            const coords = getCoords(e);
+            
+            state.isDragging = true;
+            state.activeBall = ball;
+            
+            // Remove from old slot map if it was placed
+            const oldSlotId = ball.dataset.slotId;
+            if (oldSlotId) {
+                state.slotMap.delete(oldSlotId);
+                delete ball.dataset.slotId;
+            }
+            
+            // Get initial position relative to the viewport
+            const rect = ball.getBoundingClientRect();
+            
+            state.startX = coords.x;
+            state.startY = coords.y;
+            state.initialX = rect.left;
+            state.initialY = rect.top;
+
+            ball.classList.add('dragging');
+            
+            document.addEventListener('mousemove', duringDrag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', duringDrag, { passive: false });
+            document.addEventListener('touchend', endDrag);
+        }
+        
+        function duringDrag(e) {
+            if (!state.isDragging || !state.activeBall) return;
+            
+            const coords = getCoords(e);
+            const dx = coords.x - state.startX;
+            const dy = coords.y - state.startY;
+
+            const newX = state.initialX + dx;
+            const newY = state.initialY + dy;
+            
+            const lettersRect = elements.lettersContainer.getBoundingClientRect();
+            
+            state.activeBall.style.left = `${newX - lettersRect.left}px`;
+            state.activeBall.style.top = `${newY - lettersRect.top}px`;
+            
+            if (e.touches) e.preventDefault();
+        }
+
+        function endDrag(e) {
+            if (!state.isDragging || !state.activeBall) return;
+            
+            const ball = state.activeBall;
+            const ballRect = ball.getBoundingClientRect();
+            const ballCenter = { 
+                x: ballRect.left + ballRect.width / 2, 
+                y: ballRect.top + ballRect.height / 2 
+            };
+            
+            let snapped = false;
+            
+            // 1. Check for snapping to a slot
+            const slotElements = elements.slotsContainer.children;
+            const lettersRect = elements.lettersContainer.getBoundingClientRect();
+            
+            for (let i = 0; i < slotElements.length; i++) {
+                const slot = slotElements[i];
+                const slotRect = slot.getBoundingClientRect();
+                
+                const slotCenter = {
+                    x: slotRect.left + slotRect.width / 2,
+                    y: slotRect.top + slotRect.height / 2
+                };
+                
+                const distance = Math.hypot(ballCenter.x - slotCenter.x, ballCenter.y - slotCenter.y);
+                const SNAP_THRESHOLD = 50; 
+                
+                if (distance < SNAP_THRESHOLD) {
+                    if (!state.slotMap.has(slot.dataset.id)) {
+                        const slotRelativeX = slotRect.left - lettersRect.left;
+                        const slotRelativeY = slotRect.top - lettersRect.top;
+                        
+                        ball.style.left = `${slotRelativeX}px`;
+                        ball.style.top = `${slotRelativeY}px`;
+                        
+                        state.slotMap.set(slot.dataset.id, ball);
+                        ball.dataset.slotId = slot.dataset.id;
+                        snapped = true;
+                        break;
+                    }
+                }
+            }
+
+            // 2. If not snapped, return to the original pool position
+            if (!snapped) {
+                const originalPos = state.originalPosMap.get(ball.dataset.id);
+                if (originalPos) {
+                    ball.style.left = `${originalPos.x}px`;
+                    ball.style.top = `${originalPos.y}px`;
+                }
+            }
+            
+            // 3. Clean up
+            ball.classList.remove('dragging');
+            state.isDragging = false;
+            state.activeBall = null;
+            
+            document.removeEventListener('mousemove', duringDrag);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchmove', duringDrag);
+            document.removeEventListener('touchend', endDrag);
+
+            // 4. Check if we've solved the word
+            checkSolution();
+        }
+
+
+        // --- Initialization ---
+
+        window.onload = function() {
+            // Expose globally
+            window.newRound = newRound;
+            window.processVocabSource = processVocabSource;
+            window.skipWord = skipWord;
+            window.giveHint = giveHint;
+            
+            // Start on the setup screen
+            showSetup();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEFL Tools</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styling for Sleek, Reflective Buttons */
+        .tool-button {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(0, 0, 0, 0.2);
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+        }
+
+        /* The reflective sheen effect */
+        .tool-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 150%;
+            height: 150%;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.15) 35%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0.15) 65%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: translate(-100%, -100%) rotate(45deg);
+            transition: transform 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        /* Hover effect: makes the sheen appear to move across */
+        .tool-button:hover::after {
+            transform: translate(0%, 0%) rotate(45deg);
+        }
+
+        .tool-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15), 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Individual Button Styles (Background Gradients) --- */
+
+        .btn-blue-purple { background: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%); }
+        .btn-orange-red { background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%); }
+        .btn-green-lime { background: linear-gradient(135deg, #A8E063 0%, #56AB2F 100%); }
+        .btn-cyan-blue { background: linear-gradient(135deg, #4DD0E1 0%, #00BCD4 100%); }
+        .btn-magenta-pink { background: linear-gradient(135deg, #FF00FF 0%, #FF6B8B 100%); }
+        .btn-dark-teal { background: linear-gradient(135deg, #0093E9 0%, #00C4AA 100%); }
+        .btn-red-white { background: linear-gradient(135deg, #f00 0%, #dc3545 100%); } /* Standard Red */
+        .btn-gold-yellow { background: linear-gradient(135deg, #FDBB2D 0%, #22C55E 100%); }
+        .btn-deep-violet { background: linear-gradient(135deg, #3A1C71 0%, #D76D77 50%, #FFAF7B 100%); }
+        .btn-coral-peach { background: linear-gradient(135deg, #F47C66 0%, #FFCC99 100%); }
+        .btn-new-teal { background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%); }
+        .btn-cyan-green { background: linear-gradient(135deg, #2AF598 0%, #00C9FF 100%); }
+        .btn-sun-gold { background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%); }
+        .btn-forest-gold { background: linear-gradient(135deg, #004d40 0%, #ffeb3b 100%); }
+        .btn-sunset-pink { background: linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%); }
+
+        /* General Setup */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFF8DC; /* Cornsilk (a slightly deeper pale yellow) */
+            min-height: 100vh;
+        }
+
+        /* FIX: Custom, non-negotiable CSS Grid definition to force 5 columns */
+        .force-grid {
+            display: grid;
+            gap: 1.5rem; /* Matches gap-6 */
+        }
+
+        /* 5-column layout for wide screens (LG breakpoint and up) */
+        @media (min-width: 1024px) {
+            .force-grid {
+                grid-template-columns: repeat(5, 1fr) !important;
+            }
+        }
+        
+        /* 3-column layout for medium screens (MD to LG) */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .force-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+        }
+        
+        /* 2-column layout for small screens (SM to MD) */
+        @media (min-width: 640px) and (max-width: 767px) {
+            .force-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+        
+        /* 1-column layout for mobile (default) */
+        @media (max-width: 639px) {
+            .force-grid {
+                grid-template-columns: repeat(1, 1fr) !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto py-10">
+
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-extrabold text-gray-900 leading-tight tracking-tighter">
+                TEFL <span class="text-indigo-600">Tools</span>
+            </h1>
+            <p class="mt-3 text-xl text-gray-500 font-medium">
+                Your Digital Toolkit for Everyday Classroom Use
+            </p>
+        </header>
+
+        <!-- Tools Grid -->
+        <!-- Using the custom force-grid class with direct CSS to ensure layout stability -->
+        <main class="force-grid p-4">
+
+            <!-- 1. CSV Files Explained -->
+            <a href="./CSV explained.html" class="tool-button btn-blue-purple">
+                CSV Files Explained
+            </a>
+
+            <!-- 2. Classroom Management -->
+            <a href="./Classroom Management.html" class="tool-button btn-orange-red">
+                Classroom Management
+            </a>
+
+            <!-- 3. Vocab Trainer -->
+            <a href="./Vocab.html" class="tool-button btn-green-lime">
+                Vocab Trainer
+            </a>
+
+            <!-- 4. Speed Reader -->
+            <a href="./Speed Reader.html" class="tool-button btn-cyan-blue">
+                Speed Reader
+            </a>
+
+            <!-- 5. Word Cloud Generator -->
+            <a href="./Word Cloud Generator.html" class="tool-button btn-magenta-pink">
+                Word Cloud Generator
+            </a>
+
+            <!-- 6. Flashcard Generator -->
+            <a href="./flashcards.html" class="tool-button btn-dark-teal">
+                Flashcard Generator
+            </a>
+
+            <!-- 7. Noughts & Crosses (Tic-Tac-Toe) -->
+            <a href="./xandos.html" class="tool-button btn-red-white">
+                Noughts & Crosses
+            </a>
+
+            <!-- 8. Dice -->
+            <a href="./dice.html" class="tool-button btn-gold-yellow">
+                Dice
+            </a>
+
+            <!-- 9. Anagram -->
+            <a href="./anagram.html" class="tool-button btn-deep-violet">
+                Anagram
+            </a>
+
+            <!-- 10. Speaking Exam Generator -->
+            <a href="./Speaking.html" class="tool-button btn-coral-peach">
+                Speaking Exam Generator
+            </a>
+
+            <!-- 11. Random Number Generator -->
+            <a href="./Random number generator.html" class="tool-button btn-new-teal">
+                Random Number Generator
+            </a>
+            
+            <!-- 12. Hangman -->
+            <a href="./hangman.html" class="tool-button btn-cyan-green">
+                Hangman 
+            </a>
+
+            <!-- 13. Classroom Timer -->
+            <a href="./timer.html" class="tool-button btn-sun-gold">
+                Classroom Timer
+            </a>
+
+            <!-- 14. Pelmanism -->
+            <a href="./Pelmanism.html" class="tool-button btn-forest-gold">
+                Pelmanism
+            </a>
+
+            <!-- 15. Match Race -->
+            <a href="./match.html" class="tool-button btn-sunset-pink">
+                Match
+            </a>
+
+        </main>
+
+        <!-- Footer / Instructions -->
+        <footer class="mt-16 text-center text-gray-400 text-sm">
+            <p>
+                Teaching made Easy 
+            </p>
+        </footer>
+    </div>
+    
+    <script type="module">
+        // --- Firebase Setup (Mandatory for the collaborative environment) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Not used here, but kept in module context
+        
+        // Use window['__variable'] access pattern for robustness in module context
+        const firebaseConfig = JSON.parse(typeof window['__firebase_config'] !== 'undefined' ? window['__firebase_config'] : '{}');
+        const initialAuthToken = typeof window['__initial_auth_token'] !== 'undefined' ? window['__initial_auth_token'] : undefined;
+        
+        if (Object.keys(firebaseConfig).length > 0) {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            
+            // Authentication for the current user
+            const authenticate = async () => {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    console.log("Firebase initialized and user authenticated.");
+                } catch (error) {
+                    console.error("Firebase authentication failed:", error);
+                }
+            };
+            authenticate();
+        } else {
+            console.warn("Firebase configuration not found. Skipping initialization.");
+        }
+    </script>
+</body>
+</html>
