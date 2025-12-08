@@ -203,6 +203,11 @@
             <div class="flex justify-between items-center mb-8">
                 <p id="feedback-label" class="text-xl text-gray-700 font-medium">Arrange the letters!</p>
                 <div class="flex space-x-4">
+                    <button id="back-to-setup-button"
+                        onclick="window.showSetup()"
+                        class="nav-button px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600">
+                    Back to Setup
+                </button>
                     <button id="hint-button"
                             onclick="window.giveHint()"
                             class="nav-button px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 disabled:opacity-50">
@@ -308,21 +313,15 @@
             return { x: e.clientX, y: e.clientY };
         }
         
-        /** Parses the content (from file or paste) and starts the game. 
-         * Updated to only take the first column/word per line.
+/** Parses the content (from file or paste) and starts the game. 
+         * Now correctly handles words separated by comma OR line break.
         */
         function parseAndStartGame(content) {
-            // 1. Split content by newlines to get rows
-            const lines = content.split('\n').filter(line => line.trim().length > 0);
-            
-            // 2. Process each line: take only the first column
-            vocabList = lines
-                .map(line => {
-                    // Split by the first comma (standard CSV column separator) or treat the whole line as the word
-                    const firstColumn = line.split(',')[0];
-                    return firstColumn.trim().toUpperCase();
-                })
-                .filter(word => word.length > 0 && /^[A-Z\s]+$/.test(word)); // 3. Clean and filter
+            // New Logic: Split the content by either a newline or a comma using a regular expression.
+            // This creates an array where each item is a single word.
+            vocabList = content.split(/[\n,]+/)
+                .map(word => word.trim().toUpperCase()) // 1. Trim whitespace and convert to uppercase
+                .filter(word => word.length > 0 && /^[A-Z\s]+$/.test(word)); // 2. Filter out empty/invalid entries
 
             if (vocabList.length === 0) {
                 elements.feedbackLabel.textContent = "No valid words found in the source!";
@@ -723,7 +722,7 @@
             window.processVocabSource = processVocabSource;
             window.skipWord = skipWord;
             window.giveHint = giveHint;
-            
+            window.showSetup = showSetup;
             // Start on the setup screen
             showSetup();
         };
