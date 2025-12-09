@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoreboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS for Styling and Animation --- */
+        
+        /* New Color Palette (High Contrast, Sleek) */
+        :root {
+            --color-primary: #EF4444;    /* Strong Red (for subtraction/alert) */
+            --color-secondary: #FBBF24;  /* Amber/Gold (for crown/leaderboard text) */
+            --color-tertiary: #10B981;   /* Emerald Green (for addition/Go button) */
+            --color-accent: #3B82F6;     /* Blue (for leaderboard panel background) */
+            --color-background: #1f2937; /* Dark Background Start */
+            --color-background-end: #374151; /* Dark Background End */
+            --color-surface: #ffffff;    /* Main Card/Container Surface */
+            --color-text-dark: #1f2937;  /* Dark Text */
+            --color-text-light: #F9FAFB; /* Light Text */
+            --color-highlight: #FF9F1A;  /* Orange for shadows/accents */
+        }
+
+        /* Global & Layout Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--color-background), var(--color-background-end));
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--color-text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 95vw;
+            max-width: 1200px;
+            background-color: var(--color-surface);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            /* Ensure the container uses flex for internal layout control */
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--color-primary);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 900;
+        }
+
+        /* --- Global Button Styling --- */
+        button, #index-link {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            margin: 5px;
+            font-size: 1.05em;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        button:active, #index-link:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 2. Index Link (Top-Left Position and Style) */
+        #index-link-container {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start; /* Push button to the left */
+            margin-bottom: 10px; 
+        }
+
+        #index-link {
+            background-color: #6B7280;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+            box-shadow: 0 3px 0 #4B5563;
+            margin: 0;
+        }
+        
+        #index-link:hover {
+            background-color: #4B5563;
+        }
+
+        /* --- Screen-Specific Layouts --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%; /* Important for centering content */
+        }
+        
+        /* 1. Ensure only the first screen is active on load */
+        #setup-screen.active {
+            display: flex;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+        
+        /* Remaining styles are maintained */
+
+        #setup-screen select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid var(--color-accent);
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #team-names-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+        }
+
+        .team-input-group {
+            display: flex;
+            align-items: center;
+            background-color: #F3F4F6;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #D1D5DB;
+        }
+
+        .team-input-group input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #E5E7EB;
+            border-radius: 4px;
+            margin-right: 5px;
+            font-size: 1em;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .team-input-group span {
+            font-weight: 600;
+            margin-right: 5px;
+            color: var(--color-accent);
+        }
+
+        /* --- Scoreboard Screen Styling --- */
+        #scoreboard-screen {
+            flex-direction: row; 
+            align-items: flex-start;
+            gap: 30px;
+            text-align: left;
+        }
+        
+        #scoreboard-controls {
+            flex-grow: 2;
+            min-width: 600px;
+        }
+
+        #leaderboard-panel {
+            flex-grow: 1;
+            min-width: 300px;
+            background-color: var(--color-accent);
+            color: var(--color-text-light);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #leaderboard-panel h2 {
+            margin-top: 0;
+            color: var(--color-secondary);
+            font-size: 1.8em;
+            font-weight: 900;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        /* --- Team Grid and Selection --- */
+        #team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .team-card {
+            background-color: #FEF3C7;
+            padding: 20px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            text-align: center;
+            user-select: none;
+        }
+
+        .team-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .team-card.selected {
+            border-color: var(--color-primary);
+            background-color: #FCD34D;
+            transform: scale(1.03);
+            box-shadow: 0 0 15px rgba(255, 165, 0, 0.5);
+        }
+
+        .team-card h3 {
+            margin: 0 0 5px 0;
+            color: var(--color-text-dark);
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .team-card .score {
+            font-size: 3.5em;
+            font-weight: 900;
+            color: var(--color-primary);
+        }
+
+        /* --- Control Buttons (Points) --- */
+        #point-controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #E5E7EB;
+            border-radius: 12px;
+        }
+
+        #point-controls button {
+            width: 180px;
+            height: 80px;
+            font-size: 1.8em;
+            color: white;
+        }
+
+        #add-point {
+            background-color: var(--color-tertiary);
+            box-shadow: 0 6px 0 #059669;
+        }
+
+        #add-point:active {
+            box-shadow: 0 2px 0 #059669;
+        }
+
+        #minus-point {
+            background-color: var(--color-primary);
+            box-shadow: 0 6px 0 #DC2626;
+        }
+
+        #minus-point:active {
+            box-shadow: 0 2px 0 #DC2626;
+        }
+
+        /* --- Leaderboard List --- */
+        #leaderboard {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        #leaderboard li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        #leaderboard li:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-rank {
+            width: 30px;
+            text-align: right;
+            margin-right: 10px;
+            font-weight: 900;
+        }
+
+        .leaderboard-score {
+            font-size: 1.5em;
+            color: var(--color-secondary);
+            font-weight: 900;
+        }
+
+        .rank-1 {
+            color: var(--color-secondary);
+            font-size: 1.6em;
+        }
+        
+        #leaderboard-panel button {
+            background-color: var(--color-secondary); 
+            color: var(--color-text-dark);
+            margin-top: 20px; 
+            width: 100%;
+            box-shadow: 0 4px 0 #D97706;
+        }
+        
+        #leaderboard-panel button:active {
+            box-shadow: 0 1px 0 #D97706;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <audio id="sound-point" src="https://assets.mixkit.co/sfx/preview/mixkit-game-positive-alert-2023.mp3" preload="auto"></audio>
+        <audio id="sound-minus" src="https://assets.mixkit.co/sfx/preview/mixkit-game-negative-alert-2032.mp3" preload="auto"></audio>
+        <audio id="sound-win" src="https://assets.mixkit.co/sfx/preview/mixkit-game-success-alert-2005.mp3" preload="auto"></audio>
+
+        <div id="setup-screen" class="screen active">
+            
+            <div id="index-link-container">
+                <a href="index.html" id="index-link">
+                    Back to tools
+                </a>
+            </div>
+            
+            <h1>SCOREBOARD SETUP</h1>
+            <label for="team-count">How many teams?</label>
+            <select id="team-count" onchange="generateTeamInputs()">
+                <script>
+                    for (let i = 2; i <= 12; i++) {
+                        document.write(`<option value="${i}">${i} Teams</option>`);
+                    }
+                </script>
+            </select>
+
+            <div id="team-names-list">
+                </div>
+
+            <button onclick="startScoreboard()" style="background-color: var(--color-tertiary); color: white; margin-top: 20px;">
+                GO
+            </button>
+        </div>
+
+        <div id="scoreboard-screen" class="screen">
+            <div id="scoreboard-controls">
+                <h2>Live Score Tally</h2>
+                <p>Selected Team: <span id="selected-team-name" style="color: var(--color-primary); font-weight: bold;">None</span></p>
+
+                <div id="team-grid">
+                    </div>
+
+                <div id="point-controls">
+                    <button id="add-point" onclick="changeScore(1)">+ 1 Point</button>
+                    <button id="minus-point" onclick="changeScore(-1)">- 1 Point</button>
+                </div>
+            </div>
+
+            <div id="leaderboard-panel">
+                <h2>🏆 League Table</h2>
+                <ul id="leaderboard">
+                    </ul>
+                <button onclick="showSetupScreen()">
+                    New Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const FUN_NAMES = [
+            "Team Banana", "Team Chocolate", "Team Skaters", "The Unicorns",
+            "The Dino-Mites", "The Superstars", "The Rockets", "The Brainiacs",
+            "The Pizza Crew", "The Fireballs", "The Cool Cats", "The Waffles"
+        ];
+        
+        let teams = [];
+        let selectedTeamId = null;
+
+        const soundPoint = document.getElementById('sound-point');
+        const soundMinus = document.getElementById('sound-minus');
+        const soundWin = document.getElementById('sound-win');
+
+        // Helper to shuffle an array
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
+        // --- 1. Setup Screen Logic ---
+        
+        function generateTeamInputs() {
+            const count = parseInt(document.getElementById('team-count').value);
+            const listContainer = document.getElementById('team-names-list');
+            listContainer.innerHTML = '';
+            
+            const randomNames = shuffleArray([...FUN_NAMES]);
+
+            for (let i = 0; i < count; i++) {
+                const teamName = randomNames[i] || `Team ${i + 1}`; 
+
+                const group = document.createElement('div');
+                group.className = 'team-input-group';
+                
+                group.innerHTML = `
+                    <span>Team ${i + 1}:</span>
+                    <input type="text" id="team-${i}-name" value="${teamName}" placeholder="Enter Team Name">
+                `;
+                listContainer.appendChild(group);
+            }
+        }
+        
+        function startScoreboard() {
+            const count = parseInt(document.getElementById('team-count').value);
+            teams = [];
+            selectedTeamId = null; 
+
+            for (let i = 0; i < count; i++) {
+                const nameInput = document.getElementById(`team-${i}-name`);
+                teams.push({
+                    id: i,
+                    name: nameInput.value.trim() || `Team ${i + 1}`,
+                    score: 0
+                });
+            }
+
+            renderTeamGrid();
+            updateLeaderboard();
+            switchScreen('scoreboard-screen');
+        }
+        
+        // --- 2. Scoreboard Screen Logic ---
+        
+        function renderTeamGrid() {
+            const grid = document.getElementById('team-grid');
+            grid.innerHTML = '';
+            
+            teams.forEach(team => {
+                const card = document.createElement('div');
+                card.className = `team-card${team.id === selectedTeamId ? ' selected' : ''}`;
+                card.dataset.teamId = team.id;
+                card.onclick = () => selectTeam(team.id);
+
+                card.innerHTML = `
+                    <h3>${team.name}</h3>
+                    <div class="score">${team.score}</div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            const selectedTeam = teams.find(t => t.id === selectedTeamId);
+            document.getElementById('selected-team-name').textContent = selectedTeam ? selectedTeam.name : 'None';
+        }
+
+        function selectTeam(id) {
+            selectedTeamId = (selectedTeamId === id) ? null : id; 
+            renderTeamGrid();
+        }
+
+        // Handles adding or subtracting points
+        function changeScore(delta) {
+            if (selectedTeamId === null) {
+                alert("Please select a team first!");
+                return;
+            }
+
+            const team = teams.find(t => t.id === selectedTeamId);
+            if (team) {
+                const oldScore = team.score;
+                // 5. Allow scores to go below zero
+                team.score += delta;
+                
+                if (team.score > oldScore) {
+                    soundPoint.currentTime = 0; // Reset sound for quick playback
+                    soundPoint.play();
+                } else if (team.score < oldScore) {
+                    soundMinus.currentTime = 0; // Reset sound for quick playback
+                    soundMinus.play();
+                }
+                
+                renderTeamGrid();
+                updateLeaderboard();
+            }
+        }
+        
+        // --- 3. Leaderboard Logic ---
+
+        function updateLeaderboard() {
+            // Sort teams: highest score first, then by original ID (for stable tie-breaking)
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score || a.id - b.id);
+            const leaderboardList = document.getElementById('leaderboard');
+            leaderboardList.innerHTML = '';
+            
+            const previousWinner = leaderboardList.querySelector('.rank-1')?.textContent.split(': ')[0];
+            const currentWinner = sortedTeams[0].name;
+
+            sortedTeams.forEach((team, index) => {
+                const li = document.createElement('li');
+                const rank = index + 1;
+                
+                let rankDisplay;
+                if (rank === 1) {
+                    rankDisplay = `<span class="rank-1">👑</span>`;
+                } else {
+                    rankDisplay = `<span class="leaderboard-rank">${rank}.</span>`;
+                }
+
+                li.innerHTML = `
+                    ${rankDisplay} 
+                    <span>${team.name}</span>
+                    <span class="leaderboard-score">${team.score}</span>
+                `;
+                leaderboardList.appendChild(li);
+            });
+            
+            if (currentWinner && currentWinner !== previousWinner && sortedTeams[0].score > sortedTeams[1]?.score) {
+                 soundWin.currentTime = 0;
+                 soundWin.play();
+            }
+        }
+
+        // --- Global Screen Management ---
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showSetupScreen() {
+            switchScreen('setup-screen');
+        }
+
+        // Initial setup on load
+        window.onload = () => {
+            generateTeamInputs(); 
+            switchScreen('setup-screen'); // 1. Ensure setup screen is active on load
+        };
+
+    </script>
+</body>
+</html>
