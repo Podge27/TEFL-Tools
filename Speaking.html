@@ -106,6 +106,22 @@
             border: 2px solid var(--cambridge-yellow);
         }
 
+        /* Timer Set Buttons */
+        .timer-set-button {
+            background-color: var(--darker-blue);
+            color: var(--cambridge-yellow);
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--cambridge-yellow);
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 0.9rem;
+        }
+        .timer-set-button:hover {
+            background-color: #336699;
+            color: white;
+        }
+        
         /* Spidergram Styles (Part 3) */
         #spidergram-central {
             background-color: var(--deep-blue);
@@ -173,7 +189,7 @@
             text-align: center;
         }
         
-        /* New Back Button Style (FIXED for Top Header Placement) */
+        /* New Back Button Style */
         .back-button {
             background-color: var(--darker-blue); 
             color: white;
@@ -209,11 +225,9 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <label class="text-sm text-white">Set (s):</label>
-                <input type="number" id="time-input" value="120" min="5" max="999" 
-                       class="w-16 p-1 text-center bg-white text-gray-800 rounded-md text-sm border-none"
-                       onchange="setTargetTimeFromInput()">
-
+                <button id="set-2min-button" class="timer-set-button">2 min</button>
+                <button id="set-1min-button" class="timer-set-button app-btn-secondary">1 min</button>
+                
                 <div id="timer-label" class="text-lg">02:00</div>
 
                 <button id="start-pause-button" class="timer-control">▶</button>
@@ -306,7 +320,7 @@
         const part3Screen = document.getElementById('part3-screen');
         const part4Screen = document.getElementById('part4-screen');
         const timerLabel = document.getElementById('timer-label');
-        const timeInput = document.getElementById('time-input');
+        // Removed: const timeInput = document.getElementById('time-input');
         const startPauseButton = document.getElementById('start-pause-button');
         const resetButton = document.getElementById('reset-button');
         const spidergramGrid = document.getElementById('spidergram-grid');
@@ -318,6 +332,9 @@
         const generateNewButtonP3 = document.getElementById('generate-new-button-p3');
         const backToLevelsButtonP3 = document.getElementById('back-to-levels-p3');
         const backToToolsButtonTop = document.getElementById('back-to-tools-button-top');
+        // NEW: Time Set Buttons
+        const set2MinButton = document.getElementById('set-2min-button'); 
+        const set1MinButton = document.getElementById('set-1min-button'); 
 
 
         // --- Data Loading (Updated to use Fetch) ---
@@ -414,7 +431,7 @@
             return filteredTasks[randomIndex];
         }
 
-        // --- Timer Functions (Unchanged) ---
+        // --- Timer Functions ---
 
         function secondsToDisplay(seconds) {
             const m = Math.floor(seconds / 60);
@@ -433,14 +450,11 @@
             }
         }
         
-        function setTargetTimeFromInput() {
-            const inputSeconds = parseInt(timeInput.value);
-            if (!isNaN(inputSeconds) && inputSeconds >= 5) {
-                targetTimeSeconds = inputSeconds;
-                resetTimerToTarget();
-            } else {
-                 timeInput.value = targetTimeSeconds;
-            }
+        // NEW: Function to set and reset time to a specific value
+        function setAndResetTimer(seconds) {
+            pauseTimer();
+            targetTimeSeconds = seconds;
+            resetTimerToTarget();
         }
 
         function startTimer() {
@@ -471,6 +485,7 @@
             startPauseButton.textContent = "▶";
         }
 
+        // UPDATED: This now relies only on the global targetTimeSeconds
         function resetTimerToTarget() {
             pauseTimer();
             timeRemaining = targetTimeSeconds;
@@ -480,7 +495,7 @@
             timerLabel.classList.remove('time-alert');
         }
 
-        // --- UI Functions (Unchanged) ---
+        // --- UI Functions ---
 
         function toggleReveal(element) {
             if (element.classList.contains('hidden-prompt')) {
@@ -494,6 +509,7 @@
             }
         }
         
+        // UPDATED: showPart3 now calls setAndResetTimer
         function showPart3(generateNew = false) {
             if (EXAM_TASK_SETS.length === 0 || !currentLevel) return;
 
@@ -512,9 +528,9 @@
             levelErrorMessage.classList.add('hidden');
             
             const data = currentTaskData.part3_data;
-            targetTimeSeconds = currentTaskData.set_time_p3;
-            timeInput.value = targetTimeSeconds;
-            resetTimerToTarget();
+            
+            // Set the timer to the Part 3 target time (e.g., 120 seconds)
+            setAndResetTimer(currentTaskData.set_time_p3); 
 
             hideAllScreens();
             part3Screen.classList.remove('hidden');
@@ -562,13 +578,14 @@
             window.scrollTo(0, 0); 
         }
 
+        // UPDATED: showPart4 now calls setAndResetTimer
         function showPart4() {
             if (!currentTaskData) return;
 
             const data = currentTaskData.part3_data;
-            targetTimeSeconds = currentTaskData.set_time_p4;
-            timeInput.value = targetTimeSeconds;
-            resetTimerToTarget();
+            
+            // Set the timer to the Part 4 target time (e.g., 240 seconds)
+            setAndResetTimer(currentTaskData.set_time_p4); 
             
             pauseTimer();
 
@@ -611,7 +628,10 @@
         });
 
         resetButton.addEventListener('click', resetTimerToTarget);
-        timeInput.addEventListener('change', setTargetTimeFromInput);
+        
+        // NEW: Timer Set Handlers
+        set2MinButton.addEventListener('click', () => setAndResetTimer(120));
+        set1MinButton.addEventListener('click', () => setAndResetTimer(60));
         
         // Navigation
         goToPart4Button.addEventListener('click', showPart4);
@@ -621,7 +641,7 @@
         part3FollowUpQ.addEventListener('click', () => toggleReveal(part3FollowUpQ));
         backToLevelsButtonP3.addEventListener('click', goBackToLevels); // Button on Part 3: Back to Tools
 
-        // NEW: Top button handler for external link
+        // Top button handler for external link
         backToToolsButtonTop.addEventListener('click', () => {
             window.location.href = 'index.html';
         });
