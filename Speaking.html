@@ -225,6 +225,7 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <button id="set-4min-button" class="timer-set-button app-btn-secondary">4 min</button>
                 <button id="set-2min-button" class="timer-set-button">2 min</button>
                 <button id="set-1min-button" class="timer-set-button app-btn-secondary">1 min</button>
                 
@@ -320,7 +321,6 @@
         const part3Screen = document.getElementById('part3-screen');
         const part4Screen = document.getElementById('part4-screen');
         const timerLabel = document.getElementById('timer-label');
-        // Removed: const timeInput = document.getElementById('time-input');
         const startPauseButton = document.getElementById('start-pause-button');
         const resetButton = document.getElementById('reset-button');
         const spidergramGrid = document.getElementById('spidergram-grid');
@@ -333,6 +333,7 @@
         const backToLevelsButtonP3 = document.getElementById('back-to-levels-p3');
         const backToToolsButtonTop = document.getElementById('back-to-tools-button-top');
         // NEW: Time Set Buttons
+        const set4MinButton = document.getElementById('set-4min-button'); // NEW
         const set2MinButton = document.getElementById('set-2min-button'); 
         const set1MinButton = document.getElementById('set-1min-button'); 
 
@@ -450,7 +451,7 @@
             }
         }
         
-        // NEW: Function to set and reset time to a specific value
+        // Function to set and reset time to a specific value
         function setAndResetTimer(seconds) {
             pauseTimer();
             targetTimeSeconds = seconds;
@@ -485,7 +486,7 @@
             startPauseButton.textContent = "▶";
         }
 
-        // UPDATED: This now relies only on the global targetTimeSeconds
+        // This relies only on the global targetTimeSeconds
         function resetTimerToTarget() {
             pauseTimer();
             timeRemaining = targetTimeSeconds;
@@ -509,7 +510,7 @@
             }
         }
         
-        // UPDATED: showPart3 now calls setAndResetTimer
+        // showPart3 now calls setAndResetTimer
         function showPart3(generateNew = false) {
             if (EXAM_TASK_SETS.length === 0 || !currentLevel) return;
 
@@ -578,7 +579,7 @@
             window.scrollTo(0, 0); 
         }
 
-        // UPDATED: showPart4 now calls setAndResetTimer
+        // showPart4 now calls setAndResetTimer
         function showPart4() {
             if (!currentTaskData) return;
 
@@ -630,6 +631,7 @@
         resetButton.addEventListener('click', resetTimerToTarget);
         
         // NEW: Timer Set Handlers
+        set4MinButton.addEventListener('click', () => setAndResetTimer(240));
         set2MinButton.addEventListener('click', () => setAndResetTimer(120));
         set1MinButton.addEventListener('click', () => setAndResetTimer(60));
         
