@@ -38,7 +38,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            height: 240px; /* RESTORED HEIGHT for 'y' visibility */
+            height: 220px; /* Reduced height to minimize white space below name */
         }
         
         .student-card:hover {
@@ -66,41 +66,39 @@
 
         /* Avatar Placeholder/Image Container Styling */
         .avatar {
-            width: 60px; 
-            height: 60px; 
-            border-radius: 50%;
+            width: 80px; /* Increased size */
+            height: 80px; /* Increased size */
+            border-radius: 12px; /* Changed from 50% to 12px (rounded square) */
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 20px; 
+            font-size: 24px; /* Slightly larger initials for bigger avatar */
             font-weight: 700;
             color: white;
-            margin-bottom: 2px; 
+            margin-bottom: 4px; /* Adjusted vertical space below avatar */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             overflow: hidden; 
         }
 
-        /* Avatar Image Styling (Quality Fix) */
+        /* Avatar Image Styling (Fixing Quality and Layout Shift) */
         .avatar img {
-            width: 100%;
+            width: 100%; /* Explicitly set 100% width and height */
             height: 100%;
-            object-fit: cover;
-            /* Further attempts to reduce pixellation / improve scaling */
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-            image-rendering: pixelated; /* Safari specific */
-            /* Some other attempts - browser interpretation varies */
-            -ms-interpolation-mode: nearest-neighbor;
-            interpolation-mode: nearest-neighbor;
+            /* --- AGGRESSIVE ANTI-ALIASING FIXES --- */
+            image-rendering: auto; 
+            image-rendering: optimizeQuality; /* W3C standard */
+            -webkit-optimize-contrast: high; /* Chrome/Safari specific */
+            -ms-interpolation-mode: bicubic; /* IE/Edge legacy */
+            transform: translate3d(0, 0, 0); /* Strongest GPU hint for smoother scaling */
         }
         
         /* Utility Classes */
         .points-text {
-            font-size: 2rem; 
+            font-size: 2.25rem; /* Slightly larger points text to match larger card */
             line-height: 1;
             font-weight: 800;
             color: #1f2937;
-            margin: 2px 0; 
+            margin: 2px 0; /* Keep small buffer */
         }
         .name-text {
             font-size: 0.9rem; 
@@ -110,7 +108,7 @@
             white-space: nowrap;
             text-overflow: ellipsis;
             width: 100%;
-            margin-bottom: 4px; 
+            margin-bottom: 0; /* Reduced space below name to push it closer to buttons */
         }
 
         /* Absent Button Padding Reduction */
@@ -344,7 +342,7 @@
             script.src = "https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js";
             script.onload = () => { toneLoaded = true; };
             document.head.appendChild(script);
-        } catch (e) {
+        } catch (e) { 
             console.warn("Tone.js not available. Using silent feedback. (Error: Script loading failed)");
         }
 
@@ -355,9 +353,10 @@
                 if (Tone.context.state !== 'running') {
                     Tone.context.resume();
                 }
+                // UPDATED: High frequency and short duration for a positive chime
                 const synth = new Tone.MembraneSynth().toDestination();
-                synth.triggerAttackRelease("C4", "8n", Tone.now(), 0.8);
-                synth.triggerAttackRelease("G4", "8n", Tone.now() + 0.1, 0.8);
+                synth.triggerAttackRelease("G6", "16n", Tone.now(), 0.8);
+                synth.triggerAttackRelease("C7", "16n", Tone.now() + 0.1, 0.8);
             } catch (e) { console.error("Tone.js error during sound play:", e); }
         };
 
@@ -490,9 +489,9 @@
             let avatarHTML = `
                 <div class="avatar" style="background-color: ${avatarData.color};">
                     <img src="${imagePath}" 
-                         alt="${student.name[0]}"
-                         onerror="this.parentElement.innerHTML='${avatarData.initial}'; 
-                                  this.parentElement.style.backgroundColor='${avatarData.color}'">
+                        alt="${student.name[0]}"
+                        onerror="this.parentElement.innerHTML='${avatarData.initial}'; 
+                                 this.parentElement.style.backgroundColor='${avatarData.color}'">
                 </div>
             `;
             
@@ -765,7 +764,7 @@
             // Ensure the pick label is visible
             ui.currentPickLabel.classList.remove('hidden', 'sm:hidden');
 
-            playSound(1); // Play a positive sound when a student is picked
+            // REMOVED: playSound(1); // Removed positive sound for random pick
         };
         
         /** Displays the group size selection modal. */
