@@ -78,6 +78,21 @@
         .app-btn-secondary:hover {
             background-color: #4477aa;
         }
+        .back-button {
+    /* @apply bg-transparent text-white font-bold p-2 text-lg hover:text-gray-400 transition; */
+            background-color: transparent;
+            color: white;
+            font-weight: bold;
+            padding: 8px; /* Equivalent to p-2 */
+            font-size: 1.125rem; /* Equivalent to text-lg */
+            transition: color 0.3s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none; /* Crucial for <a> tags */
+        } 
+        .back-button:hover {
+         color: #9ca3af; /* Equivalent to hover:text-gray-400 */
+        }
 
         /* Timer Styles */
         #timer-label {
