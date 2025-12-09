@@ -78,21 +78,6 @@
         .app-btn-secondary:hover {
             background-color: #4477aa;
         }
-        .back-button {
-    /* @apply bg-transparent text-white font-bold p-2 text-lg hover:text-gray-400 transition; */
-            background-color: transparent;
-            color: white;
-            font-weight: bold;
-            padding: 8px; /* Equivalent to p-2 */
-            font-size: 1.125rem; /* Equivalent to text-lg */
-            transition: color 0.3s;
-            border: none;
-            cursor: pointer;
-            text-decoration: none; /* Crucial for <a> tags */
-        } 
-        .back-button:hover {
-         color: #9ca3af; /* Equivalent to hover:text-gray-400 */
-        }
 
         /* Timer Styles */
         #timer-label {
@@ -188,18 +173,40 @@
             text-align: center;
         }
         
-        /* New Back Button Style */
+        /* New Back Button Style (FIXED for Top Header Placement) */
         .back-button {
-            @apply bg-transparent text-white font-bold p-2 text-lg hover:text-gray-400 transition;
+            background-color: var(--darker-blue); 
+            color: white;
+            font-weight: bold;
+            padding: 8px 12px;
+            font-size: 1rem; 
+            transition: background-color 0.3s, color 0.3s;
+            border: 2px solid var(--text-light-blue); 
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-button:hover {
+            background-color: #336699; 
+            color: var(--cambridge-yellow);
         }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div id="app-container" class="w-full"> <div class="flex justify-between items-center mb-6 px-4 sm:px-8 pt-4"> 
-            <h1 class="text-xl font-bold text-white">
-                Speaking Exam Practice
-            </h1>
+    <div id="app-container" class="w-full"> 
+
+        <div class="flex justify-between items-center mb-6 px-4 sm:px-8 pt-4"> 
+            
+            <div class="flex items-center gap-4">
+                <button id="back-to-tools-button-top" class="back-button hidden">
+                    ← Back to Tools
+                </button>
+                <h1 class="text-xl font-bold text-white">
+                    Speaking Exam Practice
+                </h1>
+            </div>
 
             <div class="flex items-center gap-2">
                 <label class="text-sm text-white">Set (s):</label>
@@ -218,11 +225,7 @@
         <div class="px-4 sm:px-8 pb-4">
 
             <div id="level-selection-screen" class="screen-wrapper">
-                <div class="flex justify-start w-full max-w-[500px] mx-auto mb-6">
-                    <a href="index.html" class="back-button">
-                        ← Back to Tools
-                    </a>
-                </div>
+                
                 <h2 class="text-3xl font-extrabold text-white mb-8">Select Exam Level</h2>
                 <div id="level-buttons-container" class="flex gap-6 justify-center">
                     </div>
@@ -232,7 +235,7 @@
 
             <div id="part3-screen" class="screen-wrapper hidden">
                 <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
-                    <button id="back-to-levels-p3" class="back-button">← Back</button>
+                    <button id="back-to-levels-p3" class="back-button">← Back to Tools</button>
                     <h2 class="text-2xl font-extrabold text-center text-white mr-auto ml-4">Part 3: Collaborative Task (<span id="current-level-display"></span>)</h2>
                 </div>
                 
@@ -314,8 +317,9 @@
         const generateNewButtonP4 = document.getElementById('generate-new-button'); 
         const generateNewButtonP3 = document.getElementById('generate-new-button-p3');
         const backToLevelsButtonP3 = document.getElementById('back-to-levels-p3');
+        const backToToolsButtonTop = document.getElementById('back-to-tools-button-top');
 
-        
+
         // --- Data Loading (Updated to use Fetch) ---
 
         /** Loads exam data by fetching the external JSON file. */
@@ -354,7 +358,7 @@
             }
         }
 
-        // --- Level Selection and Navigation (Rest are unchanged) ---
+        // --- Level Selection and Navigation ---
         
         function hideAllScreens() {
             levelSelectionScreen.classList.add('hidden');
@@ -366,6 +370,7 @@
             hideAllScreens();
             window.scrollTo(0, 0); 
             levelSelectionScreen.classList.remove('hidden');
+            backToToolsButtonTop.classList.remove('hidden'); // SHOW BUTTON HERE
             levelButtonsContainer.innerHTML = '';
             levelErrorMessage.classList.add('hidden');
             currentLevel = null; 
@@ -387,6 +392,7 @@
         
         function selectLevel(level) {
             currentLevel = level;
+            backToToolsButtonTop.classList.add('hidden'); // HIDE BUTTON WHEN STARTING TASK
             showPart3(true);
         }
         
@@ -610,11 +616,15 @@
         // Navigation
         goToPart4Button.addEventListener('click', showPart4);
         backToPart3Button.addEventListener('click', () => showPart3(false));
-        generateNewButtonP4.addEventListener('click', () => showPart3(true));
+        generateNewButtonP4.addEventListener('click', () => showPart3(true)); // Button on Part 4: Generate New Task
         generateNewButtonP3.addEventListener('click', () => showPart3(true));
         part3FollowUpQ.addEventListener('click', () => toggleReveal(part3FollowUpQ));
-        backToLevelsButtonP3.addEventListener('click', goBackToLevels);
+        backToLevelsButtonP3.addEventListener('click', goBackToLevels); // Button on Part 3: Back to Tools
 
+        // NEW: Top button handler for external link
+        backToToolsButtonTop.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
 
         // --- Initialization (Updated to use async load) ---
         document.addEventListener('DOMContentLoaded', async () => {
