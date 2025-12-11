@@ -51,7 +51,6 @@
                     <th>Effort (1-5)</th>
                     <th>Participation (1-5)</th>
                     <th style="width: 25%;">Individual Comment (Optional)</th>
-                    
                     <th style="width: 10%;">
                         <div class="input-group">
                             Exam Result (%)
@@ -67,6 +66,11 @@
         <div class="comment-area">
             <h2>General Class Comment</h2>
             <textarea id="class-comment-box" rows="5" placeholder="Type a general comment here that will be appended to the bottom of every report."></textarea>
+        </div>
+
+        <div class="comment-area" style="margin-top: 15px;">
+            <h2>File Name Prefix</h2>
+            <input type="text" id="filename-prefix" placeholder="Enter file name (e.g., 'Reports_2025_Class_A')">
         </div>
 
         <div style="margin-top: 20px;">
@@ -126,7 +130,7 @@
                         </select>`;
                 });
 
-                // 3. Individual Comment (Moved here)
+                // 3. Individual Comment
                 row.insertCell().innerHTML = `<input type="text" class="individual-comment" placeholder="Student-specific comment">`;
 
                 // 4. Exam Result 
@@ -165,19 +169,16 @@
             
             // 2. Add Individual Comment
             if (individualComment) {
-                // Ensure there is spacing before adding the individual comment
                 report += (report.endsWith(": ") ? "" : " ") + individualComment;
             }
             
             // 3. Add Exam Result
             if (examResult) {
-                // Ensure there is spacing before adding the exam result
                 report += (report.endsWith(": ") ? "" : " ") + `${examResult}% en el examen.`;
             }
 
             // 4. Add Class Comment
             if (classComment) {
-                // Add the class comment
                 report += (report.endsWith(": ") ? "" : " ") + classComment;
             }
 
@@ -265,7 +266,7 @@
             }
         }
         
-        // UPDATED: Saves as Word-compatible HTML file (.doc)
+        // UPDATED: Saves as Word-compatible HTML file (.doc) using a custom filename
         function saveReports() {
             const reportsText = document.getElementById('reports-output').innerText;
             if (!reportsText) {
@@ -273,13 +274,18 @@
                 return;
             }
             
+            // Get user-defined filename prefix
+            let filename = document.getElementById('filename-prefix').value.trim();
+            if (!filename) {
+                filename = 'student_reports'; // Default name if field is empty
+            }
+            
             // Format the text content into a simple, Word-friendly HTML structure
-            // Replace double line breaks with <p> tags and single breaks with <br>
             const htmlContent = `
                 <html>
                 <head>
                     <meta charset="UTF-8">
-                    <title>Student Reports</title>
+                    <title>${filename}</title>
                 </head>
                 <body>
                     ${reportsText.split('\n\n').map(p => 
@@ -288,13 +294,15 @@
                 </html>
             `;
             
-            // Save as .doc. Microsoft Word recognizes this as HTML/MHT and opens it correctly.
+            // This triggers the browser's "Save As" dialog, allowing the user to 
+            // set the save location and confirm the filename.
             const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const downloadLink = document.getElementById('download-link');
             
             downloadLink.href = url;
-            downloadLink.download = 'student_reports.doc'; // Use .doc extension
+            // Set the suggested filename using the user's prefix
+            downloadLink.download = `${filename}.doc`; 
             downloadLink.click();
             
             URL.revokeObjectURL(url);
@@ -305,6 +313,7 @@
             document.querySelectorAll('select').forEach(select => select.value = '');
             document.getElementById('class-comment-box').value = '';
             document.getElementById('reports-output').innerText = '';
+            document.getElementById('filename-prefix').value = ''; // Clear filename too
         }
 
         // --- 5. Initialization ---
