@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Report Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f9; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 8px 5px; text-align: left; border: 1px solid #ddd; font-size: 0.9em; }
+        th { background-color: #007bff; color: white; }
+        input[type="text"], select { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; }
+        .comment-area { margin-top: 20px; }
+        textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; resize: vertical; }
+        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; transition: background-color 0.3s; }
+        button:hover { background-color: #218838; }
+        #clear-btn { background-color: #dc3545; }
+        #clear-btn:hover { background-color: #c82333; }
+        #reports-output { margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 4px; white-space: pre-wrap; min-height: 200px; border: 1px solid #ced4da; }
+        .paste-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+        .paste-btn:hover { background-color: #0056b3; }
+        .input-group { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Student Report Generator (JSON)</h1>
+
+        <table id="input-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">
+                        <div class="input-group">
+                            Student Name
+                            <button class="paste-btn" onclick="pasteNames()">Paste</button>
+                        </div>
+                    </th>
+                    <th>In-Class Work (1-5)</th>
+                    <th>Homework (1-5)</th>
+                    <th>Effort (1-5)</th>
+                    <th>Participation (1-5)</th>
+                    <th style="width: 25%;">Individual Comment (Optional)</th>
+                    
+                    <th style="width: 10%;">
+                        <div class="input-group">
+                            Exam Result (%)
+                            <button class="paste-btn" onclick="pasteExamResults()">Paste</button>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div class="comment-area">
+            <h2>General Class Comment</h2>
+            <textarea id="class-comment-box" rows="5" placeholder="Type a general comment here that will be appended to the bottom of every report."></textarea>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="generateReports()">Generate Reports</button>
+            <button id="clear-btn" onclick="clearAll()">Clear All</button>
+            <button onclick="copyReports()">Copy Reports</button>
+            <a id="download-link" style="display: none;"></a>
+            <button onclick="saveReports()">Save (.doc)</button>
+        </div>
+
+        <div class="comment-area">
+            <h2>Generated Reports</h2>
+            <div id="reports-output"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Note: CATEGORIES names must match keys in comments.json (in Spanish)
+        const CATEGORIES = ["Trabajo en clase", "Trabajo en casa", "Esfuerzo", "Participación"];
+        const NUM_STUDENTS = 12; 
+        let commentsData = {};
+
+        // --- 1. Load Data ---
+        async function loadComments() {
+            try {
+                const response = await fetch('comments.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                commentsData = await response.json();
+            } catch (e) {
+                console.error("Could not load comments.json:", e);
+                alert("Error loading comments.json. Please ensure the file exists and is valid.");
+            }
+        }
+
+        // --- 2. Build UI ---
+        function buildStudentRows() {
+            const tbody = document.querySelector('#input-table tbody');
+            for (let i = 0; i < NUM_STUDENTS; i++) {
+                const row = tbody.insertRow();
+                
+                // 1. Student Name
+                row.insertCell().innerHTML = `<input type="text" class="student-name" placeholder="Student ${i + 1}">`;
+                
+                // 2. Ratings (4 columns)
+                CATEGORIES.forEach(category => {
+                    row.insertCell().innerHTML = `
+                        <select class="rating-select" data-category="${category}">
+                            <option value="">-- Select --</option>
+                            <option value="5">5</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1</option>
+                        </select>`;
+                });
+
+                // 3. Individual Comment (Moved here)
+                row.insertCell().innerHTML = `<input type="text" class="individual-comment" placeholder="Student-specific comment">`;
+
+                // 4. Exam Result 
+                row.insertCell().innerHTML = `<input type="text" class="exam-result" placeholder="%">`;
+            }
+        }
+
+        // --- 3. Core Logic ---
+        function getCommentForRating(category, rating) {
+            const categoryData = commentsData[category];
+            if (categoryData && categoryData[rating]) {
+                const comments = categoryData[rating];
+                return comments[Math.floor(Math.random() * comments.length)];
+            }
+            return "";
+        }
+
+        function generateStudentReport(name, ratings, examResult, individualComment, classComment) {
+            let report = `${name}: `;
+            let commentParts = [];
+
+            // 1. Generated Comments (based on ratings)
+            ratings.forEach(item => {
+                const category = item.category;
+                const rating = item.rating;
+                if (rating && commentsData[category]) {
+                    const comment = getCommentForRating(category, rating);
+                    if (comment) {
+                        commentParts.push(comment);
+                    }
+                }
+            });
+
+            // Add generated comments
+            report += commentParts.join(" ");
+            
+            // 2. Add Individual Comment
+            if (individualComment) {
+                // Ensure there is spacing before adding the individual comment
+                report += (report.endsWith(": ") ? "" : " ") + individualComment;
+            }
+            
+            // 3. Add Exam Result
+            if (examResult) {
+                // Ensure there is spacing before adding the exam result
+                report += (report.endsWith(": ") ? "" : " ") + `${examResult}% en el examen.`;
+            }
+
+            // 4. Add Class Comment
+            if (classComment) {
+                // Add the class comment
+                report += (report.endsWith(": ") ? "" : " ") + classComment;
+            }
+
+            return report.trim();
+        }
+
+        function generateReports() {
+            const reportsOutput = document.getElementById('reports-output');
+            reportsOutput.innerHTML = '';
+            const classComment = document.getElementById('class-comment-box').value.trim();
+
+            const nameInputs = document.querySelectorAll('.student-name');
+            const examInputs = document.querySelectorAll('.exam-result');
+            const individualCommentInputs = document.querySelectorAll('.individual-comment');
+            const tableRows = document.querySelectorAll('#input-table tbody tr');
+
+            let allReports = [];
+
+            tableRows.forEach((row, index) => {
+                const name = nameInputs[index].value.trim();
+                if (!name) return; 
+
+                const ratingSelects = row.querySelectorAll('.rating-select');
+                const ratings = Array.from(ratingSelects).map(select => ({
+                    category: select.getAttribute('data-category'),
+                    rating: select.value
+                }));
+                
+                const examResult = examInputs[index].value.trim();
+                const individualComment = individualCommentInputs[index].value.trim();
+                
+                const report = generateStudentReport(name, ratings, examResult, individualComment, classComment);
+                allReports.push(report);
+            });
+
+            reportsOutput.innerText = allReports.join('\n\n');
+        }
+
+        // --- 4. Paste/Copy/Save Utilities ---
+
+        async function getClipboardText() {
+            try {
+                return await navigator.clipboard.readText();
+            } catch (err) {
+                console.warn("Clipboard access failed. Falling back to prompt.");
+                return prompt("Paste the text here (Ctrl+V or Cmd+V):") || '';
+            }
+        }
+
+        async function pasteNames() {
+            const namesText = await getClipboardText();
+            const namesList = namesText.split('\n').map(s => s.trim()).filter(s => s);
+            const nameInputs = document.querySelectorAll('.student-name');
+
+            nameInputs.forEach((input, i) => {
+                if (i < namesList.length) {
+                    input.value = namesList[i];
+                }
+            });
+        }
+
+        async function pasteExamResults() {
+            const resultsText = await getClipboardText();
+            const resultsList = resultsText.split('\n').map(s => s.trim()).filter(s => s); 
+            const examInputs = document.querySelectorAll('.exam-result');
+
+            examInputs.forEach((input, i) => {
+                if (i < resultsList.length) {
+                    input.value = resultsList[i];
+                }
+            });
+        }
+        
+        function copyReports() {
+            const reportsText = document.getElementById('reports-output').innerText;
+            if (reportsText) {
+                navigator.clipboard.writeText(reportsText).then(() => {
+                    alert('Reports copied to clipboard.');
+                }).catch(err => {
+                    console.error('Copy error: ', err);
+                    alert('Error copying reports.');
+                });
+            } else {
+                alert('No reports to copy.');
+            }
+        }
+        
+        // UPDATED: Saves as Word-compatible HTML file (.doc)
+        function saveReports() {
+            const reportsText = document.getElementById('reports-output').innerText;
+            if (!reportsText) {
+                alert('No reports to save.');
+                return;
+            }
+            
+            // Format the text content into a simple, Word-friendly HTML structure
+            // Replace double line breaks with <p> tags and single breaks with <br>
+            const htmlContent = `
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Student Reports</title>
+                </head>
+                <body>
+                    ${reportsText.split('\n\n').map(p => 
+                        `<p style="margin-bottom: 1em;">${p.replace(/\n/g, '<br>')}</p>`).join('')}
+                </body>
+                </html>
+            `;
+            
+            // Save as .doc. Microsoft Word recognizes this as HTML/MHT and opens it correctly.
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.getElementById('download-link');
+            
+            downloadLink.href = url;
+            downloadLink.download = 'student_reports.doc'; // Use .doc extension
+            downloadLink.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAll() {
+            document.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
+            document.querySelectorAll('select').forEach(select => select.value = '');
+            document.getElementById('class-comment-box').value = '';
+            document.getElementById('reports-output').innerText = '';
+        }
+
+        // --- 5. Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadComments();
+            buildStudentRows();
+        });
+    </script>
+</body>
+</html>

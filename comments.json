@@ -1,0 +1,150 @@
+{
+  "Trabajo en clase": {
+    "5": [
+      "Siempre está atento y participa con entusiasmo en todas las actividades.",
+      "Demuestra un gran interés por aprender y hace preguntas muy acertadas.",
+      "Trabaja con autonomía y muestra una excelente actitud en clase.",
+      "Es un estudiante ejemplar, siempre dispuesto a ayudar a sus compañeros.",
+      "Su dedicación en clase es sobresaliente y contribuye positivamente al ambiente de aprendizaje."
+    ],
+    "4": [
+      "Presta atención y participa con regularidad en clase.",
+      "Muestra interés por aprender y suele aportar buenas ideas.",
+      "Trabaja bien en clase y suele completar las tareas con esmero.",
+      "Es un estudiante responsable y mantiene una actitud positiva.",
+      "Se esfuerza en las actividades y suele estar atento a las explicaciones."
+    ],
+    "3": [
+      "Sigue las explicaciones y cumple con su trabajo, aunque podría participar más.",
+      "Muestra interés en algunas actividades, pero a veces se distrae.",
+      "Realiza su trabajo de manera correcta, aunque con margen de mejora.",
+      "Puede aportar más en clase si se concentra un poco más.",
+      "Sigue el ritmo de la clase, pero a veces necesita un pequeño empujón para participar más."
+    ],
+    "2": [
+      "A veces se distrae en clase y necesita recordatorios para concentrarse.",
+      "Muestra interés en ciertos momentos, pero le cuesta mantenerse atento.",
+      "Puede mejorar si dedica más esfuerzo y atención a las actividades.",
+      "Necesita animarse a participar más y mostrar confianza en sus respuestas.",
+      "Si se enfoca más en clase, podría progresar mucho más rápido."
+    ],
+    "1": [
+      "Necesita mejorar su concentración y evitar distracciones en clase.",
+      "Podría avanzar más si demuestra un mayor interés en las explicaciones.",
+      "Debe intentar participar más y confiar en sus capacidades.",
+      "Con más esfuerzo y dedicación, podría mejorar notablemente.",
+      "Necesita mayor compromiso con su aprendizaje para lograr mejores resultados."
+    ]
+  },
+  "Trabajo en casa": {
+    "5": [
+      "Siempre está atento y participa con entusiasmo en todas las actividades.",
+      "Demuestra un gran interés por aprender y hace preguntas muy acertadas.",
+      "Trabaja con autonomía y muestra una excelente actitud en clase.",
+      "Es un estudiante ejemplar, siempre dispuesto a ayudar a sus compañeros.",
+      "Su dedicación en clase es sobresaliente y contribuye positivamente al ambiente de aprendizaje."
+    ],
+    "4": [
+      "Presta atención y participa con regularidad en clase.",
+      "Muestra interés por aprender y suele aportar buenas ideas.",
+      "Trabaja bien en clase y suele completar las tareas con esmero.",
+      "Es un estudiante responsable y mantiene una actitud positiva.",
+      "Se esfuerza en las actividades y suele estar atento a las explicaciones."
+    ],
+    "3": [
+      "Sigue las explicaciones y cumple con su trabajo, aunque podría participar más.",
+      "Muestra interés en algunas actividades, pero a veces se distrae.",
+      "Realiza su trabajo de manera correcta, aunque con margen de mejora.",
+      "Puede aportar más en clase si se concentra un poco más.",
+      "Sigue el ritmo de la clase, pero a veces necesita un pequeño empujón para participar más."
+    ],
+    "2": [
+      "A veces se distrae en clase y necesita recordatorios para concentrarse.",
+      "Muestra interés en ciertos momentos, pero le cuesta mantenerse atento.",
+      "Puede mejorar si dedica más esfuerzo y atención a las actividades.",
+      "Necesita animarse a participar más y mostrar confianza en sus respuestas.",
+      "Si se enfoca más en clase, podría progresar mucho más rápido."
+    ],
+    "1": [
+      "Necesita mejorar su concentración y evitar distracciones en clase.",
+      "Podría avanzar más si demuestra un mayor interés en las explicaciones.",
+      "Debe intentar participar más y confiar en sus capacidades.",
+      "Con más esfuerzo y dedicación, podría mejorar notablemente.",
+      "Necesita mayor compromiso con su aprendizaje para lograr mejores resultados."
+    ]
+  },
+  "Esfuerzo": {
+    "5": [
+      "Siempre está atento y participa con entusiasmo en todas las actividades.",
+      "Demuestra un gran interés por aprender y hace preguntas muy acertadas.",
+      "Trabaja con autonomía y muestra una excelente actitud en clase.",
+      "Es un estudiante ejemplar, siempre dispuesto a ayudar a sus compañeros.",
+      "Su dedicación en clase es sobresaliente y contribuye positivamente al ambiente de aprendizaje."
+    ],
+    "4": [
+      "Presta atención y participa con regularidad en clase.",
+      "Muestra interés por aprender y suele aportar buenas ideas.",
+      "Trabaja bien en clase y suele completar las tareas con esmero.",
+      "Es un estudiante responsable y mantiene una actitud positiva.",
+      "Se esfuerza en las actividades y suele estar atento a las explicaciones."
+    ],
+    "3": [
+      "Sigue las explicaciones y cumple con su trabajo, aunque podría participar más.",
+      "Muestra interés en algunas actividades, pero a veces se distrae.",
+      "Realiza su trabajo de manera correcta, aunque con margen de mejora.",
+      "Puede aportar más en clase si se concentra un poco más.",
+      "Sigue el ritmo de la clase, pero a veces necesita un pequeño empujón para participar más."
+    ],
+    "2": [
+      "A veces se distrae en clase y necesita recordatorios para concentrarse.",
+      "Muestra interés en ciertos momentos, pero le cuesta mantenerse atento.",
+      "Puede mejorar si dedica más esfuerzo y atención a las actividades.",
+      "Necesita animarse a participar más y mostrar confianza en sus respuestas.",
+      "Si se enfoca más en clase, podría progresar mucho más rápido."
+    ],
+    "1": [
+      "Necesita mejorar su concentración y evitar distracciones en clase.",
+      "Podría avanzar más si demuestra un mayor interés en las explicaciones.",
+      "Debe intentar participar más y confiar en sus capacidades.",
+      "Con más esfuerzo y dedicación, podría mejorar notablemente.",
+      "Necesita mayor compromiso con su aprendizaje para lograr mejores resultados."
+    ]
+  },
+  "Participación": {
+    "5": [
+      "Siempre está atento y participa con entusiasmo en todas las actividades.",
+      "Demuestra un gran interés por aprender y hace preguntas muy acertadas.",
+      "Trabaja con autonomía y muestra una excelente actitud en clase.",
+      "Es un estudiante ejemplar, siempre dispuesto a ayudar a sus compañeros.",
+      "Su dedicación en clase es sobresaliente y contribuye positivamente al ambiente de aprendizaje."
+    ],
+    "4": [
+      "Presta atención y participa con regularidad en clase.",
+      "Muestra interés por aprender y suele aportar buenas ideas.",
+      "Trabaja bien en clase y suele completar las tareas con esmero.",
+      "Es un estudiante responsable y mantiene una actitud positiva.",
+      "Se esfuerza en las actividades y suele estar atento a las explicaciones."
+    ],
+    "3": [
+      "Sigue las explicaciones y cumple con su trabajo, aunque podría participar más.",
+      "Muestra interés en algunas actividades, pero a veces se distrae.",
+      "Realiza su trabajo de manera correcta, aunque con margen de mejora.",
+      "Puede aportar más en clase si se concentra un poco más.",
+      "Sigue el ritmo de la clase, pero a veces necesita un pequeño empujón para participar más."
+    ],
+    "2": [
+      "A veces se distrae en clase y necesita recordatorios para concentrarse.",
+      "Muestra interés en ciertos momentos, pero le cuesta mantenerse atento.",
+      "Puede mejorar si dedica más esfuerzo y atención a las actividades.",
+      "Necesita animarse a participar más y mostrar confianza en sus respuestas.",
+      "Si se enfoca más en clase, podría progresar mucho más rápido."
+    ],
+    "1": [
+      "Necesita mejorar su concentración y evitar distracciones en clase.",
+      "Podría avanzar más si demuestra un mayor interés en las explicaciones.",
+      "Debe intentar participar más y confiar en sus capacidades.",
+      "Con más esfuerzo y dedicación, podría mejorar notablemente.",
+      "Necesita mayor compromiso con su aprendizaje para lograr mejores resultados."
+    ]
+  }
+}
