@@ -633,7 +633,7 @@
             
             // Updated feedback to show the official word count rule
             const rule = getWordCountRule(currentLevel);
-            ui.fsFeedback.textContent = `Focus on the gap. The answer must be ${rule}. Click the gap to reveal/hide.`;
+            ui.fsFeedback.textContent = `The answer must be ${rule}. Click the gap to reveal.`;
             ui.fsFeedback.style.color = '#4b5563'; // Gray
         }
         
@@ -642,25 +642,26 @@
             const isRevealed = ui.fsAnswerGap.dataset.revealed === 'true';
             const correctAnswer = ui.fsAnswerGap.dataset.answer;
             const wordCount = ui.fsAnswerGap.dataset.wordCount;
-            
+                ui.fsFeedback.textContent = `CORRECT ANSWER: ${correctAnswer}.`;
+                ui.fsFeedback.style.color = '#f59e0b'; // Amber
             // Toggle Logic
             if (isRevealed) {
                 // Hide it
                 const hintText = ``;
+		const rule = getWordCountRule(currentLevel);
                 ui.fsAnswerGap.textContent = hintText;
                 ui.fsAnswerGap.dataset.revealed = 'false';
                 ui.fsAnswerGap.classList.remove('revealed');
                 
-                ui.fsFeedback.textContent = `Answer hidden. Focus on the gap again.`;
-                ui.fsFeedback.style.color = '#4b5563';
+                ui.fsFeedback.textContent = `The answer must be ${rule}. Click the gap to reveal.`;
+                ui.fsFeedback.style.color = '#4b5563'; // Gray
             } else {
                 // Show it
                 ui.fsAnswerGap.textContent = correctAnswer;
                 ui.fsAnswerGap.dataset.revealed = 'true';
                 ui.fsAnswerGap.classList.add('revealed');
-                
-                ui.fsFeedback.textContent = `CORRECT ANSWER: ${correctAnswer}. Click the space to conceal.`;
-                ui.fsFeedback.style.color = '#f59e0b'; // Amber
+
+
             }
         }
 
@@ -707,7 +708,7 @@
                 qEl.className = 'exam-question-card';
                 qEl.innerHTML = `
                     <p class="text-xl font-bold mb-3 text-indigo-700">Question ${index + 1} of 6</p>
-                    <p class="question-text text-gray-600 mb-2">A. ${q.sentence1}</p>
+                    <p class="question-text text-gray-600 mb-2"> ${q.sentence1}</p>
                     <div class="flex flex-wrap justify-center items-center gap-4 mb-4">
                         <span class="key-word">${q.key_word}</span>
                     </div>
