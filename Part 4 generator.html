@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Use of English Trainer (Part 4)</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style type="text/tailwindcss">
+        /* General Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            min-height: 100vh;
+        }
+
+        /* App Container */
+        #app-container {
+            @apply w-full max-w-7xl;
+            background-color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* IWB-Friendly Text Styles */
+        .question-text {
+            font-size: 2.25rem; /* text-4xl */
+            line-height: 1.4;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        @media (min-width: 768px) {
+            .question-text {
+                font-size: 3rem; /* text-5xl on desktop */
+            }
+        }
+        
+        /* Large Key Word for Activity */
+        .key-word {
+            background-color: #facc15; /* Amber 400 */
+            padding: 8px 24px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 3rem; /* Much larger */
+            color: #1f2937;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 2px solid #eab308; /* Darker amber border */
+            display: inline-block;
+        }
+
+        /* Small Key Word for Results/Review */
+        .key-word-small {
+            background-color: #facc15;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 1rem;
+            color: #1f2937;
+            text-transform: uppercase;
+            border: 1px solid #eab308;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Input Styles (For Exam Mode) */
+        .answer-input {
+            @apply p-3 border-4 border-indigo-300 rounded-lg text-2xl font-semibold text-indigo-700 placeholder-indigo-400 focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 300px;
+        }
+        
+        /* New Gap Style for Reveal/Hide (Free Study) */
+        .answer-gap {
+            /* Line style */
+            @apply p-3 border-b-4 border-amber-400 text-2xl font-semibold transition duration-150 flex-1;
+            min-width: 300px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            line-height: 1.5;
+            min-height: 50px; 
+            color: #facc15; /* Hidden text color (matches the line) */
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .answer-gap.revealed {
+            background-color: #d1fae5; /* Light green background when revealed */
+            color: #10b981; /* Green text when revealed */
+            border-bottom-color: #10b981;
+            cursor: pointer;
+        }
+
+
+        /* --- Button and Design Styles (Enhanced) --- */
+        .app-btn {
+            @apply px-6 py-3 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95;
+        }
+        
+        /* Level Selection Buttons (Large, rounded, premium look) */
+        .level-select-btn {
+            /* Reduced from 7rem to 4.5rem and padding adjusted to be large, but reasonable */
+            font-size: 4.5rem; /* ~72px (Plenty big for IWB) */
+            padding: 3rem 4rem; /* Large, but contained padding */
+            min-width: 100%; /* Full width of grid column */
+
+            @apply font-black rounded-[2rem] transition duration-300 transform; 
+            border-width: 4px; 
+            transform: scale(1);
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; 
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        /* Active/Selected State for Level Buttons */
+        .level-select-btn.active {
+            transform: scale(1.05) translateY(-5px);
+            opacity: 1;
+            filter: grayscale(0);
+            z-index: 10;
+            @apply ring-4 ring-offset-4 ring-indigo-500;
+        }
+
+        /* Individual Gradient Styles */
+        .btn-b2-style {
+            background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); /* Indigo to Light Indigo */
+            color: white;
+            border-color: #C7D2FE;
+        }
+        .btn-c1-style {
+            background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); /* Orange to Amber */
+            color: #333;
+            border-color: #FFECB3;
+        }
+        .btn-c2-style {
+            background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); /* Lime Green */
+            color: #333;
+            border-color: #DCEDC8;
+        }
+        
+        /* Custom hover effect (Bulge/Pop) */
+        .level-select-btn:hover {
+            transform: scale(1.05) translateY(-5px); 
+            opacity: 1;
+            filter: grayscale(0);
+        }
+
+        /* --- Mode Selection Buttons (New Style) --- */
+        .mode-select-btn {
+            @apply flex flex-col items-center justify-center p-8 rounded-[1.5rem] border-4 border-gray-200 bg-white text-gray-500 transition-all duration-200 cursor-pointer shadow-md hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-xl hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed;
+            min-height: 200px;
+            width: 100%;
+        }
+        
+        .mode-select-btn.active {
+            @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xl ring-4 ring-offset-4 ring-indigo-500;
+            transform: translateY(-5px);
+        }
+
+        .btn-start {
+            @apply bg-indigo-600 text-white hover:bg-indigo-700;
+        }
+        .btn-next {
+            @apply bg-blue-500 text-white hover:bg-blue-600;
+        }
+        .btn-answer {
+            @apply bg-red-500 text-white hover:bg-red-600;
+        }
+        .btn-final {
+            @apply bg-amber-500 text-gray-800 hover:bg-amber-600 text-xl py-4;
+        }
+        .btn-secondary {
+            @apply bg-gray-500 text-white hover:bg-gray-600;
+        }
+        
+        /* Timer Display */
+        #timer-display {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ef4444; /* Red */
+        }
+        .time-alert {
+             animation: pulse-red 1s infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Exam Grid */
+        .exam-question-card {
+            @apply p-4 border border-gray-300 rounded-xl mb-4 bg-gray-50;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
+
+    <a id="main-menu-btn" href="exam_index.html" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 font-bold transition z-50 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Menu</span>
+    </a>
+
+    <div id="app-container" class="w-full p-6 md:p-10">
+
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center mb-8">
+            Use of English Part 4 Trainer
+        </h1>
+
+        <!-- --- 1. Selection Screen --- -->
+        <div id="screen-dashboard">
+            <h2 class="text-4xl font-extrabold mb-8 text-center text-indigo-700 border-b pb-4">Select Level & Mode</h2>
+            
+            <div class="max-w-5xl mx-auto flex flex-col gap-8">
+                <!-- LEVEL SELECTION -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">1. Select Level</h3>
+                    <div class="grid grid-cols-3 gap-6 w-full">
+                        <button onclick="window.selectLevel('B2')" id="level-b2" class="level-select-btn btn-b2-style">B2</button>
+                        <button onclick="window.selectLevel('C1')" id="level-c1" class="level-select-btn btn-c1-style">C1</button>
+                        <button onclick="window.selectLevel('C2')" id="level-c2" class="level-select-btn btn-c2-style">C2</button>
+                    </div>
+                </div>
+
+                <!-- MODE SELECTION -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">2. Select Mode</h3>
+                    <div class="grid grid-cols-2 gap-6 w-full">
+                        <button onclick="window.selectMode('free')" id="mode-free" disabled class="mode-select-btn">
+                            <span class="text-6xl mb-4">🏫</span>
+                            <span class="text-3xl font-bold text-gray-800">Classroom Style</span>
+                            <span class="text-lg mt-2">Interactive. Click to reveal.</span>
+                        </button>
+                        <button onclick="window.selectMode('exam')" id="mode-exam" disabled class="mode-select-btn">
+                            <span class="text-6xl mb-4">📝</span>
+                            <span class="text-3xl font-bold text-gray-800">Exam Style</span>
+                            <span class="text-lg mt-2">Scored. 6 Questions. Timer.</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- START BUTTON -->
+                <div class="mt-4 flex justify-center">
+                    <button onclick="window.startActivity()" id="start-btn" disabled 
+                            class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105">
+                        Start Activity →
+                    </button>
+                </div>
+            </div>
+            
+            <p id="data-loading-status" class="text-center text-sm text-gray-500 mt-12 min-h-[20px]">Attempting to load data...</p>
+        </div>
+
+        <!-- --- 2. Free Study Screen --- -->
+        <div id="free-study-screen" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Free Study Mode (<span id="fs-level-display"></span>)</h2>
+            <div id="fs-question-card" class="p-8 border-4 border-gray-200 rounded-xl space-y-4">
+                <p id="fs-sentence1" class="question-text text-gray-600">Sentence 1 goes here...</p>
+                <div class="flex flex-wrap justify-center items-center gap-4 my-4">
+                    <span id="fs-key-word" class="key-word">KEY</span>
+                </div>
+                
+                <!-- Sentence 2 with Answer Gap (Now Clickable) -->
+                <div class="flex flex-wrap items-center gap-2 question-text">
+                    <span id="fs-sentence2-pre">The part before</span>
+                    <span id="fs-answer-gap" 
+                          class="answer-gap flex-1" 
+                          data-answer="" 
+                          data-word-count=""
+                          data-revealed="false"
+                          onclick="window.toggleFreeStudyAnswer()">
+                        [Click for Answer]
+                    </span>
+                    <span id="fs-sentence2-post">the part after.</span>
+                </div>
+            </div>
+
+            <!-- Free Study Feedback and Actions -->
+            <div id="fs-feedback" class="text-xl font-semibold mt-4 mb-6 text-center min-h-[30px] text-gray-600"></div>
+
+            <div class="flex justify-center gap-4 mt-6">
+                <button onclick="window.showNextFreeStudyQuestion()" class="app-btn btn-next w-full max-w-[250px]">
+                    Next Question →
+                </button>
+            </div>
+            
+            <button onclick="window.showDashboard()" class="app-btn btn-secondary mt-8 w-full max-w-[200px] mx-auto block">
+                ← Back
+            </button>
+        </div>
+
+        <!-- --- 3. Exam Style Screen --- -->
+        <div id="exam-style-screen" class="hidden flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-6 border-b pb-4 px-8 pt-4">
+                <h2 class="text-3xl font-bold text-gray-800">Exam Mode (<span id="exam-level-display"></span>)</h2>
+                <div class="flex flex-col items-end">
+                    <span id="timer-display">06:00</span>
+                    <span class="text-sm text-gray-500">6 Questions (2 marks each)</span>
+                </div>
+            </div>
+
+            <div id="exam-questions-container" class="flex-1 overflow-y-auto px-8 pb-4">
+                <!-- 6 Question fields rendered here -->
+            </div>
+
+            <div class="p-6 bg-white border-t border-gray-200 flex justify-between items-center">
+                 <button onclick="window.showDashboard()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-bold hover:bg-gray-600">Back</button>
+
+                 <!-- Score area (hidden initially) -->
+                 <div id="score-area" class="hidden text-3xl font-black text-gray-800">
+                    Score: <span id="score-val" class="text-indigo-600">0</span>/12
+                 </div>
+
+                 <div class="flex gap-4">
+                     <button onclick="window.submitExam()" id="submit-exam-button" class="app-btn btn-final w-full max-w-sm">
+                        Submit Exam & Get Score
+                     </button>
+                     <!-- Reset button for exam (hidden initially) -->
+                     <button onclick="window.resetExam()" id="reset-exam-button" class="hidden px-8 py-3 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700">New Exam</button>
+                 </div>
+            </div>
+        </div>
+
+        <!-- --- 4. Results Screen --- -->
+        <div id="results-screen" class="hidden">
+            <h2 class="text-4xl font-extrabold text-indigo-600 text-center mb-6">Exam Results</h2>
+            <div class="p-6 bg-gray-100 rounded-xl space-y-4 text-center">
+                <p class="text-3xl font-bold text-gray-700">Your Score: <span id="final-score" class="text-green-600">0/12</span></p>
+                <p id="results-time-taken" class="xl text-gray-600"></p>
+            </div>
+
+            <h3 class="text-2xl font-bold mt-8 mb-4 border-b pb-2">Review Answers:</h3>
+            <div id="review-answers-container" class="space-y-4">
+                <!-- Review cards rendered here -->
+            </div>
+
+            <button onclick="window.showDashboard()" class="app-btn btn-start mt-8 w-full max-w-sm mx-auto block">
+                Start New Practice
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Global State ---
+        let USE_OF_ENGLISH_DATA = []; 
+        let dataLoaded = false;
+        let currentLevel = null;
+        let currentMode = null; // 'free' or 'exam'
+        let questionPool = []; 
+        let freeStudyIndex = 0;
+        let examQuestions = []; 
+        let examTimeRemaining = 360; 
+        let examTotalTime = 360;
+        let examStartTime = 0;
+        let timerInterval = null;
+
+        // --- DOM References ---
+        const ui = {
+            selectionScreen: document.getElementById('screen-dashboard'),
+            freeStudyScreen: document.getElementById('free-study-screen'),
+            examStyleScreen: document.getElementById('exam-style-screen'),
+            resultsScreen: document.getElementById('results-screen'),
+            
+            levelButtons: [document.getElementById('level-b2'), document.getElementById('level-c1'), document.getElementById('level-c2')],
+            modeFreeBtn: document.getElementById('mode-free'),
+            modeExamBtn: document.getElementById('mode-exam'),
+            startBtn: document.getElementById('start-btn'),
+            dataLoadingStatus: document.getElementById('data-loading-status'),
+
+            // Free Study Elements
+            fsLevelDisplay: document.getElementById('fs-level-display'),
+            fsSentence1: document.getElementById('fs-sentence1'),
+            fsKeyWord: document.getElementById('fs-key-word'),
+            fsSentence2Pre: document.getElementById('fs-sentence2-pre'),
+            fsSentence2Post: document.getElementById('fs-sentence2-post'),
+            fsAnswerGap: document.getElementById('fs-answer-gap'), 
+            fsFeedback: document.getElementById('fs-feedback'),
+            
+            // Exam Elements
+            examLevelDisplay: document.getElementById('exam-level-display'),
+            timerDisplay: document.getElementById('timer-display'),
+            examQuestionsContainer: document.getElementById('exam-questions-container'),
+            submitExamButton: document.getElementById('submit-exam-button'),
+            resetExamButton: document.getElementById('reset-exam-button'),
+            scoreArea: document.getElementById('score-area'),
+            scoreVal: document.getElementById('score-val'),
+            
+            // Results Elements
+            finalScore: document.getElementById('final-score'),
+            resultsTimeTaken: document.getElementById('results-time-taken'),
+            reviewAnswersContainer: document.getElementById('review-answers-container')
+        };
+        
+        // Function to determine the Cambridge word count rule based on the level
+        function getWordCountRule(level) {
+            switch (level) {
+                case 'B2': return 'between two and five words (2-5)';
+                case 'C1': return 'between three and six words (3-6)';
+                case 'C2': return 'between three and eight words (3-8)';
+                default: return 'the required number of words';
+            }
+        }
+        
+        // --- Data Loading (Switched to JSON fetch) ---
+        async function loadQuestions() {
+            if (dataLoaded) return true;
+            ui.dataLoadingStatus.textContent = "Loading data from JSON...";
+            try {
+                // IMPORTANT: This fetch is set for local testing.
+                const response = await fetch('./use_of_english_data.json'); 
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                USE_OF_ENGLISH_DATA = await response.json();
+                dataLoaded = true;
+                ui.dataLoadingStatus.textContent = `Data loaded successfully: ${USE_OF_ENGLISH_DATA.length} questions.`;
+                return true;
+            } catch (error) {
+                console.error("Failed to load vocabulary data from use_of_english_data.json:", error);
+                
+                // FALLBACK DATA for testing offline - UPDATED WITH | FOR SPLIT SCORING
+                USE_OF_ENGLISH_DATA = [
+                    { id: "B2_FB4", level: "B2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
+                    { id: "C1_FB4", level: "C1", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER STAY", word_count: 3 },
+                    { id: "C2_FB4", level: "C2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
+                    { id: "DM1", level: "B2", sentence1: "Test Q4", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
+                    { id: "DM2", level: "B2", sentence1: "Test Q5", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
+                    { id: "DM3", level: "B2", sentence1: "Test Q6", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
+                    { id: "DM4", level: "B2", sentence1: "Test Q7", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
+                    { id: "DM5", level: "B2", sentence1: "Test Q8", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 }
+                ];
+                dataLoaded = true;
+                
+                ui.dataLoadingStatus.textContent = "Loaded backup data (JSON fetch failed).";
+                return true;
+            }
+        }
+
+        // --- Navigation ---
+
+        function hideAllScreens() {
+            ui.selectionScreen.classList.add('hidden');
+            ui.freeStudyScreen.classList.add('hidden');
+            ui.examStyleScreen.classList.add('hidden');
+            ui.resultsScreen.classList.add('hidden');
+        }
+
+        // Renamed to showDashboard to match pattern
+        window.showDashboard = function() {
+            stopTimer();
+            hideAllScreens();
+            ui.selectionScreen.classList.remove('hidden');
+            
+            // Toggle menu btn
+            document.getElementById('main-menu-btn').classList.remove('hidden');
+
+            // Ensure data is loaded to enable buttons logic
+            checkDataAndEnableButtons();
+        }
+
+        // --- Level & Mode Selection ---
+
+        function checkDataAndEnableButtons() {
+            if (!dataLoaded) return;
+            
+            const availableLevels = new Set(USE_OF_ENGLISH_DATA.map(q => q.level));
+
+            ui.levelButtons.forEach(btn => {
+                const level = btn.id.split('-')[1].toUpperCase();
+                if (availableLevels.has(level)) {
+                    btn.disabled = false;
+                } else {
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        function updateStartButtonState() {
+            if (currentLevel && currentMode) {
+                ui.startBtn.disabled = false;
+            } else {
+                ui.startBtn.disabled = true;
+            }
+        }
+
+        window.selectLevel = async function(level) {
+            if (!dataLoaded) {
+                if (!await loadQuestions()) return;
+            }
+            
+            currentLevel = level;
+            
+            // Highlight
+            ui.levelButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`level-${level.toLowerCase()}`).classList.add('active');
+            
+            // Filter pool logic
+            questionPool = USE_OF_ENGLISH_DATA.filter(q => q.level === level);
+            
+            // Check availability for modes
+            if (questionPool.length >= 6) {
+                ui.modeFreeBtn.disabled = false;
+                ui.modeExamBtn.disabled = false;
+            } else if (questionPool.length > 0) {
+                ui.modeFreeBtn.disabled = false;
+                ui.modeExamBtn.disabled = true;
+            } else {
+                 ui.modeFreeBtn.disabled = true;
+                 ui.modeExamBtn.disabled = true;
+            }
+            
+            updateStartButtonState();
+        }
+
+        window.selectMode = function(mode) {
+            currentMode = mode;
+            
+            // Highlight
+            ui.modeFreeBtn.classList.remove('active');
+            ui.modeExamBtn.classList.remove('active');
+            
+            if (mode === 'free') ui.modeFreeBtn.classList.add('active');
+            if (mode === 'exam') ui.modeExamBtn.classList.add('active');
+            
+            updateStartButtonState();
+        }
+        
+        window.startActivity = function() {
+            if (!currentLevel || !currentMode) return;
+            
+            // Hide main menu button
+            document.getElementById('main-menu-btn').classList.add('hidden');
+
+            if (currentMode === 'free') {
+                startFreeStudy();
+            } else if (currentMode === 'exam') {
+                startExamStyle();
+            }
+        }
+        
+        // --- Timer Logic (Exam Mode) ---
+
+        function secondsToDisplay(seconds) {
+            seconds = Math.max(0, seconds);
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+        
+        function updateTimerDisplay() {
+            ui.timerDisplay.textContent = secondsToDisplay(examTimeRemaining);
+
+            ui.timerDisplay.classList.remove('time-alert');
+            if (examTimeRemaining <= 30) {
+                ui.timerDisplay.classList.add('time-alert');
+            }
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function runTimer() {
+            if (timerInterval) stopTimer();
+
+            timerInterval = setInterval(() => {
+                if (examTimeRemaining > 0) {
+                    examTimeRemaining -= 1;
+                    updateTimerDisplay();
+                } else {
+                    stopTimer();
+                    ui.timerDisplay.textContent = "TIME UP!";
+                    ui.timerDisplay.classList.add('time-alert');
+                    
+                    // Auto-submit on time up
+                    window.submitExam();
+                }
+            }, 1000);
+        }
+
+
+        // --- Free Study Mode ---
+
+        window.startFreeStudy = function() {
+            hideAllScreens();
+            ui.freeStudyScreen.classList.remove('hidden');
+            
+            ui.fsLevelDisplay.textContent = currentLevel;
+            freeStudyIndex = 0;
+            questionPool.sort(() => Math.random() - 0.5); // Randomize the pool
+            
+            window.showNextFreeStudyQuestion();
+        }
+
+        window.showNextFreeStudyQuestion = function() {
+            if (questionPool.length === 0) {
+                 ui.fsFeedback.textContent = "No questions loaded for this level.";
+                 return;
+            }
+
+            // Cycle through questions in the randomized pool
+            const question = questionPool[freeStudyIndex];
+            freeStudyIndex = (freeStudyIndex + 1) % questionPool.length;
+            
+            ui.fsSentence1.textContent = `1. ${question.sentence1}`;
+            ui.fsKeyWord.textContent = question.key_word;
+            ui.fsSentence2Pre.textContent = `2. ${question.sentence2_pre}`;
+            ui.fsSentence2Post.textContent = question.sentence2_post;
+            
+            // Reset Answer Gap
+            const hintText = ``;
+            ui.fsAnswerGap.textContent = hintText;
+            
+            // Clean pipe from answer for free study view
+            const cleanAnswer = question.answer.replace(/\s*\|\s*/g, ' ');
+            
+            ui.fsAnswerGap.dataset.answer = cleanAnswer.toUpperCase();
+            ui.fsAnswerGap.dataset.wordCount = question.word_count; // Store word count for hiding
+            ui.fsAnswerGap.dataset.revealed = 'false';
+            ui.fsAnswerGap.classList.remove('revealed');
+            
+            // Updated feedback to show the official word count rule
+            const rule = getWordCountRule(currentLevel);
+            ui.fsFeedback.textContent = `Focus on the gap. The answer must be ${rule}. Click the gap to reveal/hide.`;
+            ui.fsFeedback.style.color = '#4b5563'; // Gray
+        }
+        
+        // Toggles the answer visibility via clicking the gap
+        window.toggleFreeStudyAnswer = function() {
+            const isRevealed = ui.fsAnswerGap.dataset.revealed === 'true';
+            const correctAnswer = ui.fsAnswerGap.dataset.answer;
+            const wordCount = ui.fsAnswerGap.dataset.wordCount;
+            
+            // Toggle Logic
+            if (isRevealed) {
+                // Hide it
+                const hintText = ``;
+                ui.fsAnswerGap.textContent = hintText;
+                ui.fsAnswerGap.dataset.revealed = 'false';
+                ui.fsAnswerGap.classList.remove('revealed');
+                
+                ui.fsFeedback.textContent = `Answer hidden. Focus on the gap again.`;
+                ui.fsFeedback.style.color = '#4b5563';
+            } else {
+                // Show it
+                ui.fsAnswerGap.textContent = correctAnswer;
+                ui.fsAnswerGap.dataset.revealed = 'true';
+                ui.fsAnswerGap.classList.add('revealed');
+                
+                ui.fsFeedback.textContent = `CORRECT ANSWER: ${correctAnswer}. Click the space to conceal.`;
+                ui.fsFeedback.style.color = '#f59e0b'; // Amber
+            }
+        }
+
+        // --- Exam Style Mode ---
+
+        window.startExamStyle = function() {
+            if (questionPool.length < 6) return;
+
+            hideAllScreens();
+            ui.examStyleScreen.classList.remove('hidden');
+            
+            // 1. Setup State
+            examTimeRemaining = 360; // 6 minutes
+            examTotalTime = 360;
+            examStartTime = Date.now();
+            
+            ui.examLevelDisplay.textContent = currentLevel;
+            
+            // Reset UI components
+            ui.submitExamButton.classList.remove('hidden');
+            ui.resetExamButton.classList.add('hidden');
+            ui.scoreArea.classList.add('hidden');
+            
+            // 2. Select 6 random, unique questions
+            questionPool.sort(() => Math.random() - 0.5);
+            examQuestions = questionPool.slice(0, 6);
+            
+            // 3. Render questions and start timer
+            renderExamQuestions();
+            updateTimerDisplay();
+            runTimer();
+        }
+
+        window.resetExam = function() {
+             window.startExamStyle();
+        }
+
+        function renderExamQuestions() {
+            ui.examQuestionsContainer.innerHTML = '';
+            
+            examQuestions.forEach((q, index) => {
+                const qEl = document.createElement('div');
+                qEl.id = `exam-q-${index}`;
+                qEl.className = 'exam-question-card';
+                qEl.innerHTML = `
+                    <p class="text-xl font-bold mb-3 text-indigo-700">Question ${index + 1} of 6</p>
+                    <p class="question-text text-gray-600 mb-2">A. ${q.sentence1}</p>
+                    <div class="flex flex-wrap justify-center items-center gap-4 mb-4">
+                        <span class="key-word">${q.key_word}</span>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2 question-text">
+                        <span class="text-2xl">${q.sentence2_pre}</span>
+                        <input type="text" id="input-${index}" 
+                            class="answer-input flex-1 p-2 border-2 border-indigo-400 rounded-md text-base" 
+                            placeholder="Type your answer..."
+                            oninput="this.value = this.value.toUpperCase()">
+                        <span class="text-2xl">${q.sentence2_post}</span>
+                    </div>
+                `;
+                ui.examQuestionsContainer.appendChild(qEl);
+            });
+            ui.submitExamButton.disabled = false;
+        }
+
+        // --- PUNCTUATION SANITIZATION HELPERS ---
+        // Clean text for comparison: remove .,;! and trim spaces. Retain apostrophes.
+        const cleanText = (text) => {
+            return text.toUpperCase()
+                       .replace(/[.,;!]/g, '') // Remove punctuation
+                       .replace(/\s\s+/g, ' ') // Fix double spaces
+                       .trim();
+        };
+
+        window.submitExam = function() {
+            stopTimer();
+            ui.submitExamButton.disabled = true;
+
+            const timeTaken = examTotalTime - examTimeRemaining;
+            let totalScore = 0;
+            const userAnswers = [];
+            
+            examQuestions.forEach((q, index) => {
+                const inputEl = document.getElementById(`input-${index}`);
+                // Clean user input immediately
+                const userAnswer = cleanText(inputEl.value);
+                
+                const correctRaw = q.answer.toUpperCase();
+                // We clean the display version too for consistent matching if they type exactly what's shown
+                const correctDisplay = correctRaw.replace(/\s*\|\s*/g, ' '); 
+                const correctDisplayClean = cleanText(correctDisplay);
+                
+                // --- SCORING LOGIC START ---
+                let points = 0;
+                
+                // 1. Exact Match (ignores pipe)
+                // Compare cleaned user answer with cleaned correct answer
+                if (userAnswer === correctDisplayClean) {
+                    points = 2;
+                } 
+                // 2. Partial Match Logic (checks pipe split)
+                else if (correctRaw.includes('|')) {
+                    const parts = correctRaw.split('|').map(p => cleanText(p));
+                    // Check start
+                    if (userAnswer.startsWith(parts[0])) points++;
+                    // Check end
+                    if (userAnswer.endsWith(parts[1])) points++;
+                }
+                
+                totalScore += points;
+                // --- SCORING LOGIC END ---
+                
+                // Visual feedback
+                inputEl.disabled = true;
+                if(points === 2) inputEl.classList.add('input-correct');
+                else if(points === 1) inputEl.classList.add('input-partial');
+                else inputEl.classList.add('input-wrong');
+
+                userAnswers.push({
+                    question: q,
+                    userAnswer: userAnswer, // Show cleaned version or original? Cleaned is safer for logic display
+                    points: points, 
+                    correctAnswer: correctDisplay
+                });
+            });
+            
+            // Show score in footer
+            ui.scoreVal.innerText = totalScore;
+            ui.scoreArea.classList.remove('hidden');
+            ui.submitExamButton.classList.add('hidden');
+            ui.resetExamButton.classList.remove('hidden');
+            
+            // Also show detailed results screen
+            showResults(totalScore, timeTaken, userAnswers);
+        }
+
+        function showResults(score, timeTaken, answers) {
+            hideAllScreens();
+            ui.resultsScreen.classList.remove('hidden');
+            
+            // Score out of 12 (6 questions * 2 marks)
+            ui.finalScore.textContent = `${score}/12`;
+            ui.finalScore.classList.remove('text-green-600', 'text-red-600', 'text-amber-600');
+            
+            // Thresholds: 10/12 is green, 6/12 is amber, else red
+            if (score >= 10) ui.finalScore.classList.add('text-green-600');
+            else if (score >= 6) ui.finalScore.classList.add('text-amber-600');
+            else ui.finalScore.classList.add('text-red-600');
+            
+            const timeDisplay = secondsToDisplay(timeTaken);
+            ui.resultsTimeTaken.textContent = `Time taken: ${timeDisplay} / ${secondsToDisplay(examTotalTime)}`;
+            
+            ui.reviewAnswersContainer.innerHTML = '';
+
+            answers.forEach((ans, index) => {
+                const q = ans.question;
+                const reviewEl = document.createElement('div');
+                
+                // Color Logic based on Points (0, 1, 2)
+                let resultColor = 'bg-red-100 border-red-500'; // Default 0
+                let highlightClass = 'bg-red-300';
+                let statusIcon = '✘ Incorrect (0 pts)';
+
+                if (ans.points === 2) {
+                    resultColor = 'bg-green-100 border-green-500';
+                    highlightClass = 'bg-green-300';
+                    statusIcon = '✔ Correct (2 pts)';
+                } else if (ans.points === 1) {
+                    resultColor = 'bg-yellow-100 border-yellow-500'; // Amber/Yellow for partial
+                    highlightClass = 'bg-yellow-300';
+                    statusIcon = '⚠️ Partial (1 pt)';
+                }
+                
+                reviewEl.className = `p-4 border-l-4 rounded-lg ${resultColor}`;
+                reviewEl.innerHTML = `
+                    <p class="text-lg font-bold">Q${index + 1}. ${statusIcon}</p>
+                    <p class="question-text text-gray-700 mt-1">A. ${q.sentence1}</p>
+                    <div class="mt-2 text-gray-800">
+                        <span class="font-semibold">${q.sentence2_pre}</span> 
+                        <span class="font-extrabold p-1 rounded ${highlightClass}">${ans.userAnswer || '[No Answer]'}</span> 
+                        <span class="font-semibold">${q.sentence2_post}</span> 
+                        (<span class="key-word-small">${q.key_word}</span>)
+                    </div>
+                    ${ans.points < 2 ? `<p class="mt-2 text-sm text-green-700">Correct Answer: <span class="font-bold">${ans.correctAnswer}</span></p>` : ''}
+                `;
+                ui.reviewAnswersContainer.appendChild(reviewEl);
+            });
+        }
+
+        // --- NAVIGATION HELPERS ---
+        // Renamed to showDashboard to match pattern
+        window.showDashboard = function() {
+            stopTimer();
+            hideAllScreens();
+            ui.selectionScreen.classList.remove('hidden');
+            
+            // Toggle menu btn
+            document.getElementById('main-menu-btn').classList.remove('hidden');
+
+            // Ensure data is loaded to enable buttons logic
+            checkDataAndEnableButtons();
+        }
+
+        function switchScreen(id) {
+             ['screen-dashboard', 'screen-list', 'screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
+             document.getElementById(id).classList.remove('hidden');
+             window.scrollTo(0,0);
+
+             // Toggle Main Menu Button visibility based on current screen
+             const menuBtn = document.getElementById('main-menu-btn');
+             if (id === 'screen-dashboard') {
+                 menuBtn.classList.remove('hidden');
+             } else {
+                 menuBtn.classList.add('hidden');
+             }
+        }
+        
+        window.switchScreen = switchScreen; // Expose to global
+
+        // --- Initialization ---
+
+        window.onload = async function() {
+            if (await loadQuestions()) {
+                window.showSelectionScreen();
+            } else {
+                // If loading failed, keep error message visible and disable selection
+                ui.modeFreeBtn.disabled = true;
+                ui.modeExamBtn.disabled = true;
+            }
+        }
+        
+        // Load data immediately on script execution (before window.onload if possible)
+        loadQuestions();
+    </script>
+</body>
+</html>

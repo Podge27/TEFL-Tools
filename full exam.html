@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Use of English Simulator</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        /* General Styles */
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
+        
+        /* App Container */
+        #app-container { 
+            @apply w-full max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[700px] flex flex-col relative; 
+        }
+
+        /* --- DASHBOARD STYLES --- */
+        .level-select-btn {
+            font-size: 4.5rem;
+            padding: 3rem 4rem;
+            min-width: 100%;
+            @apply font-black rounded-[2rem] transition duration-300 transform; 
+            border-width: 4px; 
+            transform: scale(1);
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; 
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        .level-select-btn.active {
+            transform: scale(1.05) translateY(-5px); 
+            opacity: 1;
+            filter: grayscale(0);
+            z-index: 10;
+            @apply ring-4 ring-offset-4 ring-indigo-500;
+        }
+
+        .level-select-btn:hover {
+            transform: scale(1.05) translateY(-5px); 
+            opacity: 1;
+            filter: grayscale(0);
+        }
+
+        /* Gradients */
+        .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
+        .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
+        .btn-c2-style { background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); color: #333; border-color: #DCEDC8; }
+
+        /* Typography & Inputs */
+        .text-content { font-size: 1.25rem; line-height: 2.2; color: #374151; text-align: justify; }
+        
+        .gap-input {
+            @apply inline-block border-b-4 border-indigo-200 px-2 mx-1 font-bold text-indigo-900 focus:outline-none focus:border-indigo-600 focus:bg-indigo-50 transition-colors text-center uppercase;
+            min-width: 140px;
+            background: transparent;
+        }
+        .input-correct { @apply border-green-500 bg-green-100 text-green-800; }
+        .input-partial { @apply border-yellow-500 bg-yellow-50 text-yellow-700; }
+        .input-wrong { @apply border-red-500 bg-red-100 text-red-800 line-through decoration-2; }
+
+        /* Correction Badge (New) */
+        .correction-badge {
+            @apply inline-block ml-1 px-2 py-0.5 rounded bg-green-600 text-white text-sm font-bold shadow-sm align-middle mx-1;
+        }
+
+        /* Part 3 Root Words */
+        .root-word { @apply font-black text-indigo-600 text-sm ml-1 mr-2 px-2 py-0.5 bg-indigo-100 rounded uppercase select-none tracking-wide align-middle border border-indigo-200; }
+
+        /* Part 4 Specifics */
+        .p4-card { @apply p-6 border border-gray-200 rounded-xl mb-6 bg-gray-50; }
+        .key-word-small { @apply bg-amber-200 px-2 py-0.5 rounded font-bold text-gray-800 text-sm uppercase border border-amber-300; }
+
+        /* Buttons */
+        .btn-nav { @apply px-8 py-3 font-bold rounded-lg shadow-md transition transform hover:scale-105 active:scale-95 text-white; }
+        
+        /* Progress Bar */
+        .progress-dot { @apply w-3 h-3 rounded-full bg-gray-300 transition-all duration-300; }
+        .progress-dot.active { @apply bg-indigo-600 scale-150; }
+        .progress-dot.completed { @apply bg-green-500; }
+        
+        /* Results */
+        .score-card { @apply p-6 rounded-xl border-2 mb-4; }
+        
+        /* Start Button */
+        .app-btn {
+            @apply px-6 py-3 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
+
+    <!-- Dynamic Back Button -->
+    <button id="nav-back-btn" onclick="app.handleBack()" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 font-bold transition z-50 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span id="nav-back-text">Back to Menu</span>
+    </button>
+
+    <!-- Main Card -->
+    <div id="app-container">
+        
+        <!-- Header -->
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center mt-8 mb-4">
+            Use of English <span class="text-indigo-600">Exam</span>
+        </h1>
+        
+        <!-- Persistent Progress Bar (Hidden on Start) -->
+        <div id="exam-header" class="hidden bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center mx-6 rounded-xl border-t">
+            <span id="exam-level-badge" class="text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-lg"></span>
+            <div class="flex gap-3">
+                <div id="dot-1" class="progress-dot" title="Part 2"></div>
+                <div id="dot-2" class="progress-dot" title="Part 3"></div>
+                <div id="dot-3" class="progress-dot" title="Part 4"></div>
+            </div>
+        </div>
+
+        <!-- SCREEN 1: LEVEL SELECTION (Dashboard Style) -->
+        <div id="screen-start" class="flex-1 p-8 flex flex-col justify-center items-center gap-12 max-w-5xl mx-auto w-full">
+            <h2 class="text-3xl font-bold text-gray-700 mb-6">1. Select Exam Level</h2>
+            
+            <div class="grid grid-cols-3 gap-6 w-full">
+                <button onclick="app.selectLevel('B2')" id="btn-b2" class="level-select-btn btn-b2-style">B2</button>
+                <button onclick="app.selectLevel('C1')" id="btn-c1" class="level-select-btn btn-c1-style">C1</button>
+                <button onclick="app.selectLevel('C2')" id="btn-c2" class="level-select-btn btn-c2-style">C2</button>
+            </div>
+            
+            <button onclick="app.startExam()" id="start-btn" disabled 
+                    class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105">
+                Start Exam →
+            </button>
+            
+            <p id="status-msg" class="text-gray-400 font-medium">Loading exam data...</p>
+        </div>
+
+        <!-- SCREEN 2: Part 2 (Cloze) -->
+        <div id="screen-part2" class="hidden flex-1 flex flex-col bg-yellow-50/30">
+            <div class="bg-white px-8 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-indigo-600 uppercase tracking-wide">Part 2: Open Cloze</h3>
+                <div class="flex gap-4 items-center">
+                    <span class="text-gray-400 text-sm font-bold">8 Marks</span>
+                    <button onclick="app.handleBack()" class="text-gray-400 hover:text-red-500 font-bold text-sm">EXIT</button>
+                </div>
+            </div>
+            
+            <div class="p-8 md:p-12 flex-1 overflow-y-auto">
+                <h2 id="p2-title" class="text-3xl font-black text-gray-800 mb-8">Title</h2>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <p id="p2-text" class="text-content"></p>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-white border-t border-gray-200 flex justify-between">
+                <button onclick="app.handleBack()" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-600 font-bold">Back</button>
+                <button onclick="app.nextSection()" class="btn-nav bg-indigo-600 hover:bg-indigo-700">Next Section →</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: Part 3 (Word Formation) -->
+        <div id="screen-part3" class="hidden flex-1 flex flex-col bg-yellow-50/30">
+            <div class="bg-white px-8 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-indigo-600 uppercase tracking-wide">Part 3: Word Formation</h3>
+                <div class="flex gap-4 items-center">
+                    <span class="text-gray-400 text-sm font-bold">8 Marks</span>
+                    <button onclick="app.handleBack()" class="text-gray-400 hover:text-red-500 font-bold text-sm">EXIT</button>
+                </div>
+            </div>
+
+            <div class="p-8 md:p-12 flex-1 overflow-y-auto">
+                <h2 id="p3-title" class="text-3xl font-black text-gray-800 mb-8">Title</h2>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <p id="p3-text" class="text-content"></p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-white border-t border-gray-200 flex justify-between">
+                <button onclick="app.prevSection('screen-part2')" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-600 font-bold">← Previous</button>
+                <button onclick="app.nextSection()" class="btn-nav bg-indigo-600 hover:bg-indigo-700">Next Section →</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: Part 4 (Key Word Transformation) -->
+        <div id="screen-part4" class="hidden flex-1 flex flex-col bg-gray-50">
+            <div class="bg-white px-8 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-indigo-600 uppercase tracking-wide">Part 4: Key Word Transformation</h3>
+                <div class="flex gap-4 items-center">
+                    <span class="text-gray-400 text-sm font-bold">12 Marks</span>
+                    <button onclick="app.handleBack()" class="text-gray-400 hover:text-red-500 font-bold text-sm">EXIT</button>
+                </div>
+            </div>
+
+            <div id="p4-container" class="flex-1 overflow-y-auto p-8 md:p-12 space-y-6">
+                <!-- Questions injected here -->
+            </div>
+
+            <div class="p-6 bg-white border-t border-gray-200 flex justify-between">
+                <button onclick="app.prevSection('screen-part3')" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-600 font-bold">← Previous</button>
+                
+                <!-- Action Buttons Container -->
+                <div>
+                    <button id="p4-finish-btn" onclick="app.finishExam()" class="btn-nav bg-green-600 hover:bg-green-700 text-xl py-4 px-10 shadow-lg">Finish & Grade</button>
+                    <button id="p4-return-results-btn" onclick="app.switchScreen('screen-results')" class="hidden btn-nav bg-blue-600 hover:bg-blue-700 text-xl py-4 px-10 shadow-lg">Return to Results</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: Results -->
+        <div id="screen-results" class="hidden flex-1 flex flex-col items-center justify-center p-8 bg-gray-50">
+            <h2 class="text-5xl font-black text-gray-800 mb-10">Exam Results</h2>
+            
+            <div class="w-full max-w-3xl space-y-6 mb-12">
+                <!-- Scores Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="score-card bg-white border-indigo-100 shadow-sm text-center">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase">Part 2</h3>
+                        <div class="text-4xl font-black text-indigo-600 mt-2"><span id="score-p2">0</span><span class="text-lg text-gray-300">/8</span></div>
+                    </div>
+                    <div class="score-card bg-white border-purple-100 shadow-sm text-center">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase">Part 3</h3>
+                        <div class="text-4xl font-black text-purple-600 mt-2"><span id="score-p3">0</span><span class="text-lg text-gray-300">/8</span></div>
+                    </div>
+                    <div class="score-card bg-white border-teal-100 shadow-sm text-center">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase">Part 4</h3>
+                        <div class="text-4xl font-black text-teal-600 mt-2"><span id="score-p4">0</span><span class="text-lg text-gray-300">/12</span></div>
+                    </div>
+                </div>
+                
+                <!-- Total -->
+                <div class="p-8 rounded-3xl bg-white border-4 border-gray-100 flex flex-col items-center justify-center shadow-xl">
+                    <h3 class="text-xl font-bold text-gray-400 tracking-widest uppercase mb-2">Total Score</h3>
+                    <div id="score-total-container" class="text-center">
+                        <span id="score-total" class="text-7xl font-black">0/28</span>
+                    </div>
+                    <div id="score-percent" class="mt-2 text-3xl font-bold text-gray-500">0%</div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                 <button onclick="app.reviewAnswers()" class="btn-nav bg-indigo-600 hover:bg-indigo-700 text-lg px-10">Review Answers</button>
+                 <button onclick="location.reload()" class="btn-nav bg-gray-800 hover:bg-gray-900 text-lg px-10">Start New Exam</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const app = {
+            db: { part2: [], part3: [], part4: [] },
+            examState: {
+                level: null,
+                part2Item: null,
+                part3Item: null,
+                part4Items: [],
+            },
+            isReviewMode: false,
+
+            init: async function() {
+                const msg = document.getElementById('status-msg');
+
+                // Load all data sources in parallel
+                try {
+                    const [p2, p3, p4] = await Promise.all([
+                        this.fetchData('./part2_data.json', 'part2'),
+                        this.fetchData('./part3_data.json', 'part3'),
+                        this.fetchData('./use_of_english_data.json', 'part4')
+                    ]);
+                    
+                    this.db.part2 = p2;
+                    this.db.part3 = p3;
+                    this.db.part4 = p4;
+                    
+                    msg.innerText = "Ready to start.";
+                    msg.classList.add('text-green-500');
+
+                } catch (e) {
+                    console.error("Critical loading error", e);
+                    msg.innerText = "Error loading data. Using backup mode.";
+                }
+            },
+
+            fetchData: async function(url, type) {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error("404");
+                    return await res.json();
+                } catch (e) {
+                    console.warn(`Failed to fetch ${url}, using backup for ${type}.`);
+                    return this.getBackupData(type);
+                }
+            },
+
+            getBackupData: function(type) {
+                // Simplified fallback data for structure testing
+                if (type === 'part2') return [
+                    { id: "B2_FB", level: "B2", title: "B2 Fallback Text", content: "This is a [1] fallback text. It works [2] offline.", answers: {"1":"SIMPLE","2":"FINE"} }, 
+                    { id: "C1_FB", level: "C1", title: "C1 Fallback Text", content: "This is a [1] fallback text. It works [2] offline.", answers: {"1":"SIMPLE","2":"FINE"} },
+                    { id: "C2_FB", level: "C2", title: "C2 Fallback Text", content: "This is a [1] fallback text. It works [2] offline.", answers: {"1":"SIMPLE","2":"FINE"} }
+                ]; 
+                if (type === 'part3') return [
+                    { id: "B2_FB3", level: "B2", title: "B2 WF Text", content: "This is a [1] test.", answers: {"1": {root:"RELIES", answer:"RELIABLE/RELIABLY"}} },
+                    { id: "C1_FB3", level: "C1", title: "C1 WF Text", content: "This is a [1] test.", answers: {"1": {root:"RELIES", answer:"RELIABLE"}} },
+                    { id: "C2_FB3", level: "C2", title: "C2 WF Text", content: "This is a [1] test.", answers: {"1": {root:"RELIES", answer:"RELIABLE"}} }
+                ];
+                if (type === 'part4') return [
+                    { id: "B2_FB4", level: "B2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
+                    { id: "C1_FB4", level: "C1", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER STAY", word_count: 3 },
+                    { id: "C2_FB4", level: "C2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 }
+                ];
+                return [];
+            },
+
+            // --- NAVIGATION ---
+            handleBack: function() {
+                const current = document.querySelector('.flex-1:not(.hidden)');
+                if (current && current.id === 'screen-start') {
+                    // On Start Screen: Go to Main Menu
+                    window.location.href = 'exam_index.html';
+                } else {
+                    // Inside Exam
+                    if (this.isReviewMode) {
+                         this.switchScreen('screen-results');
+                    } else if(confirm("Exit exam? Progress will be lost.")) {
+                        this.switchScreen('screen-start');
+                    }
+                }
+            },
+
+            updateBackButton: function(screenId) {
+                const btnText = document.getElementById('nav-back-text');
+                if (screenId === 'screen-start') {
+                    btnText.innerText = 'Back to Menu';
+                } else if (this.isReviewMode) {
+                    btnText.innerText = 'Back to Results';
+                } else {
+                    btnText.innerText = 'Exit Exam';
+                }
+            },
+
+            switchScreen: function(id) {
+                ['screen-start','screen-part2','screen-part3','screen-part4','screen-results'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                window.scrollTo(0,0);
+                this.updateBackButton(id);
+                
+                // Toggle Main Menu Button vs internal back buttons
+                const menuBtn = document.getElementById('nav-back-btn');
+                if (id === 'screen-start') {
+                    menuBtn.classList.remove('hidden');
+                    document.getElementById('exam-header').classList.add('hidden');
+                } else {
+                    menuBtn.classList.add('hidden');
+                    if (id !== 'screen-results') {
+                         document.getElementById('exam-header').classList.remove('hidden');
+                    }
+                }
+            },
+
+            updateProgress: function(step) {
+                [1,2,3].forEach(n => {
+                    const dot = document.getElementById(`dot-${n}`);
+                    dot.classList.remove('active', 'completed');
+                    if(n < step) dot.classList.add('completed');
+                    if(n === step) dot.classList.add('active');
+                });
+            },
+
+            // --- SELECTION LOGIC ---
+            selectLevel: function(level) {
+                this.examState.level = level;
+                
+                // Highlight UI
+                ['b2','c1','c2'].forEach(l => {
+                    const btn = document.getElementById(`btn-${l}`);
+                    btn.classList.remove('active');
+                    if(l === level.toLowerCase()) btn.classList.add('active');
+                });
+
+                // Enable Start
+                document.getElementById('start-btn').disabled = false;
+            },
+
+            startExam: function() {
+                const level = this.examState.level;
+                if(!level) return;
+
+                const p2Pool = this.db.part2.filter(i => i.level === level);
+                const p3Pool = this.db.part3.filter(i => i.level === level);
+                const p4Pool = this.db.part4.filter(i => i.level === level);
+
+                if (!p2Pool.length || !p3Pool.length || p4Pool.length < 1) {
+                    alert(`Not enough data for Level ${level}.`);
+                    return;
+                }
+
+                this.examState.part2Item = p2Pool[Math.floor(Math.random() * p2Pool.length)];
+                this.examState.part3Item = p3Pool[Math.floor(Math.random() * p3Pool.length)];
+                this.examState.part4Items = p4Pool.sort(() => 0.5 - Math.random()).slice(0, 6); 
+
+                document.getElementById('exam-level-badge').innerText = level;
+                document.getElementById('exam-level-badge').classList.remove('hidden');
+
+                this.isReviewMode = false;
+                // Reset buttons logic
+                document.getElementById('p4-finish-btn').classList.remove('hidden');
+                document.getElementById('p4-return-results-btn').classList.add('hidden');
+
+                this.renderPart2();
+                this.renderPart3();
+                this.renderPart4();
+
+                this.switchScreen('screen-part2');
+                this.updateProgress(1);
+            },
+
+            renderPart2: function() {
+                const item = this.examState.part2Item;
+                document.getElementById('p2-title').innerText = item.title;
+                let html = item.content;
+                for(let i=1; i<=8; i++) {
+                    if(item.answers[i]) {
+                        html = html.replace(`[${i}]`, `<input id="p2-input-${i}" class="gap-input" type="text" placeholder="(${i})" autocomplete="off">`);
+                    }
+                }
+                document.getElementById('p2-text').innerHTML = html;
+            },
+
+            renderPart3: function() {
+                const item = this.examState.part3Item;
+                document.getElementById('p3-title').innerText = item.title;
+                let html = item.content;
+                for(let i=1; i<=8; i++) {
+                     if(item.answers[i]) {
+                        const root = `<span class="root-word">(${item.answers[i].root})</span>`;
+                        html = html.replace(`[${i}]`, `<input id="p3-input-${i}" class="gap-input" type="text" placeholder="(${i})" autocomplete="off">` + root);
+                     }
+                }
+                document.getElementById('p3-text').innerHTML = html;
+            },
+
+            renderPart4: function() {
+                const container = document.getElementById('p4-container');
+                container.innerHTML = '';
+                this.examState.part4Items.forEach((q, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'p4-card bg-white p-6 rounded-xl border border-gray-200';
+                    div.innerHTML = `
+                        <div class="mb-3 text-gray-500 font-bold text-sm uppercase">Question ${idx + 1}</div>
+                        <p class="mb-3 text-xl font-bold text-gray-800">${q.sentence1}</p>
+                        <div class="mb-4"><span class="key-word-small">${q.key_word}</span></div>
+                        <div class="flex flex-wrap items-center gap-2 text-xl text-gray-700">
+                            <span>${q.sentence2_pre}</span>
+                            <input id="p4-input-${idx}" type="text" class="gap-input border-b-4 min-w-[250px] font-bold text-indigo-900" placeholder="">
+                            <span>${q.sentence2_post}</span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            },
+
+            nextSection: function() {
+                const p2 = document.getElementById('screen-part2');
+                const p3 = document.getElementById('screen-part3');
+                
+                if (!p2.classList.contains('hidden')) {
+                    this.switchScreen('screen-part3');
+                    this.updateProgress(2);
+                } else if (!p3.classList.contains('hidden')) {
+                    this.switchScreen('screen-part4');
+                    this.updateProgress(3);
+                }
+            },
+            
+            prevSection: function(targetId) {
+                 this.switchScreen(targetId);
+                 if (targetId === 'screen-part2') this.updateProgress(1);
+                 if (targetId === 'screen-part3') this.updateProgress(2);
+            },
+            
+            // --- PUNCTUATION SANITIZATION HELPER ---
+            cleanText: function(text) {
+                return text.toUpperCase()
+                           .replace(/[.,;!]/g, '')
+                           .replace(/\s\s+/g, ' ')
+                           .trim();
+            },
+
+            finishExam: function() {
+                // 1. Grading Part 2 (1 Mark each, multi-answer support)
+                let s2 = 0;
+                const p2Ans = this.examState.part2Item.answers;
+                for(let i=1; i<=8; i++) {
+                    if(!p2Ans[i]) continue;
+                    const el = document.getElementById(`p2-input-${i}`);
+                    const val = el.value.trim().toUpperCase();
+                    const validOptions = p2Ans[i].split('/').map(s => s.trim().toUpperCase());
+                    
+                    el.disabled = true;
+
+                    if(validOptions.includes(val)) {
+                        s2++;
+                        el.classList.add('input-correct');
+                    } else {
+                        el.classList.add('input-wrong');
+                        // Add badge next to input
+                        const badge = document.createElement('span');
+                        badge.className = 'correction-badge';
+                        badge.innerText = p2Ans[i].replace(/\//g, ' / ');
+                        el.parentNode.insertBefore(badge, el.nextSibling);
+                    }
+                }
+
+                // 2. Grading Part 3 (1 Mark each, multi-answer support)
+                let s3 = 0;
+                const p3Ans = this.examState.part3Item.answers;
+                for(let i=1; i<=8; i++) {
+                    if(!p3Ans[i]) continue;
+                    const el = document.getElementById(`p3-input-${i}`);
+                    const val = el.value.trim().toUpperCase();
+                    const correctRaw = p3Ans[i].answer;
+                    const validOptions = correctRaw.split('/').map(s => s.trim().toUpperCase());
+
+                    el.disabled = true;
+
+                    if(validOptions.includes(val)) {
+                        s3++;
+                        el.classList.add('input-correct');
+                    } else {
+                        el.classList.add('input-wrong');
+                        // Add badge (logic to skip root word span)
+                        const badge = document.createElement('span');
+                        badge.className = 'correction-badge';
+                        badge.innerText = correctRaw.replace(/\//g, ' / ');
+                        
+                        if(el.nextElementSibling && el.nextElementSibling.classList.contains('root-word')) {
+                            el.parentNode.insertBefore(badge, el.nextElementSibling.nextSibling);
+                        } else {
+                            el.parentNode.insertBefore(badge, el.nextSibling);
+                        }
+                    }
+                }
+
+                // 3. Grading Part 4 (2 Marks each, split logic, punctuation clean)
+                let s4 = 0;
+                this.examState.part4Items.forEach((q, idx) => {
+                    const el = document.getElementById(`p4-input-${idx}`);
+                    const userVal = this.cleanText(el.value);
+                    const correctRaw = q.answer.toUpperCase();
+                    const correctDisplay = correctRaw.replace(/\s*\|\s*/g, ' '); 
+                    const correctClean = this.cleanText(correctDisplay);
+
+                    el.disabled = true;
+
+                    if (userVal === correctClean) {
+                        s4 += 2;
+                        el.classList.add('input-correct');
+                    } else if (correctRaw.includes('|')) {
+                        const parts = correctRaw.split('|').map(p => this.cleanText(p));
+                        let partial = 0;
+                        if (userVal.startsWith(parts[0])) partial++;
+                        if (userVal.endsWith(parts[1])) partial++;
+
+                        s4 += partial;
+
+                        if (partial === 2) el.classList.add('input-correct');
+                        else if (partial === 1) {
+                            el.classList.add('input-partial');
+                            // Add badge for full correct answer if partial
+                            const badge = document.createElement('div');
+                            badge.className = 'text-sm text-yellow-600 font-bold mt-1';
+                            badge.innerText = `Correct: ${correctDisplay} (1/2 Marks)`;
+                            el.parentElement.appendChild(badge);
+                        } else {
+                            el.classList.add('input-wrong');
+                            const badge = document.createElement('div');
+                            badge.className = 'text-sm text-red-600 font-bold mt-1';
+                            badge.innerText = `Correct: ${correctDisplay}`;
+                            el.parentElement.appendChild(badge);
+                        }
+                    } else {
+                        el.classList.add('input-wrong');
+                        const badge = document.createElement('div');
+                        badge.className = 'text-sm text-red-600 font-bold mt-1';
+                        badge.innerText = `Correct: ${correctDisplay}`;
+                        el.parentElement.appendChild(badge);
+                    }
+                });
+
+                // Display Scores
+                document.getElementById('score-p2').innerText = s2;
+                document.getElementById('score-p3').innerText = s3;
+                document.getElementById('score-p4').innerText = s4;
+                
+                const total = s2 + s3 + s4;
+                const max = 28;
+                const percent = Math.round((total / max) * 100);
+                
+                // Color & Emoji Logic
+                const totalEl = document.getElementById('score-total');
+                const percentEl = document.getElementById('score-percent');
+                
+                let colorClass = 'text-red-600';
+                let emoji = '';
+                
+                if (percent >= 60) {
+                    colorClass = 'text-green-600';
+                    emoji = ' 😃';
+                }
+
+                totalEl.innerHTML = `${total}/28`;
+                totalEl.className = `text-7xl font-black ${colorClass}`;
+                
+                percentEl.innerText = `${percent}%${emoji}`;
+                percentEl.className = `mt-2 text-3xl font-bold ${colorClass}`;
+
+                this.switchScreen('screen-results');
+            },
+
+            reviewAnswers: function() {
+                this.isReviewMode = true;
+                // Update P4 Buttons
+                document.getElementById('p4-finish-btn').classList.add('hidden');
+                document.getElementById('p4-return-results-btn').classList.remove('hidden');
+                
+                this.switchScreen('screen-part2');
+                this.updateProgress(1);
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

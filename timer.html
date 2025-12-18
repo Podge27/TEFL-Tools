@@ -5,194 +5,530 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TEFL Tools Timer</title>
 <style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #64748b;
+    --danger: #ef4444;
+    --text-main: #1e293b;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-hover: 0 10px 15px -3px rgb(99 102 241 / 0.2), 0 4px 6px -4px rgb(99 102 241 / 0.1);
+  }
+
   body {
-    font-family: Arial, sans-serif;
-    background: #f1f5f9;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
-    color: #0f172a;
+    min-height: 100vh;
+    margin: 0;
   }
+
+  header {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+  }
+
+  .back-link {
+    text-decoration: none;
+    color: var(--secondary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .back-link:hover {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateX(2px);
+  }
+
+  .container {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: var(--shadow-md);
+    width: 90%;
+    max-width: 650px;
+    text-align: center;
+    margin-top: 10px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+
   h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 2rem;
+    margin: 0 0 1.5rem 0;
+    color: var(--text-main);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+
+  button {
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    font-family: inherit;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: none;
+  }
+  button:hover::after { animation: shine 0.75s; }
+  @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
+  button:active { transform: scale(0.96) translateY(0) !important; }
+
+  .mode-select {
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 16px;
+    display: inline-flex;
+    margin-bottom: 2rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
   }
   .mode-select button {
-    padding: 15px 25px;
-    margin: 10px;
-    font-size: 1.4rem;
-    border: none;
-    border-radius: 15px;
-    background: #3b82f6;
-    color: white;
-    cursor: pointer;
+    padding: 12px 28px;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--secondary);
+    font-size: 1rem;
   }
-  .time-buttons {
+  .mode-select button:hover { color: var(--primary); }
+  .mode-select button.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 16px;
+    margin-bottom: 1rem;
+  }
+
+  .time-btn {
+    padding: 16px;
+    border-radius: 16px;
+    background: white;
+    color: var(--text-main);
+    font-size: 1.1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    margin-top: 20px;
-    max-width: 900px;
+    align-items: center;
+    min-height: 58px;
   }
-  .time-buttons button {
-    padding: 15px;
-    margin: 8px;
-    font-size: 1.2rem;
+
+  .time-btn:hover, .custom-wrapper:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .custom-wrapper {
+    grid-column: span 2;
+    padding: 8px 12px;
+    display: flex;
+    gap: 5px;
+  }
+
+  @media (max-width: 450px) {
+    .custom-wrapper { grid-column: span 1; }
+  }
+
+  .custom-input {
+    width: 100%;
     border: none;
-    border-radius: 12px;
-    background: #10b981;
-    color: white;
-    cursor: pointer;
-    width: 120px;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--text-main);
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s;
+    font-family: inherit;
   }
+  
+  .custom-input:focus { border-bottom-color: var(--primary); }
+  .custom-input::placeholder { color: #94a3b8; font-weight: 400; font-size: 0.9rem;}
+
+  .custom-go-btn {
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    padding: 8px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .custom-go-btn:hover { background: var(--primary-dark); }
+
+  .display-container { margin: 2rem 0; }
+  
   #display {
-    font-size: 4rem;
-    margin-top: 25px;
-    font-weight: bold;
+    /* Responsive font size: minimum 3rem, preferred 13vw, max 6rem */
+    font-size: clamp(3rem, 13vw, 6rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -2px; /* Tighter spacing for better fit */
+    line-height: 1;
+    color: #000000;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.08);
   }
-  .controls button {
-    padding: 15px 25px;
-    margin: 10px;
-    font-size: 1.4rem;
-    border: none;
-    border-radius: 15px;
-    background: #64748b;
+
+  .progress-track {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    margin-top: 30px;
+    overflow: hidden;
+    display: none;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #818cf8);
+    width: 100%;
+    transition: width 1s linear;
+  }
+
+  .controls { display: flex; justify-content: center; gap: 16px; margin-top: 2rem; }
+  .btn-control {
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-size: 1.1rem;
     color: white;
-    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
   }
-  .adjust button {
-    padding: 15px 20px;
-    margin: 10px;
-    font-size: 1.2rem;
-    border: none;
-    border-radius: 12px;
-    background: #f59e0b;
-    color: white;
-    cursor: pointer;
+  
+  .btn-start { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
+  
+  .btn-clear { background: white; color: var(--danger); border: 1px solid #fecaca; }
+  .btn-clear:hover { background: #fee2e2; transform: translateY(-2px); }
+  
+  .btn-back-ctrl { background: white; color: var(--secondary); border: 1px solid #e2e8f0; }
+  .btn-back-ctrl:hover { transform: translateY(-2px); border-color: var(--secondary); color: var(--text-main); }
+
+  .adjust-controls { display: flex; justify-content: center; gap: 12px; margin-top: 10px; }
+  .btn-adjust {
+    background: white; color: var(--secondary); font-size: 0.9rem;
+    padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0;
   }
+  .btn-adjust:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
 </style>
 </head>
 <body>
-<h1>TEFL Tools Timer</h1>
 
-<div class="mode-select">
-  <button onclick="setMode('timer')">Timer</button>
-  <button onclick="setMode('stopwatch')">Stopwatch</button>
+<header>
+  <a href="index.html" class="back-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Tools
+  </a>
+</header>
+
+<div class="container">
+  <h1>TEFL Timer</h1>
+
+  <div class="mode-select">
+    <button id="modeTimer" class="active" onclick="setMode('timer')">Timer</button>
+    <button id="modeStopwatch" onclick="setMode('stopwatch')">Stopwatch</button>
+  </div>
+
+  <div id="selectionView">
+    <div class="time-grid" id="timeGrid"></div>
+  </div>
+
+  <div id="activeView" style="display:none;">
+    <div class="display-container">
+      <div id="display">00:00</div>
+      <div class="progress-track" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="adjust-controls" id="adjustRow">
+      <button class="btn-adjust" onclick="adjustTime(30)">+ 30s</button>
+      <button class="btn-adjust" onclick="adjustTime(-30)">- 30s</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn-control btn-start" id="startBtn" onclick="toggleTimer()">Start</button>
+      <button class="btn-control btn-clear" onclick="resetTimer()">Clear</button>
+      <button class="btn-control btn-back-ctrl" onclick="goBack()">Back</button>
+    </div>
+  </div>
 </div>
-
-<div id="timeSelect" class="time-buttons"></div>
-
-<div id="display">00:00</div>
-
-<div class="adjust" id="adjustControls" style="display:none;">
-  <button onclick="adjustTime(30)">+30 sec</button>
-  <button onclick="adjustTime(-30)">-30 sec</button>
-</div>
-
-<div class="controls" id="mainControls" style="display:none;">
-  <button onclick="startTimer()">Start</button>
-  <button onclick="pauseTimer()">Pause</button>
-  <button onclick="resetTimer()">Clear</button>
-  <button onclick="goBack()">Back</button>
-</div>
-
-<audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 let totalSeconds = 0;
+let initialSeconds = 0;
 let interval = null;
 let mode = "timer";
+let isRunning = false;
 
-const timeOptions = [10, 30, 40, 45, 60, 90, 120, 150, 180, 240, 300, 600, 1200, 2400, 2700];
+const timeOptions = [10, 30, 45, 60, 90, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700];
+
+window.onload = () => generateTimeButtons();
 
 function setMode(selected) {
   mode = selected;
-  document.getElementById('timeSelect').innerHTML = '';
-  document.getElementById('adjustControls').style.display = 'none';
-  document.getElementById('mainControls').style.display = 'none';
-  document.getElementById('display').textContent = '00:00';
-
-  if (mode === 'timer') generateTimeButtons();
+  document.getElementById('modeTimer').className = mode === 'timer' ? 'active' : '';
+  document.getElementById('modeStopwatch').className = mode === 'stopwatch' ? 'active' : '';
+  
+  if (mode === 'timer') goBack();
   else prepareStopwatch();
 }
 
 function generateTimeButtons() {
-  const container = document.getElementById('timeSelect');
+  const container = document.getElementById('timeGrid');
+  container.innerHTML = '';
+  
   timeOptions.forEach(sec => {
     const btn = document.createElement('button');
-    btn.textContent = formatTime(sec);
+    btn.className = 'time-btn';
+    btn.textContent = formatHumanReadable(sec);
     btn.onclick = () => selectTime(sec);
     container.appendChild(btn);
   });
+
+  const customWrapper = document.createElement('div');
+  customWrapper.className = 'time-btn custom-wrapper';
+  
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'min (e.g. 5 or 120)';
+  input.className = 'custom-input';
+  input.inputMode = 'decimal';
+  input.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') handleCustomTime(input.value);
+  });
+
+  const goBtn = document.createElement('button');
+  goBtn.className = 'custom-go-btn';
+  goBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+  goBtn.onclick = () => handleCustomTime(input.value);
+
+  customWrapper.appendChild(input);
+  customWrapper.appendChild(goBtn);
+  container.appendChild(customWrapper);
+}
+
+function handleCustomTime(val) {
+  if(!val) return;
+  val = val.trim();
+  let secs = 0;
+
+  if (val.includes(':')) {
+    const parts = val.split(':');
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseInt(parts[1], 10) || 0;
+    secs = (m * 60) + s;
+  } else {
+    const m = parseFloat(val);
+    if(isNaN(m)) return;
+    secs = Math.floor(m * 60);
+  }
+
+  if (secs > 0) selectTime(secs);
 }
 
 function selectTime(sec) {
   totalSeconds = sec;
+  initialSeconds = sec;
+  showActiveView();
   updateDisplay();
-  document.getElementById('adjustControls').style.display = 'block';
-  document.getElementById('mainControls').style.display = 'block';
+  updateProgress();
+  document.getElementById('progressBar').style.display = 'block';
+  document.getElementById('adjustRow').style.visibility = 'visible';
 }
 
 function prepareStopwatch() {
   totalSeconds = 0;
+  initialSeconds = 0;
+  showActiveView();
   updateDisplay();
-  document.getElementById('adjustControls').style.display = 'none';
-  document.getElementById('mainControls').style.display = 'block';
+  document.getElementById('progressBar').style.display = 'none';
+  document.getElementById('adjustRow').style.visibility = 'hidden';
+}
+
+function showActiveView() {
+  document.getElementById('selectionView').style.display = 'none';
+  document.getElementById('activeView').style.display = 'block';
+  document.querySelector('.mode-select').style.display = 'none';
+}
+
+function goBack() {
+  pauseTimer();
+  document.getElementById('selectionView').style.display = 'block';
+  document.getElementById('activeView').style.display = 'none';
+  document.querySelector('.mode-select').style.display = 'inline-flex';
+  document.getElementById('progressBar').style.display = 'none';
+  
+  const startBtn = document.getElementById('startBtn');
+  startBtn.textContent = "Start";
+  startBtn.style.background = "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)";
+  document.getElementById('display').style.color = "#000000";
+  
+  const customInput = document.querySelector('.custom-input');
+  if(customInput) customInput.value = '';
 }
 
 function adjustTime(amount) {
   totalSeconds = Math.max(0, totalSeconds + amount);
+  if(totalSeconds > initialSeconds) initialSeconds = totalSeconds; 
   updateDisplay();
+  updateProgress();
+}
+
+function toggleTimer() {
+  if (isRunning) pauseTimer();
+  else startTimer();
 }
 
 function startTimer() {
   if (interval) return;
+  isRunning = true;
+  
+  const btn = document.getElementById('startBtn');
+  btn.textContent = "Pause";
+  btn.style.background = "#64748b"; 
+
   interval = setInterval(() => {
     if (mode === 'timer') {
       totalSeconds--;
       if (totalSeconds <= 0) {
         totalSeconds = 0;
-        playSound();
-        clearInterval(interval);
-        interval = null;
+        timerFinished();
       }
     } else {
       totalSeconds++;
     }
     updateDisplay();
+    updateProgress();
   }, 1000);
 }
 
 function pauseTimer() {
   clearInterval(interval);
   interval = null;
+  isRunning = false;
+  
+  const btn = document.getElementById('startBtn');
+  btn.textContent = "Start";
+  btn.style.background = "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)";
 }
 
 function resetTimer() {
-  clearInterval(interval);
-  interval = null;
-  totalSeconds = 0;
+  pauseTimer();
+  totalSeconds = mode === 'timer' ? initialSeconds : 0;
   updateDisplay();
+  updateProgress();
+  document.getElementById('display').style.color = "#000000";
 }
 
-function goBack() {
+function timerFinished() {
   pauseTimer();
-  setMode('timer');
+  playDoubleBeep();
+  const display = document.getElementById('display');
+  display.style.transform = "scale(1.1)";
+  display.style.color = "#ef4444"; 
+  setTimeout(() => {
+    display.style.transform = "scale(1)";
+    display.style.color = "#000000"; 
+  }, 500);
 }
 
 function updateDisplay() {
   document.getElementById('display').textContent = formatTime(totalSeconds);
 }
 
-function formatTime(sec) {
-  let m = Math.floor(sec / 60);
-  let s = sec % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+function updateProgress() {
+  if (mode === 'stopwatch' || initialSeconds === 0) return;
+  const percentage = Math.max(0, (totalSeconds / initialSeconds) * 100);
+  document.getElementById('progressFill').style.width = percentage + "%";
 }
 
-function playSound() {
-  document.getElementById('beep').play();
+// Updated Format Logic to support Hours
+function formatTime(sec) {
+  let h = Math.floor(sec / 3600);
+  let m = Math.floor((sec % 3600) / 60);
+  let s = sec % 60;
+
+  if (h > 0) {
+    // Return H:MM:SS if there are hours
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  } else {
+    // Return MM:SS if under an hour
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+}
+
+function formatHumanReadable(sec) {
+  if (sec < 60) return sec + 's';
+  let m = Math.floor(sec / 60);
+  let s = sec % 60;
+  if (s === 0) return m + 'm';
+  return `${m}m ${s}s`;
+}
+
+// Audio Context
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playDoubleBeep() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  
+  const osc1 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(880, now);
+  gain1.gain.setValueAtTime(0.1, now);
+  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+  osc1.connect(gain1);
+  gain1.connect(audioCtx.destination);
+  osc1.start(now);
+  osc1.stop(now + 0.1);
+
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(880, now + 0.15);
+  gain2.gain.setValueAtTime(0.1, now + 0.15);
+  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+  osc2.start(now + 0.15);
+  osc2.stop(now + 0.25);
 }
 </script>
 </body>

@@ -1,0 +1,242 @@
+[
+    {
+        "id": "B2_WF_01",
+        "level": "B2",
+        "title": "A Healthy Lifestyle",
+        "content": "Living a healthy lifestyle is of vital [1] if you want to avoid illness. It is not just about eating fruit and vegetables; regular [2] is also essential. Many people make the [3] of thinking they can eat whatever they want as long as they run occasionally. Unfortunately, this is [4] . A balanced diet is key. Furthermore, getting enough sleep is beneficial for your [5] well-being. If you are constantly tired, your [6] to concentrate will suffer. Finally, try to avoid [7] situations where possible. Stress can be extremely [8] to your health.",
+        "answers": {
+            "1": { "root": "IMPORTANT", "answer": "IMPORTANCE" },
+            "2": { "root": "FIT", "answer": "FITNESS" },
+            "3": { "root": "DECIDE", "answer": "DECISION" },
+            "4": { "root": "CORRECT", "answer": "INCORRECT" },
+            "5": { "root": "PSYCHOLOGY", "answer": "PSYCHOLOGICAL" },
+            "6": { "root": "ABLE", "answer": "ABILITY" },
+            "7": { "root": "STRESS", "answer": "STRESSFUL" },
+            "8": { "root": "HARM", "answer": "HARMFUL" }
+        }
+    },
+    {
+        "id": "B2_WF_02",
+        "level": "B2",
+        "title": "The Job Interview",
+        "content": "Going for a job interview can be a nerve-wracking experience. To increase your chances of [1] , you must prepare thoroughly. Dress [2] to make a good first impression. When answering questions, try to speak with [3] , even if you feel nervous inside. Employers are looking for [4] employees who can solve problems. It is also helpful to show [5] for the position. Ask intelligent questions about the [6] requirements of the role. If you are [7] , do not be disheartened. Ask for feedback so you can make an [8] next time.",
+        "answers": {
+            "1": { "root": "SUCCEED", "answer": "SUCCESS" },
+            "2": { "root": "SMART", "answer": "SMARTLY" },
+            "3": { "root": "CONFIDENT", "answer": "CONFIDENCE" },
+            "4": { "root": "RELY", "answer": "RELIABLE" },
+            "5": { "root": "ENTHUSIAST", "answer": "ENTHUSIASM" },
+            "6": { "root": "DAY", "answer": "DAILY" },
+            "7": { "root": "SUCCESS", "answer": "UNSUCCESSFUL" },
+            "8": { "root": "IMPROVE", "answer": "IMPROVEMENT" }
+        }
+    },
+    {
+        "id": "B2_WF_03",
+        "level": "B2",
+        "title": "Extreme Weather",
+        "content": "In recent years, there has been a significant increase in [1] weather events. Scientists believe that global [2] is largely to blame. We are seeing more [3] storms and floods than ever before. This causes massive [4] to homes and infrastructure. The [5] of sea levels is another major concern for coastal cities. Governments are trying to find a [6] to this crisis, but progress is slow. Individuals can also make a difference by reducing their [7] of energy. It is our [8] to protect the planet for future generations.",
+        "answers": {
+            "1": { "root": "DANGER", "answer": "DANGEROUS" },
+            "2": { "root": "WARM", "answer": "WARMING" },
+            "3": { "root": "POWER", "answer": "POWERFUL" },
+            "4": { "root": "DESTROY", "answer": "DESTRUCTION" },
+            "5": { "root": "RISE", "answer": "RISING" },
+            "6": { "root": "SOLVE", "answer": "SOLUTION" },
+            "7": { "root": "CONSUME", "answer": "CONSUMPTION" },
+            "8": { "root": "RESPONSIBLE", "answer": "RESPONSIBILITY" }
+        }
+    },
+    {
+        "id": "B2_WF_04",
+        "level": "B2",
+        "title": "A Famous Musician",
+        "content": "Ed Sheeran is one of the most [1] musicians in the world today. His rise to [2] was not instant; he spent years busking on the streets. He is known for his incredible [3] to write catchy songs. His [4] on stage is simple, often just him and a guitar, yet he captivates audiences. Despite his wealth, he remains surprisingly [5] by fame. He often supports [6] causes and gives money to charity. His fans love him for his [7] and down-to-earth nature. It is rare to find such a [8] artist who is also so humble.",
+        "answers": {
+            "1": { "root": "FAME", "answer": "FAMOUS" },
+            "2": { "root": "STAR", "answer": "STARDOM" },
+            "3": { "root": "ABLE", "answer": "ABILITY" },
+            "4": { "root": "APPEAR", "answer": "APPEARANCE" },
+            "5": { "root": "AFFECT", "answer": "UNAFFECTED" },
+            "6": { "root": "VARY", "answer": "VARIOUS" },
+            "7": { "root": "HONEST", "answer": "HONESTY" },
+            "8": { "root": "TALENT", "answer": "TALENTED" }
+        }
+    },
+    {
+        "id": "B2_WF_05",
+        "level": "B2",
+        "title": "Learning Languages",
+        "content": "Learning a foreign language can be highly [1] to your career. In today's global market, companies value [2] who can speak more than one language. It requires a lot of [3] and patience to master a new tongue. You need to memorise vocabulary and understand grammatical [4] . Listening to [5] speakers is one of the best ways to learn. Don't worry if your [6] is not perfect at first. The most important thing is communication. With [7] practice, you will eventually become fluent. It is definitely a [8] investment of your time.",
+        "answers": {
+            "1": { "root": "ADVANTAGE", "answer": "ADVANTAGEOUS" },
+            "2": { "root": "EMPLOY", "answer": "EMPLOYEES" },
+            "3": { "root": "DEDICATE", "answer": "DEDICATION" },
+            "4": { "root": "CONSTRUCT", "answer": "CONSTRUCTIONS" },
+            "5": { "root": "NATURE", "answer": "NATIVE" },
+            "6": { "root": "PRONOUNCE", "answer": "PRONUNCIATION" },
+            "7": { "root": "DAY", "answer": "DAILY" },
+            "8": { "root": "VALUE", "answer": "VALUABLE" }
+        }
+    },
+    {
+        "id": "C1_WF_01",
+        "level": "C1",
+        "title": "Modern Architecture",
+        "content": "The skyline of London has changed [1] over the last twenty years. Traditional stone buildings now stand alongside [2] skyscrapers made of glass and steel. This juxtaposition is often controversial. Critics argue that the new towers [3] the historic character of the city. However, supporters claim they are a symbol of economic [4] . One issue is the [5] of affordable housing in the city centre. Developers often prioritise luxury apartments, which are [6] to the average worker. There is a need for more [7] planning to ensure the city serves all its residents. We must find a balance between preservation and [8] .",
+        "answers": {
+            "1": { "root": "DRAMA", "answer": "DRAMATICALLY" },
+            "2": { "root": "IMPRESS", "answer": "IMPRESSIVE" },
+            "3": { "root": "SHADOW", "answer": "OVERSHADOW" },
+            "4": { "root": "INVEST", "answer": "INVESTMENTS" },
+            "5": { "root": "SHORT", "answer": "SHORTAGE" },
+            "6": { "root": "AFFORD", "answer": "UNAFFORDABLE" },
+            "7": { "root": "THINK", "answer": "THOUGHTFUL" },
+            "8": { "root": "MODERN", "answer": "MODERNISATION/MODERNIZATION" }
+        }
+    },
+    {
+        "id": "C1_WF_02",
+        "level": "C1",
+        "title": "Space Tourism",
+        "content": "The idea of holidaying in space was once pure science fiction, but it is fast becoming a [1] . Several private companies are competing to offer suborbital flights to [2] tourists. The cost, however, is currently [3] , meaning only the super-rich can afford it. Safety is another major concern; space travel is inherently [4] . Critics argue that the environmental impact [5] the benefits. Despite these objections, the industry is moving forward. Proponents argue that it will drive [6] innovation that benefits everyone. Whether it becomes a mainstream activity remains [7] . For now, it remains the playground of the [8] elite.",
+        "answers": {
+            "1": { "root": "REAL", "answer": "REALITY" },
+            "2": { "root": "ADVENTURE", "answer": "ADVENTURERS" },
+            "3": { "root": "ASTRONOMY", "answer": "ASTRONOMICAL" },
+            "4": { "root": "HAZARD", "answer": "HAZARDOUS" },
+            "5": { "root": "WEIGH", "answer": "OUTWEIGHS" },
+            "6": { "root": "TECHNOLOGY", "answer": "TECHNOLOGICAL" },
+            "7": { "root": "DOUBT", "answer": "DOUBTFUL" },
+            "8": { "root": "PRIVILEGE", "answer": "PRIVILEGED" }
+        }
+    },
+    {
+        "id": "C1_WF_03",
+        "level": "C1",
+        "title": "The Psychology of Colour",
+        "content": "Colour plays a significant role in our daily lives, influencing our mood and [1] . Marketing companies spend millions researching the [2] effects of packaging colours. For instance, red is often used to signal urgency or hunger, which is why it is common in fast-food logos. Blue, on the other hand, creates a sense of [3] and trust. However, our reactions to colour can be subjective and culturally [4] . In some cultures, white is associated with weddings, while in others it signifies mourning. Therefore, global brands must be [5] when launching products abroad. Using the wrong colour could lead to [6] of the brand message. Understanding these nuances is [7] for any designer. It is a fascinating field of [8] .",
+        "answers": {
+            "1": { "root": "PERCEIVE", "answer": "PERCEPTIONS" },
+            "2": { "root": "CONSCIOUS", "answer": "SUBCONSCIOUS" },
+            "3": { "root": "TRANQUIL", "answer": "TRANQUILITY" },
+            "4": { "root": "DEPEND", "answer": "DEPENDENT" },
+            "5": { "root": "CAUTION", "answer": "CAUTIOUS" },
+            "6": { "root": "INTERPRET", "answer": "MISINTERPRETATIONS" },
+            "7": { "root": "ESSENCE", "answer": "ESSENTIAL" },
+            "8": { "root": "INVESTIGATE", "answer": "INVESTIGATION" }
+        }
+    },
+    {
+        "id": "C1_WF_04",
+        "level": "C1",
+        "title": "Sleep Deprivation",
+        "content": "In our fast-paced society, sleep is often undervalued. Many people view it as a luxury rather than a biological [1] . However, chronic sleep deprivation can have severe consequences. It leads to a reduction in cognitive function, making [2] difficult. It also weakens the immune system, leaving us [3] to infections. Furthermore, there is a strong link between lack of sleep and emotional [4] . People who are tired are more prone to anxiety and irritability. Employers are beginning to realise that well-rested staff are more [5] . Some companies even encourage napping during the day. It is [6] to think we can function effectively without rest. We must prioritise sleep to avoid [7] . It is the foundation of a healthy [8] .",
+        "answers": {
+            "1": { "root": "NECESSARY", "answer": "NECESSITY" },
+            "2": { "root": "DECIDE", "answer": "DECISIONS" },
+            "3": { "root": "DEFEND", "answer": "DEFENCELESS/DEFENSELESS" },
+            "4": { "root": "STABLE", "answer": "INSTABILITY" },
+            "5": { "root": "PRODUCE", "answer": "PRODUCTIVE" },
+            "6": { "root": "LOGIC", "answer": "ILLOGICAL" },
+            "7": { "root": "BURN", "answer": "BURNOUT" },
+            "8": { "root": "EXIST", "answer": "EXISTENCE" }
+        }
+    },
+    {
+        "id": "C1_WF_05",
+        "level": "C1",
+        "title": "Renewable Energy",
+        "content": "The transition away from fossil fuels is unavoidable. As oil reserves dwindle, the [1] of renewable energy sources becomes increasingly urgent. Solar and wind power have seen massive growth, but storage remains a [2] . Batteries are currently expensive and inefficient. However, scientists are optimistic about [3] breakthroughs in this area. Another challenge is the [4] of the grid infrastructure. We need a system capable of handling [5] in power supply. Despite these hurdles, the environmental argument is [6] . Climate change poses an [7] threat to our way of life. We must invest in green technology to ensure a [8] future.",
+        "answers": {
+            "1": { "root": "ADOPT", "answer": "ADOPTION" },
+            "2": { "root": "LIMIT", "answer": "LIMITATION" },
+            "3": { "root": "COME", "answer": "UPCOMING" },
+            "4": { "root": "RELY", "answer": "RELIABILITY" },
+            "5": { "root": "FLUCTUATE", "answer": "FLUCTUATIONS" },
+            "6": { "root": "DENY", "answer": "UNDENIABLE" },
+            "7": { "root": "EXIST", "answer": "EXISTENTIAL" },
+            "8": { "root": "SUSTAIN", "answer": "SUSTAINABLE" }
+        }
+    },
+    {
+        "id": "C2_WF_01",
+        "level": "C2",
+        "title": "The Nature of Genius",
+        "content": "What makes a genius? Is it an innate gift or the result of [1] hard work? Biographies of famous intellectuals often reveal a childhood marked by [2] precocity. However, talent alone is rarely enough. It must be paired with an [3] drive to succeed. Many geniuses display traits of eccentricity, often leading to social [4] . Their minds operate on a different plane, allowing them to make connections others miss. Yet, the line between genius and madness is [5] thin. History is littered with examples of brilliant minds plagued by mental illness. Society often views them with a mixture of awe and [6] . Perhaps true genius requires a certain [7] with the status quo. It is this refusal to accept accepted wisdom that leads to [8] discoveries.",
+        "answers": {
+            "1": { "root": "CEASE", "answer": "UNCEASING" },
+            "2": { "root": "ORDINARY", "answer": "EXTRAORDINARY" },
+            "3": { "root": "SHAKE", "answer": "UNSHAKEABLE/UNSHAKABLE" },
+            "4": { "root": "ALIEN", "answer": "ALIENATION" },
+            "5": { "root": "PERCEIVE", "answer": "IMPERCEPTIBLY" },
+            "6": { "root": "SUSPECT", "answer": "SUSPICION" },
+            "7": { "root": "SATISFY", "answer": "DISSATISFACTION" },
+            "8": { "root": "PRECEDE", "answer": "UNPRECEDENTED" }
+        }
+    },
+    {
+        "id": "C2_WF_02",
+        "level": "C2",
+        "title": "Artificial Intelligence",
+        "content": "The rise of Artificial Intelligence is arguably the most [1] development of our time. Its potential to revolutionise industries is vast, yet it raises profound ethical questions. The [2] of algorithms in decision-making processes is a growing concern. If an AI makes a biased decision, who is held [3] ? Furthermore, as machines become more capable, the [4] of human workers is called into question. We may face a future of mass unemployment unless we adapt. There is also the fear of the 'singularity', where AI surpasses human intelligence, leading to [5] consequences. Experts warn against [6] regarding these risks. We must ensure that AI development is aligned with human values. If we proceed [7] , we risk creating a tool we cannot control. The stakes could not be [8] .",
+        "answers": {
+            "1": { "root": "CONSEQUENCE", "answer": "CONSEQUENTIAL" },
+            "2": { "root": "PERVADE", "answer": "PERVASIVENESS" },
+            "3": { "root": "ACCOUNT", "answer": "ACCOUNTABLE" },
+            "4": { "root": "DISPENSE", "answer": "DISPENSABILITY" },
+            "5": { "root": "PREDICT", "answer": "UNPREDICTABLE" },
+            "6": { "root": "COMPLACENT", "answer": "COMPLACENCY" },
+            "7": { "root": "CHECK", "answer": "UNCHECKED" },
+            "8": { "root": "MEASURE", "answer": "IMMEASURABLE" }
+        }
+    },
+    {
+        "id": "C2_WF_03",
+        "level": "C2",
+        "title": "Literary Criticism",
+        "content": "Post-modernist literature is often characterised by its [1] and playfulness. It rejects the linear narratives of the past, preferring fragmentation and ambiguity. This can make it [2] to the casual reader. However, proponents argue that this complexity reflects the [3] nature of reality itself. By refusing to offer easy answers, these texts invite a deeper level of [4] . The author is no longer the sole authority; the reader becomes an active participant in meaning-making. This shift represents a [5] of the traditional hierarchy. Critics, however, often accuse the genre of being [6] self-indulgent. They claim it prioritises style over substance. Regardless of one's stance, its influence on contemporary fiction is [7] . It challenges us to rethink our [8] about what a story can be.",
+        "answers": {
+            "1": { "root": "PREDICT", "answer": "UNPREDICTABILITY" },
+            "2": { "root": "ACCESS", "answer": "INACCESSIBILITY" },
+            "3": { "root": "CHAOS", "answer": "CHAOTIC" },
+            "4": { "root": "ENGAGE", "answer": "ENGAGEMENT" },
+            "5": { "root": "STABLE", "answer": "DESTABILISATION/DESTABILIZATION" },
+            "6": { "root": "EXCESS", "answer": "EXCESSIVELY" },
+            "7": { "root": "DISPUTE", "answer": "INDISPUTABLE" },
+            "8": { "root": "CONCEPT", "answer": "PRECONCEPTIONS" }
+        }
+    },
+    {
+        "id": "C2_WF_04",
+        "level": "C2",
+        "title": "Urban Exploration",
+        "content": "Urban exploration, or 'urbex', involves investigating man-made structures, typically those which are abandoned. It is a hobby that exists on the [1] of legality. Explorers are drawn to the [2] beauty of decaying buildings. There is a sense of melancholy in witnessing the [3] of once-grand structures. Photographers capture the peeling paint and rusting metal, finding art in [4] . However, it is fraught with danger; rotting floors and asbestos are common hazards. Moreover, strict security measures can lead to [5] for trespassing. Despite the risks, the community is growing [6] . For many, it is an act of historical documentation, preserving the memory of places before they vanish [7] . It offers a glimpse into a world usually hidden from [8] .",
+        "answers": {
+            "1": { "root": "SKIRT", "answer": "OUTSKIRTS" },
+            "2": { "root": "HAUNT", "answer": "HAUNTING" },
+            "3": { "root": "INTEGRATE", "answer": "DISINTEGRATION" },
+            "4": { "root": "SEE", "answer": "UNSEEN" },
+            "5": { "root": "PROSECUTE", "answer": "PROSECUTION" },
+            "6": { "root": "EXPONENT", "answer": "EXPONENTIALLY" },
+            "7": { "root": "ENTIRE", "answer": "ENTIRELY" },
+            "8": { "root": "LOOK", "answer": "ONLOOKERS" }
+        }
+    },
+    {
+        "id": "C2_WF_05",
+        "level": "C2",
+        "title": "The Philosophy of Time",
+        "content": "Our perception of time is fundamentally [1] . We experience it as a linear flow, yet physics suggests this may be an illusion. Einstein's theory of relativity demonstrated that time is [2] , depending on speed and gravity. This concept is deeply [3] to the human mind, which craves order and sequence. Philosophers have long debated whether the past and future have any [4] existence, or if only the 'now' is real. If time is indeed an illusion, then our fear of mortality is [5] . However, living with such a perspective is practically impossible. We are bound by the [6] of our biology to perceive time passing. Memories serve as a [7] of who we are, anchoring us in a temporal narrative. Without this, our sense of self would likely undergo [8] .",
+        "answers": {
+            "1": { "root": "SUBJECT", "answer": "SUBJECTIVE" },
+            "2": { "root": "FLEX", "answer": "FLEXIBLE" },
+            "3": { "root": "SETTLE", "answer": "UNSETTLING" },
+            "4": { "root": "OBJECT", "answer": "OBJECTIVE" },
+            "5": { "root": "REVOKE", "answer": "IRREVOCABLE" },
+            "6": { "root": "CONSTRAIN", "answer": "CONSTRAINTS" },
+            "7": { "root": "VALID", "answer": "VALIDATION" },
+            "8": { "root": "FRAGMENT", "answer": "FRAGMENTATION" }
+        }
+    }
+]

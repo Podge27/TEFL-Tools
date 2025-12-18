@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Use of English Part 2 (Open Cloze)</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style type="text/tailwindcss">
+        /* General Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            min-height: 100vh;
+        }
+
+        /* App Container */
+        #app-container {
+            @apply w-full max-w-7xl; /* WIDE SCREEN */
+            background-color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- DASHBOARD STYLES (New - Matching Part 4) --- */
+        .level-select-btn {
+            font-size: 4.5rem;
+            padding: 3rem 4rem;
+            min-width: 100%;
+            @apply font-black rounded-[2rem] transition duration-300 transform; 
+            border-width: 4px; 
+            transform: scale(1);
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; 
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        .level-select-btn.active {
+            transform: scale(1.05) translateY(-5px);
+            opacity: 1;
+            filter: grayscale(0);
+            z-index: 10;
+            @apply ring-4 ring-offset-4 ring-indigo-500;
+        }
+
+        .level-select-btn:hover {
+            transform: scale(1.05) translateY(-5px); 
+            opacity: 1;
+            filter: grayscale(0);
+        }
+
+        /* Gradients */
+        .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
+        .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
+        .btn-c2-style { background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); color: #333; border-color: #DCEDC8; }
+
+        .mode-select-btn {
+            @apply flex flex-col items-center justify-center p-8 rounded-[1.5rem] border-4 border-gray-200 bg-white text-gray-500 transition-all duration-200 cursor-pointer shadow-md hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-xl hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed;
+            min-height: 200px;
+            width: 100%;
+        }
+        
+        .mode-select-btn.active {
+            @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xl ring-4 ring-offset-4 ring-indigo-500;
+            transform: translateY(-5px);
+        }
+
+        /* --- ACTIVITY STYLES (Old - Preserved) --- */
+        .text-content {
+            font-size: 1.35rem; 
+            line-height: 2.3;
+            color: #374151;
+            text-align: justify;
+        }
+
+        /* Classroom Mode (Interactive Spans) */
+        .gap-box {
+            @apply inline-flex items-center justify-center border-b-2 border-gray-400 font-bold text-gray-400 px-2 mx-1 transition-all duration-200 select-none;
+            min-width: 3rem;
+            cursor: pointer;
+            vertical-align: baseline;
+            background-color: rgba(0,0,0,0.03);
+            border-radius: 4px 4px 0 0;
+        }
+        .gap-box:hover { @apply bg-amber-100 text-amber-600 border-amber-400; }
+        .gap-box.revealed { @apply border-green-500 text-green-700 bg-green-100; }
+
+        /* Home Mode (Input Fields) */
+        .gap-input {
+            @apply inline-block border-b-2 border-indigo-300 px-2 mx-1 font-semibold text-indigo-900 focus:outline-none focus:border-indigo-600 focus:bg-indigo-50 transition-colors;
+            background-color: transparent;
+            width: 140px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .input-correct { @apply border-green-500 bg-green-100 text-green-800; }
+        .input-wrong { @apply border-red-500 bg-red-100 text-red-800 line-through decoration-2; }
+        .correction-badge { @apply inline-block ml-1 px-2 py-0.5 rounded bg-green-600 text-white text-sm font-bold shadow-sm; }
+
+        /* Buttons */
+        .app-btn {
+            @apply px-6 py-3 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95;
+        }
+        .btn-action {
+            @apply px-6 py-3 font-bold text-white rounded-lg shadow-md transition hover:opacity-90 active:scale-95;
+        }
+        .list-item-btn {
+            @apply w-full text-left p-4 bg-white hover:bg-indigo-50 border border-gray-200 rounded-lg transition duration-150 font-semibold text-lg text-gray-700 hover:text-indigo-700 flex justify-between items-center shadow-sm;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
+
+    <!-- Back Button -->
+    <a id="main-menu-btn" href="exam_index.html" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 font-bold transition z-50 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Menu</span>
+    </a>
+
+    <div id="app-container">
+
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center my-8">
+            Use of English <span class="text-indigo-600">Part 2</span>
+        </h1>
+
+        <!-- --- SCREEN 1: DASHBOARD (New Style) --- -->
+        <div id="screen-dashboard" class="flex-1 p-8 flex flex-col gap-8 max-w-5xl mx-auto w-full">
+            
+            <!-- 1. Select Level -->
+            <div>
+                <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">1. Select Level</h3>
+                <div class="grid grid-cols-3 gap-6 w-full">
+                    <button onclick="app.selectLevel('B2')" id="btn-b2" class="level-select-btn btn-b2-style">B2</button>
+                    <button onclick="app.selectLevel('C1')" id="btn-c1" class="level-select-btn btn-c1-style">C1</button>
+                    <button onclick="app.selectLevel('C2')" id="btn-c2" class="level-select-btn btn-c2-style">C2</button>
+                </div>
+            </div>
+
+            <!-- 2. Select Mode -->
+            <div>
+                <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">2. Select Mode</h3>
+                <div class="grid grid-cols-2 gap-6 w-full">
+                    <button onclick="app.selectMode('classroom')" id="mode-class" disabled class="mode-select-btn">
+                        <span class="text-6xl mb-4">🏫</span>
+                        <span class="text-3xl font-bold text-gray-800">Classroom Style</span>
+                        <span class="text-lg mt-2">Interactive gaps. Click to reveal.</span>
+                    </button>
+                    <button onclick="app.selectMode('exam')" id="mode-exam" disabled class="mode-select-btn">
+                        <span class="text-6xl mb-4">📝</span>
+                        <span class="text-3xl font-bold text-gray-800">Exam Style</span>
+                        <span class="text-lg mt-2">Type answers. Scored at the end.</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Actions -->
+            <div class="mt-4 flex flex-col items-center gap-4">
+                <button onclick="app.startActivity()" id="start-btn" disabled 
+                        class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105">
+                    Start Activity →
+                </button>
+                
+                <button onclick="app.showList()" id="list-btn" disabled class="text-gray-400 font-bold hover:text-indigo-600 disabled:opacity-0 transition">
+                    or Select Text from List
+                </button>
+            </div>
+            
+            <p id="data-loading-status" class="text-center text-sm text-gray-400 mt-4">Initializing...</p>
+        </div>
+
+        <!-- --- SCREEN 2: LIST SELECTION (Old Style) --- -->
+        <div id="screen-list" class="hidden flex-1 p-8 flex flex-col">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Select Text (<span id="list-badge"></span>)</h2>
+            <div id="titles-container" class="flex-1 overflow-y-auto space-y-3 pr-2 max-h-[500px]"></div>
+            <button onclick="app.showDashboard()" class="mt-6 self-start px-6 py-2 bg-gray-200 font-bold rounded-lg hover:bg-gray-300">← Back</button>
+        </div>
+
+        <!-- --- SCREEN 3: ACTIVITY AREA (Old Style + Cream BG) --- -->
+        <div id="screen-activity" class="hidden flex-1 flex flex-col" style="background-color: #fefce8;">
+            <h2 id="text-title" class="text-3xl font-black text-gray-800 my-6 text-center uppercase tracking-wide">Title Goes Here</h2>
+            
+            <div class="flex-1 px-8 md:px-12 overflow-y-auto">
+                <p id="text-display" class="text-content">
+                    <!-- Text injected here -->
+                </p>
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="mt-8 pt-6 p-8 border-t border-gray-300/50 bg-white rounded-b-2xl">
+                <div id="home-result-bar" class="hidden mb-4 p-4 rounded-lg bg-white border border-gray-200 text-center text-xl font-bold">
+                    Score: <span id="score-display">0/8</span>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <button onclick="app.showDashboard()" class="btn-action bg-gray-500">Menu</button>
+                    
+                    <div class="space-x-4 flex">
+                        <!-- Classroom Controls -->
+                        <div id="controls-classroom" class="hidden space-x-2">
+                            <button onclick="app.resetCurrent()" class="btn-action bg-amber-500">Reset Gaps</button>
+                            <button onclick="app.revealAll()" class="btn-action bg-purple-600">Reveal All</button>
+                        </div>
+                        
+                        <!-- Home Controls -->
+                        <div id="controls-home" class="hidden space-x-2">
+                            <button onclick="app.checkAnswers()" id="btn-check" class="btn-action bg-green-600">Check Answers</button>
+                            <button onclick="app.resetCurrent()" id="btn-retry" class="hidden btn-action bg-amber-500">Retry</button>
+                        </div>
+
+                        <button onclick="app.nextText()" class="btn-action bg-blue-600">Next Text →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- APP LOGIC -->
+    <script>
+        const app = {
+            data: [],
+            filteredData: [],
+            state: { level: null, mode: null, currentIndex: 0 },
+            isRandom: false,
+
+            init: async function() {
+                await this.loadData();
+            },
+
+            loadData: async function() {
+                const status = document.getElementById('data-loading-status');
+                try {
+                    status.innerText = "Loading data...";
+                    const res = await fetch('./part2_data.json');
+                    if (!res.ok) throw new Error("File not found");
+                    this.data = await res.json();
+                    status.innerText = "Ready.";
+                } catch (e) {
+                    console.warn("Using fallback data");
+                    // Fallback Data
+                    this.data = [
+                        { "id": "B2_01", "level": "B2", "title": "The Origin of Chewing Gum", "content": "We tend to think of chewing gum as a modern American invention, but it has actually been around for thousands of years. The ancient Greeks used to chew a resin called mastic, [1] came from the bark of a tree. This substance was thought to have health benefits as [2] as freshening the breath. In South America, the Aztecs chewed a substance called chicle. This was natural, but in [3] of its popularity, it had a drawback: it would eventually break [4] . In modern times, early versions of gum were tasteless, but in 1869, flavoured gum was introduced. It was an instant success. Today, [5] the fact that it is banned in some places, it remains popular globally. However, environmentalists assume it is [6] problem because it is not biodegradable. Therefore, scientists are looking [7] ways to make it eco-friendly. Perhaps in the future, we will see gum that disappears [8] trace.", "answers": { "1": "WHICH", "2": "WELL", "3": "SPITE", "4": "UP", "5": "DESPITE", "6": "A", "7": "INTO", "8": "WITHOUT" } },
+                        { "id": "B2_02", "level": "B2", "title": "Learning a New Instrument", "content": "Many people say they would like to learn a musical instrument, but they often give [1] before they have really started. One of the main reasons for this is that they [2] not realise how much practice is involved. It is said that to become an expert [3] anything, you need to put in 10,000 hours of practice. That is a [4] of time! However, you don't need to be an expert to enjoy playing. If you set achievable goals, [5] as learning one simple song a week, you will see progress. It is also important to choose an instrument that suits you. For example, [6] you live in a small apartment, a drum kit might not be the best idea. Above [7] , remember that playing music should be fun, so don't be too hard on [8] if you make mistakes.", "answers": { "1": "UP", "2": "DO", "3": "AT", "4": "LOT", "5": "SUCH", "6": "IF", "7": "ALL", "8": "YOURSELF/YOURSELVES" } },
+                        { "id": "C1_01", "level": "C1", "title": "The Impact of Noise", "content": "Noise pollution is often defined as unwanted sound released into the environment. It disturbs humans and causes an adverse effect on [1] mental and psychological well-being. It is measured in decibels and is generated [2] a number of sources, including traffic, construction and industrial activities. [3] not commonly considered a major environmental concern, its impact is significant. Prolonged exposure to high levels of noise can lead to hearing loss, stress, and sleep disturbances. Furthermore, it interferes [4] communication and concentration. What is [5] , it affects wildlife; animals rely on sound for navigation and finding food, and noise pollution disrupts these essential activities. Consequently, urban planners are now placing [6] emphasis on noise reduction strategies. These include sound barriers and the use of quieter materials. [7] these measures are expensive, they are deemed necessary for improving the quality of life. It is high [8] we took this issue seriously.", "answers": { "1": "BOTH", "2": "BY", "3": "ALTHOUGH", "4": "WITH", "5": "MORE", "6": "GREATER", "7": "WHILE", "8": "TIME" } }
+                    ];
+                    status.innerText = "Loaded backup data.";
+                }
+                this.updateUI();
+            },
+
+            // --- DASHBOARD LOGIC (New Style) ---
+            selectLevel: function(lvl) {
+                this.state.level = lvl;
+                this.updateUI();
+            },
+
+            selectMode: function(m) {
+                this.state.mode = m;
+                this.updateUI();
+            },
+
+            updateUI: function() {
+                // Levels
+                ['b2','c1','c2'].forEach(l => {
+                    const btn = document.getElementById(`btn-${l}`);
+                    btn.classList.remove('active');
+                    if(this.state.level && l === this.state.level.toLowerCase()) btn.classList.add('active');
+                });
+
+                // Modes
+                const hasLevel = !!this.state.level;
+                const modeBtns = document.querySelectorAll('.mode-select-btn');
+                modeBtns.forEach(btn => btn.disabled = !hasLevel);
+
+                ['class','exam'].forEach(md => {
+                    const btn = document.getElementById(`mode-${md}`);
+                    btn.classList.remove('active');
+                    const modeKey = md === 'class' ? 'classroom' : 'exam';
+                    if(this.state.mode === modeKey) btn.classList.add('active');
+                });
+
+                // Start
+                const canStart = this.state.level && this.state.mode;
+                document.getElementById('start-btn').disabled = !canStart;
+                document.getElementById('list-btn').disabled = !canStart;
+            },
+
+            // --- NAVIGATION ---
+            startActivity: function() {
+                this.isRandom = true;
+                this.startEngine();
+            },
+
+            showList: function() {
+                this.filteredData = this.data.filter(i => i.level === this.state.level);
+                if (!this.filteredData.length) return alert("No texts found.");
+
+                this.isRandom = false;
+                const container = document.getElementById('titles-container');
+                container.innerHTML = '';
+                document.getElementById('list-badge').innerText = this.state.level;
+
+                this.filteredData.forEach((item, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'list-item-btn';
+                    btn.innerHTML = `<span>${item.title}</span> <span class="text-sm text-gray-400">#${index+1}</span>`;
+                    btn.onclick = () => {
+                        this.currentIndex = index;
+                        this.loadTextIntoView();
+                        this.switchScreen('screen-activity');
+                    };
+                    container.appendChild(btn);
+                });
+                this.switchScreen('screen-list');
+            },
+
+            startEngine: function() {
+                this.filteredData = this.data.filter(i => i.level === this.state.level);
+                if (!this.filteredData.length) return alert("No texts found.");
+                
+                if (this.isRandom) {
+                    this.filteredData.sort(() => Math.random() - 0.5);
+                    this.currentIndex = 0;
+                }
+                
+                this.loadTextIntoView();
+                this.switchScreen('screen-activity');
+            },
+
+            // --- ACTIVITY LOGIC (Old Style) ---
+            loadTextIntoView: function() {
+                const item = this.filteredData[this.currentIndex];
+                document.getElementById('text-title').innerText = item.title;
+                const displayArea = document.getElementById('text-display');
+                
+                // UI Reset
+                document.getElementById('home-result-bar').classList.add('hidden');
+                document.getElementById('btn-check').classList.remove('hidden');
+                document.getElementById('btn-retry').classList.add('hidden');
+
+                if (this.state.mode === 'classroom') {
+                    document.getElementById('controls-classroom').classList.remove('hidden');
+                    document.getElementById('controls-home').classList.add('hidden');
+                } else {
+                    document.getElementById('controls-classroom').classList.add('hidden');
+                    document.getElementById('controls-home').classList.remove('hidden');
+                }
+
+                let htmlContent = item.content;
+                for(let i = 1; i <= 8; i++) {
+                    const answer = item.answers[i.toString()];
+                    
+                    if (this.state.mode === 'classroom') {
+                        // Original Classroom Span
+                        const gapHtml = `<span class="gap-box" onclick="app.toggleGap(this)" data-answer="${answer}" data-index="${i}">[${i}]</span>`;
+                        htmlContent = htmlContent.replace(`[${i}]`, gapHtml);
+                    } else {
+                        // Original Exam Input with placeholder (i)
+                        const inputHtml = `<input id="input-${i}" class="gap-input" type="text" autocomplete="off" placeholder="(${i})">`;
+                        htmlContent = htmlContent.replace(`[${i}]`, inputHtml);
+                    }
+                }
+                displayArea.innerHTML = htmlContent;
+            },
+
+            toggleGap: function(el) {
+                const ans = el.getAttribute('data-answer');
+                // Replace slash with space-slash-space for better readability in UI
+                const displayAns = ans.replace(/\//g, ' / ');
+                
+                if (el.innerText === displayAns) {
+                    el.innerText = `[${el.getAttribute('data-index')}]`;
+                    el.classList.remove('revealed');
+                } else {
+                    el.innerText = displayAns;
+                    el.classList.add('revealed');
+                }
+            },
+
+            revealAll: function() {
+                const gaps = document.querySelectorAll('.gap-box');
+                gaps.forEach(el => {
+                    const ans = el.getAttribute('data-answer');
+                    // Ensure split answers look nice
+                    const displayAns = ans.replace(/\//g, ' / ');
+                    el.innerText = displayAns;
+                    el.classList.add('revealed');
+                });
+            },
+
+            checkAnswers: function() {
+                const item = this.filteredData[this.currentIndex];
+                let score = 0;
+                for(let i=1; i<=8; i++) {
+                    const input = document.getElementById(`input-${i}`);
+                    const userVal = input.value.trim().toUpperCase();
+                    const correctValRaw = item.answers[i.toString()];
+                    // Split by slash for multiple possible answers
+                    const validOptions = correctValRaw.split('/').map(s => s.trim().toUpperCase());
+
+                    input.disabled = true;
+                    
+                    if (validOptions.includes(userVal)) {
+                        score++;
+                        input.classList.add('input-correct');
+                    } else {
+                        input.classList.add('input-wrong');
+                        const badge = document.createElement('span');
+                        badge.className = 'correction-badge';
+                        // Show all valid options separated by /
+                        badge.innerText = correctValRaw.replace(/\//g, ' / ');
+                        input.parentNode.insertBefore(badge, input.nextSibling);
+                    }
+                }
+                const scoreDisplay = document.getElementById('score-display');
+                scoreDisplay.innerText = `${score} / 8`;
+                scoreDisplay.className = score >= 5 ? 'text-green-600' : 'text-red-600';
+                document.getElementById('home-result-bar').classList.remove('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('btn-retry').classList.remove('hidden');
+            },
+
+            nextText: function() {
+                if (this.isRandom) {
+                    this.currentIndex = (this.currentIndex + 1) % this.filteredData.length;
+                } else {
+                    if (this.currentIndex < this.filteredData.length - 1) this.currentIndex++;
+                    else { alert("End of list."); this.showList(); return; }
+                }
+                this.loadTextIntoView();
+            },
+
+            resetCurrent: function() {
+                this.loadTextIntoView();
+            },
+
+            switchScreen: function(id) {
+                ['screen-dashboard', 'screen-list', 'screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                window.scrollTo(0,0);
+
+                // Toggle Main Menu Button visibility based on current screen
+                const menuBtn = document.getElementById('main-menu-btn');
+                if (id === 'screen-dashboard') {
+                    menuBtn.classList.remove('hidden');
+                } else {
+                    menuBtn.classList.add('hidden');
+                }
+            },
+
+            showDashboard: function() { this.switchScreen('screen-dashboard'); },
+            goHome: function() { this.showDashboard(); }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
