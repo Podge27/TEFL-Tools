@@ -2609,6 +2609,132 @@
         "answer": "AS IF | HE WERE ENJOYING",
         "word_count": 5
     },
+      {
+    "id": "GEN_B2_262",
+    "level": "B2",
+    "sentence1": "I'm certain that Sarah didn't take your phone.",
+    "key_word": "HAVE",
+    "sentence2_pre": "Sarah ",
+    "sentence2_post": " your phone.",
+    "answers": [
+      "CAN'T HAVE | TAKEN",
+      "COULDN'T HAVE | TAKEN",
+      "CANNOT HAVE | TAKEN"
+    ],
+    "word_count": 3
+  },
+   {
+    "id": "Xmas 1.263",
+    "level": "B2",
+    "sentence1": "I'm sure Santa didn't come down the chimney because the fire is lit.",
+    "key_word": "HAVE",
+    "sentence2_pre": "Santa ",
+    "sentence2_post": " down the chimney because the fire is lit.",
+    "answers": [
+      "CAN'T HAVE | COME",
+      "COULDN'T HAVE | COME"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "Xmas 2.264",
+    "level": "B2",
+    "sentence1": "Everyone expects it to snow on Christmas Day.",
+    "key_word": "EXPECTED",
+    "sentence2_pre": "It ",
+    "sentence2_post": " on Christmas Day.",
+    "answers": [
+      "IS EXPECTED | TO SNOW"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "Xmas 3.265",
+    "level": "B2",
+    "sentence1": "Last year's Christmas pudding was much better than this year's.",
+    "key_word": "NEARLY",
+    "sentence2_pre": "This year's Christmas pudding is ",
+    "sentence2_post": " last year's.",
+    "answers": [
+      "NOT NEARLY AS GOOD | AS",
+      "NOT NEARLY SO GOOD | AS"
+    ],
+    "word_count": 5
+  },
+{
+    "id": "MODAL_B2_01.266",
+    "level": "B2",
+    "sentence1": "It wasn't necessary for you to bring a gift, but you did.",
+    "key_word": "NEEDN'T",
+    "sentence2_pre": "You ",
+    "sentence2_post": " a gift.",
+    "answers": [
+      "NEEDN'T HAVE | BROUGHT"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "MODAL_B2_02.267",
+    "level": "B2",
+    "sentence1": "It was wrong of you to speak to your mother like that.",
+    "key_word": "OUGHT",
+    "sentence2_pre": "You ",
+    "sentence2_post": " to your mother like that.",
+    "answers": [
+      "OUGHT NOT TO | HAVE SPOKEN",
+      "OUGHT NOT HAVE | SPOKEN"
+    ],
+    "word_count": 5
+  },
+  {
+    "id": "MODAL_B2_03.268",
+    "level": "B2",
+    "sentence1": "I am certain that they will arrive on time.",
+    "key_word": "BOUND",
+    "sentence2_pre": "They ",
+    "sentence2_post": " on time.",
+    "answers": [
+      "ARE BOUND | TO ARRIVE"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "MODAL_B2_04.269",
+    "level": "B2",
+    "sentence1": "Did you manage to find the restaurant easily?",
+    "key_word": "SUCCEED",
+    "sentence2_pre": "Did you ",
+    "sentence2_post": " the restaurant easily?",
+    "answers": [
+      "SUCCEED IN | FINDING"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "MODAL_B2_05.270",
+    "level": "B2",
+    "sentence1": "I was expected to finish the report yesterday.",
+    "key_word": "SUPPOSED",
+    "sentence2_pre": "I ",
+    "sentence2_post": " the report yesterday.",
+    "answers": [
+      "WAS SUPPOSED TO | FINISH",
+      "WAS SUPPOSED TO | HAVE FINISHED"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "MODAL_B2_06.280",
+    "level": "B2",
+    "sentence1": "I am sure you were very tired after the long journey.",
+    "key_word": "BEEN",
+    "sentence2_pre": "You ",
+    "sentence2_post": " very tired after the long journey.",
+    "answers": [
+      "MUST HAVE | BEEN"
+    ],
+    "word_count": 3
+  },
     {
         "id": "C1_1",
         "level": "C1",
@@ -2646,7 +2772,7 @@
         "key_word": "NEVER",
         "sentence2_pre": "They ",
         "sentence2_post": " sold the property.",
-        "answer": "SHOULD NEVER HAVE",
+        "answer": "SHOULD | NEVER HAVE",
         "word_count": 3
     },
     {
@@ -2656,7 +2782,7 @@
         "key_word": "SHOULD",
         "sentence2_pre": "Under ",
         "sentence2_post": " let anyone else use your identity card.",
-        "answer": "NO CIRCUMSTANCES SHOULD YOU",
+        "answer": "NO CIRCUMSTANCES | SHOULD YOU",
         "word_count": 4
     },
     {
@@ -2666,7 +2792,7 @@
         "key_word": "TAKEN",
         "sentence2_pre": "An experienced accountant ",
         "sentence2_post": " running of the football club.",
-        "answer": "HAS TAKEN OVER THE",
+        "answer": "HAS TAKEN OVER | THE",
         "word_count": 4
     },
     {
@@ -2676,7 +2802,7 @@
         "key_word": "KNOWING",
         "sentence2_pre": "If he doesn´t get that job, ",
         "sentence2_post": " what he'll do!",
-        "answer": "THERE IS NO KNOWING",
+        "answer": "THERE IS NO | KNOWING",
         "word_count": 4
     },
     {
@@ -2686,7 +2812,7 @@
         "key_word": "GAINED",
         "sentence2_pre": "The burglars may ",
         "sentence2_post": " by forcing open a fire exit.",
-        "answer": "HAVE GAINED ENTRY",
+        "answer": "HAVE GAINED | ENTRY",
         "word_count": 3
     },
     {
@@ -2696,7 +2822,7 @@
         "key_word": "CAPABLE",
         "sentence2_pre": "Many people believe that Edison ",
         "sentence2_post": " the world championship in judo.",
-        "answer": "IS CAPABLE OF WINNING",
+        "answer": "IS CAPABLE OF | WINNING",
         "word_count": 4
     },
     {
@@ -2706,7 +2832,7 @@
         "key_word": "UP",
         "sentence2_pre": "Leo's decision to ",
         "sentence2_post": " as a disappointment to me.",
-        "answer": "GIVE UP BASKETBALL CAME",
+        "answer": "GIVE UP BASKETBALL | CAME",
         "word_count": 4
     },
     {
@@ -2716,7 +2842,7 @@
         "key_word": "GRANTED",
         "sentence2_pre": "He dislikes ",
         "sentence2_post": " by his friends.",
-        "answer": "BEING TAKEN FOR GRANTED",
+        "answer": "BEING | TAKEN FOR GRANTED",
         "word_count": 4
     },
     {
@@ -2726,7 +2852,7 @@
         "key_word": "GET",
         "sentence2_pre": "I need ",
         "sentence2_post": " because I´m going abroad this summer.",
-        "answer": "TO GET MY PASSPORT RENEWED",
+        "answer": "TO GET | MY PASSPORT RENEWED",
         "word_count": 5
     },
     {
@@ -2736,7 +2862,7 @@
         "key_word": "WONDERING",
         "sentence2_pre": "I ",
         "sentence2_post": " willing to look after my dog while I'm away on holiday?",
-        "answer": "WAS WONDERING IF YOU WERE",
+        "answer": "WAS WONDERING | IF YOU WERE",
         "word_count": 5
     },
     {
@@ -2746,7 +2872,7 @@
         "key_word": "POINT",
         "sentence2_pre": "I can ",
         "sentence2_post": " that old computer being repaired.",
-        "answer": "SEE NO POINT IN",
+        "answer": "SEE NO POINT | IN",
         "word_count": 4
     },
     {
@@ -2756,7 +2882,7 @@
         "key_word": "JUST",
         "sentence2_pre": "It's ",
         "sentence2_post": " singing in a choir as it is playing the drums.",
-        "answer": "JUST AS MUCH FUN",
+        "answer": "JUST AS MUCH | FUN",
         "word_count": 4
     },
     {
@@ -2766,7 +2892,7 @@
         "key_word": "HAVING",
         "sentence2_pre": "Clara",
         "sentence2_post": " the missing letter.",
-        "answer": "DENIED HAVING SEEN",
+        "answer": "DENIED | HAVING SEEN",
         "word_count": 3
     },
     {
@@ -2776,7 +2902,7 @@
         "key_word": "ACCOUNT",
         "sentence2_pre": "Everyone's opinion must ",
         "sentence2_post": " before a final decision is made.",
-        "answer": "BE TAKEN INTO ACCOUNT",
+        "answer": "BE TAKEN | INTO ACCOUNT",
         "word_count": 4
     },
     {
@@ -2786,7 +2912,7 @@
         "key_word": "INTEREST",
         "sentence2_pre": "According to the chairman, it is ",
         "sentence2_post": " to look after its customers.",
-        "answer": "IN THE COMPANY´S INTEREST",
+        "answer": "IN THE COMPANY´S | INTEREST",
         "word_count": 4
     },
     {
@@ -2796,7 +2922,7 @@
         "key_word": "GET",
         "sentence2_pre": "Kelvin should ",
         "sentence2_post": " by a builder.",
-        "answer": "GET THOSE BROKEN ROOF TILES REPAIRED",
+        "answer": "GET THOSE BROKEN ROOF TILES | REPAIRED",
         "word_count": 6
     },
     {
@@ -2806,7 +2932,7 @@
         "key_word": "DELIGHT",
         "sentence2_pre": "Much to ",
         "sentence2_post": " given the award.",
-        "answer": "HER DELIGHT LUCY WAS",
+        "answer": "HER DELIGHT | LUCY WAS",
         "word_count": 4
     },
     {
@@ -2816,7 +2942,7 @@
         "key_word": "NOT",
         "sentence2_pre": "Fernanda said that ",
         "sentence2_post": " her sister´s old dress.",
-        "answer": "SHE WOULD NOT WEAR",
+        "answer": "SHE WOULD NOT | WEAR",
         "word_count": 4
     },
     {
@@ -2826,7 +2952,7 @@
         "key_word": "TOUCH",
         "sentence2_pre": "´Don´t",
         "sentence2_post": ", ' Marta said as she waved goodbye to her friend.",
-        "answer": "FORGET TO KEEP IN TOUCH",
+        "answer": "FORGET | TO KEEP IN TOUCH",
         "word_count": 5
     },
     {
@@ -2836,7 +2962,7 @@
         "key_word": "LOOKOUT",
         "sentence2_pre": "Police are warning people to be",
         "sentence2_post": " forged notes which are currently in circulation.",
-        "answer": "ON THE LOOKOUT FOR",
+        "answer": "ON THE LOOKOUT | FOR",
         "word_count": 4
     },
     {
@@ -2846,7 +2972,7 @@
         "key_word": "DRAWN",
         "sentence2_pre": "Plans ",
         "sentence2_post": " reroute the traffic to reduce congestion.",
-        "answer": "ARE BEING DRAWN UP TO",
+        "answer": "ARE BEING | DRAWN UP TO",
         "word_count": 5
     },
     {
@@ -2856,7 +2982,7 @@
         "key_word": "COULD",
         "sentence2_pre": "Much ",
         "sentence2_post": " smoke coming out of the bedroom windows.",
-        "answer": "TO OUR HORROR WE COULD SEE",
+        "answer": "TO OUR HORROR | WE COULD SEE",
         "word_count": 6
     },
     {
@@ -2866,7 +2992,7 @@
         "key_word": "RATHER",
         "sentence2_pre": "Would ",
         "sentence2_post": " the staff know about your resignation?",
-        "answer": "YOU RATHER I HAD NOT LET",
+        "answer": "YOU RATHER | I HAD NOT LET",
         "word_count": 6
     },
     {
@@ -2876,7 +3002,7 @@
         "key_word": "LOSS",
         "sentence2_pre": "Brian ",
         "sentence2_post": " how the stolen computer got into the boot of his car.",
-        "answer": "WAS AT A LOSS TO EXPLAIN",
+        "answer": "WAS AT A LOSS | TO EXPLAIN",
         "word_count": 6
     },
     {
@@ -2886,7 +3012,7 @@
         "key_word": "RESULT",
         "sentence2_pre": "These drastic measures are ",
         "sentence2_post": " the government losing some support.",
-        "answer": "LIKELY TO RESULT IN",
+        "answer": "LIKELY | TO RESULT IN",
         "word_count": 4
     },
     {
@@ -2896,7 +3022,7 @@
         "key_word": "HIGHLY",
         "sentence2_pre": "It is ",
         "sentence2_post": " win an award.",
-        "answer": "HIGHLY LIKELY THAT THE FILM WILL",
+        "answer": "HIGHLY LIKELY THAT | THE FILM WILL",
         "word_count": 6
     },
     {
@@ -2906,7 +3032,7 @@
         "key_word": "LIKELY",
         "sentence2_pre": "It ",
         "sentence2_post": " ban in the city centre will be a very unpopular move.",
-        "answer": "IS LIKELY THAT THE PARKING",
+        "answer": "IS LIKELY THAT | THE PARKING",
         "word_count": 5
     },
     {
@@ -2916,7 +3042,7 @@
         "key_word": "PART",
         "sentence2_pre": "Quick ",
         "sentence2_post": " the police prevented a fight between rival groups developing.",
-        "answer": "ACTION ON THE PART OF",
+        "answer": "ACTION | ON THE PART OF",
         "word_count": 5
     },
     {
@@ -2926,7 +3052,7 @@
         "key_word": "ACROSS",
         "sentence2_pre": "How can I ",
         "sentence2_post": " that I don´t want to see him any more?",
-        "answer": "GET IT ACROSS TO HIM",
+        "answer": "GET IT ACROSS | TO HIM",
         "word_count": 5
     },
     {
@@ -2936,7 +3062,7 @@
         "key_word": "WONDERING",
         "sentence2_pre": "I ",
         "sentence2_post": " willing to look after my dog while I´m away on holiday?",
-        "answer": "WAS WONDERING IF YOU WOULD BE",
+        "answer": "WAS WONDERING | IF YOU WOULD BE",
         "word_count": 6
     },
     {
@@ -2946,7 +3072,7 @@
         "key_word": "SUCH",
         "sentence2_pre": "Once one member of a team makes a mistake there ",
         "sentence2_post": " as team spirit.",
-        "answer": "IS NO SUCH THING",
+        "answer": "IS | NO SUCH THING",
         "word_count": 4
     },
     {
@@ -2956,7 +3082,7 @@
         "key_word": "TRACK",
         "sentence2_pre": "Sorry, I ",
         "sentence2_post": " time.",
-        "answer": "LOST TRACK OF",
+        "answer": "LOST TRACK | OF",
         "word_count": 3
     },
     {
@@ -2966,7 +3092,7 @@
         "key_word": "EVENT",
         "sentence2_pre": "",
         "sentence2_post": " that you are not satisfied with the product your money will be refunded.",
-        "answer": "IN THE UNLIKELY EVENT",
+        "answer": "IN | THE UNLIKELY EVENT",
         "word_count": 4
     },
     {
@@ -2976,7 +3102,7 @@
         "key_word": "MADE",
         "sentence2_pre": "Roger",
         "sentence2_post": " for health and safety in the factory.",
-        "answer": "WAS MADE RESPONSIBLE",
+        "answer": "WAS | MADE RESPONSIBLE",
         "word_count": 3
     },
     {
@@ -2986,7 +3112,7 @@
         "key_word": "TAKEN",
         "sentence2_pre": "I ",
         "sentence2_post": " when my colleagues organised a farewell party on my last day.",
-        "answer": "WAS TAKEN BY SURPRISE",
+        "answer": "WAS TAKEN | BY SURPRISE",
         "word_count": 4
     },
     {
@@ -2996,7 +3122,7 @@
         "key_word": "DANGER",
         "sentence2_pre": "If he keeps disagreeing with his boss, he's ",
         "sentence2_post": " from his job.",
-        "answer": "IN DANGER OF GETTING SACKED",
+        "answer": "IN DANGER OF | GETTING SACKED",
         "word_count": 5
     },
     {
@@ -3006,7 +3132,7 @@
         "key_word": "PLACED",
         "sentence2_pre": "The Government have ",
         "sentence2_post": " the worldwide economic slowdown for our problems.",
-        "answer": "PLACED THE BLAME ON",
+        "answer": "PLACED THE BLAME | ON",
         "word_count": 4
     },
     {
@@ -3016,8 +3142,8 @@
         "key_word": "IMPRESSION",
         "sentence2_pre": "I ",
         "sentence2_post": " that the job was mine if I wanted it.",
-        "answer": "HAD THE IMPRESSION",
-        "word_count": 3
+        "answer": "WAS | UNDER THE IMPRESSION",
+        "word_count": 4
     },
     {
         "id": "C1_42",
@@ -3026,7 +3152,7 @@
         "key_word": "WHY",
         "sentence2_pre": "Hilary was asked to ",
         "sentence2_post": " the mistake.",
-        "answer": "EXPLAIN WHY SHE MADE",
+        "answer": "EXPLAIN | WHY SHE MADE",
         "word_count": 4
     },
     {
@@ -3036,7 +3162,7 @@
         "key_word": "OF",
         "sentence2_pre": "Lisa has",
         "sentence2_post": " up her independence to get married.",
-        "answer": "NO INTENTION OF GIVING",
+        "answer": "NO INTENTION OF | GIVING",
         "word_count": 4
     },
     {
@@ -3046,7 +3172,7 @@
         "key_word": "RESULT",
         "sentence2_pre": "Failure to ",
         "sentence2_post": " your booking being cancelled.",
-        "answer": "PAY ON TIME WILL RESULT IN",
+        "answer": "PAY ON TIME WILL | RESULT IN",
         "word_count": 5
     },
     {
@@ -3056,7 +3182,7 @@
         "key_word": "COME",
         "sentence2_pre": "How difficult",
         "sentence2_post": " with new ideas for the festival every year!",
-        "answer": "IT IS TO COME UP",
+        "answer": "IT IS | TO COME UP",
         "word_count": 5
     },
     {
@@ -3066,7 +3192,7 @@
         "key_word": "EVERY",
         "sentence2_pre": "The company stands ",
         "sentence2_post": " the contract.",
-        "answer": "EVERY CHANCE OF GETTING",
+        "answer": "EVERY CHANCE OF | GETTING",
         "word_count": 4
     },
     {
@@ -3076,7 +3202,7 @@
         "key_word": "BY",
         "sentence2_pre": "Today's rehearsal ",
         "sentence2_post": " a short meeting of the cast.",
-        "answer": "WILL BE FOLLOWED BY",
+        "answer": "WILL BE FOLLOWED | BY",
         "word_count": 4
     },
     {
@@ -3086,7 +3212,7 @@
         "key_word": "REQUIRED",
         "sentence2_pre": "No ",
         "sentence2_post": " to help us run the exhibition next month.",
-        "answer": "FEWER THAN SIX PEOPLE ARE REQUIRED",
+        "answer": "FEWER THAN SIX PEOPLE | ARE REQUIRED",
         "word_count": 6
     },
     {
@@ -3096,7 +3222,7 @@
         "key_word": "CALL",
         "sentence2_pre": "Do not ",
         "sentence2_post": " if you have any further problems.",
-        "answer": "HESITATE TO GIVE US A CALL",
+        "answer": "HESITATE | TO GIVE US A CALL",
         "word_count": 6
     },
     {
@@ -3106,7 +3232,7 @@
         "key_word": "WEAK",
         "sentence2_pre": "British people are commonly believed to ",
         "sentence2_post": " foreign languages.",
-        "answer": "BE WEAK AT SPEAKING",
+        "answer": "BE WEAK AT | SPEAKING",
         "word_count": 4
     },
     {
@@ -3116,7 +3242,7 @@
         "key_word": "COST",
         "sentence2_pre": "A mistake in an interview may ",
         "sentence2_post": " so it is important to be well prepared.",
-        "answer": "COST YOU THE JOB",
+        "answer": "COST YOU | THE JOB",
         "word_count": 4
     },
     {
@@ -3126,7 +3252,7 @@
         "key_word": "SPENT",
         "sentence2_pre": "Layla",
         "sentence2_post": " for her car keys.",
-        "answer": "SPENT FIVE MINUTES LOOKING",
+        "answer": "SPENT FIVE MINUTES | LOOKING",
         "word_count": 4
     },
     {
@@ -3136,7 +3262,7 @@
         "key_word": "CAME",
         "sentence2_pre": "The offer of a place on the course ",
         "sentence2_post": " Phoebe.",
-        "answer": "CAME AS A SURPRISE TO",
+        "answer": "CAME AS A SURPRISE | TO",
         "word_count": 5
     },
     {
@@ -3146,7 +3272,7 @@
         "key_word": "NO",
         "sentence2_pre": "There's ",
         "sentence2_post": " embarrassment at being given the award.",
-        "answer": "NO DENYING MY",
+        "answer": "NO DENYING | MY",
         "word_count": 3
     },
     {
@@ -3156,7 +3282,7 @@
         "key_word": "HAS",
         "sentence2_pre": "It looks as ",
         "sentence2_post": " dieting because she's quite slim now.",
-        "answer": "IF ANITA HAS BEEN",
+        "answer": "IF | ANITA HAS BEEN",
         "word_count": 4
     },
     {
@@ -3166,7 +3292,7 @@
         "key_word": "PUT",
         "sentence2_pre": "'I am not willing",
         "sentence2_post": " from my colleagues any longer, ' said Delia.",
-        "answer": "TO PUT UP WITH ANY RUDENESS",
+        "answer": "TO PUT UP WITH | ANY RUDENESS",
         "word_count": 6
     },
     {
@@ -3176,7 +3302,7 @@
         "key_word": "HOW",
         "sentence2_pre": "I'm not",
         "sentence2_post": " in that situation.",
-        "answer": "SURE HOW I WOULD HAVE REACTED",
+        "answer": "SURE HOW | I WOULD HAVE REACTED",
         "word_count": 6
     },
     {
@@ -3186,7 +3312,7 @@
         "key_word": "DISCUSSION",
         "sentence2_pre": "The panel of experts started the programme",
         "sentence2_post": "the media and its importance in education.",
-        "answer": "WITH HAVING A DISCUSSION ABOUT",
+        "answer": "WITH A DISCUSSION | ABOUT",
         "word_count": 5
     },
     {
@@ -3196,7 +3322,7 @@
         "key_word": "BROKE",
         "sentence2_pre": "Sarah ",
         "sentence2_post": " soon as she heard she'd failed her driving test.",
-        "answer": "BROKE DOWN IN TEARS AS",
+        "answer": "BROKE DOWN IN TEARS | AS",
         "word_count": 5
     },
     {
@@ -3206,7 +3332,7 @@
         "key_word": "OBJECTION",
         "sentence2_pre": "Do you ",
         "sentence2_post": " coming over to see you later?",
-        "answer": "HAVE ANY OBJECTION TO ME",
+        "answer": "HAVE ANY OBJECTION | TO ME",
         "word_count": 5
     },
     {
@@ -3216,7 +3342,7 @@
         "key_word": "AFFECT",
         "sentence2_pre": "Will Glyn's ",
         "sentence2_post": " ability to do this job?",
-        "answer": "LACK OF EXPERIENCE AFFECT HIS",
+        "answer": "LACK OF EXPERIENCE | AFFECT HIS",
         "word_count": 5
     },
     {
@@ -3226,7 +3352,7 @@
         "key_word": "OCCURED",
         "sentence2_pre": "It",
         "sentence2_post": " that Pedro might be planning to leave the country.",
-        "answer": "HAD NEVER OCCURRED TO US",
+        "answer": "HAD NEVER OCCURRED | TO US",
         "word_count": 5
     },
     {
@@ -3236,7 +3362,7 @@
         "key_word": "TAKEN",
         "sentence2_pre": "We must ",
         "sentence2_post": " at the junction.",
-        "answer": "HAVE TAKEN THE WRONG TURN",
+        "answer": "HAVE TAKEN | THE WRONG TURN",
         "word_count": 5
     },
     {
@@ -3246,7 +3372,7 @@
         "key_word": "LIKE",
         "sentence2_pre": "We ",
         "sentence2_post": " on with our mountain trek but the weather was too bad.",
-        "answer": "WOULD HAVE LIKED TO CARRY",
+        "answer": "WOULD HAVE LIKED | TO CARRY",
         "word_count": 5
     },
     {
@@ -3256,7 +3382,7 @@
         "key_word": "AHEAD",
         "sentence2_pre": "This project will",
         "sentence2_post": " to plan.",
-        "answer": "GO AHEAD ACCORDING",
+        "answer": "GO AHEAD | ACCORDING",
         "word_count": 3
     },
     {
@@ -3266,7 +3392,7 @@
         "key_word": "MIND",
         "sentence2_pre": "It's high time Simon ",
         "sentence2_post": " about his future.",
-        "answer": "MADE UP HIS MIND",
+        "answer": "MADE UP | HIS MIND",
         "word_count": 4
     },
     {
@@ -3276,7 +3402,7 @@
         "key_word": "HIGHLY",
         "sentence2_pre": "The company ",
         "sentence2_post": " of in the local area.",
-        "answer": "IS HIGHLY SPOKEN",
+        "answer": "IS HIGHLY | SPOKEN",
         "word_count": 3
     },
     {
@@ -3286,7 +3412,7 @@
         "key_word": "POINT",
         "sentence2_pre": "Nadia was just",
         "sentence2_post": " the restaurant when her friend arrived.",
-        "answer": "ON THE POINT OF LEAVING",
+        "answer": "ON THE POINT OF | LEAVING",
         "word_count": 5
     },
     {
@@ -3296,7 +3422,7 @@
         "key_word": "SURPRISED",
         "sentence2_pre": "Given the economic climate, ",
         "sentence2_post": "the company made a profit this year.",
-        "answer": "I WOULD BE SURPRISED IF",
+        "answer": "I WOULD BE SURPRISED | IF",
         "word_count": 5
     },
     {
@@ -3306,7 +3432,7 @@
         "key_word": "DOUBT",
         "sentence2_pre": "Barbara's parents were ",
         "sentence2_post": " that she would be a great tennis player.",
-        "answer": "IN NO DOUBT",
+        "answer": "IN | NO DOUBT",
         "word_count": 3
     },
     {
@@ -3316,7 +3442,7 @@
         "key_word": "RECOLLECTION",
         "sentence2_pre": "My grandfather didn't ",
         "sentence2_post": " phoning me last night.",
-        "answer": "HAVE ANY RECOLLECTION OF",
+        "answer": "HAVE ANY RECOLLECTION | OF",
         "word_count": 5
     },
     {
@@ -3326,7 +3452,7 @@
         "key_word": "PUT",
         "sentence2_pre": "You have ",
         "sentence2_post": " your pay claims before the end of the month.",
-        "answer": "TO PUT IN",
+        "answer": "TO PUT | IN",
         "word_count": 3
     },
     {
@@ -3336,7 +3462,7 @@
         "key_word": "CHANCE",
         "sentence2_pre": "Martin has almost",
         "sentence2_post": " the 100 metres, as he's out of training.",
-        "answer": "NO CHANCE OF WINNING",
+        "answer": "NO CHANCE OF | WINNING",
         "word_count": 4
     },
     {
@@ -3346,7 +3472,7 @@
         "key_word": "NOTICE",
         "sentence2_pre": "Few of the children ",
         "sentence2_post": " what the teacher had told them.",
-        "answer": "TOOK NOTICE OF",
+        "answer": "TOOK NOTICE | OF",
         "word_count": 3
     },
     {
@@ -3356,7 +3482,7 @@
         "key_word": "COUNT",
         "sentence2_pre": "The company's employees shouldn´t ",
         "sentence2_post": " allocated a car-parking space.",
-        "answer": "COUNT ON BEING",
+        "answer": "COUNT ON | BEING",
         "word_count": 3
     },
     {
@@ -3366,7 +3492,7 @@
         "key_word": "HOPE",
         "sentence2_pre": "He has given",
         "sentence2_post": " a job before the end of the year.",
-        "answer": "UP HOPE OF FINDING",
+        "answer": "UP HOPE OF | FINDING",
         "word_count": 4
     },
     {
@@ -3376,7 +3502,7 @@
         "key_word": "MATTER",
         "sentence2_pre": "I think it's only ",
         "sentence2_post": " Jemma becomes a famous model.",
-        "answer": "A MATTER OF TIME BEFORE",
+        "answer": "A MATTER OF TIME | BEFORE",
         "word_count": 5
     },
     {
@@ -3386,7 +3512,7 @@
         "key_word": "POINT",
         "sentence2_pre": "I can´t ",
         "sentence2_post": " how to use a typewriter.",
-        "answer": "SEE THE POINT OF LEARNING",
+        "answer": "SEE THE POINT OF | LEARNING",
         "word_count": 5
     },
     {
@@ -3396,7 +3522,7 @@
         "key_word": "MADE",
         "sentence2_pre": "After the operation on his knee, Darius ",
         "sentence2_post": " and was able to rejoin the team.",
-        "answer": "MADE A FAST RECOVERY",
+        "answer": "MADE A FAST | RECOVERY",
         "word_count": 4
     },
     {
@@ -3406,7 +3532,7 @@
         "key_word": "USE",
         "sentence2_pre": "I ",
         "sentence2_post": " pasta when I was a child but now I cook it regularly.",
-        "answer": "DIDN'T USE TO LIKE",
+        "answer": "DIDN'T USE TO | LIKE",
         "word_count": 4
     },
     {
@@ -3416,7 +3542,7 @@
         "key_word": "POINT",
         "sentence2_pre": "I should ",
         "sentence2_post": " writing down the telephone number.",
-        "answer": "HAVE MADE A POINT OF",
+        "answer": "HAVE MADE A POINT | OF",
         "word_count": 5
     },
     {
@@ -3426,7 +3552,7 @@
         "key_word": "NAME",
         "sentence2_pre": "If Marc hadn't taken up politics, he might have ",
         "sentence2_post": " himself as an art historian.",
-        "answer": "MADE A NAME FOR",
+        "answer": "MADE A NAME | FOR",
         "word_count": 4
     },
     {
@@ -3436,7 +3562,7 @@
         "key_word": "AFFORD",
         "sentence2_pre": "We ",
         "sentence2_post": " as we avoid the expensive restaurants in the tourist centre.",
-        "answer": "CAN AFFORD THIS HOLIDAY AS LONG",
+        "answer": "CAN AFFORD THIS HOLIDAY | AS LONG",
         "word_count": 6
     },
     {
@@ -3446,7 +3572,7 @@
         "key_word": "NOTICE",
         "sentence2_pre": "I ",
         "sentence2_post": " to my boss yesterday.",
-        "answer": "HANDED IN MY NOTICE",
+        "answer": "HANDED IN | MY NOTICE",
         "word_count": 4
     },
     {
@@ -3456,7 +3582,7 @@
         "key_word": "ACCURATE",
         "sentence2_pre": "He gave ",
         "sentence2_post": " as he could to the judge's question.",
-        "answer": "AS ACCURATE AN ANSWER",
+        "answer": "AS ACCURATE | AN ANSWER",
         "word_count": 4
     },
     {
@@ -3466,7 +3592,7 @@
         "key_word": "ALONE",
         "sentence2_pre": "Davina can't even boil an egg",
         "sentence2_post": " a whole meal.",
-        "answer": "LET ALONE COOK",
+        "answer": "LET ALONE | COOK",
         "word_count": 3
     },
     {
@@ -3476,7 +3602,7 @@
         "key_word": "Difference",
         "sentence2_pre": "It",
         "sentence2_post": "what time I start or finish work.",
-        "answer": "MAKES NO DIFFERENCE TO MY BOSS",
+        "answer": "MAKES NO DIFFERENCE | TO MY BOSS",
         "word_count": 6
     },
     {
@@ -3486,7 +3612,7 @@
         "key_word": "Brains",
         "sentence2_pre": "Jane",
         "sentence2_post": "the sales promotion.",
-        "answer": "WAS THE BRAINS BEHIND",
+        "answer": "WAS | THE BRAINS BEHIND",
         "word_count": 4
     },
     {
@@ -3496,18 +3622,8 @@
         "key_word": "Being",
         "sentence2_pre": "I",
         "sentence2_post": "a person who prefers to work alone.",
-        "answer": "ADMIT TO BEING",
+        "answer": "ADMIT TO | BEING",
         "word_count": 3
-    },
-    {
-        "id": "C1_90",
-        "level": "C1",
-        "sentence1": "Yesterday I informed my boss in writing that I would be leaving the company.",
-        "key_word": "Notice",
-        "sentence2_pre": "I",
-        "sentence2_post": "to my boss yesterday.",
-        "answer": "HANDED IN MY NOTICE",
-        "word_count": 4
     },
     {
         "id": "C1_91",
@@ -3516,7 +3632,7 @@
         "key_word": "Inclination",
         "sentence2_pre": "I",
         "sentence2_post": "out of bed the day after losing my job.",
-        "answer": "HAD NO INCLINATION OF GETTING",
+        "answer": "HAD NO INCLINATION OF | GETTING",
         "word_count": 5
     },
     {
@@ -3536,18 +3652,8 @@
         "key_word": "Favour",
         "sentence2_pre": "Most of our senior managers seemed",
         "sentence2_post": "flexi-time.",
-        "answer": "TO BE IN FAVOUR OF",
+        "answer": "TO BE | IN FAVOUR OF",
         "word_count": 5
-    },
-    {
-        "id": "C1_94",
-        "level": "C1",
-        "sentence1": "Team spirit no longer exists after one member of a team makes a mistake.",
-        "key_word": "Such",
-        "sentence2_pre": "Once one member of a team makes a mistake there",
-        "sentence2_post": "as team spirit.",
-        "answer": "IS NO SUCH THING",
-        "word_count": 4
     },
     {
         "id": "C1_95",
@@ -3556,7 +3662,7 @@
         "key_word": "Fully",
         "sentence2_pre": "The effects of these changes have yet",
         "sentence2_post": "",
-        "answer": "TO BE FULLY ASSESSED",
+        "answer": "TO BE | FULLY ASSESSED",
         "word_count": 4
     },
     {
@@ -3566,7 +3672,7 @@
         "key_word": "Aback",
         "sentence2_pre": "Johnson was rather",
         "sentence2_post": "elected as President.",
-        "answer": "TAKEN ABACK AFTER BEING",
+        "answer": "TAKEN ABACK AFTER | BEING",
         "word_count": 4
     },
     {
@@ -3576,7 +3682,7 @@
         "key_word": "Have",
         "sentence2_pre": "He is now",
         "sentence2_post": "up the story to protect his girlfriend.",
-        "answer": "THOUGHT TO HAVE MADE",
+        "answer": "THOUGHT | TO HAVE MADE",
         "word_count": 4
     },
     {
@@ -3586,18 +3692,8 @@
         "key_word": "Up",
         "sentence2_pre": "My parents are planning to have their",
         "sentence2_post": "next month.",
-        "answer": "HOUSE DONE UP",
+        "answer": "HOUSE | DONE UP",
         "word_count": 3
-    },
-    {
-        "id": "C1_99",
-        "level": "C1",
-        "sentence1": "He thinks his friends do not appreciate him.",
-        "key_word": "Granted",
-        "sentence2_pre": "He dislikes",
-        "sentence2_post": "by his friends.",
-        "answer": "BEING TAKEN FOR GRANTED",
-        "word_count": 4
     },
     {
         "id": "C1_100",
@@ -3606,28 +3702,8 @@
         "key_word": "Off",
         "sentence2_pre": "The meeting",
         "sentence2_post": "until January to give the management team longer to decide.",
-        "answer": "HAS BEEN CALLED OFF",
+        "answer": "HAS BEEN | CALLED OFF",
         "word_count": 4
-    },
-    {
-        "id": "C1_101",
-        "level": "C1",
-        "sentence1": "To help us run the exhibition next month, we need at least six people.",
-        "key_word": "Required",
-        "sentence2_pre": "No",
-        "sentence2_post": "to help us run the exhibition next month.",
-        "answer": "FEWER THAN SIX PEOPLE ARE REQUIRED",
-        "word_count": 6
-    },
-    {
-        "id": "C1_102",
-        "level": "C1",
-        "sentence1": "A common belief is that British people cannot speak foreign languages very well.",
-        "key_word": "Weak",
-        "sentence2_pre": "British people are commonly believed to",
-        "sentence2_post": "foreign languages.",
-        "answer": "BE WEAK AT",
-        "word_count": 3
     },
     {
         "id": "C1_103",
@@ -3636,7 +3712,7 @@
         "key_word": "Herself",
         "sentence2_pre": "Karen prefers to avoid",
         "sentence2_post": "public, as she is terribly shy.",
-        "answer": "DRAWING ATTENTION TO HERSELF IN",
+        "answer": "DRAWING ATTENTION TO | HERSELF IN",
         "word_count": 5
     },
     {
@@ -3646,7 +3722,7 @@
         "key_word": "Weight",
         "sentence2_pre": "I don't think that",
         "sentence2_post": "you any harm.",
-        "answer": "LOSING SOME WEIGHT WOULD DO",
+        "answer": "LOSING SOME WEIGHT | WOULD DO",
         "word_count": 5
     },
     {
@@ -3656,7 +3732,7 @@
         "key_word": "Surprise",
         "sentence2_pre": "Pedro's promotion came",
         "sentence2_post": "to us.",
-        "answer": "AS A SURPRISE",
+        "answer": "AS | A SURPRISE",
         "word_count": 3
     },
     {
@@ -3666,7 +3742,7 @@
         "key_word": "Care",
         "sentence2_pre": "You should",
         "sentence2_post": "writing this report.",
-        "answer": "HAVE TAKEN MORE CARE WHEN",
+        "answer": "HAVE TAKEN MORE CARE | WHEN",
         "word_count": 5
     },
     {
@@ -3676,7 +3752,7 @@
         "key_word": "Behalf",
         "sentence2_pre": "One of the actors made",
         "sentence2_post": "the director at the awards ceremony.",
-        "answer": "A SPEECH ON BEHALF OF",
+        "answer": "A SPEECH | ON BEHALF OF",
         "word_count": 5
     },
     {
@@ -3686,7 +3762,7 @@
         "key_word": "Until",
         "sentence2_pre": "Do not open the lid of the machine",
         "sentence2_post": "that noise.",
-        "answer": "UNTIL IT HAS STOPPED MAKING",
+        "answer": "UNTIL IT HAS STOPPED | MAKING",
         "word_count": 5
     },
     {
@@ -3696,7 +3772,7 @@
         "key_word": "Attention",
         "sentence2_pre": "I now wish",
         "sentence2_post": "the teacher during my French lessons.",
-        "answer": "I HAD PAID MORE ATTENTION TO",
+        "answer": "I HAD PAID MORE ATTENTION | TO",
         "word_count": 6
     },
     {
@@ -3706,7 +3782,7 @@
         "key_word": "Considerably",
         "sentence2_pre": "Rene performed",
         "sentence2_post": "he did in last week's.",
-        "answer": "CONSIDERABLY BETTER IN TODAY'S TEST THAN",
+        "answer": "CONSIDERABLY BETTER IN | TODAY'S TEST THAN",
         "word_count": 6
     },
     {
@@ -3716,7 +3792,7 @@
         "key_word": "Most",
         "sentence2_pre": "Jake",
         "sentence2_post": "his month's free membership by going to the gym every single day.",
-        "answer": "MADE THE MOST OF",
+        "answer": "MADE | THE MOST OF",
         "word_count": 4
     },
     {
@@ -3726,7 +3802,7 @@
         "key_word": "Second",
         "sentence2_pre": "The Japanese",
         "sentence2_post": "when it comes to making pocket-sized technology.",
-        "answer": "ARE SECOND TO NONE",
+        "answer": "ARE | SECOND TO NONE",
         "word_count": 4
     },
     {
@@ -3736,7 +3812,7 @@
         "key_word": "Other",
         "sentence2_pre": "To reduce the amount of traffic, the government is proposing that cars should only",
         "sentence2_post": "day.",
-        "answer": "BE USED EVERY OTHER",
+        "answer": "BE USED | EVERY OTHER",
         "word_count": 4
     },
     {
@@ -3746,7 +3822,7 @@
         "key_word": "Single",
         "sentence2_pre": "The great success of our company is due to the contribution",
         "sentence2_post": "our employees.",
-        "answer": "OF EVERY SINGLE ONE OF",
+        "answer": "OF | EVERY SINGLE ONE OF",
         "word_count": 5
     },
     {
@@ -3756,7 +3832,7 @@
         "key_word": "Keep",
         "sentence2_pre": "I wish you",
         "sentence2_post": "the channel when we're watching TV.",
-        "answer": "WOULDN'T KEEP CHANGING",
+        "answer": "WOULDN'T KEEP | CHANGING",
         "word_count": 3
     },
     {
@@ -3766,7 +3842,7 @@
         "key_word": "Would",
         "sentence2_pre": "During our summers at the beach, we",
         "sentence2_post": "another to see who could collect the most shells.",
-        "answer": "WOULD COMPETE WITH ONE",
+        "answer": "WOULD COMPETE WITH | ONE",
         "word_count": 4
     },
     {
@@ -3776,7 +3852,7 @@
         "key_word": "Probably",
         "sentence2_pre": "They will",
         "sentence2_post": "up in a traffic jam.",
-        "answer": "PROBABLY HAVE BEEN HELD",
+        "answer": "PROBABLY HAVE BEEN | HELD",
         "word_count": 5
     },
     {
@@ -3786,7 +3862,7 @@
         "key_word": "No",
         "sentence2_pre": "Even though profits are down, the company",
         "sentence2_post": "any of their employees redundant.",
-        "answer": "HAS NO INTENTION OF MAKING",
+        "answer": "HAS NO INTENTION OF | MAKING",
         "word_count": 5
     },
     {
@@ -3796,7 +3872,7 @@
         "key_word": "Attention",
         "sentence2_pre": "The government should",
         "sentence2_post": "the issue of global warming a long time ago.",
-        "answer": "HAVE PAID ATTENTION TO",
+        "answer": "HAVE PAID ATTENTION | TO",
         "word_count": 4
     },
     {
@@ -3806,7 +3882,7 @@
         "key_word": "With",
         "sentence2_pre": "We will all be able to make",
         "sentence2_post": "of John, who is still collecting data in Antarctica.",
-        "answer": "THE MEETING WITH THE EXCEPTION",
+        "answer": "THE MEETING | WITH THE EXCEPTION",
         "word_count": 5
     },
     {
@@ -3816,7 +3892,7 @@
         "key_word": "Happen",
         "sentence2_pre": "You should take a camera with you in",
         "sentence2_post": "across some interesting wildlife.",
-        "answer": "CASE YOU HAPPEN TO COME",
+        "answer": "CASE YOU HAPPEN | TO COME",
         "word_count": 5
     },
     {
@@ -3826,7 +3902,7 @@
         "key_word": "Meantime",
         "sentence2_pre": "We could be waiting for a long time for the dolphins to swim past, so",
         "sentence2_post": "to relax.",
-        "answer": "IN THE MEANTIME TAKE SOME TIME",
+        "answer": "IN THE MEANTIME | TAKE SOME TIME",
         "word_count": 6
     },
     {
@@ -3836,7 +3912,7 @@
         "key_word": "Account",
         "sentence2_pre": "He doesn't buy clothes from that store any more,",
         "sentence2_post": "they sell clothes made by child labour in foreign factories.",
-        "answer": "ON ACCOUNT OF THE FACT THAT",
+        "answer": "ON ACCOUNT OF | THE FACT THAT",
         "word_count": 6
     },
     {
@@ -3846,7 +3922,7 @@
         "key_word": "Add",
         "sentence2_pre": "I felt I had",
         "sentence2_post": "to the petition because the animal rights activist was so persuasive.",
-        "answer": "TO ADD MY NAME",
+        "answer": "TO ADD | MY NAME",
         "word_count": 4
     },
     {
@@ -3856,7 +3932,7 @@
         "key_word": "Turn",
         "sentence2_pre": "It must",
         "sentence2_post": "every beggar that asked you for money.",
-        "answer": "HAVE BEEN TOUGH TO TURN DOWN",
+        "answer": "HAVE BEEN TOUGH | TO TURN DOWN",
         "word_count": 6
     },
     {
@@ -3866,7 +3942,7 @@
         "key_word": "Part",
         "sentence2_pre": "We needn't",
         "sentence2_post": "the protest march this afternoon, as the council had already made its decision in the morning.",
-        "answer": "HAVE TAKEN PART IN",
+        "answer": "HAVE | TAKEN PART IN",
         "word_count": 4
     },
     {
@@ -3876,7 +3952,7 @@
         "key_word": "Just",
         "sentence2_pre": "My brother",
         "sentence2_post": "much as I do but he spends more time in the gym.",
-        "answer": "LIKES JUNK FOOD JUST AS",
+        "answer": "LIKES JUNK FOOD JUST | AS",
         "word_count": 5
     },
     {
@@ -3886,7 +3962,7 @@
         "key_word": "In",
         "sentence2_pre": "With only three buttons to push, this new food processor",
         "sentence2_post": "appearance.",
-        "answer": "IS SIMPLE ONLY IN",
+        "answer": "IS SIMPLE | ONLY IN",
         "word_count": 4
     },
     {
@@ -3896,7 +3972,7 @@
         "key_word": "Soon",
         "sentence2_pre": "I lost",
         "sentence2_post": "I saw the filthy state of the restaurant kitchen.",
-        "answer": "MY APPETITE AS SOON AS",
+        "answer": "MY APPETITE | AS SOON AS",
         "word_count": 5
     },
     {
@@ -3906,7 +3982,7 @@
         "key_word": "Most",
         "sentence2_pre": "This recipe is by",
         "sentence2_post": "in this book.",
-        "answer": "FAR THE MOST IMAGINATIVE",
+        "answer": "FAR | THE MOST IMAGINATIVE",
         "word_count": 4
     },
     {
@@ -3916,7 +3992,7 @@
         "key_word": "Ever",
         "sentence2_pre": "He has been suffering",
         "sentence2_post": "since he was promoted to head chef.",
-        "answer": "FROM STRESS EVER",
+        "answer": "FROM STRESS | EVER",
         "word_count": 3
     },
     {
@@ -3926,7 +4002,7 @@
         "key_word": "Bad",
         "sentence2_pre": "The snake dish was actually nowhere",
         "sentence2_post": "I had expected.",
-        "answer": "NEAR AS BAD AS",
+        "answer": "NEAR | AS BAD AS",
         "word_count": 4
     },
     {
@@ -3936,7 +4012,7 @@
         "key_word": "Deal",
         "sentence2_pre": "There's",
         "sentence2_post": "fat in that pizza than you realize.",
-        "answer": "A GREAT DEAL MORE",
+        "answer": "A GREAT DEAL | MORE",
         "word_count": 4
     },
     {
@@ -3946,7 +4022,7 @@
         "key_word": "Request",
         "sentence2_pre": "If the bank turns",
         "sentence2_post": "a loan, we might have to ask your parents instead.",
-        "answer": "DOWN OUR REQUEST",
+        "answer": "DOWN | OUR REQUEST",
         "word_count": 3
     },
     {
@@ -3956,7 +4032,7 @@
         "key_word": "Never",
         "sentence2_pre": "I wish",
         "sentence2_post": "on holiday together because we argued all the time.",
-        "answer": "WE HAD NEVER GONE",
+        "answer": "WE | HAD NEVER GONE",
         "word_count": 4
     },
     {
@@ -3966,7 +4042,7 @@
         "key_word": "Secret",
         "sentence2_pre": "I'd rather you",
         "sentence2_post": "instead of telling everyone!",
-        "answer": "HAD KEPT MY NEWS A SECRET",
+        "answer": "HAD KEPT | MY NEWS A SECRET",
         "word_count": 6
     },
     {
@@ -3976,7 +4052,7 @@
         "key_word": "Prefer",
         "sentence2_pre": "I",
         "sentence2_post": "up smoking gradually, but my doctor told me to stop immediately.",
-        "answer": "WOULD HAVE PREFERRED TO GIVE",
+        "answer": "WOULD HAVE PREFERRED | TO GIVE",
         "word_count": 5
     },
     {
@@ -3986,7 +4062,7 @@
         "key_word": "Sense",
         "sentence2_pre": "If it were",
         "sentence2_post": "humour, I would find Andy quite attractive.",
-        "answer": "NOT FOR HIS STRANGE SENSE OF",
+        "answer": "NOT FOR | HIS STRANGE SENSE OF",
         "word_count": 6
     },
     {
@@ -3996,7 +4072,7 @@
         "key_word": "Happen",
         "sentence2_pre": "Please feel free to visit us",
         "sentence2_post": "to France.",
-        "answer": "SHOULD YOU HAPPEN TO COME",
+        "answer": "SHOULD YOU | HAPPEN TO COME",
         "word_count": 5
     },
     {
@@ -4006,7 +4082,7 @@
         "key_word": "Keeps",
         "sentence2_pre": "If",
         "sentence2_post": "up late to work, Patrick is going to lose his job.",
-        "answer": "HE KEEPS TURNING",
+        "answer": "HE KEEPS | TURNING",
         "word_count": 3
     },
     {
@@ -4016,7 +4092,7 @@
         "key_word": "Probably",
         "sentence2_pre": "If their research had been more thorough, the scientists",
         "sentence2_post": "to the wrong conclusion.",
-        "answer": "WOULD PROBABLY NOT HAVE COME",
+        "answer": "WOULD PROBABLY | NOT HAVE COME",
         "word_count": 5
     },
     {
@@ -4026,7 +4102,7 @@
         "key_word": "Second",
         "sentence2_pre": "The company might",
         "sentence2_post": "if he had admitted his mistake.",
-        "answer": "HAVE GIVEN HIM A SECOND CHANCE",
+        "answer": "HAVE GIVEN HIM | A SECOND CHANCE",
         "word_count": 6
     },
     {
@@ -4036,7 +4112,7 @@
         "key_word": "Interested",
         "sentence2_pre": "Petra asked her friend whether",
         "sentence2_post": "to see the new play.",
-        "answer": "SHE WAS INTERESTED IN GOING",
+        "answer": "SHE WAS INTERESTED | IN GOING",
         "word_count": 5
     },
     {
@@ -4046,7 +4122,7 @@
         "key_word": "Intention",
         "sentence2_pre": "Pat has",
         "sentence2_post": "on holiday this year.",
-        "answer": "NO INTENTION OF GOING",
+        "answer": "NO INTENTION OF | GOING",
         "word_count": 4
     },
     {
@@ -4056,7 +4132,7 @@
         "key_word": "Highly",
         "sentence2_pre": "The company is",
         "sentence2_post": "the local area",
-        "answer": "HIGHLY REGARDED IN",
+        "answer": "HIGHLY REGARDED | IN",
         "word_count": 3
     },
     {
@@ -4066,7 +4142,7 @@
         "key_word": "Chance",
         "sentence2_pre": "Do you think Pablo",
         "sentence2_post": "the competition?",
-        "answer": "STANDS A CHANCE OF WINNING",
+        "answer": "STANDS A CHANCE OF | WINNING",
         "word_count": 5
     },
     {
@@ -4076,7 +4152,7 @@
         "key_word": "Made",
         "sentence2_pre": "Darius soon",
         "sentence2_post": "after the operation.",
-        "answer": "MADE A FULL RECOVERY",
+        "answer": "MADE A | FULL RECOVERY",
         "word_count": 4
     },
     {
@@ -4086,7 +4162,7 @@
         "key_word": "Change",
         "sentence2_pre": "I think the weather will",
         "sentence2_post": "next week.",
-        "answer": "CHANGE FOR THE BETTER",
+        "answer": "CHANGE FOR |THE BETTER",
         "word_count": 4
     },
     {
@@ -4096,7 +4172,7 @@
         "key_word": "Came",
         "sentence2_pre": "The offer of a place on the course",
         "sentence2_post": "Phoebe.",
-        "answer": "CAME AS A SURPRISE TO",
+        "answer": "CAME AS A SURPRISE | TO",
         "word_count": 5
     },
     {
@@ -4106,7 +4182,7 @@
         "key_word": "Come",
         "sentence2_pre": "It's so difficult to",
         "sentence2_post": "new ideas for the festival every year.",
-        "answer": "COME UP WITH",
+        "answer": "COME UP | WITH",
         "word_count": 3
     },
     {
@@ -4116,7 +4192,7 @@
         "key_word": "Every",
         "sentence2_pre": "The company",
         "sentence2_post": "the contract",
-        "answer": "HAS EVERY CHANCE OF GETTING",
+        "answer": "HAS EVERY CHANCE OF | GETTING",
         "word_count": 5
     },
     {
@@ -4126,7 +4202,7 @@
         "key_word": "Short",
         "sentence2_pre": "Sven would have called yesterday if he hadn't been",
         "sentence2_post": "",
-        "answer": "SHORT OF TIME",
+        "answer": "SHORT OF | TIME",
         "word_count": 3
     },
     {
@@ -4136,7 +4212,7 @@
         "key_word": "Capable",
         "sentence2_pre": "Many people believe that Garcia",
         "sentence2_post": "world champion.",
-        "answer": "IS CAPABLE OF BECOMING",
+        "answer": "IS CAPABLE OF | BECOMING",
         "word_count": 4
     },
     {
@@ -4146,7 +4222,7 @@
         "key_word": "Reference",
         "sentence2_pre": "In his speech, the Principal",
         "sentence2_post": "the new language courses.",
-        "answer": "MADE NO REFERENCE TO",
+        "answer": "MADE | NO REFERENCE TO",
         "word_count": 4
     },
     {
@@ -4156,7 +4232,7 @@
         "key_word": "Occurred",
         "sentence2_pre": "It",
         "sentence2_post": "me for advice.",
-        "answer": "NEVER OCCURRED TO SAM TO ASK",
+        "answer": "NEVER OCCURRED TO SAM | TO ASK",
         "word_count": 6
     },
     {
@@ -4166,7 +4242,7 @@
         "key_word": "Hard",
         "sentence2_pre": "No",
         "sentence2_post": ", they could not get the old car to start.",
-        "answer": "MATTER HOW HARD THEY TRIED",
+        "answer": "MATTER HOW HARD | THEY TRIED",
         "word_count": 5
     },
     {
@@ -4176,7 +4252,7 @@
         "key_word": "Clear",
         "sentence2_pre": "Maria",
         "sentence2_post": "she wasn't going to sleep on the floor.",
-        "answer": "MADE IT CLEAR THAT",
+        "answer": "MADE IT | CLEAR THAT",
         "word_count": 4
     },
     {
@@ -4186,7 +4262,7 @@
         "key_word": "Touch",
         "sentence2_pre": "\"Remember",
         "sentence2_post": ",\" Marta said as she waved goodbye.",
-        "answer": "TO KEEP IN TOUCH",
+        "answer": "TO KEEP | IN TOUCH",
         "word_count": 4
     },
     {
@@ -4196,7 +4272,7 @@
         "key_word": "Mind",
         "sentence2_pre": "Simon really ought to",
         "sentence2_post": "about his future.",
-        "answer": "MAKE UP HIS MIND",
+        "answer": "MAKE UP | HIS MIND",
         "word_count": 4
     },
     {
@@ -4206,7 +4282,7 @@
         "key_word": "Result",
         "sentence2_pre": "Not paying in time",
         "sentence2_post": "cancelled.",
-        "answer": "WILL RESULT IN YOUR BOOKING BEING",
+        "answer": "WILL RESULT IN | YOUR BOOKING BEING",
         "word_count": 6
     },
     {
@@ -4216,18 +4292,8 @@
         "key_word": "Matter",
         "sentence2_pre": "I´m sure",
         "sentence2_post": "time before Gemma becomes a famous model.",
-        "answer": "IT'S ONLY A MATTER OF",
+        "answer": "IT'S ONLY | A MATTER OF",
         "word_count": 5
-    },
-    {
-        "id": "C1_162",
-        "level": "C1",
-        "sentence1": "Barbara's parents were certain that she would be a great tennis player.",
-        "key_word": "Doubt",
-        "sentence2_pre": "Barbara's parents",
-        "sentence2_post": "that she would be a great tennis player.",
-        "answer": "HAD NO DOUBT",
-        "word_count": 3
     },
     {
         "id": "C1_163",
@@ -4236,7 +4302,7 @@
         "key_word": "Count",
         "sentence2_pre": "Employees",
         "sentence2_post": "an allocated car parking space.",
-        "answer": "CANNOT COUNT ON HAVING",
+        "answer": "CANNOT COUNT ON | HAVING",
         "word_count": 4
     },
     {
@@ -4245,8 +4311,8 @@
         "sentence1": "Daisy said that she would no longer tolerate her colleagues being rude.",
         "key_word": "Put",
         "sentence2_pre": "Daisy said that she would no longer",
-        "sentence2_post": "her colleagues being rude.",
-        "answer": "PUT UP WITH",
+        "sentence2_post": "colleagues being rude.",
+        "answer": "PUT UP WITH | HER",
         "word_count": 3
     },
     {
@@ -4256,7 +4322,7 @@
         "key_word": "Point",
         "sentence2_pre": "Sven",
         "sentence2_post": "the police when the burglar stopped trying to open the window and ran away.",
-        "answer": "WAS ON THE POINT OF CALLING",
+        "answer": "WAS ON THE POINT OF | CALLING",
         "word_count": 6
     },
     {
@@ -4266,7 +4332,7 @@
         "key_word": "Event",
         "sentence2_pre": "The wedding reception will take",
         "sentence2_post": "rain.",
-        "answer": "PLACE INDOORS IN THE EVENT OF",
+        "answer": "PLACE INDOORS | IN THE EVENT OF",
         "word_count": 6
     },
     {
@@ -4276,7 +4342,7 @@
         "key_word": "Terms",
         "sentence2_pre": "George has",
         "sentence2_post": "that his marriage is over.",
-        "answer": "COME TO TERMS WITH THE FACT",
+        "answer": "COME TO TERMS WITH | THE FACT",
         "word_count": 6
     },
     {
@@ -4286,7 +4352,7 @@
         "key_word": "In",
         "sentence2_pre": "Was there any",
         "sentence2_post": "team played last year?",
-        "answer": "IMPROVEMENT IN THE WAY THE HOCKEY",
+        "answer": "IMPROVEMENT IN | THE WAY THE HOCKEY",
         "word_count": 6
     },
     {
@@ -4296,7 +4362,7 @@
         "key_word": "Common",
         "sentence2_pre": "It",
         "sentence2_post": "find their first experience of bangee jumping rather sickening.",
-        "answer": "IS COMMON FOR PEOPLE TO",
+        "answer": "IS COMMON FOR | PEOPLE TO",
         "word_count": 5
     },
     {
@@ -4306,7 +4372,7 @@
         "key_word": "Has",
         "sentence2_pre": "However",
         "sentence2_post": ", she agreed to marry him.",
-        "answer": "MANY FAULTS HE HAS",
+        "answer": "MANY FAULTS | HE HAS",
         "word_count": 4
     },
     {
@@ -4316,7 +4382,7 @@
         "key_word": "Dispose",
         "sentence2_pre": "If I were in your",
         "sentence2_post": "the old shirt.",
-        "answer": "SHOES I WOULD DISPOSE OF",
+        "answer": "SHOES | I WOULD DISPOSE OF",
         "word_count": 5
     },
     {
@@ -4326,7 +4392,7 @@
         "key_word": "So",
         "sentence2_pre": "If",
         "sentence2_post": "noise, she could have stayed longer at the concert.",
-        "answer": "THERE HAD NOT BEEN SO MUCH",
+        "answer": "THERE HAD NOT BEEN | SO MUCH",
         "word_count": 6
     },
     {
@@ -4336,7 +4402,7 @@
         "key_word": "Loss",
         "sentence2_pre": "She was",
         "sentence2_post": "the reason why Mr. Thompson left for Australia.",
-        "answer": "AT A LOSS TO EXPLAIN",
+        "answer": "AT A LOSS | TO EXPLAIN",
         "word_count": 5
     },
     {
@@ -4346,7 +4412,7 @@
         "key_word": "Rather",
         "sentence2_pre": "I",
         "sentence2_post": "before you took my car.",
-        "answer": "WOULD RATHER YOU HAD ASKED ME",
+        "answer": "WOULD RATHER | YOU HAD ASKED ME",
         "word_count": 6
     },
     {
@@ -4356,7 +4422,7 @@
         "key_word": "Exception",
         "sentence2_pre": "Mr. Collins",
         "sentence2_post": "some comments that couldn't possibly be directed at him.",
-        "answer": "HAS TAKEN EXCEPTION TO",
+        "answer": "HAS TAKEN EXCEPTION | TO",
         "word_count": 4
     },
     {
@@ -4366,17 +4432,17 @@
         "key_word": "Led",
         "sentence2_pre": "What was it that",
         "sentence2_post": "that Tony was going to get a promotion?",
-        "answer": "LED HER TO BELIEVE",
+        "answer": "LED HER | TO BELIEVE",
         "word_count": 4
     },
     {
         "id": "C1_177",
         "level": "C1",
         "sentence1": "She still sees her old boyfriend at times.",
-        "key_word": "Whiles",
+        "key_word": "While",
         "sentence2_pre": "he still sees her old boyfriend",
         "sentence2_post": ".",
-        "answer": "ONCE IN A WHILE",
+        "answer": "ONCE | IN A WHILE",
         "word_count": 4
     },
     {
@@ -4386,7 +4452,7 @@
         "key_word": "Obligation",
         "sentence2_pre": "Lucy wasn't",
         "sentence2_post": "check the calculations.",
-        "answer": "UNDER AN OBLIGATION TO",
+        "answer": "UNDER ANY | OBLIGATION TO",
         "word_count": 4
     },
     {
@@ -4396,7 +4462,7 @@
         "key_word": "Prides",
         "sentence2_pre": "David",
         "sentence2_post": "very reliable.",
-        "answer": "PRIDES HIMSELF ON ALWAYS BEING",
+        "answer": "PRIDES HIMSELF ON | ALWAYS BEING",
         "word_count": 5
     },
     {
@@ -4406,7 +4472,7 @@
         "key_word": "Turned",
         "sentence2_pre": "I will always wish that",
         "sentence2_post": "the opportunity to work at IBM.",
-        "answer": "I HADN'T TURNED DOWN",
+        "answer": "I HADN'T | TURNED DOWN",
         "word_count": 4
     },
     {
@@ -4416,18 +4482,8 @@
         "key_word": "Impossible",
         "sentence2_pre": "The horrible storm",
         "sentence2_post": "Jim to work outdoors today.",
-        "answer": "MADE IT IMPOSSIBLE FOR",
+        "answer": "MADE IT IMPOSSIBLE | FOR",
         "word_count": 4
-    },
-    {
-        "id": "C1_182",
-        "level": "C1",
-        "sentence1": "Dick looks as if he were a very good person.",
-        "key_word": "Impression",
-        "sentence2_pre": "Dick",
-        "sentence2_post": "a very good person.",
-        "answer": "MAKES AN IMPRESSION OF BEING",
-        "word_count": 5
     },
     {
         "id": "C1_183",
@@ -4436,7 +4492,7 @@
         "key_word": "Having",
         "sentence2_pre": "Is there any",
         "sentence2_post": "word with her?",
-        "answer": "CHANCE OF MY HAVING A PRIVATE",
+        "answer": "CHANCE OF | MY HAVING A PRIVATE",
         "word_count": 6
     },
     {
@@ -4446,7 +4502,7 @@
         "key_word": "Such",
         "sentence2_pre": "She was driving",
         "sentence2_post": "that the police wasn't able to catch up with her.",
-        "answer": "AT SUCH A SPEED",
+        "answer": "AT | SUCH A SPEED",
         "word_count": 4
     },
     {
@@ -4456,7 +4512,7 @@
         "key_word": "Luck",
         "sentence2_pre": "Helen couldn't",
         "sentence2_post": "when she won the first prize.",
-        "answer": "BELIEVE HER LUCK",
+        "answer": "BELIEVE | HER LUCK",
         "word_count": 3
     },
     {
@@ -4466,7 +4522,7 @@
         "key_word": "Devices",
         "sentence2_pre": "I was",
         "sentence2_post": "by everybody.",
-        "answer": "LEFT TO MY OWN DEVICES",
+        "answer": "LEFT TO | MY OWN DEVICES",
         "word_count": 5
     },
     {
@@ -4476,7 +4532,7 @@
         "key_word": "Mind",
         "sentence2_pre": "It's high time Lisa",
         "sentence2_post": "about where to invest her money.",
-        "answer": "MADE UP HER MIND",
+        "answer": "MADE UP | HER MIND",
         "word_count": 4
     },
     {
@@ -4486,7 +4542,7 @@
         "key_word": "Have",
         "sentence2_pre": "The plane",
         "sentence2_post": "any damage.",
-        "answer": "APPEARS NOT TO HAVE SUSTAINED",
+        "answer": "APPEARS NOT | TO HAVE SUSTAINED",
         "word_count": 5
     },
     {
@@ -4496,7 +4552,7 @@
         "key_word": "Allowances",
         "sentence2_pre": "You ought to",
         "sentence2_post": "his young age.",
-        "answer": "MAKE ALLOWANCES FOR",
+        "answer": "MAKE ALLOWANCES | FOR",
         "word_count": 3
     },
     {
@@ -4506,7 +4562,7 @@
         "key_word": "Had",
         "sentence2_pre": "Hardly",
         "sentence2_post": "things went wrong.",
-        "answer": "HAD HE RESIGNED WHEN",
+        "answer": "HAD HE RESIGNED | WHEN",
         "word_count": 4
     },
     {
@@ -4516,7 +4572,7 @@
         "key_word": "Emphasis",
         "sentence2_pre": "We shouldn't",
         "sentence2_post": "the importance of finishing on time.",
-        "answer": "PUT TOO MUCH EMPHASIS ON",
+        "answer": "PUT TOO MUCH EMPHASIS | ON",
         "word_count": 5
     },
     {
@@ -4526,7 +4582,7 @@
         "key_word": "Go",
         "sentence2_pre": "She doesn't really",
         "sentence2_post": "outdoor sports.",
-        "answer": "GO IN FOR",
+        "answer": "GO IN | FOR",
         "word_count": 3
     },
     {
@@ -4536,17 +4592,17 @@
         "key_word": "Than",
         "sentence2_pre": "She was",
         "sentence2_post": "before.",
-        "answer": "HAPPIER THAN SHE HAD EVER BEEN",
+        "answer": "HAPPIER THAN | SHE HAD EVER BEEN",
         "word_count": 6
     },
     {
         "id": "C1_194",
         "level": "C1",
-        "sentence1": "Isn't Julia similar to the women form the movie?",
+        "sentence1": "Isn't Julia similar to the woman form the movie?",
         "key_word": "Bear",
         "sentence2_pre": "Doesn't Julia",
         "sentence2_post": "the woman from the movie?",
-        "answer": "BEAR RESEMBLANCE TO",
+        "answer": "BEAR A RESEMBLANCE | TO",
         "word_count": 3
     },
     {
@@ -4556,7 +4612,7 @@
         "key_word": "Night",
         "sentence2_pre": "I spent",
         "sentence2_post": "in the lab trying to do everything we can before he left.",
-        "answer": "MANY A SLEEPLESS NIGHT",
+        "answer": "MANY | A SLEEPLESS NIGHT",
         "word_count": 4
     },
     {
@@ -4566,7 +4622,7 @@
         "key_word": "Out",
         "sentence2_pre": "Unfortunately, she's",
         "sentence2_post": "these days.",
-        "answer": "OUT OF LUCK",
+        "answer": "OUT OF | LUCK",
         "word_count": 3
     },
     {
@@ -4576,7 +4632,7 @@
         "key_word": "Habit",
         "sentence2_pre": "John is not",
         "sentence2_post": "after meals.",
-        "answer": "IN THE HABIT OF SLEEPING",
+        "answer": "IN THE HABIT OF | SLEEPING",
         "word_count": 5
     },
     {
@@ -4586,7 +4642,7 @@
         "key_word": "Spite",
         "sentence2_pre": "In",
         "sentence2_post": "over sixty, Mr. Rogers continued to smoke forty cigarettes a day.",
-        "answer": "SPITE OF BEING",
+        "answer": "SPITE OF | BEING",
         "word_count": 3
     },
     {
@@ -4596,18 +4652,8 @@
         "key_word": "Talked",
         "sentence2_pre": "Martha",
         "sentence2_post": "out tonight.",
-        "answer": "TALKED JOHN OUT OF GOING",
+        "answer": "TALKED JOHN OUT OF | GOING",
         "word_count": 5
-    },
-    {
-        "id": "C1_200",
-        "level": "C1",
-        "sentence1": "I didn't believe in the explanation he gave.",
-        "key_word": "Was",
-        "sentence2_pre": "The explanation he gave",
-        "sentence2_post": "belief.",
-        "answer": "WAS BEYOND MY",
-        "word_count": 3
     },
     {
         "id": "C1_201",
@@ -5399,6 +5445,58 @@
         "answer": "MADE NO REFERENCE TO",
         "word_count": 4
     },
+     {
+    "id": "GEN_C1_01.280",
+    "level": "C1",
+    "sentence1": "I didn't understand the joke until he explained it.",
+    "key_word": "DID",
+    "sentence2_pre": "Only after he explained the joke ",
+    "sentence2_post": " it.",
+    "answers": [
+      "DID I | UNDERSTAND",
+      "DID I | GRASP"
+    ],
+    "word_count": 3
+  },
+   {
+    "id": "Xmas 4.281",
+    "level": "C1",
+    "sentence1": "We couldn't go to the Christmas party because of the heavy snow.",
+    "key_word": "PREVENTED",
+    "sentence2_pre": "The heavy snow ",
+    "sentence2_post": " to the Christmas party.",
+    "answers": [
+      "PREVENTED US | FROM GOING",
+      "PREVENTED US | GETTING"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "Xmas 5.282",
+    "level": "C1",
+    "sentence1": "Immediately after finishing their turkey, they started opening presents.",
+    "key_word": "SOONER",
+    "sentence2_pre": "No ",
+    "sentence2_post": " their turkey than they started opening presents.",
+    "answers": [
+      "SOONER HAD THEY | FINISHED",
+      "SOONER HAD THEY | EATEN"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "Xmas 6.283",
+    "level": "C1",
+    "sentence1": "We really should decorate the tree now before it gets too late.",
+    "key_word": "HIGH",
+    "sentence2_pre": "It ",
+    "sentence2_post": " the tree before it gets too late.",
+    "answers": [
+      "IS HIGH TIME | WE DECORATED",
+      "IS HIGH TIME | TO DECORATE"
+    ],
+    "word_count": 5
+  },
     {
         "id": "C2_1",
         "level": "C2",
@@ -9538,5 +9636,232 @@
         "sentence2_post": "while we are away.",
         "answer": "WILL KEEP AN EYE ON OUR HOUSE",
         "word_count": 7
-    }
+    },
+     {
+    "id": "C2_415",
+    "level": "C2",
+    "sentence1": "It is rumoured that the board is disagreeing about the budget.",
+    "key_word": "LOGGERHEADS",
+    "sentence2_pre": "The board is rumoured ",
+    "sentence2_post": " over the budget.",
+    "answers": [
+      "TO BE AT | LOGGERHEADS"
+    ],
+    "word_count": 4
+  },
+   {
+    "id": "Xmas 7.416",
+    "level": "C2",
+    "sentence1": "Buying all those presents must have cost you a lot of money.",
+    "key_word": "SET",
+    "sentence2_pre": "Buying all those presents must ",
+    "sentence2_post": " a lot of money.",
+    "answers": [
+      "HAVE SET YOU | BACK"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "Xmas 8.417",
+    "level": "C2",
+    "sentence1": "I wouldn't have finished cooking the Christmas dinner without your help.",
+    "key_word": "NOT",
+    "sentence2_pre": "Had ",
+    "sentence2_post": " your help, I wouldn't have finished cooking the Christmas dinner.",
+    "answers": [
+      "IT NOT BEEN | FOR"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "Xmas 9.418",
+    "level": "C2",
+    "sentence1": "It was completely unexpected when my brother arrived home for Christmas.",
+    "key_word": "ABACK",
+    "sentence2_pre": "We were ",
+    "sentence2_post": " my brother's arrival home for Christmas.",
+    "answers": [
+      "TAKEN ABACK | BY",
+      "COMPLETELY TAKEN ABACK | BY"
+    ],
+    "word_count": 4
+  },
+ {
+    "id": "ARTS_C2_419",
+    "level": "C2",
+    "sentence1": "The young actor became a star overnight after the success of the film.",
+    "key_word": "PROPELLED",
+    "sentence2_pre": "The success of the film ",
+    "sentence2_post": " stardom overnight.",
+    "answers": [
+      "PROPELLED THE YOUNG ACTOR | TO",
+      "PROPELLED HIM | TO"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "ARTS_C2_420",
+    "level": "C2",
+    "sentence1": "I don't think his latest novel is as good as his previous ones.",
+    "key_word": "PAR",
+    "sentence2_pre": "His latest novel is ",
+    "sentence2_post": " his previous ones.",
+    "answers": [
+      "NOT ON A PAR | WITH"
+    ],
+    "word_count": 5
+  },
+  {
+    "id": "ARTS_C2_421",
+    "level": "C2",
+    "sentence1": "I couldn't understand the meaning of the abstract painting at all.",
+    "key_word": "TAIL",
+    "sentence2_pre": "I couldn't make ",
+    "sentence2_post": " the abstract painting.",
+    "answers": [
+      "HEAD NOR TAIL | OF"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "ARTS_C2_422",
+    "level": "C2",
+    "sentence1": "The opening night of the opera was a complete and absolute disaster.",
+    "key_word": "UNMITIGATED",
+    "sentence2_pre": "The opening night of the opera ",
+    "sentence2_post": " disaster.",
+    "answers": [
+      "WAS AN UNMITIGATED |",
+      "PROVED TO BE | AN UNMITIGATED"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "ARTS_C2_423",
+    "level": "C2",
+    "sentence1": "He resented the fact that he was less important than the leading lady.",
+    "key_word": "FIDDLE",
+    "sentence2_pre": "He resented ",
+    "sentence2_post": " to the leading lady.",
+    "answers": [
+      "HAVING TO PLAY | SECOND FIDDLE "
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "ARTS_C2_424",
+    "level": "C2",
+    "sentence1": "The director changed the original script significantly for the movie adaptation.",
+    "key_word": "LIBERTIES",
+    "sentence2_pre": "The director took ",
+    "sentence2_post": " the original script for the movie adaptation.",
+    "answers": [
+      "SIGNIFICANT LIBERTIES | WITH",
+      "GREAT LIBERTIES | WITH"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "ARTS_C2_425",
+    "level": "C2",
+    "sentence1": "The critics praised the performance very highly.",
+    "key_word": "ACCLAIM",
+    "sentence2_pre": "The performance was received ",
+    "sentence2_post": " the critics.",
+    "answers": [
+      "WITH GREAT ACCLAIM | BY",
+      "WITH CRITICAL ACCLAIM | BY"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "ARTS_C2_426",
+    "level": "C2",
+    "sentence1": "I simply can't write anything at the moment.",
+    "key_word": "BLOCK",
+    "sentence2_pre": "I am suffering ",
+    "sentence2_post": " at the moment.",
+    "answers": [
+      "FROM WRITER'S | BLOCK"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "ARTS_C2_427",
+    "level": "C2",
+    "sentence1": "The book describes life in the 19th century very vividly.",
+    "key_word": "PICTURE",
+    "sentence2_pre": "The book paints ",
+    "sentence2_post": " life in the 19th century.",
+    "answers": [
+      "A VIVID PICTURE | OF"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "ARTS_C2_428",
+    "level": "C2",
+    "sentence1": "You must not switch channels or you will miss the next episode.",
+    "key_word": "TUNED",
+    "sentence2_pre": "You must ",
+    "sentence2_post": " the next episode.",
+    "answers": [
+      "STAY TUNED | FOR"
+    ],
+    "word_count": 3
+  },
+  {
+    "id": "ARTS_C2_429",
+    "level": "C2",
+    "sentence1": "The biography of the pianist really connected emotionally with readers.",
+    "key_word": "CHORD",
+    "sentence2_pre": "The biography of the pianist really ",
+    "sentence2_post": " readers.",
+    "answers": [
+      "STRUCK A CHORD | WITH",
+      "STRUCK A RESONANT CHORD | WITH"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "ARTS_C2_430",
+    "level": "C2",
+    "sentence1": "The painter claimed that his success was purely due to luck.",
+    "key_word": "ATTRIBUTED",
+    "sentence2_pre": "The painter ",
+    "sentence2_post": " luck.",
+    "answers": [
+      "ATTRIBUTED HIS SUCCESS | PURELY TO",
+      "ATTRIBUTED HIS SUCCESS | SOLELY TO"
+    ],
+    "word_count": 5
+  },
+  {
+    "id": "ARTS_C2_431",
+    "level": "C2",
+    "sentence1": "The ending of the play didn't seem right given the serious tone of the previous acts.",
+    "key_word": "KEEPING",
+    "sentence2_pre": "The ending of the play was ",
+    "sentence2_post": " the serious tone of the previous acts.",
+    "answers": [
+      "OUT OF KEEPING | WITH",
+      "NOT IN KEEPING | WITH"
+    ],
+    "word_count": 4
+  },
+  {
+    "id": "ARTS_C2_432",
+    "level": "C2",
+    "sentence1": "The new sculpture in the town square has caused a lot of public anger.",
+    "key_word": "OUTCRY",
+    "sentence2_pre": "The new sculpture in the town square has ",
+    "sentence2_post": " from the public.",
+    "answers": [
+      "CAUSED A HUGE | OUTCRY",
+      "LED TO A PUBLIC | OUTCRY",
+      "PROVOKED A MASSIVE | OUTCRY"
+    ],
+    "word_count": 4
+  }
+
 ]

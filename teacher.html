@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Classroom Board</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; margin: 0; padding: 20px; }
+        #header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #34495e; padding-bottom: 20px; margin-bottom: 20px;}
+        h1 { margin: 0; font-size: 2rem; }
+        .room-tag { background: #3498db; padding: 2px 8px; border-radius: 4px; font-size: 1rem; vertical-align: middle; }
+        #qrcode { background: white; padding: 10px; border-radius: 8px; float: right; }
+
+        .admin-controls { display: none; margin-top: 15px; }
+        button.clear-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        #board { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding-bottom: 50px;}
+        .note { background: #f1c40f; color: #2c3e50; padding: 15px; border-radius: 4px; box-shadow: 4px 4px 10px rgba(0,0,0,0.3); min-height: 140px; display: flex; flex-direction: column; cursor: grab; }
+        .author { font-weight: bold; font-size: 0.9rem; text-transform: uppercase; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 10px; }
+        .content { font-size: 1.1rem; flex-grow: 1; word-wrap: break-word; }
+
+        .fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f1c40f; color: #2c3e50; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 50px; box-sizing: border-box; }
+        .fullscreen .content { font-size: 3rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div>
+            <h1>Class Storyboard <span id="roomDisplay" class="room-tag">...</span></h1>
+            <p>Scan to join this specific room</p>
+            <div class="admin-controls" id="adminArea">
+                <button class="clear-btn" onclick="clearBoard()">🗑 Clear Room</button>
+            </div>
+        </div>
+        <div id="qrcode"></div>
+    </div>
+
+    <div id="board"></div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SB_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+        const TEACHER_PIN = "1234"; 
+
+        const supabase = supabase.createClient(SB_URL, SB_KEY);
+        const boardElement = document.getElementById('board');
+        let isDragging = false;
+
+        // 1. SETUP ROOM
+        // Ask for a room name, or generate a random one if they cancel
+        let roomID = prompt("Enter a Room Name (e.g. CLASS-A):");
+        if (!roomID) roomID = "DEMO-" + Math.floor(Math.random() * 1000);
+        
+        // Clean up the input (remove spaces to avoid URL issues)
+        roomID = roomID.replace(/\s+/g, '-').toUpperCase();
+        document.getElementById('roomDisplay').innerText = roomID;
+
+        // 2. ADMIN CHECK
+        if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
+            document.getElementById('adminArea').style.display = 'block';
+        }
+
+        // 3. QR CODE (Now includes the ROOM)
+        const currentPath = window.location.href.split('?')[0]; 
+        const studentUrl = currentPath.replace('index.html', '') + 'student.html?room=' + roomID;
+        new QRCode(document.getElementById("qrcode"), { text: studentUrl, width: 110, height: 110 });
+
+        // 4. FETCH NOTES (Filtered by Room)
+        async function fetchNotes() {
+            const { data } = await supabase
+                .from('notes')
+                .select('*')
+                .eq('room_id', roomID)  // <--- THE IMPORTANT FILTER
+                .order('order_index', { ascending: true });
+
+            boardElement.innerHTML = ''; 
+
+            data.forEach(note => {
+                const div = document.createElement('div');
+                div.className = 'note';
+                div.setAttribute('data-id', note.id);
+                div.innerHTML = `<span class="author">${note.student_name}</span><span class="content">${note.content}</span>`;
+                div.onclick = () => { if(!isDragging) div.classList.toggle('fullscreen'); };
+                boardElement.appendChild(div);
+            });
+        }
+
+        // 5. DRAG AND DROP
+        Sortable.create(boardElement, {
+            animation: 150,
+            onStart: () => { isDragging = true; },
+            onEnd: async () => {
+                isDragging = false;
+                const items = boardElement.querySelectorAll('.note');
+                for (let i = 0; i < items.length; i++) {
+                    await supabase.from('notes').update({ order_index: i }).eq('id', items[i].getAttribute('data-id'));
+                }
+            }
+        });
+
+        // 6. REALTIME (Listen for changes in THIS room)
+        supabase.channel('room-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `room_id=eq.${roomID}` }, () => {
+                fetchNotes();
+            })
+            .subscribe();
+
+        // 7. CLEAR BOARD (Only this room)
+        async function clearBoard() {
+            if (prompt("Enter PIN:") === TEACHER_PIN) {
+                await supabase.from('notes').delete().eq('room_id', roomID);
+            }
+        }
+
+        fetchNotes();
+    </script>
+</body>
+</html>

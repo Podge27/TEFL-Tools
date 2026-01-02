@@ -21,9 +21,6 @@
             background-color: white;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             border-radius: 16px;
-            min-height: 700px;
-            display: flex;
-            flex-direction: column;
         }
 
         /* IWB-Friendly Text Styles */
@@ -427,12 +424,13 @@
             } catch (error) {
                 console.error("Failed to load vocabulary data from use_of_english_data.json:", error);
                 
-                // FALLBACK DATA for testing offline - UPDATED WITH | FOR SPLIT SCORING
+                // FALLBACK DATA for testing offline - UPDATED WITH | FOR SPLIT SCORING AND ARRAYS
                 USE_OF_ENGLISH_DATA = [
                     { id: "B2_FB4", level: "B2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
                     { id: "C1_FB4", level: "C1", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER STAY", word_count: 3 },
                     { id: "C2_FB4", level: "C2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
-                    { id: "DM1", level: "B2", sentence1: "Test Q4", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
+                    // Example with array of answers
+                    { id: "GEN_C1_01", level: "C1", sentence1: "I didn't understand the joke.", key_word: "DID", sentence2_pre: "Only after explanation ", sentence2_post: " it.", answers: ["DID I | UNDERSTAND", "DID I | GRASP"], word_count: 3 },
                     { id: "DM2", level: "B2", sentence1: "Test Q5", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
                     { id: "DM3", level: "B2", sentence1: "Test Q6", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
                     { id: "DM4", level: "B2", sentence1: "Test Q7", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answer: "START | END", word_count: 2 },
@@ -623,17 +621,22 @@
             const hintText = ``;
             ui.fsAnswerGap.textContent = hintText;
             
-            // Clean pipe from answer for free study view
-            const cleanAnswer = question.answer.replace(/\s*\|\s*/g, ' ');
+            // Clean display: Prefer singular answer if available, or first in array, removing pipes
+            let cleanAnswer = "";
+            if (Array.isArray(question.answers)) {
+                cleanAnswer = question.answers[0].replace(/\s*\|\s*/g, ' ');
+            } else if (question.answer) {
+                cleanAnswer = question.answer.replace(/\s*\|\s*/g, ' ');
+            }
             
             ui.fsAnswerGap.dataset.answer = cleanAnswer.toUpperCase();
-            ui.fsAnswerGap.dataset.wordCount = question.word_count; // Store word count for hiding
+            ui.fsAnswerGap.dataset.wordCount = question.word_count; 
             ui.fsAnswerGap.dataset.revealed = 'false';
             ui.fsAnswerGap.classList.remove('revealed');
             
             // Updated feedback to show the official word count rule
             const rule = getWordCountRule(currentLevel);
-            ui.fsFeedback.textContent = `The answer must be ${rule}. Click the gap to reveal.`;
+            ui.fsFeedback.textContent = `Focus on the gap. The answer must be ${rule}. Click the gap to reveal/hide.`;
             ui.fsFeedback.style.color = '#4b5563'; // Gray
         }
         
@@ -642,26 +645,25 @@
             const isRevealed = ui.fsAnswerGap.dataset.revealed === 'true';
             const correctAnswer = ui.fsAnswerGap.dataset.answer;
             const wordCount = ui.fsAnswerGap.dataset.wordCount;
-                ui.fsFeedback.textContent = `CORRECT ANSWER: ${correctAnswer}.`;
-                ui.fsFeedback.style.color = '#f59e0b'; // Amber
+            
             // Toggle Logic
             if (isRevealed) {
                 // Hide it
                 const hintText = ``;
-		const rule = getWordCountRule(currentLevel);
                 ui.fsAnswerGap.textContent = hintText;
                 ui.fsAnswerGap.dataset.revealed = 'false';
                 ui.fsAnswerGap.classList.remove('revealed');
                 
-                ui.fsFeedback.textContent = `The answer must be ${rule}. Click the gap to reveal.`;
-                ui.fsFeedback.style.color = '#4b5563'; // Gray
+                ui.fsFeedback.textContent = `Answer hidden. Focus on the gap again.`;
+                ui.fsFeedback.style.color = '#4b5563';
             } else {
                 // Show it
                 ui.fsAnswerGap.textContent = correctAnswer;
                 ui.fsAnswerGap.dataset.revealed = 'true';
                 ui.fsAnswerGap.classList.add('revealed');
-
-
+                
+                ui.fsFeedback.textContent = `CORRECT ANSWER: ${correctAnswer}. Click the space to conceal.`;
+                ui.fsFeedback.style.color = '#f59e0b'; // Amber
             }
         }
 
@@ -708,7 +710,7 @@
                 qEl.className = 'exam-question-card';
                 qEl.innerHTML = `
                     <p class="text-xl font-bold mb-3 text-indigo-700">Question ${index + 1} of 6</p>
-                    <p class="question-text text-gray-600 mb-2"> ${q.sentence1}</p>
+                    <p class="question-text text-gray-600 mb-2">A. ${q.sentence1}</p>
                     <div class="flex flex-wrap justify-center items-center gap-4 mb-4">
                         <span class="key-word">${q.key_word}</span>
                     </div>
@@ -728,11 +730,10 @@
         }
 
         // --- PUNCTUATION SANITIZATION HELPERS ---
-        // Clean text for comparison: remove .,;! and trim spaces. Retain apostrophes.
         const cleanText = (text) => {
             return text.toUpperCase()
-                       .replace(/[.,;!]/g, '') // Remove punctuation
-                       .replace(/\s\s+/g, ' ') // Fix double spaces
+                       .replace(/[.,;!]/g, '')
+                       .replace(/\s\s+/g, ' ')
                        .trim();
         };
 
@@ -746,33 +747,49 @@
             
             examQuestions.forEach((q, index) => {
                 const inputEl = document.getElementById(`input-${index}`);
-                // Clean user input immediately
                 const userAnswer = cleanText(inputEl.value);
                 
-                const correctRaw = q.answer.toUpperCase();
-                // We clean the display version too for consistent matching if they type exactly what's shown
-                const correctDisplay = correctRaw.replace(/\s*\|\s*/g, ' '); 
-                const correctDisplayClean = cleanText(correctDisplay);
-                
-                // --- SCORING LOGIC START ---
-                let points = 0;
-                
-                // 1. Exact Match (ignores pipe)
-                // Compare cleaned user answer with cleaned correct answer
-                if (userAnswer === correctDisplayClean) {
-                    points = 2;
-                } 
-                // 2. Partial Match Logic (checks pipe split)
-                else if (correctRaw.includes('|')) {
-                    const parts = correctRaw.split('|').map(p => cleanText(p));
-                    // Check start
-                    if (userAnswer.startsWith(parts[0])) points++;
-                    // Check end
-                    if (userAnswer.endsWith(parts[1])) points++;
+                // Get valid answers list (Supports Array "answers" OR String "answer")
+                let validAnswers = [];
+                if (Array.isArray(q.answers)) {
+                    validAnswers = q.answers;
+                } else if (q.answer) {
+                    validAnswers = [q.answer];
                 }
                 
+                let points = 0;
+                let matchedCleanCorrect = ""; // To store which version matched for display
+
+                // Check against ALL possible valid answers
+                for (let rawOption of validAnswers) {
+                    const rawOptionUpper = rawOption.toUpperCase();
+                    const cleanOption = cleanText(rawOptionUpper.replace(/\s*\|\s*/g, ' '));
+                    let currentPoints = 0;
+
+                    // 1. Exact Match Check
+                    if (userAnswer === cleanOption) {
+                        currentPoints = 2;
+                    } 
+                    // 2. Partial Match Check (Split by |)
+                    else if (rawOptionUpper.includes('|')) {
+                        const parts = rawOptionUpper.split('|').map(p => cleanText(p));
+                        if (userAnswer.startsWith(parts[0])) currentPoints++;
+                        if (userAnswer.endsWith(parts[1])) currentPoints++;
+                    }
+
+                    // Keep the best score found among options
+                    if (currentPoints > points) {
+                        points = currentPoints;
+                        matchedCleanCorrect = cleanOption;
+                    }
+                }
+                
+                // If no points, default display to the first option cleaned
+                if (points === 0 && !matchedCleanCorrect) {
+                     matchedCleanCorrect = cleanText(validAnswers[0].replace(/\s*\|\s*/g, ' '));
+                }
+
                 totalScore += points;
-                // --- SCORING LOGIC END ---
                 
                 // Visual feedback
                 inputEl.disabled = true;
@@ -782,9 +799,9 @@
 
                 userAnswers.push({
                     question: q,
-                    userAnswer: userAnswer, // Show cleaned version or original? Cleaned is safer for logic display
+                    userAnswer: userAnswer,
                     points: points, 
-                    correctAnswer: correctDisplay
+                    correctAnswer: validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR ') // Show all valid options
                 });
             });
             

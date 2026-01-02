@@ -59,9 +59,9 @@
         }
         .input-correct { @apply border-green-500 bg-green-100 text-green-800; }
         .input-partial { @apply border-yellow-500 bg-yellow-50 text-yellow-700; }
-        .input-wrong { @apply border-red-500 bg-red-100 text-red-800 line-through decoration-2; }
+        .input-wrong { @apply border-red-500 bg-red-50 text-red-700 line-through decoration-2; }
 
-        /* Correction Badge (New) */
+        /* Correction Badge */
         .correction-badge {
             @apply inline-block ml-1 px-2 py-0.5 rounded bg-green-600 text-white text-sm font-bold shadow-sm align-middle mx-1;
         }
@@ -307,7 +307,9 @@
                 if (type === 'part4') return [
                     { id: "B2_FB4", level: "B2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
                     { id: "C1_FB4", level: "C1", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER STAY", word_count: 3 },
-                    { id: "C2_FB4", level: "C2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 }
+                    { id: "C2_FB4", level: "C2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
+                    // Test array answers
+                    { id: "TEST_ARR", level: "B2", sentence1: "Multi answer test.", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answers: ["START | END", "BEGIN | FINISH"], word_count: 2 }
                 ];
                 return [];
             },
@@ -495,6 +497,7 @@
                     if(!p2Ans[i]) continue;
                     const el = document.getElementById(`p2-input-${i}`);
                     const val = el.value.trim().toUpperCase();
+                    // Split logic for Part 2 multiple answers (e.g. WHICH/THAT)
                     const validOptions = p2Ans[i].split('/').map(s => s.trim().toUpperCase());
                     
                     el.disabled = true;
@@ -542,48 +545,66 @@
                     }
                 }
 
-                // 3. Grading Part 4 (2 Marks each, split logic, punctuation clean)
+                // 3. Grading Part 4 (2 Marks each, split logic, punctuation clean, array support)
                 let s4 = 0;
                 this.examState.part4Items.forEach((q, idx) => {
                     const el = document.getElementById(`p4-input-${idx}`);
                     const userVal = this.cleanText(el.value);
-                    const correctRaw = q.answer.toUpperCase();
-                    const correctDisplay = correctRaw.replace(/\s*\|\s*/g, ' '); 
-                    const correctClean = this.cleanText(correctDisplay);
+                    
+                    // Support Array or String answer
+                    let validAnswers = [];
+                    if (Array.isArray(q.answers)) validAnswers = q.answers;
+                    else if (q.answer) validAnswers = [q.answer];
+
+                    let points = 0;
+                    let matchedCleanCorrect = ""; 
+
+                    // Check ALL valid options
+                    for (let rawOption of validAnswers) {
+                        const rawOptionUpper = rawOption.toUpperCase();
+                        const cleanOption = this.cleanText(rawOptionUpper.replace(/\s*\|\s*/g, ' '));
+                        let currentPoints = 0;
+
+                        if (userVal === cleanOption) {
+                            currentPoints = 2;
+                        } else if (rawOptionUpper.includes('|')) {
+                            const parts = rawOptionUpper.split('|').map(p => this.cleanText(p));
+                            if (userVal.startsWith(parts[0])) currentPoints++;
+                            if (userVal.endsWith(parts[1])) currentPoints++;
+                        }
+
+                        if (currentPoints > points) {
+                            points = currentPoints;
+                            matchedCleanCorrect = cleanOption;
+                        }
+                    }
+
+                    // Fallback for display if 0 points
+                    if (points === 0 && !matchedCleanCorrect) {
+                         // Just grab first valid option cleaned
+                         matchedCleanCorrect = this.cleanText(validAnswers[0].replace(/\s*\|\s*/g, ' '));
+                    }
+
+                    s4 += points;
 
                     el.disabled = true;
 
-                    if (userVal === correctClean) {
-                        s4 += 2;
+                    if (points === 2) {
                         el.classList.add('input-correct');
-                    } else if (correctRaw.includes('|')) {
-                        const parts = correctRaw.split('|').map(p => this.cleanText(p));
-                        let partial = 0;
-                        if (userVal.startsWith(parts[0])) partial++;
-                        if (userVal.endsWith(parts[1])) partial++;
-
-                        s4 += partial;
-
-                        if (partial === 2) el.classList.add('input-correct');
-                        else if (partial === 1) {
-                            el.classList.add('input-partial');
-                            // Add badge for full correct answer if partial
-                            const badge = document.createElement('div');
-                            badge.className = 'text-sm text-yellow-600 font-bold mt-1';
-                            badge.innerText = `Correct: ${correctDisplay} (1/2 Marks)`;
-                            el.parentElement.appendChild(badge);
-                        } else {
-                            el.classList.add('input-wrong');
-                            const badge = document.createElement('div');
-                            badge.className = 'text-sm text-red-600 font-bold mt-1';
-                            badge.innerText = `Correct: ${correctDisplay}`;
-                            el.parentElement.appendChild(badge);
-                        }
+                    } else if (points === 1) {
+                        el.classList.add('input-partial');
+                        const badge = document.createElement('div');
+                        badge.className = 'text-sm text-yellow-600 font-bold mt-1';
+                        // Show all valid answers join by OR
+                        const niceAnswers = validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR ');
+                        badge.innerText = `Correct: ${niceAnswers} (1/2 Marks)`;
+                        el.parentElement.appendChild(badge);
                     } else {
                         el.classList.add('input-wrong');
                         const badge = document.createElement('div');
                         badge.className = 'text-sm text-red-600 font-bold mt-1';
-                        badge.innerText = `Correct: ${correctDisplay}`;
+                        const niceAnswers = validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR ');
+                        badge.innerText = `Correct: ${niceAnswers}`;
                         el.parentElement.appendChild(badge);
                     }
                 });

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* --- GENERAL LAYOUT --- */
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background-color: #f4f7f6;
+      color: #333;
+      text-align: center;
+      /* Huge padding at bottom so you can scroll past the typewriter */
+      padding-bottom: 200px; 
+    }
+
+    h1 { color: #2c3e50; margin-bottom: 30px; }
+
+    /* --- THE WRAPPERS --- */
+    
+    /* 1. Main Container to keep everything centered and same width */
+    .main-container {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+
+    /* 2. Top Row (Vowels + Diphthongs) */
+    .top-row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* --- THE CARDS --- */
+    .section-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    h3 {
+      margin-top: 0;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    /* --- THE GRIDS --- */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    
+    /* Consonants: 8 columns wide */
+    .grid-consonants {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+    }
+
+    /* --- BUTTONS --- */
+    button {
+      width: 60px;
+      height: 60px;
+      font-size: 20px;
+      font-family: "Lucida Sans Unicode", sans-serif;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 3px 0px rgba(0,0,0,0.1);
+      transition: all 0.1s;
+    }
+    button:active { transform: translateY(2px); box-shadow: none; }
+
+    /* Colors */
+    .vowel { background: linear-gradient(to bottom, #3498db, #2980b9); }
+    .diph { background: linear-gradient(to bottom, #1abc9c, #16a085); }
+    .cons { background: linear-gradient(to bottom, #34495e, #2c3e50); }
+    .cons-light { background: linear-gradient(to bottom, #95a5a6, #7f8c8d); }
+
+    /* --- THE TYPEWRITER (Fixed to Bottom) --- */
+    #typewriter-zone {
+      display: none; /* Hidden at start */
+      position: fixed;
+      bottom: 0; 
+      left: 0; 
+      width: 100%;
+      background: white;
+      border-top: 4px solid #3498db;
+      padding: 15px;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+      z-index: 9999;
+    }
+
+    .tw-content { 
+      display: flex; 
+      gap: 10px; 
+      max-width: 850px; 
+      margin: 0 auto; 
+      align-items: center; 
+    }
+
+    textarea { 
+      flex-grow: 1; 
+      height: 50px; 
+      padding: 10px; 
+      font-size: 20px; 
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    /* Utility Buttons Style */
+    .util-btn { width: auto; font-size: 14px; padding: 0 15px; color: white; height: 50px; }
+    .stress-btn { background: #e67e22; width: 40px; padding: 0; font-weight: bold; }
+    .copy-btn { background: #3498db; }
+    .close-btn { background: #e74c3c; width: 40px; padding: 0; font-weight: bold;}
+
+    /* The 'Show' Button (Floating at bottom right) */
+    #show-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: auto;
+      height: auto;
+      padding: 15px 25px;
+      background: #3498db;
+      border-radius: 50px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>Phonetic Chart</h1>
+
+  <div class="main-container">
+    
+    <div class="top-row">
+      <div class="section-card">
+        <h3>Monophthongs</h3>
+        <div class="grid-4">
+          <button class="vowel" onclick="hit('iː')">iː</button>
+          <button class="vowel" onclick="hit('ɪ')">ɪ</button>
+          <button class="vowel" onclick="hit('ʊ')">ʊ</button>
+          <button class="vowel" onclick="hit('uː')">uː</button>
+          
+          <button class="vowel" onclick="hit('e')">e</button>
+          <button class="vowel" onclick="hit('ə')">ə</button>
+          <button class="vowel" onclick="hit('ɜː')">ɜː</button>
+          <button class="vowel" onclick="hit('ɔː')">ɔː</button>
+          
+          <button class="vowel" onclick="hit('æ')">æ</button>
+          <button class="vowel" onclick="hit('ʌ')">ʌ</button>
+          <button class="vowel" onclick="hit('ɑː')">ɑː</button>
+          <button class="vowel" onclick="hit('ɒ')">ɒ</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Diphthongs</h3>
+        <div class="grid-3"> 
+          <button class="diph" onclick="hit('ɪə')">ɪə</button>
+          <button class="diph" onclick="hit('eɪ')">eɪ</button>
+          <button class="diph" onclick="hit('ʊə')">ʊə</button>
+          
+          <button class="diph" onclick="hit('ɔɪ')">ɔɪ</button>
+          <button class="diph" onclick="hit('əʊ')">əʊ</button>
+          <button class="diph" onclick="hit('eə')">eə</button>
+          
+          <button class="diph" onclick="hit('aɪ')">aɪ</button>
+          <button class="diph" onclick="hit('aʊ')">aʊ</button>
+          <div style="width:60px;"></div> 
+        </div>
+      </div>
+    </div> 
+
+    <div class="section-card">
+      <h3>Consonants</h3>
+      <div class="grid-consonants">
+        <button class="cons-light" onclick="hit('p')">p</button>
+        <button class="cons" onclick="hit('b')">b</button>
+        <button class="cons-light" onclick="hit('t')">t</button>
+        <button class="cons" onclick="hit('d')">d</button>
+        <button class="cons-light" onclick="hit('tʃ')">tʃ</button>
+        <button class="cons" onclick="hit('dʒ')">dʒ</button>
+        <button class="cons-light" onclick="hit('k')">k</button>
+        <button class="cons" onclick="hit('g')">g</button>
+
+        <button class="cons-light" onclick="hit('f')">f</button>
+        <button class="cons" onclick="hit('v')">v</button>
+        <button class="cons-light" onclick="hit('θ')">θ</button>
+        <button class="cons" onclick="hit('ð')">ð</button>
+        <button class="cons-light" onclick="hit('s')">s</button>
+        <button class="cons" onclick="hit('z')">z</button>
+        <button class="cons-light" onclick="hit('ʃ')">ʃ</button>
+        <button class="cons" onclick="hit('ʒ')">ʒ</button>
+      </div>
+
+      <div class="grid-consonants" style="margin-top:10px;">
+         <button class="cons" onclick="hit('m')">m</button>
+         <button class="cons" onclick="hit('n')">n</button>
+         <button class="cons" onclick="hit('ŋ')">ŋ</button>
+         <button class="cons-light" onclick="hit('h')">h</button>
+         <button class="cons" onclick="hit('l')">l</button>
+         <button class="cons" onclick="hit('r')">r</button>
+         <button class="cons" onclick="hit('w')">w</button>
+         <button class="cons" onclick="hit('j')">j</button>
+      </div>
+    </div>
+
+  </div> <button id="show-btn" onclick="openTypewriter()">
+    ⌨ Open Keyboard
+  </button>
+
+
+  <div id="typewriter-zone">
+    <div class="tw-content">
+      
+      <button class="util-btn close-btn" onclick="closeTypewriter()">X</button>
+
+      <textarea id="paper" placeholder="Type here..."></textarea>
+      
+      <div style="display:flex; flex-direction:column; gap:5px;">
+         <button class="util-btn stress-btn" onclick="hit('ˈ')" style="height:22px;">ˈ</button>
+         <button class="util-btn stress-btn" onclick="hit('ˌ')" style="height:22px;">ˌ</button>
+      </div>
+      
+      <button class="util-btn copy-btn" onclick="copyText()">Copy</button>
+    </div>
+  </div>
+
+
+  <script>
+    // Audio Placeholder
+function hit(letter, filenameOverride) {
+      // 1. Determine the filename
+      // If you gave a specific filename (like 'ii'), use it. 
+      // Otherwise, just use the letter (like 'p').
+      var name = filenameOverride ? filenameOverride : letter;
+
+      // 2. Play the sound (Now set to .m4a)
+      // We add a timestamp (?t=...) to force the browser to reload the sound 
+      // if you change the file, otherwise it might play the old version from memory.
+      var audio = new Audio("sounds/" + name + ".m4a?t=" + new Date().getTime());
+      audio.play();
+
+      // 3. Typing Logic
+      var box = document.getElementById("typewriter-zone");
+      if (box.style.display === "block") {
+        document.getElementById("paper").value += letter;
+      }
+    }
+
+    function openTypewriter() {
+      document.getElementById("typewriter-zone").style.display = "block";
+      document.getElementById("show-btn").style.display = "none"; // Hide the 'Open' button
+    }
+
+    function closeTypewriter() {
+      document.getElementById("typewriter-zone").style.display = "none";
+      document.getElementById("show-btn").style.display = "block"; // Bring back 'Open' button
+    }
+
+    function copyText() {
+      document.getElementById("paper").select();
+      document.execCommand("copy");
+      alert("Copied!");
+    }
+  </script>
+
+</body>
+</html>

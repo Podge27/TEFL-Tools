@@ -80,6 +80,22 @@
         }
     },
     {
+        "id": "B2_RECIPE_BOOKS",
+        "level": "B2",
+        "title": "The Survival of the Cookbook",
+        "content": "In an age of digital convenience, the continued [1] of the printed recipe book is somewhat surprising. While online recipes are free and accessible, many home cooks still prefer the [2] feel of a hardback volume. A well-written book offers clear [3] that are often easier to follow than scrolling through a screen with sticky fingers. Furthermore, internet recipes can sometimes be [4], leading to kitchen disasters. A good cookbook is seen as a [5] investment for anyone serious about food. Precise [6] are particularly crucial for baking, where chemistry matters. Reading a cookbook is [7] a more relaxing experience than staring at a tablet. For many, cooking from a physical book brings a sense of [8] that technology simply cannot replicate.",
+        "answers": {
+            "1": { "root": "SURVIVE", "answer": "SURVIVAL" },
+            "2": { "root": "TRADITION", "answer": "TRADITIONAL" },
+            "3": { "root": "INSTRUCT", "answer": "INSTRUCTIONS" },
+            "4": { "root": "RELY", "answer": "UNRELIABLE" },
+            "5": { "root": "VALUE", "answer": "VALUABLE" },
+            "6": { "root": "MEASURE", "answer": "MEASUREMENTS" },
+            "7": { "root": "BASIC", "answer": "BASICALLY" },
+            "8": { "root": "SATISFY", "answer": "SATISFACTION" }
+        }
+    },
+    {
         "id": "C1_WF_01",
         "level": "C1",
         "title": "Modern Architecture",
@@ -159,7 +175,23 @@
             "8": { "root": "SUSTAIN", "answer": "SUSTAINABLE" }
         }
     },
-    {
+      {
+    "id": "C1_RECIPE_BOOKS",
+    "level": "C1",
+    "title": "Evolution of Recipe Writing",
+    "content": "The style of recipe writing has [1] huge changes over the last century. Historically, recipes were vague, and the [2] of success depended entirely on the cook's instinct. Modern food writing, however, demands scientific [3] regarding temperatures and timings. Despite this, there are still occasional [4] in celebrity cookbooks which can frustrate amateur chefs. The true [5] of a classic cookbook lies in its ability to teach technique, not just list ingredients. The [6] of a dish often relies on how well the writer explains the process. While some predicted the death of the format, this theory has been [7] by rising sales. Today, the [8] of cuisines available in print form is truly staggering.",
+    "answers": {
+      "1": { "root": "GO", "answer": "UNDERGONE" },
+      "2": { "root": "LIKELY", "answer": "LIKELIHOOD" },
+      "3": { "root": "PRECISE", "answer": "PRECISION" },
+      "4": { "root": "ACCURATE", "answer": "INACCURACIES" },
+      "5": { "root": "STRONG", "answer": "STRENGTH" },
+      "6": { "root": "COME", "answer": "OUTCOME" },
+      "7": { "root": "PROVE", "answer": "DISPROVEN" },
+      "8": { "root": "BROAD", "answer": "BREADTH" }
+    }
+  },
+  {
         "id": "C2_WF_01",
         "level": "C2",
         "title": "The Nature of Genius",
@@ -238,5 +270,21 @@
             "7": { "root": "VALID", "answer": "VALIDATION" },
             "8": { "root": "FRAGMENT", "answer": "FRAGMENTATION" }
         }
+    },
+      {
+    "id": "C2_RECIPE_BOOKS",
+    "level": "C2",
+    "title": "Cookbooks as Cultural Artifacts",
+    "content": "The [1] of the cookbook in modern publishing is a phenomenon worth analyzing. Despite the digital revolution, their [2] in the market is remarkable, suggesting they serve a purpose beyond mere utility. Recent years have seen [3] sales figures for high-end culinary volumes. Critics who argue [4] that print is dead fail to recognize the object's aesthetic value. The planned [5] of digital content contrasts with the permanence of a library collection. However, a common critique is the [6] of complex culinary techniques for a mass audience, which can strip dishes of their authenticity. True connoisseurs appreciate the [7] of regional flavors that detailed books preserve. It is [8] that the cookbook has transcended its original function to become a lifestyle object.",
+    "answers": {
+      "1": { "root": "UBIQUITOUS", "answer": "UBIQUITY" },
+      "2": { "root": "ENDURE", "answer": "ENDURANCE" },
+      "3": { "root": "PRECEDE", "answer": "UNPRECEDENTED" },
+      "4": { "root": "CONVINCE", "answer": "UNCONVINCINGLY" },
+      "5": { "root": "OBSOLETE", "answer": "OBSOLESCENCE" },
+      "6": { "root": "SIMPLE", "answer": "OVERSIMPLIFICATION" },
+      "7": { "root": "INTRICATE", "answer": "INTRICACIES" },
+      "8": { "root": "DENY", "answer": "UNDENIABLE" }
     }
+  }
 ]

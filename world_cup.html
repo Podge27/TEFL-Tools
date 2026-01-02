@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA World Cup Archive</title>
+    <style>
+        /* --- 1. BASIC STYLES (Clean & Simple) --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f9; margin: 0; padding: 0; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        .header { background: #1a1a2e; color: white; padding: 15px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; }
+        .back-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; margin-right: 15px; padding: 5px; }
+        h1 { font-size: 1.2rem; margin: 0; flex-grow: 1; }
+        .hidden { display: none !important; }
+
+        /* --- 2. HOME SCREEN (The List of Rows) --- */
+        .cup-row {
+            display: flex; align-items: center;
+            padding: 20px; border-bottom: 1px solid #eee;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .cup-row:hover { background: #f9f9f9; }
+        .cup-flag { width: 40px; height: 30px; object-fit: cover; border-radius: 4px; margin-right: 15px; border: 1px solid #ddd; }
+        .cup-info { display: flex; flex-direction: column; }
+        .cup-host { font-weight: bold; font-size: 1.1rem; }
+        .cup-year { color: #666; font-size: 0.9rem; }
+
+        /* --- 3. MENU SCREEN (The Big Buttons) --- */
+        .menu-grid { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .menu-btn {
+            background: #e94560; color: white; border: none;
+            padding: 18px; font-size: 1rem; font-weight: bold;
+            border-radius: 8px; cursor: pointer; text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .menu-btn.secondary { background: #16213e; } /* Blue for non-matches */
+        .menu-btn:active { transform: scale(0.98); }
+
+        /* --- 4. DATA SCREENS (Matches & Tables) --- */
+        .stage-container { padding: 15px; }
+        
+        /* The Table */
+        .group-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem; }
+        .group-table th { background: #eee; text-align: left; padding: 8px; }
+        .group-table td { border-bottom: 1px solid #eee; padding: 8px; }
+        
+        /* The Match List */
+        .match-card { background: white; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+        .match-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .match-header:hover { background: #fafafa; }
+        .score-line { font-weight: bold; font-size: 1rem; }
+        .match-meta { font-size: 0.8rem; color: #888; margin-top: 4px; }
+        
+        /* The Expanded Details */
+        .match-details { display: none; padding: 15px; background: #fcfcfc; border-top: 1px dashed #ddd; font-size: 0.9rem; }
+        .event-row { margin: 5px 0; }
+        .full-stats-btn {
+            display: block; width: 100%; margin-top: 15px; padding: 10px;
+            background: #1a1a2e; color: white; border: none; border-radius: 4px; cursor: pointer;
+        }
+
+        /* --- 5. WALL CHART (Simple Vertical List) --- */
+        .round-header { background: #e0e0e0; padding: 10px 15px; font-weight: bold; margin-top: 20px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <button id="back-btn" class="back-btn hidden" onclick="goBack()">←</button>
+            <h1 id="page-title">World Cup Archive</h1>
+        </div>
+
+        <div id="view-home"></div>
+
+        <div id="view-menu" class="hidden"></div>
+
+        <div id="view-stage" class="hidden"></div>
+        
+        <div id="view-text" class="hidden" style="padding: 20px; line-height: 1.6;"></div>
+    </div>
+
+    <script>
+        let fullData = [];
+        let currentCup = null;
+        let historyStack = []; // To handle the "Back" button logic
+
+        // 1. START: Load the data
+        fetch('world_cup_data.json')
+            .then(res => res.json())
+            .then(data => {
+                fullData = data.sort((a,b) => b.year - a.year); // Newest first
+                renderHome();
+            });
+
+        // 2. RENDER HOME (The List of Rows)
+        function renderHome() {
+            showView('view-home', 'FIFA World Cup Archive', false);
+            const container = document.getElementById('view-home');
+            container.innerHTML = '';
+
+            fullData.forEach(cup => {
+                const row = document.createElement('div');
+                row.className = 'cup-row';
+                // Using a Flag API for images
+                const flagUrl = `https://flagcdn.com/w80/${cup.host_flag_code[0]}.png`; 
+                
+                row.innerHTML = `
+                    <img src="${flagUrl}" class="cup-flag" alt="Flag">
+                    <div class="cup-info">
+                        <span class="cup-host">${cup.host}</span>
+                        <span class="cup-year">${cup.year}</span>
+                    </div>
+                `;
+                row.onclick = () => openMenu(cup);
+                container.appendChild(row);
+            });
+        }
+
+        // 3. RENDER MENU (The Dashboard)
+        function openMenu(cup) {
+            currentCup = cup;
+            showView('view-menu', `${cup.year} ${cup.host}`, true);
+            const container = document.getElementById('view-menu');
+            container.innerHTML = `<div class="menu-grid"></div>`;
+            const grid = container.querySelector('.menu-grid');
+
+            // 3a. Add Match Stage Buttons (Group, R16, etc.)
+            cup.stages_menu.forEach(stage => {
+                const btn = document.createElement('button');
+                btn.className = 'menu-btn';
+                btn.innerText = stage.label;
+                btn.onclick = () => openStage(stage);
+                grid.appendChild(btn);
+            });
+
+            // 3b. Add Wall Chart & Text Buttons
+            grid.innerHTML += `
+                <hr style="width:100%; border:0; border-top:1px solid #ddd; margin:10px 0;">
+                <button class="menu-btn secondary" onclick="openWallChart()">🌳 Wall Chart</button>
+                <button class="menu-btn secondary" onclick="openText('overview')">📖 Overview</button>
+                <button class="menu-btn secondary" onclick="openText('controversies')">⚠️ Controversies</button>
+            `;
+        }
+
+        // 4. RENDER STAGE (Matches & Tables)
+        function openStage(stage) {
+            showView('view-stage', `${stage.label} - ${currentCup.year}`, true);
+            const container = document.getElementById('view-stage');
+            const data = currentCup.stage_data[stage.id];
+            
+            container.innerHTML = '';
+
+            // If it's a group, show table
+            if (stage.view_type === 'table_view' && data.table.length > 0) {
+                let tableHtml = `<table class="group-table"><thead><tr><th>Team</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr></thead><tbody>`;
+                data.table.forEach(t => {
+                    tableHtml += `<tr><td>${t.team}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td><b>${t.pts}</b></td></tr>`;
+                });
+                tableHtml += `</tbody></table>`;
+                container.innerHTML += tableHtml;
+            }
+
+            // Show Matches
+            renderMatchList(container, data.matches);
+        }
+
+        // 5. RENDER WALL CHART (Simple Vertical List)
+        function openWallChart() {
+            showView('view-stage', `Wall Chart - ${currentCup.year}`, true);
+            const container = document.getElementById('view-stage');
+            container.innerHTML = '';
+
+            // Loop through all stages in order
+            currentCup.stages_menu.forEach(stage => {
+                // Skip groups for wall chart usually, but we can include if you want
+                if(stage.view_type === 'bracket_view') {
+                    container.innerHTML += `<div class="round-header">${stage.label}</div>`;
+                    const matches = currentCup.stage_data[stage.id].matches;
+                    renderMatchList(container, matches);
+                }
+            });
+        }
+
+        // HELPER: Render a list of matches
+        function renderMatchList(container, matches) {
+            matches.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <div class="match-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
+                        <div>
+                            <div class="score-line">${m.home_team} ${m.score} ${m.away_team}</div>
+                            <div class="match-meta">${m.date} | ${m.stadium}</div>
+                        </div>
+                        <div style="font-size:1.2rem;">▾</div>
+                    </div>
+                    <div class="match-details">
+                        ${m.goals.map(g => `<div class="event-row">⚽ ${g.min}' ${g.player} (${g.team})</div>`).join('')}
+                        ${m.cards.map(c => `<div class="event-row">🟨 ${c.min}' ${c.player} (${c.team})</div>`).join('')}
+                        <button class="full-stats-btn" onclick="alert('Lineups coming soon!')">View Lineups & Managers</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 6. RENDER TEXT (Overview/Controversy)
+        function openText(type) {
+            const title = type === 'overview' ? 'Overview' : 'Controversies';
+            showView('view-text', `${title} - ${currentCup.year}`, true);
+            const content = currentCup.details[type] || "No content available yet.";
+            document.getElementById('view-text').innerHTML = `<h2>${title}</h2><p>${content}</p>`;
+        }
+
+        // UTILITY: Handle Navigation
+        function showView(viewId, title, showBack) {
+            // Hide all views
+            ['view-home', 'view-menu', 'view-stage', 'view-text'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            // Show target
+            document.getElementById(viewId).classList.remove('hidden');
+            // Update Header
+            document.getElementById('page-title').innerText = title;
+            const backBtn = document.getElementById('back-btn');
+            if(showBack) {
+                backBtn.classList.remove('hidden');
+                historyStack.push(viewId); // Simple stack tracking
+            } else {
+                backBtn.classList.add('hidden');
+                historyStack = [];
+            }
+        }
+
+        function goBack() {
+            // A simple logic: If in Stage/Text -> go to Menu. If in Menu -> go Home.
+            const current = document.querySelector('div:not(.hidden)[id^="view-"]').id;
+            if(current === 'view-menu') {
+                renderHome();
+            } else {
+                openMenu(currentCup);
+            }
+        }
+    </script>
+</body>
+</html>
