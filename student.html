@@ -36,18 +36,17 @@
     <script>
         const SB_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
-        const supabase = supabase.createClient(SB_URL, SB_KEY);
+// FIX: Use supabaseClient to avoid the name crash
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         
         // 1. GET ROOM FROM URL
         const urlParams = new URLSearchParams(window.location.search);
         let roomID = urlParams.get('room');
 
-        // If they didn't scan a QR code, ask them manually
         if (!roomID) {
             roomID = prompt("Please enter the Room Name:");
         }
         
-        // Show Room ID on screen
         if (roomID) {
             document.getElementById('roomBadgeLogin').innerText = "Room: " + roomID;
             document.getElementById('roomBadgeWrite').innerText = "Room: " + roomID;
@@ -78,17 +77,18 @@
             status.innerText = "Sending...";
             status.style.color = "grey";
 
-            // INSERT WITH ROOM ID
-            const { error } = await supabase.from('notes').insert([{ 
+            // FIX: Use supabaseClient
+            const { error } = await supabaseClient.from('notes').insert([{ 
                 student_name: myName, 
                 content: content,
                 order_index: 9999,
-                room_id: roomID // <--- Crucial!
+                room_id: roomID 
             }]);
 
             if (error) {
                 status.innerText = "Error!";
                 status.style.color = "red";
+                console.error(error);
             } else {
                 status.innerText = "Sent!";
                 status.style.color = "green";
