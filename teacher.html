@@ -95,7 +95,7 @@
     <div id="board">Loading...</div>
 
     <script>
-        // --- 1. CONFIGURATION (PASTE KEYS HERE) ---
+        // --- 1. CONFIGURATION ---
         const SB_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
         const TEACHER_PIN = "2010";
@@ -129,6 +129,13 @@
                     await supabaseClient.from('notes').delete().eq('room_id', roomID);
                 }
             }
+            
+            // --- FIX: START REALTIME LISTENER HERE, AFTER ROOM ID IS SET ---
+            supabaseClient.channel('room-channel')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `room_id=eq.${roomID}` }, () => {
+                    fetchNotes();
+                })
+                .subscribe();
 
             fetchNotes();
         }
@@ -195,26 +202,17 @@
         
         document.getElementById('pinInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkPin(); });
 
-        // --- ACTIONS (UPDATED) ---
+        // --- ACTIONS ---
         async function deleteNote(id, event) {
             event.stopPropagation();
-            // REMOVED THE CONFIRM DIALOG HERE FOR INSTANT DELETE
-            
             const { error } = await supabaseClient.from('notes').delete().eq('id', id);
-            
-            // Check for security errors
-            if (error) {
-                console.error(error);
-                alert("Error: Supabase blocked the delete. \n\nPlease go to Supabase -> Table Editor -> Notes -> Turn OFF 'RLS' (Row Level Security).");
-            }
+            if (error) alert("Delete Error. Check RLS settings.");
         }
 
         async function clearBoard() {
             if (confirm("Delete ALL notes?")) {
                 const { error } = await supabaseClient.from('notes').delete().eq('room_id', roomID);
-                if (error) {
-                    alert("Error: Supabase blocked the delete. Check RLS settings.");
-                }
+                if (error) alert("Delete Error. Check RLS settings.");
             }
         }
 
@@ -238,10 +236,6 @@
                 }
             }
         });
-
-        supabaseClient.channel('room-channel')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `room_id=eq.${roomID}` }, () => fetchNotes())
-            .subscribe();
 
         // START
         init();
