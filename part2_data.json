@@ -441,6 +441,22 @@
       ["TO"]
     ]
   },
+   {
+    "id": "C1_KAS_CYCLING",
+    "level": "C1",
+    "title": "The Yellow and Blue Army",
+    "content": "The KAS cycling team remains one of the most iconic squads in the history of the sport. Instantly recognizable [1] virtue of their yellow and blue jerseys, they were a dominant force in the peloton. Their resurgence in the 1980s can be put [2] to the arrival of Irish legend Sean Kelly. [3] only did Kelly secure victories in the Classics, but he also captured the Vuelta a España title. The team's strategy often relied on brute strength, wearing rivals down [4] relentless attacks. [5] it not been for the untimely death of the team owner, their reign might have continued well into the 90s. Today, the kit is considered a collector's item, highly sought [6] by enthusiasts. It represents a golden era [7] cycling was defined by grit and determination. Few teams have left [8] a lasting impression on the collective memory of fans.",
+    "answers": [
+      ["BY"],
+      ["DOWN"],
+      ["NOT"],
+      ["WITH", "UNDER"],
+      ["HAD"],
+      ["AFTER"],
+      ["WHEN", "WHERE"],
+      ["SUCH"]
+    ]
+  },
   {
     "id": "C2_01",
     "level": "C2",
@@ -708,6 +724,22 @@
       ["IN"],
       ["EVEN"],
       ["ONE"]
+    ]
+  },
+  {
+    "id": "C2_QUANTUM_ENTANGLEMENT",
+    "level": "C2",
+    "title": "The Quantum Paradox",
+    "content": "Quantum entanglement represents a fundamental departure from classical physics, positing a scenario [1] particles remain interconnected regardless of distance. When two particles are entangled, the state of one cannot be fully described without [2] to the other. Measurement of one immediately influences its partner, a concept Einstein found [3] preposterous that he famously dismissed it. This 'action at a distance' appears to contradict the principle of locality, [4] to which objects are influenced only by their immediate surroundings. [5] is the strangeness of this phenomenon that it challenges the very fabric of reality. Yet, experimental tests known as Bell tests have consistently validated it, proving that the universe is [6] from being locally real. [7] we to unlock the full potential of this interconnectedness, computing power would increase exponentially. We are standing on the [8] of a new era in information technology.",
+    "answers": [
+      ["WHEREBY", "WHERE", "IN", "WHEREIN"],
+      ["REFERENCE", "RECOURSE"],
+      ["SO"],
+      ["ACCORDING"],
+      ["SUCH"],
+      ["FAR"],
+      ["WERE"],
+      ["BRINK", "VERGE", "EDGE", "CUSP"]
     ]
   }
 ]

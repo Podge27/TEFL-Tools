@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Full Use of English Simulator</title>
-    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     <style type="text/tailwindcss">
@@ -92,7 +92,6 @@
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
 
-    <!-- Dynamic Back Button -->
     <button id="nav-back-btn" onclick="app.handleBack()" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 font-bold transition z-50 group">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -100,15 +99,12 @@
         <span id="nav-back-text">Back to Menu</span>
     </button>
 
-    <!-- Main Card -->
     <div id="app-container">
         
-        <!-- Header -->
         <h1 class="text-4xl font-extrabold text-gray-900 text-center mt-8 mb-4">
             Use of English <span class="text-indigo-600">Exam</span>
         </h1>
         
-        <!-- Persistent Progress Bar (Hidden on Start) -->
         <div id="exam-header" class="hidden bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center mx-6 rounded-xl border-t">
             <span id="exam-level-badge" class="text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-lg"></span>
             <div class="flex gap-3">
@@ -118,7 +114,6 @@
             </div>
         </div>
 
-        <!-- SCREEN 1: LEVEL SELECTION (Dashboard Style) -->
         <div id="screen-start" class="flex-1 p-8 flex flex-col justify-center items-center gap-12 max-w-5xl mx-auto w-full">
             <h2 class="text-3xl font-bold text-gray-700 mb-6">1. Select Exam Level</h2>
             
@@ -136,7 +131,6 @@
             <p id="status-msg" class="text-gray-400 font-medium">Loading exam data...</p>
         </div>
 
-        <!-- SCREEN 2: Part 2 (Cloze) -->
         <div id="screen-part2" class="hidden flex-1 flex flex-col bg-yellow-50/30">
             <div class="bg-white px-8 py-4 border-b border-gray-100 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-indigo-600 uppercase tracking-wide">Part 2: Open Cloze</h3>
@@ -159,7 +153,6 @@
             </div>
         </div>
 
-        <!-- SCREEN 3: Part 3 (Word Formation) -->
         <div id="screen-part3" class="hidden flex-1 flex flex-col bg-yellow-50/30">
             <div class="bg-white px-8 py-4 border-b border-gray-100 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-indigo-600 uppercase tracking-wide">Part 3: Word Formation</h3>
@@ -182,7 +175,6 @@
             </div>
         </div>
 
-        <!-- SCREEN 4: Part 4 (Key Word Transformation) -->
         <div id="screen-part4" class="hidden flex-1 flex flex-col bg-gray-50">
             <div class="bg-white px-8 py-4 border-b border-gray-100 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-indigo-600 uppercase tracking-wide">Part 4: Key Word Transformation</h3>
@@ -193,13 +185,11 @@
             </div>
 
             <div id="p4-container" class="flex-1 overflow-y-auto p-8 md:p-12 space-y-6">
-                <!-- Questions injected here -->
-            </div>
+                </div>
 
             <div class="p-6 bg-white border-t border-gray-200 flex justify-between">
                 <button onclick="app.prevSection('screen-part3')" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-600 font-bold">← Previous</button>
                 
-                <!-- Action Buttons Container -->
                 <div>
                     <button id="p4-finish-btn" onclick="app.finishExam()" class="btn-nav bg-green-600 hover:bg-green-700 text-xl py-4 px-10 shadow-lg">Finish & Grade</button>
                     <button id="p4-return-results-btn" onclick="app.switchScreen('screen-results')" class="hidden btn-nav bg-blue-600 hover:bg-blue-700 text-xl py-4 px-10 shadow-lg">Return to Results</button>
@@ -207,12 +197,10 @@
             </div>
         </div>
 
-        <!-- SCREEN 5: Results -->
         <div id="screen-results" class="hidden flex-1 flex flex-col items-center justify-center p-8 bg-gray-50">
             <h2 class="text-5xl font-black text-gray-800 mb-10">Exam Results</h2>
             
             <div class="w-full max-w-3xl space-y-6 mb-12">
-                <!-- Scores Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="score-card bg-white border-indigo-100 shadow-sm text-center">
                         <h3 class="text-sm font-bold text-gray-500 uppercase">Part 2</h3>
@@ -228,7 +216,6 @@
                     </div>
                 </div>
                 
-                <!-- Total -->
                 <div class="p-8 rounded-3xl bg-white border-4 border-gray-100 flex flex-col items-center justify-center shadow-xl">
                     <h3 class="text-xl font-bold text-gray-400 tracking-widest uppercase mb-2">Total Score</h3>
                     <div id="score-total-container" class="text-center">
@@ -260,7 +247,7 @@
             init: async function() {
                 const msg = document.getElementById('status-msg');
 
-                // Load all data sources in parallel
+                // Load all data sources
                 try {
                     const [p2, p3, p4] = await Promise.all([
                         this.fetchData('./part2_data.json', 'part2'),
@@ -277,7 +264,7 @@
 
                 } catch (e) {
                     console.error("Critical loading error", e);
-                    msg.innerText = "Error loading data. Using backup mode.";
+                    msg.innerText = "Error loading data. Check console.";
                 }
             },
 
@@ -288,30 +275,8 @@
                     return await res.json();
                 } catch (e) {
                     console.warn(`Failed to fetch ${url}, using backup for ${type}.`);
-                    return this.getBackupData(type);
+                    return [];
                 }
-            },
-
-            getBackupData: function(type) {
-                // Simplified fallback data for structure testing
-                if (type === 'part2') return [
-                    { id: "B2_FB", level: "B2", title: "B2 Fallback Text", content: "This is a [1] fallback text. It works [2] offline.", answers: {"1":"SIMPLE","2":"FINE"} }, 
-                    { id: "C1_FB", level: "C1", title: "C1 Fallback Text", content: "This is a [1] fallback text. It works [2] offline.", answers: {"1":"SIMPLE","2":"FINE"} },
-                    { id: "C2_FB", level: "C2", title: "C2 Fallback Text", content: "This is a [1] fallback text. It works [2] offline.", answers: {"1":"SIMPLE","2":"FINE"} }
-                ]; 
-                if (type === 'part3') return [
-                    { id: "B2_FB3", level: "B2", title: "B2 WF Text", content: "This is a [1] test.", answers: {"1": {root:"RELIES", answer:"RELIABLE/RELIABLY"}} },
-                    { id: "C1_FB3", level: "C1", title: "C1 WF Text", content: "This is a [1] test.", answers: {"1": {root:"RELIES", answer:"RELIABLE"}} },
-                    { id: "C2_FB3", level: "C2", title: "C2 WF Text", content: "This is a [1] test.", answers: {"1": {root:"RELIES", answer:"RELIABLE"}} }
-                ];
-                if (type === 'part4') return [
-                    { id: "B2_FB4", level: "B2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
-                    { id: "C1_FB4", level: "C1", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER STAY", word_count: 3 },
-                    { id: "C2_FB4", level: "C2", sentence1: "I almost always go out.", key_word: "HARDLY", sentence2_pre: "I", sentence2_post: "ever stay in.", answer: "HARDLY EVER | STAY", word_count: 3 },
-                    // Test array answers
-                    { id: "TEST_ARR", level: "B2", sentence1: "Multi answer test.", key_word: "TEST", sentence2_pre: "Start", sentence2_post: "end.", answers: ["START | END", "BEGIN | FINISH"], word_count: 2 }
-                ];
-                return [];
             },
 
             // --- NAVIGATION ---
@@ -417,25 +382,30 @@
                 this.updateProgress(1);
             },
 
+            // --- RENDERING PART 2 (Modified for Array Format) ---
             renderPart2: function() {
                 const item = this.examState.part2Item;
                 document.getElementById('p2-title').innerText = item.title;
                 let html = item.content;
                 for(let i=1; i<=8; i++) {
-                    if(item.answers[i]) {
+                    // Check answers[i-1] (Index 0 is Question 1)
+                    if(item.answers && item.answers[i-1]) {
                         html = html.replace(`[${i}]`, `<input id="p2-input-${i}" class="gap-input" type="text" placeholder="(${i})" autocomplete="off">`);
                     }
                 }
                 document.getElementById('p2-text').innerHTML = html;
             },
 
+            // --- RENDERING PART 3 (Modified for Array Format) ---
             renderPart3: function() {
                 const item = this.examState.part3Item;
                 document.getElementById('p3-title').innerText = item.title;
                 let html = item.content;
                 for(let i=1; i<=8; i++) {
-                     if(item.answers[i]) {
-                        const root = `<span class="root-word">(${item.answers[i].root})</span>`;
+                     // Check answers[i-1]. Expecting object { root: "X", answer: "Y" } inside array
+                     const ansObj = item.answers ? item.answers[i-1] : null;
+                     if(ansObj && ansObj.root) {
+                        const root = `<span class="root-word">(${ansObj.root})</span>`;
                         html = html.replace(`[${i}]`, `<input id="p3-input-${i}" class="gap-input" type="text" placeholder="(${i})" autocomplete="off">` + root);
                      }
                 }
@@ -481,7 +451,6 @@
                  if (targetId === 'screen-part3') this.updateProgress(2);
             },
             
-            // --- PUNCTUATION SANITIZATION HELPER ---
             cleanText: function(text) {
                 return text.toUpperCase()
                            .replace(/[.,;!]/g, '')
@@ -490,15 +459,20 @@
             },
 
             finishExam: function() {
-                // 1. Grading Part 2 (1 Mark each, multi-answer support)
+                // 1. Grading Part 2 (Array Fix + Safety Check)
                 let s2 = 0;
                 const p2Ans = this.examState.part2Item.answers;
                 for(let i=1; i<=8; i++) {
-                    if(!p2Ans[i]) continue;
                     const el = document.getElementById(`p2-input-${i}`);
+                    if(!el) continue; // Safety check for missing gap
+
+                    // Get array answer at i-1
+                    const rawAns = p2Ans[i-1]; 
+                    if (!rawAns) continue; 
+
                     const val = el.value.trim().toUpperCase();
-                    // Split logic for Part 2 multiple answers (e.g. WHICH/THAT)
-                    const validOptions = p2Ans[i].split('/').map(s => s.trim().toUpperCase());
+                    // Normalize to array
+                    const validOptions = (Array.isArray(rawAns) ? rawAns : [rawAns]).map(s => s.trim().toUpperCase());
                     
                     el.disabled = true;
 
@@ -507,23 +481,29 @@
                         el.classList.add('input-correct');
                     } else {
                         el.classList.add('input-wrong');
-                        // Add badge next to input
                         const badge = document.createElement('span');
                         badge.className = 'correction-badge';
-                        badge.innerText = p2Ans[i].replace(/\//g, ' / ');
+                        badge.innerText = validOptions.join(' / ');
                         el.parentNode.insertBefore(badge, el.nextSibling);
                     }
                 }
 
-                // 2. Grading Part 3 (1 Mark each, multi-answer support)
+                // 2. Grading Part 3 (Array Fix + Safety Check)
                 let s3 = 0;
                 const p3Ans = this.examState.part3Item.answers;
                 for(let i=1; i<=8; i++) {
-                    if(!p3Ans[i]) continue;
                     const el = document.getElementById(`p3-input-${i}`);
+                    if(!el) continue;
+
+                    // Expecting array of objects: [{root:..., answer:...}, ...]
+                    const ansObj = p3Ans[i-1];
+                    if (!ansObj) continue;
+
                     const val = el.value.trim().toUpperCase();
-                    const correctRaw = p3Ans[i].answer;
-                    const validOptions = correctRaw.split('/').map(s => s.trim().toUpperCase());
+                    const correctRaw = ansObj.answer; 
+                    // Support if answer is "RELY/RELIABLE" string OR ["RELY", "RELIABLE"] array
+                    const validOptions = (Array.isArray(correctRaw) ? correctRaw : correctRaw.split('/'))
+                        .map(s => s.trim().toUpperCase());
 
                     el.disabled = true;
 
@@ -532,10 +512,9 @@
                         el.classList.add('input-correct');
                     } else {
                         el.classList.add('input-wrong');
-                        // Add badge (logic to skip root word span)
                         const badge = document.createElement('span');
                         badge.className = 'correction-badge';
-                        badge.innerText = correctRaw.replace(/\//g, ' / ');
+                        badge.innerText = validOptions.join(' / ');
                         
                         if(el.nextElementSibling && el.nextElementSibling.classList.contains('root-word')) {
                             el.parentNode.insertBefore(badge, el.nextElementSibling.nextSibling);
@@ -545,13 +524,14 @@
                     }
                 }
 
-                // 3. Grading Part 4 (2 Marks each, split logic, punctuation clean, array support)
+                // 3. Grading Part 4 (Safety Check Added)
                 let s4 = 0;
                 this.examState.part4Items.forEach((q, idx) => {
                     const el = document.getElementById(`p4-input-${idx}`);
+                    if (!el) return; // Safety check
+
                     const userVal = this.cleanText(el.value);
                     
-                    // Support Array or String answer
                     let validAnswers = [];
                     if (Array.isArray(q.answers)) validAnswers = q.answers;
                     else if (q.answer) validAnswers = [q.answer];
@@ -559,7 +539,6 @@
                     let points = 0;
                     let matchedCleanCorrect = ""; 
 
-                    // Check ALL valid options
                     for (let rawOption of validAnswers) {
                         const rawOptionUpper = rawOption.toUpperCase();
                         const cleanOption = this.cleanText(rawOptionUpper.replace(/\s*\|\s*/g, ' '));
@@ -579,9 +558,7 @@
                         }
                     }
 
-                    // Fallback for display if 0 points
-                    if (points === 0 && !matchedCleanCorrect) {
-                         // Just grab first valid option cleaned
+                    if (points === 0 && !matchedCleanCorrect && validAnswers.length > 0) {
                          matchedCleanCorrect = this.cleanText(validAnswers[0].replace(/\s*\|\s*/g, ' '));
                     }
 
@@ -595,7 +572,6 @@
                         el.classList.add('input-partial');
                         const badge = document.createElement('div');
                         badge.className = 'text-sm text-yellow-600 font-bold mt-1';
-                        // Show all valid answers join by OR
                         const niceAnswers = validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR ');
                         badge.innerText = `Correct: ${niceAnswers} (1/2 Marks)`;
                         el.parentElement.appendChild(badge);
