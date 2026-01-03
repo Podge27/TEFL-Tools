@@ -12,53 +12,7 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; margin: 0; padding: 20px; }
         
-        /* HEADER */
-        #header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #34495e; padding-bottom: 20px; margin-bottom: 20px;}
-        h1 { margin: 0; font-size: 2rem; }
-        .room-tag { background: #3498db; padding: 2px 8px; border-radius: 4px; font-size: 1rem; vertical-align: middle; }
-        
-        /* CONTROLS & QR */
-        #controls-area { text-align: right; }
-        #qrcode { background: white; padding: 10px; border-radius: 8px; display: inline-block; margin-top: 10px; }
-        
-        /* BUTTONS */
-        .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; font-size: 0.9rem; transition: 0.2s; }
-        .btn-copy { background: #2ecc71; color: white; }
-        .btn-clear { background: #e74c3c; color: white; display: none; } /* Hidden by default */
-        .btn-lock { background: #34495e; color: #bdc3c7; border: 1px solid #7f8c8d; }
-        .btn:hover { opacity: 0.9; }
-        .admin-active { background: #e67e22 !important; color: white !important; border: none !important; }
-
-        /* BOARD GRID */
-        #board { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding-bottom: 50px;}
-        
-        /* STICKY NOTES */
-        .note { 
-            background: #f1c40f; color: #2c3e50; padding: 15px; border-radius: 4px; 
-            box-shadow: 4px 4px 10px rgba(0,0,0,0.3); min-height: 140px; 
-            display: flex; flex-direction: column; cursor: grab; position: relative;
-            transition: transform 0.1s;
-        }
-        .note:active { cursor: grabbing; }
-        .note:hover { transform: scale(1.02); }
-        .author { font-weight: bold; font-size: 0.9rem; text-transform: uppercase; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 10px; }
-        .content { font-size: 1.1rem; flex-grow: 1; word-wrap: break-word; white-space: pre-wrap; }
-
-        /* DELETE X BUTTON */
-        .delete-x {
-            position: absolute; top: 5px; right: 5px; 
-            background: #e74c3c; color: white; border-radius: 50%; width: 24px; height: 24px;
-            text-align: center; line-height: 24px; cursor: pointer; font-size: 14px; font-weight: bold;
-            display: none; z-index: 10;
-        }
-        .delete-x:hover { background: #c0392b; transform: scale(1.1); }
-
-        /* FULLSCREEN */
-        .fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f1c40f; color: #2c3e50; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 50px; box-sizing: border-box; }
-        .fullscreen .content { font-size: 3rem; text-align: center; }
-        .fullscreen .delete-x { display: none !important; } 
-
-        /* --- PIN MODAL (THE POPUP BOX) --- */
+        /* PIN MODAL */
         #pinModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 10000;
@@ -75,6 +29,41 @@
         }
         #pinError { color: #e74c3c; margin-top: 10px; display: none; font-weight: bold; }
 
+        /* HEADER */
+        #header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #34495e; padding-bottom: 20px; margin-bottom: 20px;}
+        h1 { margin: 0; font-size: 2rem; }
+        .room-tag { background: #3498db; padding: 2px 8px; border-radius: 4px; font-size: 1rem; vertical-align: middle; }
+        #qrcode { background: white; padding: 10px; border-radius: 8px; display: inline-block; margin-top: 10px; }
+        
+        /* BUTTONS */
+        .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; font-size: 0.9rem; transition: 0.2s; }
+        .btn-copy { background: #2ecc71; color: white; }
+        .btn-clear { background: #e74c3c; color: white; display: none; }
+        .btn-lock { background: #34495e; color: #bdc3c7; border: 1px solid #7f8c8d; }
+        .admin-active { background: #e67e22 !important; color: white !important; border: none !important; }
+
+        /* BOARD */
+        #board { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding-bottom: 50px;}
+        .note { 
+            background: #f1c40f; color: #2c3e50; padding: 15px; border-radius: 4px; 
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.3); min-height: 140px; 
+            display: flex; flex-direction: column; cursor: grab; position: relative;
+        }
+        .author { font-weight: bold; font-size: 0.9rem; text-transform: uppercase; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 10px; }
+        .content { font-size: 1.1rem; flex-grow: 1; word-wrap: break-word; white-space: pre-wrap; }
+
+        /* DELETE X */
+        .delete-x {
+            position: absolute; top: 5px; right: 5px; 
+            background: #e74c3c; color: white; border-radius: 50%; width: 24px; height: 24px;
+            text-align: center; line-height: 24px; cursor: pointer; font-size: 14px; font-weight: bold;
+            display: none; z-index: 10;
+        }
+        
+        /* FULLSCREEN */
+        .fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f1c40f; color: #2c3e50; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 50px; box-sizing: border-box; }
+        .fullscreen .content { font-size: 3rem; text-align: center; }
+        .fullscreen .delete-x { display: none !important; } 
     </style>
 </head>
 <body>
@@ -94,22 +83,19 @@
         <div>
             <h1>Class Storyboard <span id="roomDisplay" class="room-tag">...</span></h1>
             <p>Scan to join.</p>
-            
             <div style="margin-top: 10px;">
                 <button id="lockBtn" class="btn btn-lock" onclick="openLogin()">🔒 Teacher Login</button>
                 <button class="btn btn-copy" onclick="copyNotes()">📋 Copy Notes</button>
                 <button id="clearBtn" class="btn btn-clear" onclick="clearBoard()">🗑 Clear Room</button>
             </div>
         </div>
-        <div id="controls-area">
-            <div id="qrcode"></div>
-        </div>
+        <div id="qrcode"></div>
     </div>
 
     <div id="board">Loading...</div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- 1. CONFIGURATION (PASTE KEYS HERE) ---
         const SB_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
         const TEACHER_PIN = "2010";
@@ -118,15 +104,20 @@
         const boardElement = document.getElementById('board');
         let isDragging = false;
         let isAdmin = false;
+        let roomID = "";
 
-        // --- SETUP ROOM ---
-        let roomID = prompt("Enter Room Name (e.g. History1):");
-        if (!roomID) roomID = "DEMO"; 
-        roomID = roomID.replace(/\s+/g, '-').toUpperCase();
-        document.getElementById('roomDisplay').innerText = roomID;
-
-        // --- STARTUP LOGIC ---
         async function init() {
+            // Setup Room
+            roomID = prompt("Enter Room Name (e.g. History1):");
+            if (!roomID) roomID = "DEMO"; 
+            roomID = roomID.replace(/\s+/g, '-').toUpperCase();
+            document.getElementById('roomDisplay').innerText = roomID;
+
+            // Generate QR Code
+            const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const studentUrl = basePath + '/student.html?room=' + roomID;
+            new QRCode(document.getElementById("qrcode"), { text: studentUrl, width: 100, height: 100 });
+
             // Check for existing notes
             const { count } = await supabaseClient
                 .from('notes')
@@ -134,60 +125,13 @@
                 .eq('room_id', roomID);
 
             if (count > 0) {
-                const choice = confirm(`Found ${count} notes. Press OK to RESUME or CANCEL to START FRESH.`);
-                if (!choice) await supabaseClient.from('notes').delete().eq('room_id', roomID);
+                if (!confirm(`Found ${count} notes. OK to Keep, Cancel to Delete.`)) {
+                    await supabaseClient.from('notes').delete().eq('room_id', roomID);
+                }
             }
-
-            // QR Code
-            const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            const studentUrl = basePath + '/student.html?room=' + roomID;
-            new QRCode(document.getElementById("qrcode"), { text: studentUrl, width: 100, height: 100 });
 
             fetchNotes();
         }
-
-        // --- LOGIN / PIN LOGIC ---
-        function openLogin() {
-            if (isAdmin) {
-                // If already logged in, just log out
-                isAdmin = false;
-                document.getElementById('lockBtn').innerText = "🔒 Teacher Login";
-                document.getElementById('lockBtn').classList.remove('admin-active');
-                document.getElementById('clearBtn').style.display = 'none';
-                document.querySelectorAll('.delete-x').forEach(el => el.style.display = 'none');
-            } else {
-                // Show the PIN Modal
-                document.getElementById('pinModal').style.display = 'flex';
-                document.getElementById('pinInput').value = '';
-                document.getElementById('pinError').style.display = 'none';
-                document.getElementById('pinInput').focus();
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('pinModal').style.display = 'none';
-        }
-
-        function checkPin() {
-            const input = document.getElementById('pinInput').value;
-            if (input === TEACHER_PIN) {
-                // SUCCESS
-                isAdmin = true;
-                closeModal();
-                document.getElementById('lockBtn').innerText = "🔓 Unlocked";
-                document.getElementById('lockBtn').classList.add('admin-active');
-                document.getElementById('clearBtn').style.display = 'inline-block';
-                document.querySelectorAll('.delete-x').forEach(el => el.style.display = 'block');
-            } else {
-                // FAIL
-                document.getElementById('pinError').style.display = 'block';
-            }
-        }
-
-        // Allow pressing "Enter" in the pin box
-        document.getElementById('pinInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') checkPin();
-        });
 
         // --- FETCH NOTES ---
         async function fetchNotes() {
@@ -218,28 +162,70 @@
             });
         }
 
-        // --- ACTIONS ---
+        // --- LOGIN LOGIC ---
+        function openLogin() {
+            if (isAdmin) {
+                isAdmin = false;
+                document.getElementById('lockBtn').innerText = "🔒 Teacher Login";
+                document.getElementById('lockBtn').classList.remove('admin-active');
+                document.getElementById('clearBtn').style.display = 'none';
+                document.querySelectorAll('.delete-x').forEach(el => el.style.display = 'none');
+            } else {
+                document.getElementById('pinModal').style.display = 'flex';
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinError').style.display = 'none';
+                document.getElementById('pinInput').focus();
+            }
+        }
+
+        function closeModal() { document.getElementById('pinModal').style.display = 'none'; }
+
+        function checkPin() {
+            if (document.getElementById('pinInput').value === TEACHER_PIN) {
+                isAdmin = true;
+                closeModal();
+                document.getElementById('lockBtn').innerText = "🔓 Unlocked";
+                document.getElementById('lockBtn').classList.add('admin-active');
+                document.getElementById('clearBtn').style.display = 'inline-block';
+                document.querySelectorAll('.delete-x').forEach(el => el.style.display = 'block');
+            } else {
+                document.getElementById('pinError').style.display = 'block';
+            }
+        }
+        
+        document.getElementById('pinInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkPin(); });
+
+        // --- ACTIONS (UPDATED) ---
         async function deleteNote(id, event) {
             event.stopPropagation();
-            if(confirm("Delete this note?")) await supabaseClient.from('notes').delete().eq('id', id);
+            // REMOVED THE CONFIRM DIALOG HERE FOR INSTANT DELETE
+            
+            const { error } = await supabaseClient.from('notes').delete().eq('id', id);
+            
+            // Check for security errors
+            if (error) {
+                console.error(error);
+                alert("Error: Supabase blocked the delete. \n\nPlease go to Supabase -> Table Editor -> Notes -> Turn OFF 'RLS' (Row Level Security).");
+            }
         }
 
         async function clearBoard() {
-            if (confirm("WARNING: Delete ALL notes in this room?")) {
-                await supabaseClient.from('notes').delete().eq('room_id', roomID);
+            if (confirm("Delete ALL notes?")) {
+                const { error } = await supabaseClient.from('notes').delete().eq('room_id', roomID);
+                if (error) {
+                    alert("Error: Supabase blocked the delete. Check RLS settings.");
+                }
             }
         }
 
         function copyNotes() {
             const notes = document.querySelectorAll('.note');
-            let text = `NOTES FOR ROOM: ${roomID}\n--------------------\n`;
-            notes.forEach(n => {
-                text += `[${n.querySelector('.author').innerText}]: ${n.querySelector('.content').innerText}\n\n`;
-            });
-            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+            let text = `ROOM: ${roomID}\n\n`;
+            notes.forEach(n => text += `[${n.querySelector('.author').innerText}]: ${n.querySelector('.content').innerText}\n\n`);
+            navigator.clipboard.writeText(text).then(() => alert("Copied!"));
         }
 
-        // --- REALTIME ---
+        // --- DRAG & DROP ---
         Sortable.create(boardElement, {
             animation: 150,
             onStart: () => { isDragging = true; },
@@ -257,6 +243,7 @@
             .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `room_id=eq.${roomID}` }, () => fetchNotes())
             .subscribe();
 
+        // START
         init();
     </script>
 </body>

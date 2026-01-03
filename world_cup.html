@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIFA World Cup Archive (Final Polish)</title>
+    <title>FIFA World Cup Archive</title>
     <style>
         /* --- 1. VISUAL STYLE --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f9; margin: 0; padding: 0; color: #333; }
@@ -68,6 +68,8 @@
         .sub-time { font-weight: bold; color: #333; font-size: 0.75rem; background: #eee; padding: 1px 4px; border-radius: 3px; }
 
         .round-header { background: #e0e0e0; padding: 10px 15px; font-weight: bold; margin-top: 25px; border-radius: 4px; }
+        
+        .loading { padding: 20px; text-align: center; color: #666; }
     </style>
 </head>
 <body>
@@ -84,7 +86,9 @@
             </div>
         </div>
 
-        <div id="view-home"></div>
+        <div id="view-home">
+            <div class="loading">Loading data...</div>
+        </div>
         <div id="view-menu" class="hidden"></div>
         <div id="view-stage" class="hidden stage-container"></div>
         <div id="view-text" class="hidden" style="padding: 20px;"></div>
@@ -92,76 +96,33 @@
 
     <script>
         /* -------------------------------------------------------
-           HARDCODED DATA
-           ------------------------------------------------------- */
-        const hardcodedData = [
-            {
-                "id": "WC-2022", "year": 2022, "type": "men", "host": "Qatar", "host_flag_code": "qa", 
-                "name": "2022 FIFA Men's World Cup",
-                "details": { "overview": "Overview...", "controversies": "Controversies..." },
-                "stages_menu": [
-                    { "label": "Group Stage", "id": "groups", "view_type": "table_view" },
-                    { "label": "Final", "id": "final", "view_type": "bracket_view" }
-                ],
-                "stage_data": {
-                    "groups": { 
-                        "matches": [
-                            { "match_id": "m1", "date": "20 Nov", "stadium": "Al Bayt", "home_team": "Qatar", "away_team": "Ecuador", "score": "0 - 2", 
-                              "goals": [{ "player": "Enner Valencia", "min": "16'", "team": "Ecuador" }, { "player": "Enner Valencia", "min": "31'", "team": "Ecuador" }], 
-                              "cards": [{ "player": "Al-Sheeb", "card": "Yellow", "min": "15'", "team": "Qatar" }], 
-                              "lineups": null }
-                        ],
-                        "table": [] 
-                    },
-                    "final": { 
-                        "matches": [
-                            { 
-                                "match_id": "m64", "date": "18 Dec", "stadium": "Lusail", "home_team": "Argentina", "away_team": "France", "score": "3 - 3 (4-2 pens)",
-                                "goals": [{ "player": "Lionel Messi", "min": "23'", "team": "Argentina" }, { "player": "Ángel Di María", "min": "36'", "team": "Argentina" }, { "player": "Kylian Mbappé", "min": "80'", "team": "France" }, { "player": "Kylian Mbappé", "min": "81'", "team": "France" }, { "player": "Lionel Messi", "min": "108'", "team": "Argentina" }, { "player": "Kylian Mbappé", "min": "118'", "team": "France" }],
-                                "cards": [{ "player": "Fernández", "card": "Yellow", "min": "45'", "team": "Argentina"}],
-                                "penalties": [
-                                    { "player": "Mbappé", "team": "France", "outcome": "Goal" },
-                                    { "player": "Messi", "team": "Argentina", "outcome": "Goal" },
-                                    { "player": "Coman", "team": "France", "outcome": "Miss" },
-                                    { "player": "Dybala", "team": "Argentina", "outcome": "Goal" },
-                                    { "player": "Tchouaméni", "team": "France", "outcome": "Miss" },
-                                    { "player": "Paredes", "team": "Argentina", "outcome": "Goal" },
-                                    { "player": "Kolo Muani", "team": "France", "outcome": "Goal" },
-                                    { "player": "Montiel", "team": "Argentina", "outcome": "Goal" }
-                                ],
-                                "lineups": {
-                                    "home_manager": "Lionel Scaloni",
-                                    "away_manager": "Didier Deschamps",
-                                    "home_xi": ["E. Martínez", "Molina", "Romero", "Otamendi", "Tagliafico", "De Paul", "Fernández", "Mac Allister", "Messi", "Álvarez", "Di María"],
-                                    "away_xi": ["Lloris", "Koundé", "Varane", "Upamecano", "Hernández", "Tchouaméni", "Rabiot", "Dembélé", "Griezmann", "Mbappé", "Giroud"],
-                                    "home_subs": [{ "min": "64", "in": "Acuña", "out": "Di María" }],
-                                    "away_subs": [{ "min": "41", "in": "Thuram", "out": "Giroud" }]
-                                }
-                            }
-                        ] 
-                    }
-                }
-            },
-            {
-                "id": "WWC-2019", "year": 2019, "type": "women", "host": "France", "host_flag_code": "fr",
-                "name": "2019 Women's World Cup",
-                "details": { "overview": "Overview...", "controversies": "Controversies..." },
-                "stages_menu": [{ "label": "Final", "id": "final", "view_type": "bracket_view" }],
-                "stage_data": {
-                    "final": { "matches": [{ "match_id": "wm1", "date": "07 Jul", "stadium": "Lyon", "home_team": "USA", "away_team": "Netherlands", "score": "2 - 0", "goals": [{"player": "Megan Rapinoe", "min": "61'", "team": "USA"}], "cards": [], "lineups": null }] }
-                }
-            }
-        ];
-
-        /* -------------------------------------------------------
            APP LOGIC
            ------------------------------------------------------- */
+        let fullData = [];
         let currentGender = 'men';
         let currentCup = null;
         let historyStack = [];
 
-        renderHome();
+        // 1. FETCH DATA ON LOAD
+        fetch('world_cup_data.json')
+            .then(response => {
+                if (!response.ok) { throw new Error("File not found"); }
+                return response.json();
+            })
+            .then(data => {
+                fullData = data;
+                renderHome(); // Render only after data is loaded
+            })
+            .catch(error => {
+                document.getElementById('view-home').innerHTML = 
+                    `<div style="padding:20px; text-align:center; color:red">
+                        <strong>Error loading data.</strong><br>
+                        Make sure 'world_cup_data.json' is in the same folder.
+                    </div>`;
+                console.error('Error loading data:', error);
+            });
 
+        // 2. UTILITIES
         function cleanName(name) {
             if(!name) return "";
             return name.replace(/not applicable /gi, "").replace(/undefined /gi, "").trim();
@@ -174,23 +135,48 @@
             renderHome();
         }
 
+        // 3. RENDER HOME
         function renderHome() {
             showView('view-home', 'World Cup Archive', false);
             const container = document.getElementById('view-home');
             container.innerHTML = '';
 
-            const filteredData = hardcodedData.filter(c => c.type === currentGender);
+            if (fullData.length === 0) {
+                container.innerHTML = `<div class="loading">No data loaded yet.</div>`;
+                return;
+            }
+
+            // Filter data by gender
+            const filteredData = fullData.filter(c => c.type === currentGender);
+
+            if (filteredData.length === 0 && currentGender === 'men') {
+                container.innerHTML = `<div class="loading">No Men's data found.</div>`;
+                return;
+            }
+            
+            if (filteredData.length === 0 && currentGender === 'women') {
+                container.innerHTML = `<div class="loading">No Women's data available yet.<br><small>(The database currently only has Men's history)</small></div>`;
+                return;
+            }
 
             filteredData.forEach(cup => {
                 const row = document.createElement('div');
                 row.className = 'cup-row';
                 const flagUrl = `https://flagcdn.com/w80/${cup.host_flag_code.toLowerCase()}.png`;
-                row.innerHTML = `<img src="${flagUrl}" class="cup-flag" onerror="this.style.display='none'"><div class="cup-info"><span class="cup-host">${cup.host}</span><span class="cup-year">${cup.year}</span></div>`;
+                
+                row.innerHTML = `
+                    <img src="${flagUrl}" class="cup-flag" onerror="this.style.display='none'">
+                    <div class="cup-info">
+                        <span class="cup-host">${cup.host}</span>
+                        <span class="cup-year">${cup.year}</span>
+                    </div>
+                `;
                 row.onclick = () => openMenu(cup);
                 container.appendChild(row);
             });
         }
 
+        // 4. RENDER MENU
         function openMenu(cup) {
             currentCup = cup;
             showView('view-menu', `${cup.year} ${cup.host}`, true);
@@ -232,6 +218,7 @@
             grid.appendChild(btnContro);
         }
 
+        // 5. RENDER STAGE
         function openStage(stage) {
             showView('view-stage', stage.label, true);
             const container = document.getElementById('view-stage');
@@ -242,9 +229,43 @@
                 return;
             }
             const data = currentCup.stage_data[stage.id];
+            
+            // Draw Table
             if (stage.view_type === 'table_view' && data.table && data.table.length > 0) {
-                container.innerHTML += `<h3>Table</h3><p>(Table data here)</p>`;
+                // Table Headers
+                let tableHtml = `
+                    <div style="overflow-x:auto; margin-bottom:20px; border:1px solid #eee; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.9rem; min-width:300px;">
+                        <thead>
+                            <tr style="background:#f0f0f0;">
+                                <th style="padding:10px; text-align:left;">Team</th>
+                                <th style="padding:10px;">W</th>
+                                <th style="padding:10px;">D</th>
+                                <th style="padding:10px;">L</th>
+                                <th style="padding:10px;">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                // Table Rows
+                data.table.forEach(t => {
+                    tableHtml += `
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:10px;">${t.team}</td>
+                            <td style="padding:10px; text-align:center;">${t.w}</td>
+                            <td style="padding:10px; text-align:center;">${t.d}</td>
+                            <td style="padding:10px; text-align:center;">${t.l}</td>
+                            <td style="padding:10px; text-align:center;"><strong>${t.pts}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += `</tbody></table></div>`;
+                container.innerHTML += tableHtml;
             }
+
+            // Draw Matches
             renderMatchList(container, data.matches);
         }
 
@@ -252,6 +273,7 @@
             showView('view-stage', 'Wall Chart', true);
             const container = document.getElementById('view-stage');
             container.innerHTML = '';
+            
             currentCup.stages_menu.forEach(stage => {
                 if(stage.view_type === 'bracket_view') {
                     if(currentCup.stage_data[stage.id] && currentCup.stage_data[stage.id].matches) {
@@ -262,13 +284,13 @@
             });
         }
 
-        // --- RENDER MATCHES ---
+        // 6. RENDER MATCH DETAILS
         function renderMatchList(container, matches) {
             matches.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'match-card';
                 
-                // 1. FILTER EVENTS
+                // --- FILTERS ---
                 const homeGoals = (m.goals || []).filter(g => g.team === m.home_team);
                 const awayGoals = (m.goals || []).filter(g => g.team === m.away_team);
                 const homeCards = (m.cards || []).filter(c => c.team === m.home_team);
@@ -276,11 +298,11 @@
                 const homePens = (m.penalties || []).filter(p => p.team === m.home_team);
                 const awayPens = (m.penalties || []).filter(p => p.team === m.away_team);
 
-                // 2. GENERATORS
+                // --- GENERATORS ---
                 const generateEvents = (goals, cards) => {
                     let html = '';
-                    goals.forEach(g => html += `<div class="event-row">⚽ ${g.min} ${cleanName(g.player)}</div>`);
-                    cards.forEach(c => html += `<div class="event-row">🟨 ${c.min} ${cleanName(c.player)}</div>`);
+                    goals.forEach(g => html += `<div class="event-row">⚽ ${g.min}' ${cleanName(g.player)}</div>`);
+                    cards.forEach(c => html += `<div class="event-row">🟨 ${c.min}' ${cleanName(c.player)}</div>`);
                     return html || '&nbsp;';
                 };
 
@@ -293,9 +315,9 @@
                     return html;
                 };
 
-                // 3. BUILD SECTIONS (This ensures they stack neatly)
+                // --- LAYOUT BLOCKS ---
                 
-                // -- A. MATCH EVENTS BLOCK --
+                // Block 1: Events
                 let detailsHtml = `
                     <div class="section-label">Match Events</div>
                     <div class="split-grid">
@@ -304,7 +326,7 @@
                     </div>
                 `;
 
-                // -- B. PENALTIES BLOCK (Only if they exist) --
+                // Block 2: Penalties
                 if(m.penalties && m.penalties.length > 0) {
                     detailsHtml += `
                         <div class="section-label">Penalty Shootout</div>
@@ -315,10 +337,9 @@
                     `;
                 }
 
-                // -- C. LINEUPS BLOCK --
+                // Block 3: Lineups
                 if(m.lineups) {
                     const subFormat = sub => {
-                        // FIXED: Ensure "out" is shown
                         return typeof sub === 'string' 
                             ? `<div>${sub}</div>` 
                             : `<div class="sub-row"><span class="sub-time">${sub.min}'</span> ${sub.in} (for ${sub.out})</div>`;
@@ -329,13 +350,17 @@
                         <div class="split-grid" style="border-bottom:none;">
                             <div class="split-col home">
                                 <div class="lineup-title">Manager: ${m.lineups.home_manager}</div>
-                                <div class="lineup-list">${m.lineups.home_xi.join(', ')}</div>
-                                ${m.lineups.home_subs ? `<div class="subs-title">Subs</div>` + m.lineups.home_subs.map(subFormat).join('') : ''}
+                                <div class="lineup-list">
+                                    ${m.lineups.home_xi.length > 0 ? m.lineups.home_xi.join(', ') : 'Starting XI not available'}
+                                </div>
+                                ${m.lineups.home_subs && m.lineups.home_subs.length > 0 ? `<div class="subs-title">Subs</div>` + m.lineups.home_subs.map(subFormat).join('') : ''}
                             </div>
                             <div class="split-col away">
                                 <div class="lineup-title">Manager: ${m.lineups.away_manager}</div>
-                                <div class="lineup-list">${m.lineups.away_xi.join(', ')}</div>
-                                ${m.lineups.away_subs ? `<div class="subs-title">Subs</div>` + m.lineups.away_subs.map(subFormat).join('') : ''}
+                                <div class="lineup-list">
+                                    ${m.lineups.away_xi.length > 0 ? m.lineups.away_xi.join(', ') : 'Starting XI not available'}
+                                </div>
+                                ${m.lineups.away_subs && m.lineups.away_subs.length > 0 ? `<div class="subs-title">Subs</div>` + m.lineups.away_subs.map(subFormat).join('') : ''}
                             </div>
                         </div>
                     `;
@@ -343,6 +368,7 @@
                     detailsHtml += `<div style="padding:15px; text-align:center; color:#999;">No lineups available</div>`;
                 }
 
+                // --- CARD STRUCTURE ---
                 card.innerHTML = `
                     <div class="match-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
                         <div style="flex-grow:1;">
@@ -359,6 +385,7 @@
             });
         }
 
+        // 7. UTILS
         function openText(type) {
             const title = type === 'overview' ? 'Overview' : 'Controversies';
             showView('view-text', title, true);
@@ -368,7 +395,6 @@
 
         function showView(viewId, title, showBack) {
             ['view-home', 'view-menu', 'view-stage', 'view-text'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            
             document.getElementById(viewId).classList.remove('hidden');
             document.getElementById('page-title').innerText = title;
             

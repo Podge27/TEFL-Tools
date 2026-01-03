@@ -4,14 +4,32 @@
     <meta charset="UTF-8">
     <title>Send Note</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f6f8; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 400px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
         h2 { margin-top: 0; color: #2c3e50; text-align: center; }
         .room-badge { background: #3498db; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; display: block; width: fit-content; margin: 0 auto 15px auto; }
-        input, textarea { width: 100%; box-sizing: border-box; padding: 15px; margin-bottom: 15px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 16px; }
+        
+        input, textarea { 
+            width: 100%; box-sizing: border-box; padding: 15px; margin-bottom: 15px; 
+            border: 2px solid #dfe6e9; border-radius: 8px; font-size: 16px; 
+        }
+        input:focus, textarea:focus { outline: none; border-color: #3498db; }
+        
         button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        button:active { transform: scale(0.98); }
+        
+        /* The new "Change Name" button style */
+        .btn-small { 
+            width: auto; padding: 5px 10px; font-size: 0.8rem; background: #95a5a6; 
+            margin-left: 10px; border-radius: 4px; 
+        }
+
+        .header-row { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
         .hidden { display: none; }
         #statusMsg { text-align: center; margin-top: 10px; font-weight: bold; min-height: 20px; }
     </style>
@@ -21,28 +39,36 @@
     <div class="container" id="loginSection">
         <h2>Join Class</h2>
         <span id="roomBadgeLogin" class="room-badge">Room: ...</span>
-        <input type="text" id="studentName" placeholder="Your Name">
-        <button onclick="login()">Start</button>
+        <input type="text" id="studentName" placeholder="Enter Name or Team Name">
+        <button onclick="login()">Start Writing</button>
     </div>
 
     <div class="container hidden" id="writeSection">
         <span id="roomBadgeWrite" class="room-badge">Room: ...</span>
-        <h2 id="welcomeMsg"></h2>
-        <textarea id="noteContent" rows="5" placeholder="Type here..."></textarea>
+        
+        <div class="header-row">
+            <span id="welcomeMsg" style="font-weight:bold; color:#2c3e50; font-size:1.2rem;">Hi, ...</span>
+            <button class="btn-small" onclick="logout()">Change Name</button>
+        </div>
+
+        <textarea id="noteContent" rows="5" placeholder="Type your idea here..."></textarea>
         <button onclick="sendNote()">Send to Board</button>
         <p id="statusMsg"></p>
     </div>
 
     <script>
-        const SB_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
-// FIX: Use supabaseClient to avoid the name crash
+        // --- 1. PASTE KEYS HERE ---
+        const SB_URL = "YOUR_SUPABASE_URL"; 
+        const SB_KEY = "YOUR_SUPABASE_ANON_KEY";
+        
+        // Use "supabaseClient" to avoid naming conflicts
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         
-        // 1. GET ROOM FROM URL
+        // --- 2. ROOM LOGIC ---
         const urlParams = new URLSearchParams(window.location.search);
         let roomID = urlParams.get('room');
 
+        // If no QR code scan, ask manually
         if (!roomID) {
             roomID = prompt("Please enter the Room Name:");
         }
@@ -52,32 +78,47 @@
             document.getElementById('roomBadgeWrite').innerText = "Room: " + roomID;
         }
 
+        // --- 3. LOGIN LOGIC ---
         let myName = localStorage.getItem('student_name') || ""; 
-        if (myName) showEditor();
+
+        // Auto-login if we remember them
+        if (myName) {
+            showEditor();
+        }
 
         function login() {
             const inputName = document.getElementById('studentName').value.trim();
-            if (!inputName) return alert("Enter a name");
+            if (!inputName) return alert("Please enter a name");
+            
             myName = inputName;
-            localStorage.setItem('student_name', myName);
+            localStorage.setItem('student_name', myName); // Save to phone memory
             showEditor();
         }
 
         function showEditor() {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('writeSection').classList.remove('hidden');
-            document.getElementById('welcomeMsg').innerText = "Hi, " + myName;
+            document.getElementById('welcomeMsg').innerText = myName;
         }
 
+        // NEW: Logout Function
+        function logout() {
+            if(confirm("Change name?")) {
+                localStorage.removeItem('student_name'); // Clear memory
+                location.reload(); // Reload page to start over
+            }
+        }
+
+        // --- 4. SEND NOTE ---
         async function sendNote() {
             const content = document.getElementById('noteContent').value.trim();
             const status = document.getElementById('statusMsg');
+
             if (!content) return;
 
             status.innerText = "Sending...";
             status.style.color = "grey";
 
-            // FIX: Use supabaseClient
             const { error } = await supabaseClient.from('notes').insert([{ 
                 student_name: myName, 
                 content: content,
@@ -86,13 +127,13 @@
             }]);
 
             if (error) {
-                status.innerText = "Error!";
+                status.innerText = "Error! Try again.";
                 status.style.color = "red";
                 console.error(error);
             } else {
                 status.innerText = "Sent!";
-                status.style.color = "green";
-                document.getElementById('noteContent').value = "";
+                status.style.color = "#27ae60";
+                document.getElementById('noteContent').value = ""; 
                 setTimeout(() => { status.innerText = ""; }, 2000);
             }
         }

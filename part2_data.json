@@ -172,6 +172,166 @@
       ["NO", "LITTLE"]
     ]
   },
+    {
+    "id": "B2_JANUARY",
+    "level": "B2",
+    "title": "The First Month",
+    "content": "January is named [1] the Roman god Janus. He had two faces, one looking back at the old year and one looking forward to the new [2]. It is traditionally the time [3] make resolutions. However, [4] many people keep them for long. By the end of the month, most have given [5]. It is also usually the coldest month [6] the year in the northern hemisphere. Despite the weather, it represents a fresh start [7] everyone. It is a time to plan for the year [8].",
+    "answers": [
+      ["AFTER"],
+      ["ONE"],
+      ["TO"],
+      ["NOT"],
+      ["UP"],
+      ["OF"],
+      ["FOR"],
+      ["AHEAD"]
+    ]
+  },
+  {
+    "id": "B2_PLUTO_PHOTOS",
+    "level": "B2",
+    "title": "A New Look at Pluto",
+    "content": "For a long time, Pluto was considered the ninth planet. Then, [1] 2006, it was reclassified as a dwarf planet. A few years ago, the New Horizons probe flew past it and took amazing photos. The images showed that Pluto [2] mountains made of ice and a huge heart-shaped area. Scientists were surprised [3] how complex the surface was. It took the spacecraft nine years to get [4]. The data sent back [5] Earth has changed what we know about the outer solar system. It turns [6] that Pluto is [7] just a dead rock. It is a fascinating world [8] its own.",
+    "answers": [
+      ["IN"],
+      ["HAD", "HAS"],
+      ["BY", "AT"],
+      ["THERE"],
+      ["TO"],
+      ["OUT"],
+      ["NOT"],
+      ["ON"]
+    ]
+  },
+  {
+    "id": "B2_STREAMING",
+    "level": "B2",
+    "title": "Changing TV Habits",
+    "content": "The way we watch television has changed completely. We no [1] have to wait for a specific time to see our favorite show. Streaming services allow us to watch what we want, [2] we want. However, this convenience comes [3] a price. There are now [4] many different services that it can be expensive to subscribe to them all. Some people spend more [5] they used to spend on cable TV. Another problem is choosing [6] to watch. We spend hours scrolling through lists [7] actually picking something. It was easier when there were only [8] few channels.",
+    "answers": [
+      ["LONGER"],
+      ["WHEN", "WHENEVER"],
+      ["AT"],
+      ["SO"],
+      ["THAN"],
+      ["WHAT"],
+      ["WITHOUT", "BEFORE", "INSTEAD"],
+      ["A"]
+    ]
+  },
+  {
+    "id": "B2_BUTTERFLIES",
+    "level": "B2",
+    "title": "The Great Migration",
+    "content": "Butterflies are some of the most beautiful insects in the world. There are thousands of species, but the Monarch is famous [1] its long migration. Every year, millions of them fly from Canada to Mexico to escape the cold. It is a mystery [2] they know where to go, especially as no single butterfly makes the whole journey. They lay their eggs on plants, [3] hatch into caterpillars. This transformation is known [4] metamorphosis. Unfortunately, butterfly numbers are going [5] due to habitat loss. We need to protect the flowers they feed [6]. If we don't, we might lose these amazing creatures [7]. They are important for the environment [8] addition to being beautiful.",
+    "answers": [
+      ["FOR"],
+      ["HOW"],
+      ["WHICH", "THAT"],
+      ["AS"],
+      ["DOWN"],
+      ["ON", "UPON"],
+      ["FOREVER"],
+      ["IN"]
+    ]
+  },
+  {
+    "id": "B2_TV_REMAKES",
+    "level": "B2",
+    "title": "Everything Old is New Again",
+    "content": "It seems that every time you turn on the TV, there is a remake of an old show. Television producers seem obsessed [1] the past. They take a popular series from twenty years ago and make [2] again with new actors. Sometimes these remakes are successful, but often they are not [3] good as the original. Fans of the old shows usually hate [4]. They argue that the new versions lack the magic of the [5] time. So why do studios keep doing it? It is mainly because it is less risky [6] trying a completely new idea. They know there is already an audience waiting [7] it. However, it would be nice to see something original [8] an alternative.",
+    "answers": [
+      ["WITH"],
+      ["IT"],
+      ["SO"],
+      ["THEM"],
+      ["FIRST"],
+      ["THAN"],
+      ["FOR"],
+      ["AS"]
+    ]
+  },
+  {
+    "id": "B2_BUTTER",
+    "level": "B2",
+    "title": "Back to Butter",
+    "content": "For years, we were told that butter was bad for our health. Doctors said we [1] eat margarine instead because it had less fat. However, recent research suggests that butter is not as harmful [2] we thought. In fact, it is a natural product made from milk, [3] margarine is highly processed. Chefs have always preferred butter because [4] its rich flavor. Now, consumers are buying it [5] increasingly large numbers. Of course, it is still high in calories, so you shouldn't eat too [6]. But a little bit on your toast is fine. It seems that grandmother was right [7] along. Everything is good in moderation, [8] butter.",
+    "answers": [
+      ["SHOULD", "MUST"],
+      ["AS"],
+      ["WHEREAS", "WHILE", "BUT"],
+      ["OF"],
+      ["IN"],
+      ["MUCH"],
+      ["ALL"],
+      ["INCLUDING", "LIKE", "EVEN"]
+    ]
+  },
+  {
+    "id": "B2_HONEY",
+    "level": "B2",
+    "title": "Liquid Gold",
+    "content": "Honey is a truly amazing food. It is the only food made by insects that humans eat. Bees collect nectar from flowers and make [1] into honey to store for the winter. It is naturally sweet and can be used instead [2] sugar in cakes and drinks. One of the most incredible things about honey is [3] it never goes bad. Archaeologists have found pots of honey in ancient Egyptian tombs that are thousands of years [4] and are still safe to eat. It also has medicinal properties and is good [5] sore throats. To make just one jar, bees have to visit millions of flowers. We should appreciate the hard work they put [6] it. Sadly, bee populations are falling, [7] is a worry for farmers. We rely on them to pollinate [8] crops.",
+    "answers": [
+      ["IT"],
+      ["OF"],
+      ["THAT"],
+      ["OLD"],
+      ["FOR"],
+      ["INTO"],
+      ["WHICH"],
+      ["OUR", "THE"]
+    ]
+  },
+  {
+    "id": "B2_BABIES_PLANES",
+    "level": "B2",
+    "title": "A Difficult Flight",
+    "content": "There is nothing worse than trying to sleep on a plane and hearing a baby cry. It is a sound that cuts right [1] you. However, before you get angry, you should try to understand. Flying is confusing for a baby and the change in air pressure can cause pain in [2] ears. They don't know how to 'pop' their ears [3] adults do. The parents are usually more stressed [4] anyone else. They are desperate [5] stop the noise but often can't. Instead of staring, we should [6] patient. Maybe offer a smile to the parents. Remember that you [7] once a baby too. Hopefully, the flight will be over [8].",
+    "answers": [
+      ["THROUGH"],
+      ["THEIR"],
+      ["LIKE", "AS"],
+      ["THAN"],
+      ["TO"],
+      ["BE"],
+      ["WERE"],
+      ["SOON"]
+    ]
+  },
+  {
+    "id": "B2_1984",
+    "level": "B2",
+    "title": "Big Brother is Watching",
+    "content": "George Orwell's novel '1984' is one of the most famous books [1] the 20th century. Although it was written in 1948, it predicts a future that feels very familiar today. In the book, the government controls everything and there are cameras everywhere. The leader is known [2] 'Big Brother'. The phrase \"Big Brother is watching you\" comes [3] this book. Orwell was worried [4] the loss of privacy and freedom. Today, with CCTV and the internet, many people feel his warnings have [5] true. It is a frightening story, but one that everyone should read. It makes you think about [6] much power the state has. It remains relevant, even [7] it is fiction. It serves as a warning to [8] all.",
+    "answers": [
+      ["OF"],
+      ["AS"],
+      ["FROM"],
+      ["ABOUT"],
+      ["COME"],
+      ["HOW"],
+      ["THOUGH", "IF", "WHEN"],
+      ["US"]
+    ]
+  },
+  {
+    "id": "B2_GENETICS",
+    "level": "B2",
+    "title": "The Code of Life",
+    "content": "The study of genetics has advanced hugely in the last few decades. Scientists have mapped the human genome, [1] is the set of instructions that makes us who we are. This knowledge is helping doctors to understand diseases [2] cancer and heart disease. They hope that one day they will [3] able to cure these illnesses by fixing broken genes. There is also research into 'designer babies', where parents could choose the eye color [4] height of their children. This raises many ethical questions that [5] to be answered. Just because we can do something, does not mean we [6]. However, the potential benefits are huge. It is an exciting time [7] be involved in biology. The future of medicine looks very bright [8] of this research.",
+    "answers": [
+      ["WHICH"],
+      ["LIKE", "SUCH"],
+      ["BE"],
+      ["OR", "AND"],
+      ["NEED", "HAVE"],
+      ["SHOULD"],
+      ["TO"],
+      ["BECAUSE"]
+    ]
+  },
   {
     "id": "C1_01",
     "level": "C1",
@@ -455,6 +615,166 @@
       ["AFTER"],
       ["WHEN", "WHERE"],
       ["SUCH"]
+    ]
+  },
+    {
+    "id": "C1_PLUTO_REVISITED",
+    "level": "C1",
+    "title": "Pluto: A Planet No More?",
+    "content": "Once considered the ninth planet, Pluto's controversial demotion in 2006 was met [1] widespread debate. However, the New Horizons mission later revealed a world far more complex [2] anyone had imagined. [3] did we expect to find active geology on such a small, cold body. It turned [4] to be a dynamic landscape with mountains of ice. [5] it not for this mission, we would still view it as a frozen, dead rock. It is [6] no means inactive, possessing a nitrogen atmosphere. It orbits the sun at a vast distance, [7] accounts for its frigid temperatures. Whether it should be reinstated as a planet is a matter of opinion, but it is certainly a world [8] its own right.",
+    "answers": [
+      ["WITH"],
+      ["THAN"],
+      ["LITTLE"],
+      ["OUT"],
+      ["WERE", "HAD"],
+      ["BY"],
+      ["WHICH"],
+      ["IN"]
+    ]
+  },
+  {
+    "id": "C1_STREAMING_WARS",
+    "level": "C1",
+    "title": "The Fragmented Screen",
+    "content": "The television landscape has undergone a seismic shift, largely brought [1] by the advent of streaming. We are [2] longer beholden to broadcast schedules, consuming content on demand. However, the market is becoming saturated, leaving viewers overwhelmed [3] choice. Subscribing to every platform can amount [4] a small fortune, often exceeding the cost of traditional cable. It is often a case of quantity [5] than quality, with endless lists of mediocre shows. [6] you to cancel your subscription, you might miss out on the latest cultural phenomenon. It remains to be seen [7] this fragmentation is sustainable in the long run. We are undeniably spoiled [8] content, but at a price.",
+    "answers": [
+      ["ABOUT"],
+      ["NO"],
+      ["WITH", "BY"],
+      ["TO"],
+      ["RATHER"],
+      ["SHOULD", "WERE"],
+      ["WHETHER", "IF"],
+      ["FOR"]
+    ]
+  },
+  {
+    "id": "C1_BUTTERFLY_MIGRATION",
+    "level": "C1",
+    "title": "The Monarch's Journey",
+    "content": "The Monarch butterfly completes a migration [1] distance is unrivaled in the insect world. They travel thousands of miles, navigating [2] means of an internal compass linked to the sun. What makes it remarkable is that no single individual makes the entire trip; it takes several generations to [3] so. They are currently [4] threat from habitat loss and climate change. Conservationists warn that [5] action is taken immediately, the species could face extinction. Their decline is largely blamed [6] the destruction of milkweed plants. We must preserve the habitat [7] which they cannot survive. They are [8] vital importance to the pollination of our ecosystems.",
+    "answers": [
+      ["WHOSE"],
+      ["BY"],
+      ["DO"],
+      ["UNDER"],
+      ["UNLESS"],
+      ["ON", "UPON"],
+      ["WITHOUT"],
+      ["OF"]
+    ]
+  },
+  {
+    "id": "C1_1984_RELEVANCE",
+    "level": "C1",
+    "title": "Orwell's Warning",
+    "content": "George Orwell's masterpiece '1984' is arguably more relevant today [1] ever before. He depicted a dystopian society stripped [2] privacy, where independent thought is a crime. The term 'Orwellian' has entered the lexicon, referring to a state [3] surveillance is total and inescapable. [4] only did he predict the use of cameras, but also the manipulation of truth by those in power. It serves [5] a stark warning about the dangers of totalitarianism. [6] we to ignore his message, we do so at our own peril. It is [7] doubt one of the most prophetic books of the 20th century. It remains a testament [8] his genius.",
+    "answers": [
+      ["THAN"],
+      ["OF"],
+      ["WHERE"],
+      ["NOT"],
+      ["AS"],
+      ["WERE"],
+      ["WITHOUT"],
+      ["TO"]
+    ]
+  },
+  {
+    "id": "C1_GENETICS_CRISPR",
+    "level": "C1",
+    "title": "Editing Life",
+    "content": "CRISPR technology has placed us [1] the brink of a medical revolution. The potential to cure hereditary diseases is immense, but [2] are the ethical risks involved. We must seriously consider [3] we have the moral right to alter the human genome. [4] implies that we could eventually design humans to specification. The technology is [5] from perfect and could introduce unintended mutations. We must ensure it is used for the benefit of [6], rather than becoming a luxury for the wealthy. [7] should we allow such powerful tools to go unregulated. It is a topic that remains open [8] fierce debate.",
+    "answers": [
+      ["ON", "AT"],
+      ["SO"],
+      ["WHETHER", "IF"],
+      ["IT"],
+      ["FAR"],
+      ["ALL"],
+      ["NOR", "NEITHER"],
+      ["TO"]
+    ]
+  },
+  {
+    "id": "C1_BIRO_HISTORY",
+    "level": "C1",
+    "title": "The Ballpoint Revolution",
+    "content": "László Bíró, a Hungarian journalist, is the man responsible [1] the invention of the modern ballpoint pen. He noticed that newspaper ink dried quickly, unlike the ink [2] was used in traditional fountain pens. He fled the Nazis during World War II, eventually settling [3] Argentina. It was the Royal Air Force [4] helped bring the pen to global prominence. They required a writing instrument that would not leak [5] high altitudes. [6] successful was the design that it became the standard for aircrews. Today, the brand name has become synonymous [7] the object itself in many parts of the world. It is hard to imagine daily life [8] it.",
+    "answers": [
+      ["FOR"],
+      ["WHICH"],
+      ["IN"],
+      ["THAT", "WHO"],
+      ["AT"],
+      ["SO"],
+      ["WITH"],
+      ["WITHOUT"]
+    ]
+  },
+  {
+    "id": "C1_STEALTH_BOMBER",
+    "level": "C1",
+    "title": "The Invisible Plane",
+    "content": "The B-2 Spirit is a marvel of engineering, designed to be hidden [1] radar. Its unique 'flying wing' shape allows it to slip through defenses undetected, [2] giving it a significant strategic advantage. The cost of the program was astronomical, amounting [3] billions of dollars per aircraft. [4] its massive size, it is incredibly quiet and difficult to track. It utilizes advanced materials capable [5] absorbing radar waves. Only a small number were ever built, largely [6] to the immense expense of production and maintenance. It looks [7] something from a science fiction movie rather than a military jet. It remains [8] service today as a key part of the US Air Force.",
+    "answers": [
+      ["FROM"],
+      ["THEREBY", "THUS"],
+      ["TO"],
+      ["DESPITE"],
+      ["OF"],
+      ["DUE", "OWING"],
+      ["LIKE"],
+      ["IN"]
+    ]
+  },
+  {
+    "id": "C1_ARUBA_GEOGRAPHY",
+    "level": "C1",
+    "title": "One Happy Island",
+    "content": "Located in the southern Caribbean, Aruba differs [1] many of its neighbors in terms of climate. It lies outside the main hurricane belt, meaning it is rarely struck [2] the violent storms that affect the region. The climate is arid, giving [3] to a desert-like landscape filled with cacti rather than rainforests. It was historically a Dutch colony, the influence of [4] is still visible in the architecture and language. Tourism is the mainstay of the economy, accounting [5] a large percentage of the island's GDP. The island prides itself [6] its pristine white sandy beaches and calm waters. [7] matter when you visit, the sun is almost guaranteed to be shining. It is a destination like [8] others.",
+    "answers": [
+      ["FROM"],
+      ["BY"],
+      ["RISE"],
+      ["WHICH"],
+      ["FOR"],
+      ["ON"],
+      ["NO"],
+      ["FEW"]
+    ]
+  },
+  {
+    "id": "C1_HIPPIES_HISTORY",
+    "level": "C1",
+    "title": "The Flower Children",
+    "content": "The counterculture movement of the 1960s, known [1] the hippie movement, changed the cultural landscape forever. It began in the United States before spreading [2] other parts of the Western world. Participants rebelled [3] the conservative values of the post-war generation. The movement reached its peak [4] the famous 'Summer of Love' in 1967. [5] having a reputation for laziness, many hippies were politically active and organized protests. They opposed the Vietnam War, calling [6] peace and love instead of conflict. Their fashion style, characterized [7] tie-dye clothing and long hair, remains iconic. They paved the [8] for the modern environmental and civil rights movements.",
+    "answers": [
+      ["AS"],
+      ["TO"],
+      ["AGAINST"],
+      ["WITH", "DURING"],
+      ["DESPITE"],
+      ["FOR"],
+      ["BY"],
+      ["WAY"]
+    ]
+  },
+  {
+    "id": "C1_AIR_TRAVEL",
+    "level": "C1",
+    "title": "The Modern Passenger",
+    "content": "Modern air travel is often an endurance test rather [1] a luxury experience. Passengers are frequently packed into seats with [2] or no legroom. Airlines now charge for extras that used to be included, [3] as luggage and meals. There is nothing worse than being stuck next to a screaming infant, through [4] fault of the parents. However, we must [5] in mind that the ability to fly is a technological miracle. [6] were we to drive the same distance, the journey would take days. It is statistically the safest mode of transport, [7] to popular belief and fear of flying. We should be grateful [8] the opportunity to traverse the globe so easily.",
+    "answers": [
+      ["THAN"],
+      ["LITTLE"],
+      ["SUCH"],
+      ["NO"],
+      ["BEAR", "KEEP"],
+      ["WERE"],
+      ["CONTRARY"],
+      ["FOR"]
     ]
   },
   {
