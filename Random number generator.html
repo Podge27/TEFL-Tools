@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flashy Random Number Generator</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* Custom styles for extra flash and smooth transitions */
         :root {
-            --primary-color: #3b82f6; /* Blue */
-            --secondary-color: #f97316; /* Orange */
-            --bg-color: #0f172a; /* Slate-900 */
+            --primary-color: #3b82f6;
+            --secondary-color: #f97316;
+            --bg-color: #0f172a;
         }
 
         body {
@@ -21,37 +19,8 @@
             transition: background-color 0.3s ease;
         }
 
-        /* --- Generic Button Styling --- */
         .app-button {
             @apply px-4 py-2 font-bold rounded-xl shadow-md transition duration-300 transform hover:scale-[1.02] active:scale-95;
-        }
-
-        /* Secondary Button (Default for utilities, overridden below for Back button) */
-        .secondary-btn {
-            background-color: var(--primary-color);
-            color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.2s;
-        }
-        .secondary-btn:hover {
-            background-color: #2563eb; /* Darker blue */
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Custom style for Back button to match unselected radio button */
-        #back-to-main-button {
-            background-color: #1e293b; /* Dark Slate Background (matches unselected radio) */
-            color: #94a3b8; /* Light Text (matches unselected radio) */
-            border: 1px solid #475569; /* Subtle border for definition */
-            box-shadow: none;
-            transform: none; /* Override hover scale from .app-button */
-            transition: all 0.2s;
-        }
-        #back-to-main-button:hover:not(:disabled) {
-            background-color: #334155; /* Slightly lighter slate on hover */
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-            color: #cbd5e1; /* Lighter text on hover */
-            transform: none;
         }
 
         .input-field {
@@ -62,33 +31,15 @@
             @apply block text-sm font-medium text-slate-300 mb-1;
         }
 
-        /* Radio Group Styling */
-        .radio-group-container {
-            @apply flex space-x-2 w-full text-sm font-medium;
-        }
-        .radio-button-label {
-            @apply flex-1 text-center py-2 rounded-lg cursor-pointer transition duration-200 border border-slate-700;
-            background-color: #1e293b; /* Slate-800 equivalent */
-            color: #94a3b8; /* Slate-400 equivalent */
-        }
-        input[type="radio"]:checked + .radio-button-label {
-            background-color: var(--secondary-color);
-            color: white;
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 5px var(--secondary-color);
-        }
-
         .big-number-display {
-            /* Text shadow and vibrant gradient for the big number */
             background-image: linear-gradient(45deg, #f97316, #facc15, #84cc16);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
             transition: transform 0.1s ease-out, opacity 0.3s ease-in-out;
-            min-height: 200px; /* Ensure space even when empty */
+            min-height: 200px;
         }
 
-        /* Keyframes for a gentle 'pop' animation on number update */
         @keyframes pop {
             0% { transform: scale(1); opacity: 0.8; }
             50% { transform: scale(1.05); opacity: 1; }
@@ -99,75 +50,50 @@
             animation: pop 0.4s ease-out;
         }
         
-        /* New style for the Reset button */
+        /* Reset button is Red to indicate it clears the memory */
         #reset-pool-button {
-            background-color: #dc2626; /* Red */
+            background-color: #dc2626;
             color: white;
+            min-width: 100px; /* Added width so it doesn't look too small */
         }
         #reset-pool-button:hover {
-            background-color: #b91c1c; /* Darker red */
+            background-color: #b91c1c;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <div class="w-full max-w-4xl bg-slate-900 p-6 md:p-10 rounded-2xl shadow-2xl border border-slate-700">
-        <!-- Back Button Wrapper: Aligns button to the left -->
-        <div class="mb-6">
-            <button id="back-to-main-button" onclick="window.location.href = 'index.html'"
-                    class="app-button secondary-btn">
-                ← Back to Main
-            </button>
-        </div>
         
         <h1 class="text-3xl font-extrabold text-center mb-6 text-white tracking-wider">
             🎲 The Flashy Number Factory
         </h1>
 
-        <!-- BIG NUMBER DISPLAY AREA -->
         <div id="number-display" 
              class="big-number-display text-7xl md:text-9xl lg:text-[10rem] font-black text-center mb-8 flex items-center justify-center select-none"
              aria-live="polite">
             ?
         </div>
         
-        <!-- Controls Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             
-            <!-- Min Value -->
             <div class="col-span-1">
                 <label for="min-input" class="control-label">Min Value</label>
                 <input type="number" id="min-input" value="1" min="0" class="input-field">
             </div>
 
-            <!-- Max Value -->
             <div class="col-span-1">
                 <label for="max-input" class="control-label">Max Value</label>
-                <input type="number" id="max-input" value="100" min="1" class="input-field">
+                <input type="number" id="max-input" value="6" min="1" class="input-field">
             </div>
 
-            <!-- Number Count -->
             <div class="col-span-1">
-                <label for="count-input" class="control-label">Number Count</label>
+                <label for="count-input" class="control-label">How Many to Draw?</label>
                 <input type="number" id="count-input" value="1" min="1" max="100" class="input-field">
-            </div>
-
-            <!-- Repeat Toggle (Replaced by Radio Buttons) -->
-            <div class="col-span-1">
-                <label class="control-label">Should Numbers Repeat?</label>
-                <div class="radio-group-container mt-2">
-                    
-                    <input type="radio" id="repeat-yes" name="repeat-option" value="yes" checked class="sr-only">
-                    <label for="repeat-yes" class="radio-button-label">Yes, Repeat</label>
-
-                    <input type="radio" id="repeat-no" name="repeat-option" value="no" class="sr-only">
-                    <label for="repeat-no" class="radio-button-label">No, Unique</label>
-                </div>
             </div>
 
         </div>
         
-        <!-- Generate Button -->
         <button id="generate-button"
                 class="w-full py-4 text-xl font-bold rounded-xl shadow-lg 
                        bg-gradient-to-r from-primary-color to-secondary-color 
@@ -176,285 +102,140 @@
             GENERATE NUMBERS
         </button>
         
-        <!-- Reset Button and Info Box for Unique Mode -->
-        <div id="unique-mode-controls" class="mt-4 flex justify-between items-center hidden">
+        <div id="pool-controls" class="mt-4 flex justify-between items-center">
             <span id="unique-info" class="text-sm font-medium text-slate-300">
-                Pool Size: 100
+                Pool Size: 0
             </span>
-            <button id="reset-pool-button" class="app-button" onclick="initializePool()">
-                Reset Pool
+            <button id="reset-pool-button" class="app-button" onclick="forceReset()">
+                Reset
             </button>
         </div>
 
+        <div id="message-box" class="mt-4 p-3 hidden rounded-xl bg-red-800 text-white font-semibold transition duration-300"></div>
 
-        <!-- Message/Error Box -->
-        <div id="message-box" class="mt-4 p-3 hidden rounded-xl bg-red-800 text-white font-semibold transition duration-300">
-            <!-- Messages will appear here -->
-        </div>
-
-        <!-- Results Display -->
         <div id="results-list-container" class="mt-6 hidden">
-            <h3 class="text-xl font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">All Generated Numbers:</h3>
-            <div id="results-list" class="flex flex-wrap gap-2 p-3 bg-slate-800 rounded-xl max-h-40 overflow-y-auto">
-                <!-- Generated numbers will appear here -->
-            </div>
+            <h3 class="text-xl font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">History (Current Batch):</h3>
+            <div id="results-list" class="flex flex-wrap gap-2 p-3 bg-slate-800 rounded-xl max-h-40 overflow-y-auto"></div>
         </div>
 
     </div>
 
     <script>
-        // --- GLOBAL STATE for Persistent Uniqueness (Card Deck Mode) ---
-        let uniqueNumberPool = []; // Array of available numbers (e.g., [1, 2, 3, ...])
-        let poolMin = 0;
-        let poolMax = 0;
-        let isPoolInitialized = false;
+        // --- DATA STORAGE ---
+        let numberPool = [];    
+        let savedMin = null;    
+        let savedMax = null;    
 
-        // Global utility to get elements
-        const getEl = (id) => document.getElementById(id);
+        // --- DOM ELEMENTS ---
+        const display = document.getElementById('number-display');
+        const minInput = document.getElementById('min-input');
+        const maxInput = document.getElementById('max-input');
+        const countInput = document.getElementById('count-input');
+        const messageBox = document.getElementById('message-box');
+        const resultsList = document.getElementById('results-list');
+        const resultsContainer = document.getElementById('results-list-container');
+        const uniqueInfo = document.getElementById('unique-info');
 
-        // UI elements
-        const display = getEl('number-display');
-        const minInput = getEl('min-input');
-        const maxInput = getEl('max-input');
-        const countInput = getEl('count-input');
-        const repeatYesRadio = getEl('repeat-yes');
-        const repeatNoRadio = getEl('repeat-no');
-        const generateButton = getEl('generate-button');
-        const messageBox = getEl('message-box');
-        const resultsListContainer = getEl('results-list-container');
-        const resultsList = getEl('results-list');
-        const uniqueModeControls = getEl('unique-mode-controls');
-        const uniqueInfo = getEl('unique-info');
-
-        /**
-         * Clears and displays a message to the user.
-         * @param {string} message The message content.
-         * @param {string} type 'error' or 'success'
-         */
-        function showMessage(message, type = 'error') {
-            messageBox.textContent = message;
+        // Helper: Show Message
+        function showMessage(text, isError = true) {
+            messageBox.textContent = text;
             messageBox.classList.remove('hidden', 'bg-red-800', 'bg-green-800');
-            
-            if (type === 'error') {
-                messageBox.classList.add('bg-red-800');
-            } else {
-                messageBox.classList.add('bg-green-800');
+            messageBox.classList.add(isError ? 'bg-red-800' : 'bg-green-800');
+        }
+
+        // Helper: Create a pill for the history list
+        function addResultPill(num) {
+            const pill = document.createElement('span');
+            pill.textContent = num;
+            pill.className = 'px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-mono border border-blue-500/50';
+            resultsList.appendChild(pill);
+            resultsContainer.classList.remove('hidden');
+        }
+
+        // --- CORE LOGIC ---
+
+        // 1. FILL THE HAT
+        function fillPool(min, max) {
+            numberPool = [];
+            for (let i = min; i <= max; i++) {
+                numberPool.push(i);
             }
+            // Shuffle
+            numberPool.sort(() => Math.random() - 0.5);
+            
+            savedMin = min;
+            savedMax = max;
+            
+            uniqueInfo.textContent = `Numbers left in pool: ${numberPool.length}`;
+            showMessage(`Deck shuffled! Range: ${min}-${max}`, false);
+            
+            resultsList.innerHTML = ''; 
+            resultsContainer.classList.add('hidden');
         }
 
-        /**
-         * Clears the message box.
-         */
-        function clearMessage() {
-            messageBox.classList.add('hidden');
-            messageBox.textContent = '';
-        }
+        // 2. MAIN ACTION (Generate)
+        function generate() {
+            messageBox.classList.add('hidden'); 
 
-        /**
-         * Updates the main display with the latest generated number, applying the 'pop' animation.
-         * @param {number|string} value The number or text to display.
-         */
-        function updateMainDisplay(value) {
-            display.textContent = value;
+            const currentMin = parseInt(minInput.value);
+            const currentMax = parseInt(maxInput.value);
+            const count = parseInt(countInput.value);
+
+            if (currentMin >= currentMax) return showMessage("Min must be smaller than Max.");
+            if (count < 1) return showMessage("You must draw at least 1 number.");
+
+            // If settings changed, reset everything
+            if (currentMin !== savedMin || currentMax !== savedMax) {
+                fillPool(currentMin, currentMax);
+            }
+
+            // If empty, auto-reset
+            if (numberPool.length === 0) {
+                fillPool(currentMin, currentMax);
+                showMessage("Pool was empty. Restarted automatically!", false);
+            }
+
+            // If drawing more than available, reset first
+            if (numberPool.length < count) {
+                fillPool(currentMin, currentMax);
+                showMessage("Not enough numbers left. Reshuffled!", false);
+            }
+
+            // Draw
+            let drawnNumbers = [];
+            for (let i = 0; i < count; i++) {
+                let num = numberPool.pop(); 
+                drawnNumbers.push(num);
+                addResultPill(num);
+            }
+
+            // Update UI
+            uniqueInfo.textContent = `Numbers left in pool: ${numberPool.length}`;
+            
             display.classList.remove('pop-animation');
-            // Trigger reflow to restart animation
             void display.offsetWidth; 
             display.classList.add('pop-animation');
-        }
-
-        /**
-         * Creates a styled number pill element for the results list.
-         * @param {number} number 
-         * @returns {HTMLElement}
-         */
-        function createResultPill(number) {
-            const pill = document.createElement('span');
-            pill.textContent = number;
-            // Uses CSS variables for color consistency
-            pill.className = 'px-3 py-1 bg-primary-color/20 text-primary-color rounded-full text-sm font-mono border border-primary-color/50 transition duration-300 hover:bg-primary-color hover:text-white cursor-default';
-            return pill;
-        }
-
-        /**
-         * Initializes or resets the unique number pool based on current min/max settings.
-         */
-        function initializePool() {
-            clearMessage();
-            resultsList.innerHTML = '';
-            resultsListContainer.classList.add('hidden');
-
-            const min = parseInt(minInput.value);
-            const max = parseInt(maxInput.value);
-
-            // Validation (must be run again here)
-            if (isNaN(min) || isNaN(max) || min >= max) {
-                 uniqueModeControls.classList.add('hidden');
-                 isPoolInitialized = false;
-                 return showMessage("Invalid Min/Max values. Pool cannot be created.");
-            }
             
-            poolMin = min;
-            poolMax = max;
-            uniqueNumberPool = [];
-            for (let i = min; i <= max; i++) {
-                uniqueNumberPool.push(i);
-            }
-            
-            // Randomly shuffle the pool (like shuffling a deck)
-            uniqueNumberPool.sort(() => Math.random() - 0.5);
-
-            isPoolInitialized = true;
-            uniqueModeControls.classList.remove('hidden');
-            uniqueInfo.textContent = `Pool Size: ${uniqueNumberPool.length}`;
-            updateMainDisplay("Ready!");
-            showMessage(`Unique pool created: ${uniqueNumberPool.length} numbers available.`, 'success');
-        }
-        
-        /**
-         * Toggles the visibility of unique mode controls and manages initialization.
-         */
-        function handleRadioChange() {
-            if (repeatNoRadio.checked) {
-                // When switching to Unique mode, initialize the pool
-                if (!isPoolInitialized || poolMin !== parseInt(minInput.value) || poolMax !== parseInt(maxInput.value)) {
-                    initializePool();
-                } else {
-                    uniqueModeControls.classList.remove('hidden');
-                }
-                
-                // For 'Card Deck' mode, Number Count MUST be 1
-                if (parseInt(countInput.value) > 1) {
-                     showMessage("Warning: For persistent uniqueness across clicks (Card Deck mode), set 'Number Count' to 1.", 'error');
-                }
-
+            if (drawnNumbers.length === 1) {
+                display.textContent = drawnNumbers[0];
             } else {
-                // When switching to Repeat mode, hide unique controls
-                uniqueModeControls.classList.add('hidden');
-                isPoolInitialized = false;
+                display.textContent = drawnNumbers.join(', ');
+                display.style.fontSize = "4rem"; 
             }
         }
-        
-        // Attach handlers to inputs to re-initialize the pool automatically
-        minInput.addEventListener('change', initializePool);
-        maxInput.addEventListener('change', initializePool);
-        repeatNoRadio.addEventListener('change', handleRadioChange);
-        repeatYesRadio.addEventListener('change', handleRadioChange);
-        
-        /**
-         * Main function to generate and display numbers.
-         */
-        function generateNumbers() {
-            clearMessage();
-            
+
+        // 3. MANUAL RESET
+        function forceReset() {
             const min = parseInt(minInput.value);
             const max = parseInt(maxInput.value);
-            const count = parseInt(countInput.value);
-            const allowRepeats = repeatYesRadio.checked;
-
-            // 1. Validation (Same as before, mainly for repeat mode)
-            if (isNaN(min) || isNaN(max) || isNaN(count)) {
-                return showMessage("Please ensure Min, Max, and Count are valid numbers.");
-            }
-            if (min >= max) {
-                return showMessage("Minimum value must be strictly less than the Maximum value.");
-            }
-            if (count < 1) {
-                return showMessage("Number Count must be at least 1.");
-            }
-            
-            // 2. Generation Logic: PERSISTENT UNIQUE MODE (Card Deck)
-            if (!allowRepeats) {
-                if (!isPoolInitialized || uniqueNumberPool.length === 0) {
-                    if (!isPoolInitialized) {
-                        initializePool(); // Attempt to initialize if somehow missed
-                    }
-                    if (uniqueNumberPool.length === 0) {
-                        updateMainDisplay("Pool Empty!");
-                        return showMessage("All unique numbers have been drawn. Click 'Reset Pool' to start over.", 'error');
-                    }
-                }
-                
-                // We MUST enforce count = 1 for the deck-of-cards experience across multiple clicks
-                const numItemsToDraw = Math.min(count, uniqueNumberPool.length);
-
-                if (numItemsToDraw === 0) {
-                     updateMainDisplay("Pool Empty!");
-                     return showMessage("All unique numbers have been drawn. Click 'Reset Pool' to start over.", 'error');
-                }
-
-                const generatedBatch = [];
-                for(let i=0; i<numItemsToDraw; i++) {
-                    // Draw the next number from the end of the shuffled pool
-                    const drawnNumber = uniqueNumberPool.pop();
-                    generatedBatch.push(drawnNumber);
-                }
-
-                // Update info and main display
-                uniqueInfo.textContent = `Pool Size: ${uniqueNumberPool.length}`;
-                
-                if (generatedBatch.length > 0) {
-                    updateMainDisplay(generatedBatch.join(', '));
-                    showMessage(`Drawn ${generatedBatch.length} unique number(s). ${uniqueNumberPool.length} left.`, 'success');
-                }
-
-                // Update Results List (Append drawn numbers)
-                resultsListContainer.classList.remove('hidden');
-                generatedBatch.forEach(num => {
-                    resultsList.appendChild(createResultPill(num));
-                });
-                
-                return;
-            }
-            
-            // 3. Generation Logic: ALLOW REPEATS MODE (Batch Mode)
-            
-            const rangeSize = max - min + 1;
-            
-            const generatedNumbers = [];
-            const history = new Set(); // Local history, resets per click
-            let attempts = 0;
-            const maxAttempts = count * 20;
-
-            while (generatedNumbers.length < count) {
-                if (attempts > maxAttempts) {
-                    return showMessage("Generation failed due to too many attempts. Check your range vs. count settings.", 'error');
-                }
-                attempts++;
-
-                const num = generateSingleRandom(min, max);
-                generatedNumbers.push(num);
-                history.add(num);
-            }
-
-            // Display Results for Repeat Mode
-            resultsList.innerHTML = '';
-            resultsListContainer.classList.remove('hidden');
-            
-            // A. Update Main Display
-            const latestNumber = generatedNumbers[generatedNumbers.length - 1];
-            updateMainDisplay(latestNumber);
-
-            // B. Update Results List
-            generatedNumbers.forEach(num => {
-                resultsList.appendChild(createResultPill(num));
-            });
-            showMessage(`Generated ${count} number(s) with repeats allowed.`, 'success');
+            fillPool(min, max);
+            display.textContent = "?";
+            display.style.fontSize = ""; 
         }
 
-        // Attach event listener to the button
-        generateButton.addEventListener('click', generateNumbers);
+        window.onload = () => forceReset();
+        document.getElementById('generate-button').addEventListener('click', generate);
 
-        // Initialize display and pool on load
-        window.onload = () => {
-             updateMainDisplay("Ready!");
-             // Initial check of the radio state
-             handleRadioChange();
-        };
-
-        // Initialize pool on input changes for min/max
-        minInput.addEventListener('input', initializePool);
-        maxInput.addEventListener('input', initializePool);
-        
     </script>
 </body>
 </html>

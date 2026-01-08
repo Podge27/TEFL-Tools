@@ -103,7 +103,7 @@
       ["AT", "IN", "OUTSIDE", "NEAR"],
       ["IS", "GETS"],
       ["BEEN"],
-      ["MUCH", "FAR", "CONSIDERABLY", "LOTS", "A"],
+      ["MUCH", "FAR", "CONSIDERABLY", "LOTS"],
       ["SURE", "CERTAIN"],
       ["THE"]
     ]
@@ -120,7 +120,7 @@
       ["BY"],
       ["ANY"],
       ["INTO"],
-      ["WITH", "HAS"],
+      ["WITH"],
       ["FOR"]
     ]
   },
@@ -240,11 +240,11 @@
     "id": "B2_TV_REMAKES",
     "level": "B2",
     "title": "Everything Old is New Again",
-    "content": "It seems that every time you turn on the TV, there is a remake of an old show. Television producers seem obsessed [1] the past. They take a popular series from twenty years ago and make [2] again with new actors. Sometimes these remakes are successful, but often they are not [3] good as the original. Fans of the old shows usually hate [4]. They argue that the new versions lack the magic of the [5] time. So why do studios keep doing it? It is mainly because it is less risky [6] trying a completely new idea. They know there is already an audience waiting [7] it. However, it would be nice to see something original [8] an alternative.",
+    "content": "It seems that every time you turn on the TV, there is a remake of an old show. Television producers seem obsessed [1] the past. They take a popular series from twenty years ago and make [2] again with new actors. Sometimes these remakes are successful, but often they do not live up [3] the original. Fans of the old shows usually hate [4]. They argue that the new versions lack the magic of the [5] time. So why do studios keep doing it? It is mainly because it is less risky [6] trying a completely new idea. They know there is already an audience waiting [7] it. However, it would be nice to see something original [8] an alternative.",
     "answers": [
       ["WITH"],
       ["IT"],
-      ["SO"],
+      ["TO"],
       ["THEM"],
       ["FIRST"],
       ["THAN"],

@@ -98,7 +98,7 @@
         // --- 1. CONFIGURATION ---
         const SB_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
-        const TEACHER_PIN = "2010";
+        const TEACHER_PIN = "2010"
 
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         const boardElement = document.getElementById('board');
@@ -130,9 +130,10 @@
                 }
             }
             
-            // --- FIX: START REALTIME LISTENER HERE, AFTER ROOM ID IS SET ---
+            // --- FIX 1: Broad Realtime Listener (No filter) ---
             supabaseClient.channel('room-channel')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `room_id=eq.${roomID}` }, () => {
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
+                    // Just reload everything when anything changes
                     fetchNotes();
                 })
                 .subscribe();
@@ -205,14 +206,21 @@
         // --- ACTIONS ---
         async function deleteNote(id, event) {
             event.stopPropagation();
-            const { error } = await supabaseClient.from('notes').delete().eq('id', id);
-            if (error) alert("Delete Error. Check RLS settings.");
+            
+            // --- FIX 2: OPTIMISTIC DELETE (Remove from screen immediately) ---
+            const noteDiv = document.querySelector(`.note[data-id="${id}"]`);
+            if (noteDiv) noteDiv.remove();
+
+            // Then delete from database
+            await supabaseClient.from('notes').delete().eq('id', id);
         }
 
         async function clearBoard() {
             if (confirm("Delete ALL notes?")) {
-                const { error } = await supabaseClient.from('notes').delete().eq('room_id', roomID);
-                if (error) alert("Delete Error. Check RLS settings.");
+                // --- FIX 3: OPTIMISTIC CLEAR (Wipe screen immediately) ---
+                boardElement.innerHTML = '';
+                
+                await supabaseClient.from('notes').delete().eq('room_id', roomID);
             }
         }
 

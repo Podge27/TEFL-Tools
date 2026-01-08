@@ -1,0 +1,34 @@
+[
+  {
+    "level": "A1",
+    "topic": "Present Simple: To Be",
+    "slug": "a1-to-be",
+    "description": "Using am, is, and are to describe identity and states.",
+    "resources": {
+      "sentences": [
+        "I am from Italy.",
+        "He is a doctor.",
+        "We are very excited to meet you!"
+      ],
+      "gapfill": [
+        { "q": "They ___ (be) at the park today.", "a": "are" },
+        { "q": "It ___ (be) a beautiful morning.", "a": "is" }
+      ],
+      "visual": "https://via.placeholder.com/600x400?text=Cartoon+Example+of+To+Be",
+      "game": "https://www.wikipedia.org"
+    }
+  },
+  {
+    "level": "B2",
+    "topic": "The Passive Voice",
+    "slug": "b2-passive",
+    "description": "Shifting focus to the action rather than the person.",
+    "resources": {
+      "sentences": [
+        "The Mona Lisa was painted by Da Vinci.",
+        "Our house is being renovated this month."
+      ],
+      "presentation": "https://www.wikipedia.org"
+    }
+  }
+]

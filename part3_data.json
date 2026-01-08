@@ -550,7 +550,7 @@
         "content": "Post-modernist literature is often characterised by its [1] and playfulness. It rejects the linear narratives of the past, preferring fragmentation and ambiguity. This can make it [2] to the casual reader. However, proponents argue that this complexity reflects the [3] nature of reality itself. By refusing to offer easy answers, these texts invite a deeper level of [4] . The author is no longer the sole authority; the reader becomes an active participant in meaning-making. This shift represents a [5] of the traditional hierarchy. Critics, however, often accuse the genre of being [6] self-indulgent. They claim it prioritises style over substance. Regardless of one's stance, its influence on contemporary fiction is [7] . It challenges us to rethink our [8] about what a story can be.",
         "answers": {
             "1": { "root": "PREDICT", "answer": "UNPREDICTABILITY" },
-            "2": { "root": "ACCESS", "answer": "INACCESSIBILITY" },
+            "2": { "root": "ACCESS", "answer": "INACCESSIBILE" },
             "3": { "root": "CHAOS", "answer": "CHAOTIC" },
             "4": { "root": "ENGAGE", "answer": "ENGAGEMENT" },
             "5": { "root": "STABLE", "answer": "DESTABILISATION/DESTABILIZATION" },

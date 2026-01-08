@@ -3,144 +3,240 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Vocabulary Spinner — Full Screen Edition</title>
+<title>Pro Vocabulary Spinner</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
 :root {
-    --bg: #eef7ff;
-    --panel: #ffffff;
-    --accent: #ff3b3b;
-    --accent2: #ffcc00;
-    --blue: #4aa8ff;
-    --text: #1b2a41;
-}
-* { box-sizing:border-box; }
-body {
-    margin:0;
-    background:var(--bg);
-    font-family:"Segoe UI", Tahoma, sans-serif;
-    color:var(--text);
-    overflow-y:auto;
+    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --accent: #ff4757;  /* Vivid Red */
+    --accent-hover: #ff6b81;
+    --accent2: #ffa502; /* Golden Yellow */
+    --text: #2f3542;
 }
 
-/* -------- BACK BUTTON (now normal, not fixed) -------- */
-#back a {
-    text-decoration:none;
-    font-weight:700;
-    color:var(--blue);
-    background:white;
-    padding:6px 12px;
-    border-radius:8px;
-    box-shadow:0 3px 6px rgba(0,0,0,0.1);
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg-gradient);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 /* -------- TOP BAR -------- */
 .topbar {
-    width:100%;
-    background:#fff;
-    padding:10px 20px;
-    display:flex;
-    align-items:center;
-    gap:15px;
-    border-bottom:4px solid #dce6ef;
-    box-shadow:0 4px 12px rgba(0,0,0,0.06);
-    flex-wrap:wrap;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    z-index: 100;
 }
 
-/* Buttons */
-button {
-    padding:10px 18px;
-    border-radius:10px;
-    border:none;
-    font-size:15px;
-    font-weight:700;
-    cursor:pointer;
-    color:white;
-    background:var(--accent);
-    box-shadow:0 3px 8px rgba(255,59,59,0.3);
+#back a {
+    text-decoration: none;
+    font-weight: 700;
+    color: var(--text);
+    background: #eee;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: 0.2s;
+    font-size: 0.9rem;
 }
-button:hover { background:#e53232; }
+#back a:hover { background: #ddd; }
+
+/* Buttons & Inputs */
+/* Hide the ugly default file input and use a label button instead */
+input[type="file"] {
+    display: none;
+}
+
+.file-upload-btn {
+    padding: 10px 24px;
+    border-radius: 50px;
+    background: #3742fa; /* Blue for upload */
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(55, 66, 250, 0.4);
+    transition: transform 0.1s, box-shadow 0.2s;
+    display: inline-block;
+}
+.file-upload-btn:hover {
+    background: #535cff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(55, 66, 250, 0.5);
+}
+
+button {
+    padding: 10px 24px;
+    border-radius: 50px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: white;
+    background: var(--accent);
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+    transition: transform 0.1s, box-shadow 0.2s;
+}
+
+button:hover { 
+    background: var(--accent-hover); 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 71, 87, 0.5);
+}
+
+button:active { transform: translateY(0); }
 
 .ghost {
-    background:#ffffff;
-    color:var(--text);
-    border:2px solid #cfd9e2;
-    box-shadow:none;
+    background: transparent;
+    color: var(--text);
+    border: 2px solid #e1e1e1;
+    box-shadow: none;
 }
-.ghost:hover { background:#f3f6f9; }
+.ghost:hover { 
+    background: #f1f2f6; 
+    border-color: #ccc;
+    box-shadow: none;
+    transform: none;
+}
 
 /* -------- MAIN AREA -------- */
 .main {
-    margin-top:20px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.wheel-container {
+    position: relative;
+    padding: 20px;
+}
+
+/* The Ticker/Pointer */
+.pointer {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 60px;
+    background: var(--accent2);
+    border: 4px solid white;
+    border-radius: 8px;
+    z-index: 10;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.pointer::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 20px solid var(--accent2);
 }
 
 #wheelCanvas {
-    max-width:90vmin;
-    max-height:90vmin;
-    width:90vmin;
-    height:90vmin;
-    border-radius:50%;
-    background:#fff;
-    border:12px solid var(--blue);
-    box-shadow:inset 0 0 20px rgba(0,0,0,0.12), 0 0 20px rgba(0,0,0,0.18);
+    max-width: 80vmin;
+    max-height: 80vmin;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    box-shadow: 
+        0 0 0 10px white, 
+        0 20px 50px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
 }
 
-.pointer {
-    width:0;height:0;
-    border-left:30px solid transparent;
-    border-right:30px solid transparent;
-    border-bottom:50px solid var(--accent2);
-    filter:drop-shadow(0 0 8px rgba(255,204,0,0.6));
-    margin-bottom:-20px;
+/* -------- RESULT DISPLAY -------- */
+#result-container {
+    margin-top: 30px;
+    min-height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #result {
-    margin-top:20px;
-    font-size:4rem;
-    font-weight:900;
-    text-align:center;
-    color:var(--accent);
-    line-height:1.1;
-    min-height:4.5rem;
+    font-size: 3.5rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--text);
+    line-height: 1.1;
+    padding: 10px 30px;
+    border-radius: 20px;
+    opacity: 0.5; 
+    transform: scale(0.9);
+    transition: opacity 0.3s;
 }
 
 .winner-flash {
-    animation:flash 0.6s infinite alternate;
+    opacity: 1 !important;
+    transform: scale(1) !important;
+    color: var(--accent) !important;
+    animation: popAndPulse 0.5s ease-in-out 3 alternate;
 }
-@keyframes flash {
-    from { transform:scale(1); opacity:1; }
-    to { transform:scale(1.18); opacity:0.65; }
+
+@keyframes popAndPulse {
+    0% { transform: scale(1); text-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+    100% { transform: scale(1.1); text-shadow: 0 10px 20px rgba(255, 71, 87, 0.4); }
+}
+
+@media (max-width: 600px) {
+    .topbar { justify-content: center; }
+    #result { font-size: 2.5rem; }
+    button, .file-upload-btn { padding: 8px 16px; font-size: 12px; }
 }
 </style>
 </head>
 <body>
 
-<!-- BACK BUTTON MOVED HERE INTO TOPBAR -->
 <div class="topbar">
     <div id="back"><a href="index.html">← Back</a></div>
 
-    <input id="csvInput" type="file" accept=".csv">
-    <button id="spinBtn">SPIN!</button>
-    <button id="removeBtn" class="ghost" style="display:none;">Remove</button>
+    <label for="csvInput" class="file-upload-btn">
+        📂 Upload CSV
+    </label>
+    <input id="csvInput" type="file" accept=".csv, .txt">
+
+    <button id="spinBtn">SPIN WHEEL</button>
+    <button id="removeBtn" class="ghost" style="display:none;">Remove Word</button>
     <button id="shuffleBtn" class="ghost">Shuffle</button>
-    <button id="soundTestBtn" class="ghost">Sound Test</button>
 </div>
 
 <div class="main">
-    <div class="pointer"></div>
-    <canvas id="wheelCanvas" width="800" height="800"></canvas>
-    <div id="result"></div>
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas" width="800" height="800"></canvas>
+    </div>
+    
+    <div id="result-container">
+        <div id="result">Ready?</div>
+    </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-
 <script>
-/* -------------------- YOUR ORIGINAL WORKING JS -------------------- */
-
+/* -------------------- AUDIO CONTEXT -------------------- */
 let audioCtx;
 function playBeep(frequency, duration, type = 'sine') {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -151,14 +247,23 @@ function playBeep(frequency, duration, type = 'sine') {
   osc.type = type;
   osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
   const now = audioCtx.currentTime;
-  gain.gain.setValueAtTime(0.5, now);
+  
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  
   osc.start();
   osc.stop(now + duration);
 }
-function playSpinStart(){ playBeep(220,0.1,'sawtooth'); }
-function playWin(){ playBeep(440,0.2,'square'); }
 
+function playSpinStart(){ playBeep(300, 0.1, 'triangle'); }
+function playWin(){ 
+    playBeep(440, 0.4, 'sine');
+    setTimeout(() => playBeep(554, 0.4, 'sine'), 100);
+    setTimeout(() => playBeep(659, 0.6, 'sine'), 200);
+}
+
+/* -------------------- CANVAS & LOGIC -------------------- */
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -169,11 +274,14 @@ const shuffleBtn = document.getElementById('shuffleBtn');
 const result = document.getElementById('result');
 
 const MAX_VISIBLE = 12;
-let items = [];
-let visible = [];
+let items = []; 
+let visible = []; 
 let rotation = 0;
 let spinning = false;
 let chosenItem = null;
+
+// Initial Default Data
+items = [{word:"Hello"},{word:"Bonjour"},{word:"Hola"},{word:"Ciao"},{word:"Hallo"},{word:"Namaste"}];
 
 function shuffle(a){ return a.slice().sort(()=>Math.random()-0.5); }
 
@@ -182,26 +290,33 @@ function updateVisible(){
 }
 
 function degToRad(d){ return d*Math.PI/180; }
-function radToDeg(r){ return r*180/Math.PI; }
 
 function palette(i,n){
-  const hue = (i*(360/n)+180)%360;
-  return `hsl(${hue},70%,75%)`;
+  const hue = (i * (360/n)) % 360;
+  return `hsl(${hue}, 85%, 60%)`; 
 }
 
 function draw(){
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0,0,w,h);
   const cx = w/2, cy = h/2;
-  const r = Math.min(w,h)/2 - 8;
+  const r = Math.min(w,h)/2 - 10; 
 
-  if(visible.length===0){
+  if(visible.length === 0){
     ctx.save();
     ctx.translate(cx,cy);
     ctx.beginPath();
     ctx.arc(0,0,r,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.04)';
+    ctx.fillStyle='#f0f0f0';
     ctx.fill();
+    ctx.strokeStyle='#ddd';
+    ctx.lineWidth=5;
+    ctx.stroke();
+    
+    ctx.fillStyle = "#aaa";
+    ctx.font='700 30px Poppins';
+    ctx.textAlign='center';
+    ctx.fillText("Load CSV", 0, 10);
     ctx.restore();
     return;
   }
@@ -209,39 +324,52 @@ function draw(){
   const n = visible.length;
   const angle = 2*Math.PI/n;
 
-  for(let i=0;i<n;i++){
+  for(let i=0; i<n; i++){
     const start = i*angle + degToRad(rotation);
     const end = start + angle;
+    
     ctx.beginPath();
     ctx.moveTo(cx,cy);
     ctx.arc(cx,cy,r,start,end);
     ctx.closePath();
     ctx.fillStyle = palette(i,n);
     ctx.fill();
-
-    ctx.strokeStyle='rgba(0,0,0,0.1)';
-    ctx.lineWidth=2;
+    
+    ctx.strokeStyle='rgba(255,255,255,0.5)';
+    ctx.lineWidth = 4;
     ctx.stroke();
 
     const mid = (start+end)/2;
     ctx.save();
     ctx.translate(cx,cy);
     ctx.rotate(mid);
-    ctx.fillStyle = "#1b2a41";
-    ctx.font='700 18px sans-serif';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
+    
+    ctx.font = '800 24px Poppins';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    
     const text = visible[i].word;
-    const short = text.length>40 ? text.slice(0,37)+'...' : text;
-    ctx.fillText(short, r*0.55, 0);
+    const short = text.length > 25 ? text.slice(0,22)+'...' : text;
+    
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = "white";
+    
+    ctx.fillText(short, r - 40, 0);
     ctx.restore();
   }
 
   ctx.beginPath();
-  ctx.arc(cx,cy,r*0.22,0,Math.PI*2);
-  ctx.fillStyle='#fff';
+  ctx.arc(cx,cy,r*0.15, 0, Math.PI*2);
+  ctx.fillStyle='white';
   ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,0.1)';
+  
+  ctx.beginPath();
+  ctx.arc(cx,cy,r*0.13, 0, Math.PI*2);
+  ctx.strokeStyle = '#eee';
+  ctx.lineWidth = 2;
   ctx.stroke();
 }
 
@@ -250,26 +378,26 @@ function indexUnderPointer(){
   const span = 360/visible.length;
   const pointer = 270;
   let best = 0, bestDiff = 9999;
-  for(let i=0;i<visible.length;i++){
+  
+  for(let i=0; i<visible.length; i++){
     const mid = i*span + span/2;
-    const displayed = (mid + rotation)%360;
-    const d = Math.abs(((displayed-pointer+540)%360)-180);
-    if(d<bestDiff){ bestDiff=d; best=i; }
+    const displayed = (mid + rotation) % 360; 
+    const d = Math.abs(((displayed - pointer + 540) % 360) - 180);
+    if(d < bestDiff){ bestDiff = d; best = i; }
   }
-  if(bestDiff <= span/2 + 0.5) return best;
-  return -1;
+  return best;
 }
 
 function easeOutCubic(t){ return 1 - Math.pow(1-t,3); }
 
-function animateSpin(targetRotation, duration=4200){
+function animateSpin(targetRotation, duration=4000){
   const start = performance.now();
   const from = rotation;
   const delta = targetRotation - from;
 
   return new Promise(resolve=>{
     function frame(now){
-      const t = Math.min(1,(now-start)/duration);
+      const t = Math.min(1, (now-start)/duration);
       const eased = easeOutCubic(t);
       rotation = from + delta*eased;
       draw();
@@ -283,88 +411,127 @@ async function spin(){
   if(spinning || items.length===0) return;
 
   spinning = true;
-  result.textContent='Spinning...';
+  result.textContent = '...';
   result.classList.remove('winner-flash');
+  removeBtn.style.display = 'none';
 
   playSpinStart();
 
   chosenItem = items[Math.floor(Math.random()*items.length)];
 
-  if(!visible.some(v=>v.word===chosenItem.word)){
-    if(visible.length<MAX_VISIBLE) visible.push(chosenItem);
-    else visible[Math.floor(Math.random()*visible.length)] = chosenItem;
+  if(!visible.some(v => v.word === chosenItem.word)){
+    if(visible.length < MAX_VISIBLE) {
+        visible.push(chosenItem);
+    } else {
+        visible[Math.floor(Math.random()*visible.length)] = chosenItem;
+    }
   }
 
   draw();
 
-  const idx = visible.findIndex(v=>v.word===chosenItem.word);
+  const idx = visible.findIndex(v => v.word === chosenItem.word);
   const span = 360/visible.length;
   const mid = idx*span + span/2;
-  let target = (270-mid)%360;
-  if(target<0) target+=360;
+  
+  let target = (270 - mid) % 360;
+  if(target < 0) target += 360;
 
-  const spins = 6;
-  const targetRotation = rotation + spins*360 + target;
+  const spins = 5 + Math.floor(Math.random() * 3); 
+  const targetRotation = rotation + (spins * 360) + target;
 
   await animateSpin(targetRotation);
 
   playWin();
 
-  rotation = ((rotation%360)+360)%360;
+  rotation = ((rotation % 360) + 360) % 360;
   draw();
 
   const idxFinal = indexUnderPointer();
-  const finalText = idxFinal===-1 ? chosenItem.word : visible[idxFinal].word;
+  const finalText = idxFinal === -1 ? chosenItem.word : visible[idxFinal].word;
 
   result.textContent = finalText;
+  
+  result.classList.remove('winner-flash');
+  void result.offsetWidth; 
   result.classList.add('winner-flash');
-  removeBtn.style.display='inline-block';
-
+  
+  removeBtn.style.display = 'inline-block';
   spinning = false;
 }
 
+// Events
 spinBtn.addEventListener('click', spin);
 canvas.addEventListener('click', spin);
 
 removeBtn.addEventListener('click', ()=>{
   if(!result.textContent) return;
-  items = items.filter(x=>x.word!==result.textContent);
+  items = items.filter(x => x.word !== result.textContent);
   updateVisible();
   draw();
-  result.textContent='';
-  removeBtn.style.display='none';
+  result.textContent = 'Removed!';
   result.classList.remove('winner-flash');
+  removeBtn.style.display = 'none';
+  setTimeout(() => {
+      if(result.textContent === 'Removed!') result.textContent = 'Spin again!';
+  }, 1500);
 });
 
-csvInput.addEventListener('change', e=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  Papa.parse(f,{
-    skipEmptyLines:true,
-    complete(res){
-      items = res.data
-        .map(r=>({word:String(Array.isArray(r)?r[0]:r)}))
-        .filter(x=>x.word.trim()!=='');
-      updateVisible();
-      draw();
-      result.textContent = `Loaded ${items.length} items`;
-      removeBtn.style.display='none';
-      result.classList.remove('winner-flash');
+/* -------------------- UPDATED FILE LOADER -------------------- */
+/* Replaces PapaParse with native FileReader to prevent blocking issues */
+csvInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  result.textContent = "Loading...";
+  
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const text = event.target.result;
+    
+    // Parse by new lines
+    const lines = text.split(/\r\n|\n/);
+    
+    // Clean and Map
+    items = lines
+        .map(line => {
+            // Remove commas if they are just separators, or quotes
+            // Simple logic: take the whole line, trim it
+            let clean = line.trim();
+            if (clean.includes(',')) clean = clean.split(',')[0].trim();
+            return { word: clean };
+        })
+        .filter(item => item.word.length > 0); // Remove empty lines
+        
+    if(items.length > 0) {
+        updateVisible();
+        draw();
+        result.textContent = `Loaded ${items.length} words!`;
+        result.classList.remove('winner-flash');
+        removeBtn.style.display='none';
+    } else {
+        result.textContent = "Error: File empty";
     }
-  });
+    
+    // Reset input so you can load the same file again if needed
+    csvInput.value = '';
+  };
+  
+  reader.onerror = function() {
+      result.textContent = "Error reading file";
+  };
+  
+  reader.readAsText(file);
 });
 
-shuffleBtn.addEventListener('click', ()=>{ updateVisible(); draw(); });
-
-document.getElementById('soundTestBtn').addEventListener('click', ()=>{
-  playSpinStart();
-  setTimeout(playWin,300);
+shuffleBtn.addEventListener('click', ()=>{ 
+    updateVisible(); 
+    draw(); 
+    result.textContent = "Shuffled!";
+    result.classList.remove('winner-flash');
 });
 
 updateVisible();
 draw();
-
-/* -------------------- END JS -------------------- */
 </script>
 
 </body>
