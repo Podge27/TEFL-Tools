@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style type="text/tailwindcss">
-        /* ... (All your existing CSS is exactly the same) ... */
         body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
         #app-container { @apply w-full max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[700px] flex flex-col relative; }
         .level-select-btn { font-size: 4.5rem; padding: 3rem 4rem; min-width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform; border-width: 4px; transform: scale(1); cursor: pointer; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; opacity: 0.7; filter: grayscale(0.5); }
@@ -129,8 +128,10 @@
 
     <script>
         // --- CONFIGURATION ---
+        // !!! IMPORTANT: Fill in your Supabase details below !!!
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
 
         const app = {
             supabase: null,
@@ -150,7 +151,6 @@
                 }
 
                 try {
-                    // Fetch from Database Tables (Note the table names!)
                     const [p2, p3, p4] = await Promise.all([
                         this.fetchData('exam_part2', 'part2'),
                         this.fetchData('exam_part3', 'part3'),
@@ -172,11 +172,7 @@
 
             fetchData: async function(tableName, type) {
                 try {
-                    // Select * from specific table
-                    let { data, error } = await this.supabase
-                        .from(tableName)
-                        .select('*');
-                    
+                    let { data, error } = await this.supabase.from(tableName).select('*');
                     if (error) throw error;
                     return data;
                 } catch (e) {
@@ -279,6 +275,7 @@
                 document.getElementById('p2-title').innerText = item.title;
                 let html = item.content;
                 for(let i=1; i<=8; i++) {
+                    // Logic fixed here: Using i-1 for array access if it's an array
                     if(item.answers && item.answers[i-1]) {
                         html = html.replace(`[${i}]`, `<input id="p2-input-${i}" class="gap-input" type="text" placeholder="(${i})" autocomplete="off">`);
                     }
@@ -291,7 +288,8 @@
                 document.getElementById('p3-title').innerText = item.title;
                 let html = item.content;
                 for(let i=1; i<=8; i++) {
-                     const ansObj = item.answers ? item.answers[i-1] : null;
+                     // Logic fixed here: Using item.answers[i] (key based) instead of index
+                     const ansObj = item.answers ? item.answers[i] : null;
                      if(ansObj && ansObj.root) {
                         const root = `<span class="root-word">(${ansObj.root})</span>`;
                         html = html.replace(`[${i}]`, `<input id="p3-input-${i}" class="gap-input" type="text" placeholder="(${i})" autocomplete="off">` + root);
@@ -353,13 +351,14 @@
                     else { el.classList.add('input-wrong'); const badge = document.createElement('span'); badge.className = 'correction-badge'; badge.innerText = validOptions.join(' / '); el.parentNode.insertBefore(badge, el.nextSibling); }
                 }
 
-                // Grading Part 3
+                // Grading Part 3 (Corrected Logic: Use Key Access)
                 let s3 = 0;
                 const p3Ans = this.examState.part3Item.answers;
                 for(let i=1; i<=8; i++) {
                     const el = document.getElementById(`p3-input-${i}`);
                     if(!el) continue;
-                    const ansObj = p3Ans[i-1];
+                    // FIX: Access object by key '1', '2', etc.
+                    const ansObj = p3Ans[i]; 
                     if (!ansObj) continue;
                     const val = el.value.trim().toUpperCase();
                     const correctRaw = ansObj.answer; 
@@ -417,6 +416,7 @@
                 totalEl.className = `text-7xl font-black ${colorClass}`;
                 percentEl.innerText = `${percent}%${emoji}`;
                 percentEl.className = `mt-2 text-3xl font-bold ${colorClass}`;
+
                 this.switchScreen('screen-results');
             },
 
@@ -428,6 +428,7 @@
                 this.updateProgress(1);
             }
         };
+
         app.init();
     </script>
 </body>
