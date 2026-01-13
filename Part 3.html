@@ -4,142 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Use of English Part 3 (Word Formation)</title>
-    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style type="text/tailwindcss">
         /* General Styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light blue-gray background */
-            min-height: 100vh;
-        }
-
-        /* App Container */
-        #app-container {
-            @apply w-full max-w-7xl; /* WIDE SCREEN */
-            background-color: white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border-radius: 16px;
-            min-height: 700px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- DASHBOARD STYLES --- */
-        .level-select-btn {
-            font-size: 4.5rem;
-            padding: 3rem 4rem;
-            min-width: 100%;
-            @apply font-black rounded-[2rem] transition duration-300 transform; 
-            border-width: 4px; 
-            transform: scale(1);
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; 
-            opacity: 0.7;
-            filter: grayscale(0.5);
-        }
-
-        .level-select-btn.active {
-            transform: scale(1.05) translateY(-5px);
-            opacity: 1;
-            filter: grayscale(0);
-            z-index: 10;
-            @apply ring-4 ring-offset-4 ring-indigo-500;
-        }
-
-        .level-select-btn:hover {
-            transform: scale(1.05) translateY(-5px); 
-            opacity: 1;
-            filter: grayscale(0);
-        }
-
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
+        #app-container { @apply w-full max-w-7xl; background-color: white; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border-radius: 16px; min-height: 700px; display: flex; flex-direction: column; }
+        
+        /* Dashboard Buttons */
+        .level-select-btn { font-size: 4.5rem; padding: 3rem 4rem; min-width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform; border-width: 4px; transform: scale(1); cursor: pointer; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; opacity: 0.7; filter: grayscale(0.5); }
+        .level-select-btn.active { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); z-index: 10; @apply ring-4 ring-offset-4 ring-indigo-500; }
+        .level-select-btn:hover { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); }
+        
         /* Gradients */
         .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
         .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
         .btn-c2-style { background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); color: #333; border-color: #DCEDC8; }
 
-        .mode-select-btn {
-            @apply flex flex-col items-center justify-center p-8 rounded-[1.5rem] border-4 border-gray-200 bg-white text-gray-500 transition-all duration-200 cursor-pointer shadow-md hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-xl hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed;
-            min-height: 200px;
-            width: 100%;
-        }
+        .mode-select-btn { @apply flex flex-col items-center justify-center p-8 rounded-[1.5rem] border-4 border-gray-200 bg-white text-gray-500 transition-all duration-200 cursor-pointer shadow-md hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-xl hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed; min-height: 200px; width: 100%; }
+        .mode-select-btn.active { @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xl ring-4 ring-offset-4 ring-indigo-500; transform: translateY(-5px); }
+
+        /* Activity Styles */
+        .text-content { font-size: 1.35rem; line-height: 2.5; color: #374151; text-align: justify; }
+        .root-word { @apply font-black text-indigo-600 text-sm ml-1 mr-2 px-2 py-0.5 bg-indigo-100 rounded uppercase select-none tracking-wide align-middle border border-indigo-200; white-space: nowrap; }
         
-        .mode-select-btn.active {
-            @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xl ring-4 ring-offset-4 ring-indigo-500;
-            transform: translateY(-5px);
-        }
-
-        /* --- ACTIVITY STYLES --- */
-        .text-content {
-            font-size: 1.35rem; 
-            line-height: 2.5; /* Looser for root words */
-            color: #374151;
-            text-align: justify;
-        }
-
-        /* Word Formation Specifics */
-        .root-word {
-            @apply font-black text-indigo-600 text-sm ml-1 mr-2 px-2 py-0.5 bg-indigo-100 rounded uppercase select-none tracking-wide align-middle border border-indigo-200;
-            white-space: nowrap;
-        }
-
-        /* Classroom Mode */
-        .gap-box {
-            @apply inline-flex items-center justify-center border-b-4 border-gray-300 font-bold text-gray-400 px-3 mx-1 transition-all select-none;
-            min-width: 3.5rem;
-            cursor: pointer;
-            background-color: rgba(0,0,0,0.03);
-            border-radius: 4px 4px 0 0;
-        }
+        /* Inputs */
+        .gap-box { @apply inline-flex items-center justify-center border-b-4 border-gray-300 font-bold text-gray-400 px-3 mx-1 transition-all select-none; min-width: 3.5rem; cursor: pointer; background-color: rgba(0,0,0,0.03); border-radius: 4px 4px 0 0; }
         .gap-box:hover { @apply bg-amber-100 text-amber-600 border-amber-400; }
         .gap-box.revealed { @apply border-green-500 text-green-700 bg-green-100; }
-
-        /* Home Mode */
-        .gap-input {
-            @apply inline-block border-b-4 border-indigo-200 px-2 mx-1 font-bold text-indigo-900 focus:outline-none focus:border-indigo-600 focus:bg-indigo-50 transition-colors uppercase text-center;
-            min-width: 160px;
-            background: transparent;
-        }
+        .gap-input { @apply inline-block border-b-4 border-indigo-200 px-2 mx-1 font-bold text-indigo-900 focus:outline-none focus:border-indigo-600 focus:bg-indigo-50 transition-colors uppercase text-center; min-width: 160px; background: transparent; }
         .input-correct { @apply border-green-500 bg-green-100 text-green-800; }
         .input-wrong { @apply border-red-500 bg-red-100 text-red-800 line-through decoration-2; }
-        
-        .correction-badge {
-            @apply inline-block ml-1 px-2 py-0.5 rounded bg-green-600 text-white text-sm font-bold shadow-sm;
-        }
+        .correction-badge { @apply inline-block ml-1 px-2 py-0.5 rounded bg-green-600 text-white text-sm font-bold shadow-sm; }
 
         /* Buttons */
-        .app-btn {
-            @apply px-6 py-3 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95;
-        }
-        .btn-action {
-            @apply px-6 py-3 font-bold text-white rounded-lg shadow-md transition hover:opacity-90 active:scale-95;
-        }
-        .list-item-btn {
-            @apply w-full text-left p-4 bg-white hover:bg-indigo-50 border border-gray-200 rounded-lg transition duration-150 font-semibold text-lg text-gray-700 hover:text-indigo-700 flex justify-between items-center shadow-sm;
-        }
+        .app-btn { @apply px-6 py-3 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95; }
+        .btn-action { @apply px-6 py-3 font-bold text-white rounded-lg shadow-md transition hover:opacity-90 active:scale-95; }
+        .list-item-btn { @apply w-full text-left p-4 bg-white hover:bg-indigo-50 border border-gray-200 rounded-lg transition duration-150 font-semibold text-lg text-gray-700 hover:text-indigo-700 flex justify-between items-center shadow-sm; }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
 
-    <!-- Back Button -->
     <a id="main-menu-btn" href="exam_index.html" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 font-bold transition z-50 group">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         <span>Back to Menu</span>
     </a>
 
     <div id="app-container">
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center my-8">Use of English <span class="text-indigo-600">Part 3</span></h1>
 
-        <h1 class="text-4xl font-extrabold text-gray-900 text-center my-8">
-            Use of English <span class="text-indigo-600">Part 3</span>
-        </h1>
-
-        <!-- --- SCREEN 1: DASHBOARD --- -->
         <div id="screen-dashboard" class="flex-1 p-8 flex flex-col gap-8 max-w-5xl mx-auto w-full">
-            
-            <!-- 1. Select Level -->
             <div>
                 <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">1. Select Level</h3>
                 <div class="grid grid-cols-3 gap-6 w-full">
@@ -149,7 +65,6 @@
                 </div>
             </div>
 
-            <!-- 2. Select Mode -->
             <div>
                 <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">2. Select Mode</h3>
                 <div class="grid grid-cols-2 gap-6 w-full">
@@ -166,54 +81,30 @@
                 </div>
             </div>
 
-            <!-- 3. Actions -->
             <div class="mt-4 flex flex-col items-center gap-4">
-                <button onclick="app.startActivity()" id="start-btn" disabled 
-                        class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105">
-                    Start Activity →
-                </button>
-                
-                <button onclick="app.showList()" id="list-btn" disabled class="text-gray-400 font-bold hover:text-indigo-600 disabled:opacity-0 transition">
-                    or Select Text from List
-                </button>
+                <button onclick="app.startActivity()" id="start-btn" disabled class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105">Start Activity →</button>
+                <button onclick="app.showList()" id="list-btn" disabled class="text-gray-400 font-bold hover:text-indigo-600 disabled:opacity-0 transition">or Select Text from List</button>
             </div>
             
-            <p id="data-loading-status" class="text-center text-sm text-gray-400 mt-4">Initializing...</p>
+            <p id="data-loading-status" class="text-center text-sm text-gray-400 mt-4">Connecting to Database...</p>
         </div>
 
-        <!-- --- SCREEN 2: LIST SELECTION --- -->
         <div id="screen-list" class="hidden flex-1 p-8 flex flex-col">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Select Text (<span id="list-badge"></span>)</h2>
             <div id="titles-container" class="flex-1 overflow-y-auto space-y-3 pr-2 max-h-[500px]"></div>
             <button onclick="app.showDashboard()" class="mt-6 self-start px-6 py-2 bg-gray-200 font-bold rounded-lg hover:bg-gray-300">← Back</button>
         </div>
 
-        <!-- --- SCREEN 3: ACTIVITY AREA --- -->
         <div id="screen-activity" class="hidden flex-1 flex flex-col" style="background-color: #fefce8;">
             <h2 id="text-title" class="text-3xl font-black text-gray-800 my-6 text-center uppercase tracking-wide">Title</h2>
-            
-            <div class="flex-1 px-8 md:px-12 overflow-y-auto">
-                <p id="text-display" class="text-content"></p>
-            </div>
-
-            <!-- Footer Controls -->
+            <div class="flex-1 px-8 md:px-12 overflow-y-auto"><p id="text-display" class="text-content"></p></div>
             <div class="mt-8 pt-6 p-8 border-t border-gray-300/50 bg-white rounded-b-2xl">
-                <div id="home-result-bar" class="hidden mb-4 p-4 rounded-lg bg-white border border-gray-200 text-center text-xl font-bold">
-                    Score: <span id="score-display">0/8</span>
-                </div>
+                <div id="home-result-bar" class="hidden mb-4 p-4 rounded-lg bg-white border border-gray-200 text-center text-xl font-bold">Score: <span id="score-display">0/8</span></div>
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <button onclick="app.showDashboard()" class="btn-action bg-gray-500">Menu</button>
                     <div class="space-x-4 flex">
-                        <!-- Classroom Controls -->
-                        <div id="controls-classroom" class="hidden space-x-2">
-                            <button onclick="app.resetCurrent()" class="btn-action bg-amber-500">Reset</button>
-                            <button onclick="app.revealAll()" class="btn-action bg-purple-600">Reveal All</button>
-                        </div>
-                        <!-- Home Controls -->
-                        <div id="controls-home" class="hidden space-x-2">
-                            <button onclick="app.checkAnswers()" id="btn-check" class="btn-action bg-green-600">Check</button>
-                            <button onclick="app.resetCurrent()" id="btn-retry" class="hidden btn-action bg-amber-500">Retry</button>
-                        </div>
+                        <div id="controls-classroom" class="hidden space-x-2"><button onclick="app.resetCurrent()" class="btn-action bg-amber-500">Reset</button><button onclick="app.revealAll()" class="btn-action bg-purple-600">Reveal All</button></div>
+                        <div id="controls-home" class="hidden space-x-2"><button onclick="app.checkAnswers()" id="btn-check" class="btn-action bg-green-600">Check</button><button onclick="app.resetCurrent()" id="btn-retry" class="hidden btn-action bg-amber-500">Retry</button></div>
                         <button onclick="app.nextText()" class="btn-action bg-blue-600">Next →</button>
                     </div>
                 </div>
@@ -221,15 +112,33 @@
         </div>
     </div>
 
-    <!-- APP LOGIC -->
     <script>
+        // ============================================================
+        // 👇 2. PASTE YOUR KEYS HERE
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        // ============================================================
+
         const app = {
+            supabase: null,
             data: [],
             filteredData: [],
             state: { level: null, mode: null, currentIndex: 0 },
             isRandom: false,
 
             init: async function() {
+                const status = document.getElementById('data-loading-status');
+                
+                // Initialize Supabase
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
+                } else {
+                    status.innerText = "Error: Library not loaded.";
+                    return;
+                }
+
                 await this.loadData();
                 this.switchScreen('screen-dashboard');
             },
@@ -237,286 +146,45 @@
             loadData: async function() {
                 const status = document.getElementById('data-loading-status');
                 try {
-                    status.innerText = "Loading data...";
-                    const res = await fetch('./part3_data.json');
-                    if (!res.ok) throw new Error("JSON file not found");
-                    this.data = await res.json();
+                    status.innerText = "Loading data from Supabase...";
+                    
+                    // FETCH FROM TABLE 'exam_part3'
+                    let { data, error } = await this.supabase
+                        .from('exam_part3')
+                        .select('*');
+
+                    if (error) throw error;
+                    
+                    this.data = data;
                     status.innerText = "Ready.";
+                    status.className = "text-center text-sm text-green-500 mt-4 font-bold";
                 } catch (error) {
-                    console.warn("Using local backup data.", error);
-                    // --- HARDCODED DATA: 5 Texts per level (15 total) ---
-                    this.data = [
-                        // --- B2 LEVEL ---
-                        {
-                            "id": "B2_WF_01",
-                            "level": "B2",
-                            "title": "A Healthy Lifestyle",
-                            "content": "Living a healthy lifestyle is of vital [1] if you want to avoid illness. It is not just about eating fruit and vegetables; regular [2] is also essential. Many people make the [3] of thinking they can eat whatever they want as long as they run occasionally. Unfortunately, this is [4] . A balanced diet is key. Furthermore, getting enough sleep is beneficial for your [5] well-being. If you are constantly tired, your [6] to concentrate will suffer. Finally, try to avoid [7] situations where possible. Stress can be extremely [8] to your health.",
-                            "answers": {
-                                "1": { "root": "IMPORTANT", "answer": "IMPORTANCE" },
-                                "2": { "root": "FIT", "answer": "FITNESS" },
-                                "3": { "root": "DECIDE", "answer": "DECISION" },
-                                "4": { "root": "CORRECT", "answer": "INCORRECT" },
-                                "5": { "root": "PSYCHOLOGY", "answer": "PSYCHOLOGICAL" },
-                                "6": { "root": "ABLE", "answer": "ABILITY" },
-                                "7": { "root": "STRESS", "answer": "STRESSFUL" },
-                                "8": { "root": "HARM", "answer": "HARMFUL" }
-                            }
-                        },
-                        {
-                            "id": "B2_WF_02",
-                            "level": "B2",
-                            "title": "The Job Interview",
-                            "content": "Going for a job interview can be a nerve-wracking experience. To increase your chances of [1] , you must prepare thoroughly. Dress [2] to make a good first impression. When answering questions, try to speak with [3] , even if you feel nervous inside. Employers are looking for [4] employees who can solve problems. It is also helpful to show [5] for the position. Ask intelligent questions about the [6] requirements of the role. If you are [7] , do not be disheartened. Ask for feedback so you can make an [8] next time.",
-                            "answers": {
-                                "1": { "root": "SUCCEED", "answer": "SUCCESS" },
-                                "2": { "root": "SMART", "answer": "SMARTLY" },
-                                "3": { "root": "CONFIDENT", "answer": "CONFIDENCE" },
-                                "4": { "root": "RELY", "answer": "RELIABLE" },
-                                "5": { "root": "ENTHUSIAST", "answer": "ENTHUSIASM" },
-                                "6": { "root": "DAY", "answer": "DAILY" },
-                                "7": { "root": "SUCCESS", "answer": "UNSUCCESSFUL" },
-                                "8": { "root": "IMPROVE", "answer": "IMPROVEMENT" }
-                            }
-                        },
-                        {
-                            "id": "B2_WF_03",
-                            "level": "B2",
-                            "title": "Extreme Weather",
-                            "content": "In recent years, there has been a significant increase in [1] weather events. Scientists believe that global [2] is largely to blame. We are seeing more [3] storms and floods than ever before. This causes massive [4] to homes and infrastructure. The [5] of sea levels is another major concern for coastal cities. Governments are trying to find a [6] to this crisis, but progress is slow. Individuals can also make a difference by reducing their [7] of energy. It is our [8] to protect the planet for future generations.",
-                            "answers": {
-                                "1": { "root": "DANGER", "answer": "DANGEROUS" },
-                                "2": { "root": "WARM", "answer": "WARMING" },
-                                "3": { "root": "POWER", "answer": "POWERFUL" },
-                                "4": { "root": "DESTROY", "answer": "DESTRUCTION" },
-                                "5": { "root": "RISE", "answer": "RISING" },
-                                "6": { "root": "SOLVE", "answer": "SOLUTION" },
-                                "7": { "root": "CONSUME", "answer": "CONSUMPTION" },
-                                "8": { "root": "RESPONSIBLE", "answer": "RESPONSIBILITY" }
-                            }
-                        },
-                        {
-                            "id": "B2_WF_04",
-                            "level": "B2",
-                            "title": "A Famous Musician",
-                            "content": "Ed Sheeran is one of the most [1] musicians in the world today. His rise to [2] was not instant; he spent years busking on the streets. He is known for his incredible [3] to write catchy songs. His [4] on stage is simple, often just him and a guitar, yet he captivates audiences. Despite his wealth, he remains surprisingly [5] by fame. He often supports [6] causes and gives money to charity. His fans love him for his [7] and down-to-earth nature. It is rare to find such a [8] artist who is also so humble.",
-                            "answers": {
-                                "1": { "root": "FAME", "answer": "FAMOUS" },
-                                "2": { "root": "STAR", "answer": "STARDOM" },
-                                "3": { "root": "ABLE", "answer": "ABILITY" },
-                                "4": { "root": "APPEAR", "answer": "APPEARANCE" },
-                                "5": { "root": "AFFECT", "answer": "UNAFFECTED" },
-                                "6": { "root": "VARY", "answer": "VARIOUS" },
-                                "7": { "root": "HONEST", "answer": "HONESTY" },
-                                "8": { "root": "TALENT", "answer": "TALENTED" }
-                            }
-                        },
-                        {
-                            "id": "B2_WF_05",
-                            "level": "B2",
-                            "title": "Learning Languages",
-                            "content": "Learning a foreign language can be highly [1] to your career. In today's global market, companies value [2] who can speak more than one language. It requires a lot of [3] and patience to master a new tongue. You need to memorise vocabulary and understand grammatical [4] . Listening to [5] speakers is one of the best ways to learn. Don't worry if your [6] is not perfect at first. The most important thing is communication. With [7] practice, you will eventually become fluent. It is definitely a [8] investment of your time.",
-                            "answers": {
-                                "1": { "root": "ADVANTAGE", "answer": "ADVANTAGEOUS" },
-                                "2": { "root": "EMPLOY", "answer": "EMPLOYEES" },
-                                "3": { "root": "DEDICATE", "answer": "DEDICATION" },
-                                "4": { "root": "CONSTRUCT", "answer": "CONSTRUCTIONS" },
-                                "5": { "root": "NATURE", "answer": "NATIVE" },
-                                "6": { "root": "PRONOUNCE", "answer": "PRONUNCIATION" },
-                                "7": { "root": "DAY", "answer": "DAILY" },
-                                "8": { "root": "VALUE", "answer": "VALUABLE" }
-                            }
-                        },
-                        // --- C1 LEVEL ---
-                        {
-                            "id": "C1_WF_01",
-                            "level": "C1",
-                            "title": "Modern Architecture",
-                            "content": "The skyline of London has changed [1] over the last twenty years. Traditional stone buildings now stand alongside [2] skyscrapers made of glass and steel. This juxtaposition is often controversial. Critics argue that the new towers are [3] to the historic character of the city. However, supporters claim they are a symbol of economic [4] . One issue is the [5] of affordable housing in the city centre. Developers often prioritise luxury apartments, which are [6] to the average worker. There is a need for more [7] planning to ensure the city serves all its residents. We must find a balance between preservation and [8] .",
-                            "answers": {
-                                "1": { "root": "DRAMA", "answer": "DRAMATICALLY" },
-                                "2": { "root": "IMPRESS", "answer": "IMPRESSIVE" },
-                                "3": { "root": "SENSITIVE", "answer": "INSENSITIVE" },
-                                "4": { "root": "PROSPER", "answer": "PROSPERITY" },
-                                "5": { "root": "SHORT", "answer": "SHORTAGE" },
-                                "6": { "root": "ACCESS", "answer": "INACCESSIBLE" },
-                                "7": { "root": "THINK", "answer": "THOUGHTFUL" },
-                                "8": { "root": "MODERN", "answer": "MODERNISATION" }
-                            }
-                        },
-                        {
-                            "id": "C1_WF_02",
-                            "level": "C1",
-                            "title": "Space Tourism",
-                            "content": "The idea of holidaying in space was once pure science fiction, but it is fast becoming a [1] . Several private companies are competing to offer suborbital flights to [2] tourists. The cost, however, is currently [3] , meaning only the super-rich can afford it. Safety is another major concern; space travel is inherently [4] . Critics also point out the environmental impact, arguing that the carbon footprint of a rocket launch is [5] . Despite these objections, the industry is moving forward. Proponents argue that it will drive [6] innovation that benefits everyone. Whether it becomes a mainstream activity remains [7] . For now, it remains the playground of the [8] elite.",
-                            "answers": {
-                                "1": { "root": "REAL", "answer": "REALITY" },
-                                "2": { "root": "WEALTH", "answer": "WEALTHY" },
-                                "3": { "root": "ASTRONOMY", "answer": "ASTRONOMICAL" },
-                                "4": { "root": "HAZARD", "answer": "HAZARDOUS" },
-                                "5": { "root": "EXCUSE", "answer": "INEXCUSABLE" },
-                                "6": { "root": "TECHNOLOGY", "answer": "TECHNOLOGICAL" },
-                                "7": { "root": "DOUBT", "answer": "DOUBTFUL" },
-                                "8": { "root": "PRIVILEGE", "answer": "PRIVILEGED" }
-                            }
-                        },
-                        {
-                            "id": "C1_WF_03",
-                            "level": "C1",
-                            "title": "The Psychology of Colour",
-                            "content": "Colour plays a significant role in our daily lives, influencing our mood and [1] . Marketing companies spend millions researching the [2] effects of packaging colours. For instance, red is often used to signal urgency or hunger, which is why it is common in fast-food logos. Blue, on the other hand, creates a sense of [3] and trust. However, our reactions to colour can be subjective and culturally [4] . In some cultures, white is associated with weddings, while in others it signifies mourning. Therefore, global brands must be [5] when launching products abroad. Using the wrong colour could lead to a [6] marketing campaign. Understanding these nuances is [7] for any designer. It is a fascinating field of [8] .",
-                            "answers": {
-                                "1": { "root": "BEHAVE", "answer": "BEHAVIOUR/BEHAVIOR" },
-                                "2": { "root": "CONSCIOUS", "answer": "SUBCONSCIOUS" },
-                                "3": { "root": "TRANQUIL", "answer": "TRANQUILITY" },
-                                "4": { "root": "DEPEND", "answer": "DEPENDENT" },
-                                "5": { "root": "CAUTION", "answer": "CAUTIOUS" },
-                                "6": { "root": "DISASTER", "answer": "DISASTROUS" },
-                                "7": { "root": "ESSENCE", "answer": "ESSENTIAL" },
-                                "8": { "root": "INVESTIGATE", "answer": "INVESTIGATION" }
-                            }
-                        },
-                        {
-                            "id": "C1_WF_04",
-                            "level": "C1",
-                            "title": "Sleep Deprivation",
-                            "content": "In our fast-paced society, sleep is often undervalued. Many people view it as a luxury rather than a biological [1] . However, chronic sleep deprivation can have severe consequences. It leads to a reduction in cognitive function, making [2] difficult. It also weakens the immune system, leaving us [3] to infections. Furthermore, there is a strong link between lack of sleep and emotional [4] . People who are tired are more prone to anxiety and irritability. Employers are beginning to realise that well-rested staff are more [5] . Some companies even encourage napping during the day. It is [6] to think we can function effectively without rest. We must prioritise sleep for our own [7] . It is the foundation of a healthy [8] .",
-                            "answers": {
-                                "1": { "root": "NECESSARY", "answer": "NECESSITY" },
-                                "2": { "root": "CONCENTRATE", "answer": "CONCENTRATION" },
-                                "3": { "root": "DEFEND", "answer": "DEFENCELESS" },
-                                "4": { "root": "STABLE", "answer": "INSTABILITY" },
-                                "5": { "root": "PRODUCE", "answer": "PRODUCTIVE" },
-                                "6": { "root": "LOGIC", "answer": "ILLOGICAL" },
-                                "7": { "root": "SURVIVE", "answer": "SURVIVAL" },
-                                "8": { "root": "EXIST", "answer": "EXISTENCE" }
-                            }
-                        },
-                        {
-                            "id": "C1_WF_05",
-                            "level": "C1",
-                            "title": "Renewable Energy",
-                            "content": "The transition away from fossil fuels is unavoidable. As oil reserves dwindle, the [1] of renewable energy sources becomes increasingly urgent. Solar and wind power have seen massive growth, but storage remains a [2] . Batteries are currently expensive and inefficient. However, scientists are optimistic about [3] breakthroughs in this area. Another challenge is the [4] of the grid infrastructure. We need a system capable of handling [5] power supplies. Despite these hurdles, the environmental argument is [6] . Climate change poses an [7] threat to our way of life. We must invest in green technology to ensure a [8] future.",
-                            "answers": {
-                                "1": { "root": "ADOPT", "answer": "ADOPTION" },
-                                "2": { "root": "LIMIT", "answer": "LIMITATION" },
-                                "3": { "root": "COME", "answer": "UPCOMING" },
-                                "4": { "root": "RELY", "answer": "RELIABILITY" },
-                                "5": { "root": "FLUCTUATE", "answer": "FLUCTUATING" },
-                                "6": { "root": "DENY", "answer": "UNDENIABLE" },
-                                "7": { "root": "EXIST", "answer": "EXISTENTIAL" },
-                                "8": { "root": "SUSTAIN", "answer": "SUSTAINABLE" }
-                            }
-                        },
-                        // --- C2 LEVEL ---
-                        {
-                            "id": "C2_WF_01",
-                            "level": "C2",
-                            "title": "The Nature of Genius",
-                            "content": "What makes a genius? Is it an innate gift or the result of [1] hard work? Biographies of famous intellectuals often reveal a childhood marked by [2] precocity. However, talent alone is rarely enough. It must be paired with an [3] drive to succeed. Many geniuses display traits of eccentricity, often leading to social [4] . Their minds operate on a different plane, allowing them to make connections others miss. Yet, the line between genius and madness is [5] thin. History is littered with examples of brilliant minds plagued by mental illness. Society often views them with a mixture of awe and [6] . Perhaps true genius requires a certain [7] with the status quo. It is this refusal to accept accepted wisdom that leads to [8] discoveries.",
-                            "answers": {
-                                "1": { "root": "RELENT", "answer": "RELENTLESS" },
-                                "2": { "root": "EXCEPT", "answer": "EXCEPTIONAL" },
-                                "3": { "root": "SHAKE", "answer": "UNSHAKEABLE" },
-                                "4": { "root": "ALIEN", "answer": "ALIENATION" },
-                                "5": { "root": "PERCEIVE", "answer": "IMPERCEPTIBLY" },
-                                "6": { "root": "SUSPECT", "answer": "SUSPICION" },
-                                "7": { "root": "SATISFY", "answer": "DISSATISFACTION" },
-                                "8": { "root": "REVOLUTION", "answer": "REVOLUTIONARY" }
-                            }
-                        },
-                        {
-                            "id": "C2_WF_02",
-                            "level": "C2",
-                            "title": "Artificial Intelligence",
-                            "content": "The rise of Artificial Intelligence is arguably the most [1] development of our time. Its potential to revolutionise industries is vast, yet it raises profound ethical questions. The [2] of algorithms in decision-making processes is a growing concern. If an AI makes a biased decision, who is held [3] ? Furthermore, as machines become more capable, the [4] of human workers is called into question. We may face a future of mass unemployment unless we adapt. There is also the fear of the 'singularity', where AI surpasses human intelligence, leading to [5] consequences. While some dismiss this as alarmist, leading experts urge [6] . We must ensure that AI development is aligned with human values. If we proceed [7] , we risk creating a tool we cannot control. The stakes could not be [8] .",
-                            "answers": {
-                                "1": { "root": "CONSEQUENCE", "answer": "CONSEQUENTIAL" },
-                                "2": { "root": "PREVAIL", "answer": "PREVALENCE" },
-                                "3": { "root": "ACCOUNT", "answer": "ACCOUNTABLE" },
-                                "4": { "root": "DISPENSE", "answer": "DISPENSABILITY" },
-                                "5": { "root": "PREDICT", "answer": "UNPREDICTABLE" },
-                                "6": { "root": "VIGIL", "answer": "VIGILANCE" },
-                                "7": { "root": "CHECK", "answer": "UNCHECKED" },
-                                "8": { "root": "HIGH", "answer": "HIGHER" }
-                            }
-                        },
-                        {
-                            "id": "C2_WF_03",
-                            "level": "C2",
-                            "title": "Literary Criticism",
-                            "content": "Post-modernist literature is often characterised by its [1] and playfulness. It rejects the linear narratives of the past, preferring fragmentation and ambiguity. This can make it [2] to the casual reader. However, proponents argue that this complexity reflects the [3] nature of reality itself. By refusing to offer easy answers, these texts invite a deeper level of [4] . The author is no longer the sole authority; the reader becomes an active participant in meaning-making. This shift represents a [5] of the traditional hierarchy. Critics, however, often accuse the genre of being [6] self-indulgent. They claim it prioritises style over substance. Regardless of one's stance, its influence on contemporary fiction is [7] . It challenges us to rethink our [8] about what a story can be.",
-                            "answers": {
-                                "1": { "root": "PREDICT", "answer": "UNPREDICTABILITY" },
-                                "2": { "root": "ACCESS", "answer": "INACCESSIBLE" },
-                                "3": { "root": "CHAOS", "answer": "CHAOTIC" },
-                                "4": { "root": "ENGAGE", "answer": "ENGAGEMENT" },
-                                "5": { "root": "STABLE", "answer": "DESTABILISATION" },
-                                "6": { "root": "EXCESS", "answer": "EXCESSIVELY" },
-                                "7": { "root": "DISPUTE", "answer": "INDISPUTABLE" },
-                                "8": { "root": "ASSUME", "answer": "ASSUMPTIONS" }
-                            }
-                        },
-                        {
-                            "id": "C2_WF_04",
-                            "level": "C2",
-                            "title": "Urban Exploration",
-                            "content": "Urban exploration, or 'urbex', involves investigating man-made structures, typically those which are abandoned. It is a hobby that exists on the [1] of legality. Explorers are drawn to the [2] beauty of decaying buildings. There is a sense of melancholy in witnessing the [3] of once-grand structures. Photographers capture the peeling paint and rusting metal, finding art in [4] . However, it is fraught with danger; rotting floors and asbestos are common hazards. Moreover, strict security measures can lead to [5] for trespassing. Despite the risks, the community is growing [6] . For many, it is an act of historical documentation, preserving the memory of places before they vanish [7] . It offers a glimpse into a world usually hidden from [8] .",
-                            "answers": {
-                                "1": { "root": "FRINGE", "answer": "FRINGES" },
-                                "2": { "root": "HAUNT", "answer": "HAUNTING" },
-                                "3": { "root": "INTEGRATE", "answer": "DISINTEGRATION" },
-                                "4": { "root": "OBSCURE", "answer": "OBSCURITY" },
-                                "5": { "root": "PROSECUTE", "answer": "PROSECUTION" },
-                                "6": { "root": "EXPONENT", "answer": "EXPONENTIALLY" },
-                                "7": { "root": "ENTIRE", "answer": "ENTIRELY" },
-                                "8": { "root": "SEE", "answer": "SIGHT" }
-                            }
-                        },
-                        {
-                            "id": "C2_WF_05",
-                            "level": "C2",
-                            "title": "The Philosophy of Time",
-                            "content": "Our perception of time is fundamentally [1] . We experience it as a linear flow, yet physics suggests this may be an illusion. Einstein's theory of relativity demonstrated that time is [2] , depending on speed and gravity. This concept is deeply [3] to the human mind, which craves order and sequence. Philosophers have long debated whether the past and future have any [4] existence, or if only the 'now' is real. If time is indeed an illusion, then our fear of mortality is [5] . However, living with such a perspective is practically impossible. We are bound by the [6] of our biology to perceive time passing. Memories serve as a [7] of who we are, anchoring us in a temporal narrative. Without this, our sense of self would likely undergo [8] .",
-                            "answers": {
-                                "1": { "root": "SUBJECT", "answer": "SUBJECTIVE" },
-                                "2": { "root": "FLEX", "answer": "FLEXIBLE" },
-                                "3": { "root": "SETTLE", "answer": "UNSETTLING" },
-                                "4": { "root": "OBJECT", "answer": "OBJECTIVE" },
-                                "5": { "root": "BASE", "answer": "BASELESS" },
-                                "6": { "root": "CONSTRAIN", "answer": "CONSTRAINTS" },
-                                "7": { "root": "VALID", "answer": "VALIDATION" },
-                                "8": { "root": "INTEGRATE", "answer": "DISINTEGRATION" }
-                            }
-                        }
-                    ];
-                    status.innerText = "Loaded local backup data.";
+                    console.error("Connection Error:", error);
+                    this.data = []; 
+                    status.innerText = "Error loading data. Check console.";
+                    status.className = "text-center text-sm text-red-500 mt-4 font-bold";
                 }
-                
-                // Enable level buttons
                 this.updateUI();
             },
 
-            // --- DASHBOARD LOGIC (New Style) ---
+            // --- DASHBOARD LOGIC ---
             selectLevel: function(lvl) {
-                this.state.level = lvl; // FIXED: Using correct state variable
+                this.state.level = lvl;
                 this.updateUI();
             },
 
             selectMode: function(m) {
-                this.state.mode = m; // FIXED: Using correct state variable
+                this.state.mode = m;
                 this.updateUI();
             },
 
             updateUI: function() {
-                // Levels
                 ['b2','c1','c2'].forEach(l => {
                     const btn = document.getElementById(`btn-${l}`);
                     btn.classList.remove('active');
                     if(this.state.level && l === this.state.level.toLowerCase()) btn.classList.add('active');
                 });
 
-                // Modes (Enable only if level selected)
                 const hasLevel = !!this.state.level;
                 const modeBtns = document.querySelectorAll('.mode-select-btn');
                 modeBtns.forEach(btn => btn.disabled = !hasLevel);
@@ -528,7 +196,6 @@
                     if(this.state.mode === modeKey) btn.classList.add('active');
                 });
 
-                // Start
                 const canStart = this.state.level && this.state.mode;
                 document.getElementById('start-btn').disabled = !canStart;
                 document.getElementById('list-btn').disabled = !canStart;
@@ -542,7 +209,7 @@
 
             showList: function() {
                 this.filteredData = this.data.filter(i => i.level === this.state.level);
-                if (!this.filteredData.length) return alert("No texts found.");
+                if (!this.filteredData.length) return alert("No texts found for this level.");
 
                 this.isRandom = false;
                 const container = document.getElementById('titles-container');
@@ -565,7 +232,7 @@
 
             startEngine: function() {
                 this.filteredData = this.data.filter(i => i.level === this.state.level);
-                if (!this.filteredData.length) return alert("No texts found.");
+                if (!this.filteredData.length) return alert("No texts found for this level.");
                 
                 if (this.isRandom) {
                     this.filteredData.sort(() => Math.random() - 0.5);
@@ -596,17 +263,16 @@
                 }
 
                 let htmlContent = item.content;
-                
                 for(let i = 1; i <= 8; i++) {
                     const ansObj = item.answers[i.toString()];
+                    if (!ansObj) continue;
+
                     const rootWordHtml = `<span class="root-word">(${ansObj.root})</span>`;
                     
                     if (this.state.mode === 'classroom') {
-                        // GAP + ROOT
                         const gapHtml = `<span class="gap-box" onclick="app.toggleGap(this)" data-answer="${ansObj.answer}" data-index="${i}">[${i}]</span>`;
                         htmlContent = htmlContent.replace(`[${i}]`, gapHtml + rootWordHtml);
                     } else {
-                        // INPUT + ROOT
                         const inputHtml = `<input id="input-${i}" class="gap-input" type="text" autocomplete="off" placeholder="(${i})">`;
                         htmlContent = htmlContent.replace(`[${i}]`, inputHtml + rootWordHtml);
                     }
@@ -616,7 +282,7 @@
 
             toggleGap: function(element) {
                 const answer = element.getAttribute('data-answer');
-                const displayAns = answer.replace(/\//g, ' / '); // Formatting
+                const displayAns = answer.replace(/\//g, ' / ');
 
                 if (element.innerText === displayAns) {
                     element.innerHTML = `[${element.getAttribute('data-index')}]`;
@@ -641,9 +307,11 @@
                 let score = 0;
                 for(let i = 1; i <= 8; i++) {
                     const input = document.getElementById(`input-${i}`);
+                    if (!input) continue;
+
                     const userVal = input.value.trim().toUpperCase();
-                    const correctValRaw = item.answers[i.toString()].answer; // Get raw string
-                    const validOptions = correctValRaw.split('/').map(s => s.trim().toUpperCase()); // Split options
+                    const correctValRaw = item.answers[i.toString()].answer;
+                    const validOptions = correctValRaw.split('/').map(s => s.trim().toUpperCase());
 
                     input.disabled = true;
                     if (validOptions.includes(userVal)) {
@@ -653,9 +321,8 @@
                         input.classList.add('input-wrong');
                         const badge = document.createElement('span');
                         badge.className = 'correction-badge';
-                        badge.innerText = correctValRaw.replace(/\//g, ' / '); // Format for display
+                        badge.innerText = correctValRaw.replace(/\//g, ' / ');
                         
-                        // Insert correction badge intelligently
                         if(input.nextElementSibling && input.nextElementSibling.classList.contains('root-word')) {
                             input.parentNode.insertBefore(badge, input.nextElementSibling.nextSibling);
                         } else {
@@ -681,22 +348,15 @@
                 this.loadTextIntoView();
             },
 
-            resetCurrent: function() {
-                this.loadTextIntoView();
-            },
+            resetCurrent: function() { this.loadTextIntoView(); },
 
             switchScreen: function(id) {
                 ['screen-dashboard', 'screen-list', 'screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
                 document.getElementById(id).classList.remove('hidden');
                 window.scrollTo(0,0);
-
-                // Toggle Main Menu Button visibility based on current screen
                 const menuBtn = document.getElementById('main-menu-btn');
-                if (id === 'screen-dashboard') {
-                    menuBtn.classList.remove('hidden');
-                } else {
-                    menuBtn.classList.add('hidden');
-                }
+                if (id === 'screen-dashboard') menuBtn.classList.remove('hidden');
+                else menuBtn.classList.add('hidden');
             },
 
             showDashboard: function() { this.switchScreen('screen-dashboard'); },

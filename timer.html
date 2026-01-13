@@ -166,9 +166,9 @@
     width: 100%;
     border: none;
     background: transparent;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: var(--text-main);
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
     outline: none;
     border-bottom: 2px solid transparent;
@@ -325,41 +325,70 @@ function generateTimeButtons() {
   customWrapper.className = 'time-btn custom-wrapper';
   
   const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'min (e.g. 5 or 120)';
+  
+  // CRITICAL FIX: inputmode="numeric" triggers the number pad on iOS/Android
+  input.inputMode = 'numeric'; 
+  input.type = 'text'; 
+  
+  input.placeholder = '00:00';
   input.className = 'custom-input';
-  input.inputMode = 'decimal';
+  
+  // Add live formatter
+  input.addEventListener('input', function(e) {
+      // 1. Strip non-digits
+      let raw = e.target.value.replace(/[^0-9]/g, '');
+      
+      // 2. Format: Insert colon before the last 2 digits if length > 2
+      if (raw.length > 2) {
+          const seconds = raw.slice(-2);
+          const minutes = raw.slice(0, raw.length - 2);
+          e.target.value = `${minutes}:${seconds}`;
+      } else {
+          e.target.value = raw;
+      }
+  });
+
   input.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') handleCustomTime(input.value);
+    if (e.key === 'Enter') handleSmartInput(input.value);
   });
 
   const goBtn = document.createElement('button');
   goBtn.className = 'custom-go-btn';
   goBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-  goBtn.onclick = () => handleCustomTime(input.value);
+  goBtn.onclick = () => handleSmartInput(input.value);
 
   customWrapper.appendChild(input);
   customWrapper.appendChild(goBtn);
   container.appendChild(customWrapper);
 }
 
-function handleCustomTime(val) {
+function handleSmartInput(val) {
   if(!val) return;
-  val = val.trim();
-  let secs = 0;
+  // Remove non-digits/colons
+  const raw = val.replace(/[^0-9:]/g, ''); 
+  
+  let totalSecs = 0;
 
-  if (val.includes(':')) {
-    const parts = val.split(':');
-    const m = parseInt(parts[0], 10) || 0;
-    const s = parseInt(parts[1], 10) || 0;
-    secs = (m * 60) + s;
+  if (raw.includes(':')) {
+    const parts = raw.split(':');
+    if (parts.length === 3) {
+        totalSecs = (+parts[0] * 3600) + (+parts[1] * 60) + (+parts[2]);
+    } else {
+        totalSecs = (+parts[0] * 60) + (+parts[1]);
+    }
   } else {
-    const m = parseFloat(val);
-    if(isNaN(m)) return;
-    secs = Math.floor(m * 60);
+    // Fallback if they somehow bypassed the visual formatter
+    const num = parseInt(raw, 10);
+    if (isNaN(num)) return;
+    if (num < 100) totalSecs = num;
+    else {
+        const s = num % 100;
+        const m = Math.floor(num / 100);
+        totalSecs = (m * 60) + s;
+    }
   }
 
-  if (secs > 0) selectTime(secs);
+  if (totalSecs > 0) selectTime(totalSecs);
 }
 
 function selectTime(sec) {
@@ -478,17 +507,14 @@ function updateProgress() {
   document.getElementById('progressFill').style.width = percentage + "%";
 }
 
-// Updated Format Logic to support Hours
 function formatTime(sec) {
   let h = Math.floor(sec / 3600);
   let m = Math.floor((sec % 3600) / 60);
   let s = sec % 60;
 
   if (h > 0) {
-    // Return H:MM:SS if there are hours
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   } else {
-    // Return MM:SS if under an hour
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 }
@@ -501,7 +527,6 @@ function formatHumanReadable(sec) {
   return `${m}m ${s}s`;
 }
 
-// Audio Context
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playDoubleBeep() {

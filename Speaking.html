@@ -6,23 +6,24 @@
     <title>Speaking Exam Tool (Part 3 & 4)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* --- Configuration & Colors (Matching Python PySide Style) --- */
+        /* --- Configuration & Colors --- */
         :root {
             --deep-blue: #003366;
             --cambridge-yellow: #FFC300;
             --darker-blue: #002244;
             --time-alert-red: #D32F2F;
             --text-light-blue: #99cfff;
+            --input-bg: #004080;
         }
 
-        /* FIX: Resetting Body/HTML scroll behavior */
         html, body {
-            height: 100%; /* Use full height */
+            height: 100%;
             margin: 0;
             padding: 0;
-            overflow-y: auto; /* Allow scrolling only on the main body */
+            overflow-y: auto;
         }
         
         body {
@@ -39,26 +40,21 @@
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
             border-radius: 12px;
             width: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 1.5rem 2.5rem; /* Standard padding applied here */
+            padding: 1.5rem 2.5rem;
         }
         
-        /* FIX: New style to manage screen visibility and scrolling within the container */
         .screen-wrapper {
             width: 100%;
-            flex-grow: 1; /* Allows it to take up available vertical space */
-            padding-top: 20px; /* Separates content from header */
+            flex-grow: 1;
+            padding-top: 20px;
         }
         
-        /* FIX: Hide screens that are not active */
-        .screen-wrapper.hidden {
-            display: none !important;
-        }
+        .screen-wrapper.hidden { display: none !important; }
 
-        /* --- Custom Components --- */
-
-        /* Button Styles */
+        /* --- Buttons --- */
         .app-btn {
             background-color: var(--cambridge-yellow);
             color: var(--deep-blue);
@@ -66,20 +62,50 @@
             font-size: 1.25rem;
             font-weight: 700;
             border-radius: 10px;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
         }
-        .app-btn:hover {
-            background-color: #FEDD5C;
-        }
-        .app-btn-secondary {
-            background-color: #336699;
+        .app-btn:hover { background-color: #FEDD5C; transform: translateY(-2px); }
+        .app-btn:active { transform: translateY(0); }
+        
+        .app-btn-secondary { background-color: #336699; color: white; }
+        .app-btn-secondary:hover { background-color: #4477aa; }
+
+        /* --- Topic List Buttons --- */
+        .topic-btn {
+            background-color: var(--darker-blue);
+            border: 1px solid var(--text-light-blue);
             color: white;
+            padding: 15px;
+            text-align: left;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
         }
-        .app-btn-secondary:hover {
-            background-color: #4477aa;
+        .topic-btn:hover {
+            background-color: var(--cambridge-yellow);
+            color: var(--deep-blue);
+            border-color: var(--cambridge-yellow);
         }
 
-        /* Timer Styles */
+        /* --- Search Input --- */
+        #topic-search-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid var(--text-light-blue);
+            background-color: var(--input-bg);
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        #topic-search-input:focus {
+            border-color: var(--cambridge-yellow);
+        }
+        #topic-search-input::placeholder { color: #aaa; }
+
+        /* --- Timer --- */
         #timer-label {
             background-color: var(--darker-blue);
             color: white;
@@ -105,8 +131,6 @@
             color: var(--cambridge-yellow) !important;
             border: 2px solid var(--cambridge-yellow);
         }
-
-        /* Timer Set Buttons */
         .timer-set-button {
             background-color: var(--darker-blue);
             color: var(--cambridge-yellow);
@@ -117,17 +141,14 @@
             transition: background-color 0.2s, color 0.2s;
             font-size: 0.9rem;
         }
-        .timer-set-button:hover {
-            background-color: #336699;
-            color: white;
-        }
+        .timer-set-button:hover { background-color: #336699; color: white; }
         
-        /* Spidergram Styles (Part 3) */
+        /* --- Spidergram (Part 3) --- */
         #spidergram-central {
             background-color: var(--deep-blue);
             color: var(--cambridge-yellow);
             border: 3px solid var(--cambridge-yellow);
-            font-size: 1.375rem; /* 22px */
+            font-size: 1.375rem;
             font-weight: bold;
             min-height: 80px;
             display: flex;
@@ -140,7 +161,7 @@
         .spidergram-topic {
             background-color: var(--darker-blue);
             color: white;
-            font-size: 1.125rem; /* 18px */
+            font-size: 1.125rem;
             font-weight: bold;
             min-height: 60px;
             display: flex;
@@ -152,7 +173,7 @@
             border: 1px solid var(--cambridge-yellow);
         }
 
-        /* Revealable Question Styles (Part 3 Follow-up / Part 4) */
+        /* --- Revealable Questions --- */
         .revealable-question {
             font-size: 1.25rem;
             padding: 20px;
@@ -179,17 +200,15 @@
             font-weight: 500;
         }
         
-        /* Level Selection Screen Styling */
-        #level-selection-screen {
+        /* --- Screens --- */
+        #level-selection-screen, #mode-selection-screen, #topic-list-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 600px; /* Keep height minimum for visibility */
+            /* justify-content: center; Removed to allow scrolling in lists */
             text-align: center;
         }
         
-        /* New Back Button Style */
         .back-button {
             background-color: var(--darker-blue); 
             color: white;
@@ -203,10 +222,7 @@
             text-decoration: none;
             display: inline-block;
         }
-        .back-button:hover {
-            background-color: #336699; 
-            color: var(--cambridge-yellow);
-        }
+        .back-button:hover { background-color: #336699; color: var(--cambridge-yellow); }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -214,447 +230,395 @@
     <div id="app-container" class="w-full"> 
 
         <div class="flex justify-between items-center mb-6 px-4 sm:px-8 pt-4"> 
-            
             <div class="flex items-center gap-4">
-                <button id="back-to-tools-button-top" class="back-button hidden">
-                    ← Back to Tools
-                </button>
-                <h1 class="text-xl font-bold text-white">
-                    Speaking Exam Practice
-                </h1>
+                <a id="main-menu-btn" href="exam_index.html" class="back-button hidden">← Menu</a>
+                <h1 class="text-xl font-bold text-white">Speaking Exam Practice</h1>
             </div>
 
             <div class="flex items-center gap-2">
                 <button id="set-4min-button" class="timer-set-button app-btn-secondary">4 min</button>
                 <button id="set-2min-button" class="timer-set-button">2 min</button>
                 <button id="set-1min-button" class="timer-set-button app-btn-secondary">1 min</button>
-                
                 <div id="timer-label" class="text-lg">02:00</div>
-
                 <button id="start-pause-button" class="timer-control">▶</button>
                 <button id="reset-button" class="timer-control">🔄</button>
             </div>
         </div>
         
-        
-        <div class="px-4 sm:px-8 pb-4">
+        <div class="px-4 sm:px-8 pb-4 flex-1">
 
-            <div id="level-selection-screen" class="screen-wrapper">
-                
+            <div id="level-selection-screen" class="screen-wrapper justify-center">
                 <h2 class="text-3xl font-extrabold text-white mb-8">Select Exam Level</h2>
-                <div id="level-buttons-container" class="flex gap-6 justify-center">
-                    </div>
-                <p id="level-error-message" class="text-red-400 mt-6 hidden">Error: No questions loaded for this level.</p>
+                <div id="level-buttons-container" class="flex gap-6 justify-center flex-wrap"></div>
+                <p id="data-loading-status" class="text-gray-400 mt-12">Connecting to database...</p>
             </div>
 
+            <div id="mode-selection-screen" class="screen-wrapper hidden justify-center">
+                <div class="w-full max-w-md">
+                    <div class="flex justify-start mb-6">
+                        <button onclick="app.showLevelSelection()" class="back-button">← Back</button>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-white mb-8">How would you like to choose?</h2>
+                    <div class="flex flex-col gap-6">
+                        <button onclick="app.showPart3(true)" class="app-btn">🎲 Random Topic</button>
+                        <button onclick="app.showTopicList()" class="app-btn app-btn-secondary">📋 Choose from List</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="topic-list-screen" class="screen-wrapper hidden">
+                <div class="w-full max-w-3xl">
+                    <div class="flex justify-start mb-4">
+                        <button onclick="app.showModeSelection()" class="back-button">← Back</button>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-4">Select a Topic</h2>
+                    
+                    <input type="text" id="topic-search-input" placeholder="Type to search topics (e.g., 'Travel', 'Work')..." oninput="app.filterTopics(this.value)">
+                    
+                    <div id="topics-grid-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-h-[60vh] overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </div>
 
             <div id="part3-screen" class="screen-wrapper hidden">
                 <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
-                    <button id="back-to-levels-p3" class="back-button">← Back</button>
+                    <button onclick="app.handleBackFromPart3()" class="back-button">← Back</button>
                     <h2 class="text-2xl font-extrabold text-center text-white mr-auto ml-4">Part 3: Collaborative Task (<span id="current-level-display"></span>)</h2>
                 </div>
                 
-                <div id="spidergram-grid" class="grid grid-cols-3 gap-4">
-                    </div>
+                <div id="spidergram-grid" class="grid grid-cols-3 gap-4"></div>
                 
                 <div id="part3-follow-up-container" class="mt-8">
                     <p class="text-center text-gray-400 mb-2 text-sm">Follow-up Discussion Prompt (Click to Reveal):</p>
-                    <div id="part3-follow-up-q" class="revealable-question hidden-prompt">
+                    <div id="part3-follow-up-q" class="revealable-question hidden-prompt" onclick="app.toggleReveal(this)">
                         Click to REVEAL the prompt.
                     </div>
                 </div>
 
                 <div class="flex justify-center mt-8 gap-4">
-                    <button id="go-to-part4-button" class="app-btn app-btn-secondary w-full max-w-[200px]">
-                        Go to Part 4 >>
-                    </button>
-                    <button id="generate-new-button-p3" class="app-btn w-full max-w-[200px]">
-                        Generate New Task
-                    </button>
+                    <button onclick="app.showPart4()" class="app-btn app-btn-secondary w-full max-w-[200px]">Go to Part 4 >></button>
+                    <button onclick="app.showPart3(true)" class="app-btn w-full max-w-[200px]">New Random Task</button>
                 </div>
             </div>
 
             <div id="part4-screen" class="screen-wrapper hidden">
                 <h2 class="text-2xl font-extrabold text-center text-white mb-6">Part 4: Discussion Questions</h2>
 
-                <div id="part4-questions-list" class="space-y-4">
-                    </div>
+                <div id="part4-questions-list" class="space-y-4"></div>
 
                 <div class="flex justify-center mt-8 gap-4">
-                    <button id="back-to-part3-button" class="app-btn app-btn-secondary w-full max-w-[200px]">
-                        &lt;&lt; Back to Part 3
-                    </button>
-                    <button id="generate-new-button" class="app-btn w-full max-w-[200px]">
-                        Generate New Task
-                    </button>
+                    <button onclick="app.showPart3(false)" class="app-btn app-btn-secondary w-full max-w-[200px]">&lt;&lt; Back to Part 3</button>
+                    <button onclick="app.showPart3(true)" class="app-btn w-full max-w-[200px]">New Random Task</button>
                 </div>
             </div>
             
-            <div id="loading-overlay" class="hidden">
-                 <p class="text-xl text-white mt-12">Loading exam data...</p>
-            </div> 
-
         </div>
     </div>
 
     <script>
-        
-        // --- Global Data Container ---
-        let EXAM_TASK_SETS = []; 
-        let AVAILABLE_LEVELS = []; // Will be populated dynamically from data
+        // ============================================================
+        // 👇 2. PASTE YOUR KEYS HERE
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        // --- Global State ---
-        let timeRemaining = 0;
-        let targetTimeSeconds = 120;
-        let timerInterval = null;
-        let isRunning = false;
-        
-        let currentTaskData = null; 
-        let currentLevel = null; 
+        // ============================================================
 
-        // --- DOM Elements ---
-        const appContainer = document.getElementById('app-container');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const levelSelectionScreen = document.getElementById('level-selection-screen');
-        const levelButtonsContainer = document.getElementById('level-buttons-container');
-        const levelErrorMessage = document.getElementById('level-error-message');
-        const part3Screen = document.getElementById('part3-screen');
-        const part4Screen = document.getElementById('part4-screen');
-        const timerLabel = document.getElementById('timer-label');
-        const startPauseButton = document.getElementById('start-pause-button');
-        const resetButton = document.getElementById('reset-button');
-        const spidergramGrid = document.getElementById('spidergram-grid');
-        const part3FollowUpQ = document.getElementById('part3-follow-up-q');
-        const part4QuestionsList = document.getElementById('part4-questions-list');
-        const goToPart4Button = document.getElementById('go-to-part4-button');
-        const backToPart3Button = document.getElementById('back-to-part3-button');
-        const generateNewButtonP4 = document.getElementById('generate-new-button'); 
-        const generateNewButtonP3 = document.getElementById('generate-new-button-p3');
-        const backToLevelsButtonP3 = document.getElementById('back-to-levels-p3');
-        const backToToolsButtonTop = document.getElementById('back-to-tools-button-top');
-        // NEW: Time Set Buttons
-        const set4MinButton = document.getElementById('set-4min-button'); // NEW
-        const set2MinButton = document.getElementById('set-2min-button'); 
-        const set1MinButton = document.getElementById('set-1min-button'); 
+        const app = {
+            supabase: null,
+            data: [],
+            currentLevel: null,
+            currentTask: null,
+            timer: { interval: null, remaining: 120, target: 120, isRunning: false },
 
-
-        // --- Data Loading (Updated to use Fetch) ---
-
-        /** Loads exam data by fetching the external JSON file. */
-        async function loadExamData() {
-            loadingOverlay.classList.remove('hidden');
-            
-            try {
-                // Fetch the external JSON file
-                const response = await fetch('./exam_tasks.json');
+            init: async function() {
+                const status = document.getElementById('data-loading-status');
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                // Parse the JSON data
-                EXAM_TASK_SETS = await response.json();
-                
-                // Dynamically populate AVAILABLE_LEVELS from the loaded data
-                const uniqueLevels = new Set(EXAM_TASK_SETS.map(task => task.level).filter(Boolean));
-                AVAILABLE_LEVELS = Array.from(uniqueLevels).sort();
-
-                console.log(`Successfully loaded ${EXAM_TASK_SETS.length} external exam tasks. Levels found: ${AVAILABLE_LEVELS.join(', ')}`);
-                return EXAM_TASK_SETS.length > 0;
-            } catch (error) {
-                console.error("FATAL ERROR: Failed to load external JSON file:", error);
-                
-                // Display error message directly on the screen
-                levelSelectionScreen.innerHTML = `<h1 style="color:var(--time-alert-red); margin-top: 50px;" class="text-2xl text-center">
-                    FATAL ERROR: Could not load data from exam_tasks.json. 
-                    <br>Check if the file exists and the path is correct.
-                    </h1>`;
-                levelSelectionScreen.classList.remove('hidden');
-                return false;
-            } finally {
-                loadingOverlay.classList.add('hidden');
-            }
-        }
-
-        // --- Level Selection and Navigation ---
-        
-        function hideAllScreens() {
-            levelSelectionScreen.classList.add('hidden');
-            part3Screen.classList.add('hidden');
-            part4Screen.classList.add('hidden');
-        }
-
-        function showLevelSelection() {
-            hideAllScreens();
-            window.scrollTo(0, 0); 
-            levelSelectionScreen.classList.remove('hidden');
-            backToToolsButtonTop.classList.remove('hidden'); // SHOW BUTTON HERE
-            levelButtonsContainer.innerHTML = '';
-            levelErrorMessage.classList.add('hidden');
-            currentLevel = null; 
-
-            if (AVAILABLE_LEVELS.length === 0) {
-                 levelErrorMessage.textContent = "Data loaded, but no valid 'level' keys found.";
-                 levelErrorMessage.classList.remove('hidden');
-                 return;
-            }
-
-            AVAILABLE_LEVELS.forEach(level => {
-                const button = document.createElement('button');
-                button.textContent = level;
-                button.className = 'app-btn';
-                button.onclick = () => selectLevel(level);
-                levelButtonsContainer.appendChild(button);
-            });
-        }
-        
-        function selectLevel(level) {
-            currentLevel = level;
-            backToToolsButtonTop.classList.add('hidden'); // HIDE BUTTON WHEN STARTING TASK
-            showPart3(true);
-        }
-        
-        function goBackToLevels() {
-            pauseTimer();
-            window.scrollTo(0, 0); 
-            showLevelSelection();
-        }
-
-        /** Selects a random task set from the EXAM_TASK_SETS array, filtered by level. */
-        function selectRandomTask(level) {
-            const filteredTasks = EXAM_TASK_SETS.filter(task => task.level === level);
-            
-            if (filteredTasks.length === 0) {
-                console.error(`No exam tasks available for level: ${level}`);
-                return null;
-            }
-            const randomIndex = Math.floor(Math.random() * filteredTasks.length);
-            return filteredTasks[randomIndex];
-        }
-
-        // --- Timer Functions ---
-
-        function secondsToDisplay(seconds) {
-            const m = Math.floor(seconds / 60);
-            const s = seconds % 60;
-            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        }
-
-        function updateTimerDisplay() {
-            timerLabel.textContent = secondsToDisplay(timeRemaining);
-
-            timerLabel.classList.remove('time-alert');
-            if (timeRemaining <= 5 && isRunning) {
-                if (timeRemaining % 2 === 0) {
-                    timerLabel.classList.add('time-alert');
-                }
-            }
-        }
-        
-        // Function to set and reset time to a specific value
-        function setAndResetTimer(seconds) {
-            pauseTimer();
-            targetTimeSeconds = seconds;
-            resetTimerToTarget();
-        }
-
-        function startTimer() {
-            if (isRunning || timeRemaining <= 0) return;
-
-            isRunning = true;
-            startPauseButton.textContent = "⏸";
-
-            timerInterval = setInterval(() => {
-                if (timeRemaining > 0) {
-                    timeRemaining -= 1;
-                    updateTimerDisplay();
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
                 } else {
-                    pauseTimer();
-                    timerLabel.textContent = "TIME UP!";
-                    timerLabel.classList.add('time-alert');
-                    startPauseButton.disabled = true;
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            if (!isRunning) return;
-
-            clearInterval(timerInterval);
-            timerInterval = null;
-            isRunning = false;
-            startPauseButton.textContent = "▶";
-        }
-
-        // This relies only on the global targetTimeSeconds
-        function resetTimerToTarget() {
-            pauseTimer();
-            timeRemaining = targetTimeSeconds;
-            updateTimerDisplay();
-            startPauseButton.textContent = "▶";
-            startPauseButton.disabled = false;
-            timerLabel.classList.remove('time-alert');
-        }
-
-        // --- UI Functions ---
-
-        function toggleReveal(element) {
-            if (element.classList.contains('hidden-prompt')) {
-                element.textContent = element.dataset.fullText;
-                element.classList.remove('hidden-prompt');
-                element.classList.add('revealed-prompt');
-            } else {
-                element.textContent = element.dataset.hiddenText;
-                element.classList.remove('revealed-prompt');
-                element.classList.add('hidden-prompt');
-            }
-        }
-        
-        // showPart3 now calls setAndResetTimer
-        function showPart3(generateNew = false) {
-            if (EXAM_TASK_SETS.length === 0 || !currentLevel) return;
-
-            pauseTimer();
-
-            if (generateNew || !currentTaskData || currentTaskData.level !== currentLevel) {
-                currentTaskData = selectRandomTask(currentLevel);
-                if (!currentTaskData) {
-                    levelErrorMessage.textContent = `No questions found for level ${currentLevel}.`;
-                    levelErrorMessage.classList.remove('hidden');
-                    showLevelSelection();
+                    status.innerText = "Error: Library not loaded.";
                     return;
                 }
-            }
-            
-            levelErrorMessage.classList.add('hidden');
-            
-            const data = currentTaskData.part3_data;
-            
-            // Set the timer to the Part 3 target time (e.g., 120 seconds)
-            setAndResetTimer(currentTaskData.set_time_p3); 
 
-            hideAllScreens();
-            part3Screen.classList.remove('hidden');
+                await this.loadData();
+                this.renderLevelButtons();
+            },
 
-            document.getElementById('current-level-display').textContent = currentLevel;
+            loadData: async function() {
+                const status = document.getElementById('data-loading-status');
+                try {
+                    status.innerText = "Loading data...";
+                    
+                    let { data, error } = await this.supabase
+                        .from('exam_speaking_tasks')
+                        .select('*');
 
-
-            // 1. Setup Spidergram Grid
-            spidergramGrid.innerHTML = '';
-            
-            const centralQ = document.createElement('div');
-            centralQ.id = 'spidergram-central';
-            centralQ.textContent = data.initial_q;
-            centralQ.classList.add('col-span-1', 'row-span-1');
-            
-            const positions = [
-                { r: 0, c: 0 }, { r: 0, c: 2 }, { r: 2, c: 0 }, { r: 2, c: 2 }, { r: 2, c: 1 }
-            ];
-
-            data.topics.forEach((topic, i) => {
-                const topicEl = document.createElement('div');
-                topicEl.className = 'spidergram-topic';
-                topicEl.textContent = topic;
-                
-                if (positions[i]) {
-                     topicEl.style.gridRow = positions[i].r + 1;
-                     topicEl.style.gridColumn = positions[i].c + 1;
+                    if (error) throw error;
+                    
+                    this.data = data;
+                    status.innerText = ""; 
+                } catch (error) {
+                    console.error("Connection Error:", error);
+                    status.innerText = "Error loading data. Check console.";
+                    status.className = "text-red-400 mt-12";
                 }
-                spidergramGrid.appendChild(topicEl);
-            });
-            
-            centralQ.style.gridRow = 2;
-            centralQ.style.gridColumn = 2;
-            spidergramGrid.appendChild(centralQ);
+            },
 
-            // 2. Setup Part 3 Follow-up
-            part3FollowUpQ.dataset.fullText = data.second_q; 
-            part3FollowUpQ.dataset.hiddenText = "Click to REVEAL the prompt.";
-            
-            // Reset to hidden
-            part3FollowUpQ.textContent = part3FollowUpQ.dataset.hiddenText;
-            part3FollowUpQ.classList.add('hidden-prompt');
-            part3FollowUpQ.classList.remove('revealed-prompt');
-            
-            window.scrollTo(0, 0); 
-        }
-
-        // showPart4 now calls setAndResetTimer
-        function showPart4() {
-            if (!currentTaskData) return;
-
-            const data = currentTaskData.part3_data;
-            
-            // Set the timer to the Part 4 target time (e.g., 240 seconds)
-            setAndResetTimer(currentTaskData.set_time_p4); 
-            
-            pauseTimer();
-
-            hideAllScreens();
-            part4Screen.classList.remove('hidden');
-
-            part4QuestionsList.innerHTML = ''; 
-
-            data.part4_qs.forEach((q_text, i) => {
-                const qEl = document.createElement('div');
-                qEl.className = 'revealable-question hidden-prompt';
-                qEl.dataset.fullText = `Q${i + 1}. ${q_text}`;
-                qEl.dataset.hiddenText = `Click to REVEAL Part 4 Question ${i + 1}`;
-                qEl.textContent = qEl.dataset.hiddenText;
+            renderLevelButtons: function() {
+                const container = document.getElementById('level-buttons-container');
+                container.innerHTML = '';
                 
-                qEl.onclick = () => toggleReveal(qEl);
+                const levels = [...new Set(this.data.map(item => item.level))].sort();
                 
-                part4QuestionsList.appendChild(qEl);
-            });
-            
-            window.scrollTo(0, 0);
-        }
-        
-        // --- Event Connections ---
+                if (levels.length === 0) return;
 
-        function toggleStartPause() {
-            if (isRunning) {
-                pauseTimer();
-            } else {
-                startTimer();
+                levels.forEach(level => {
+                    const btn = document.createElement('button');
+                    btn.textContent = level;
+                    btn.className = 'app-btn';
+                    btn.onclick = () => this.selectLevel(level);
+                    container.appendChild(btn);
+                });
+            },
+
+            selectLevel: function(level) {
+                this.currentLevel = level;
+                document.getElementById('main-menu-btn').classList.add('hidden');
+                this.showModeSelection(); // CHANGED: Goes to Mode Selection instead of Part 3
+            },
+
+            selectRandomTask: function() {
+                const pool = this.data.filter(t => t.level === this.currentLevel);
+                if (pool.length === 0) return null;
+                const randomIndex = Math.floor(Math.random() * pool.length);
+                return pool[randomIndex];
+            },
+
+            // --- SCREENS & NAVIGATION ---
+
+            hideAllScreens: function() {
+                ['level-selection-screen', 'mode-selection-screen', 'topic-list-screen', 'part3-screen', 'part4-screen'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+            },
+
+            showLevelSelection: function() {
+                this.pauseTimer();
+                this.hideAllScreens();
+                document.getElementById('level-selection-screen').classList.remove('hidden');
+                document.getElementById('main-menu-btn').classList.remove('hidden');
+            },
+
+            showModeSelection: function() {
+                this.hideAllScreens();
+                document.getElementById('mode-selection-screen').classList.remove('hidden');
+            },
+
+            showTopicList: function() {
+                this.hideAllScreens();
+                document.getElementById('topic-list-screen').classList.remove('hidden');
+                document.getElementById('topic-search-input').value = ""; // Clear search
+                this.filterTopics(""); // Render all topics for current level
+            },
+
+            handleBackFromPart3: function() {
+                // Return to mode selection so user can choose Random or List again
+                this.showModeSelection();
+            },
+
+            // --- TOPIC SEARCH LOGIC ---
+
+            filterTopics: function(query) {
+                const container = document.getElementById('topics-grid-container');
+                container.innerHTML = '';
+                
+                const normalizedQuery = query.toLowerCase();
+                
+                // Filter data by Level AND Search Query
+                const filtered = this.data.filter(t => 
+                    t.level === this.currentLevel && 
+                    (t.topic || "Untitled").toLowerCase().includes(normalizedQuery)
+                );
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400 col-span-full text-center">No topics found.</p>';
+                    return;
+                }
+
+                // Sort alphabetically by topic name
+                filtered.sort((a, b) => (a.topic || "").localeCompare(b.topic || ""));
+
+                filtered.forEach(task => {
+                    const btn = document.createElement('button');
+                    btn.textContent = task.topic || "Untitled Topic";
+                    btn.className = 'topic-btn';
+                    // When clicked, load this specific task
+                    btn.onclick = () => {
+                        this.currentTask = task;
+                        this.showPart3(false); // false = don't generate random, use currentTask
+                    };
+                    container.appendChild(btn);
+                });
+            },
+
+            // --- EXAM LOGIC ---
+
+            showPart3: function(generateRandom) {
+                if (generateRandom) {
+                    this.currentTask = this.selectRandomTask();
+                    if (!this.currentTask) return alert("No tasks found for this level.");
+                }
+
+                this.hideAllScreens();
+                document.getElementById('part3-screen').classList.remove('hidden');
+                document.getElementById('current-level-display').innerText = this.currentLevel + (this.currentTask.topic ? ` - ${this.currentTask.topic}` : '');
+
+                const data = this.currentTask.part3_data;
+                
+                // 1. Spidergram
+                const grid = document.getElementById('spidergram-grid');
+                grid.innerHTML = '';
+                
+                const central = document.createElement('div');
+                central.id = 'spidergram-central';
+                central.textContent = data.initial_q;
+                central.className = 'col-span-1 row-span-1';
+                
+                // Grid positioning logic
+                const positions = [{r:0,c:0}, {r:0,c:2}, {r:2,c:0}, {r:2,c:2}, {r:2,c:1}];
+                
+                data.topics.forEach((topic, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'spidergram-topic';
+                    el.textContent = topic;
+                    if(positions[i]) {
+                        el.style.gridRow = positions[i].r + 1;
+                        el.style.gridColumn = positions[i].c + 1;
+                    }
+                    grid.appendChild(el);
+                });
+                
+                central.style.gridRow = 2;
+                central.style.gridColumn = 2;
+                grid.appendChild(central);
+
+                // 2. Follow up
+                const followUp = document.getElementById('part3-follow-up-q');
+                followUp.dataset.fullText = data.second_q;
+                followUp.dataset.hiddenText = "Click to REVEAL discussion question";
+                followUp.textContent = followUp.dataset.hiddenText;
+                followUp.className = 'revealable-question hidden-prompt';
+
+                // Timer
+                this.setTimer(this.currentTask.set_time_p3 || 120);
+            },
+
+            showPart4: function() {
+                this.hideAllScreens();
+                document.getElementById('part4-screen').classList.remove('hidden');
+                
+                const list = document.getElementById('part4-questions-list');
+                list.innerHTML = '';
+                
+                const qs = this.currentTask.part3_data.part4_qs;
+                
+                qs.forEach((qText, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'revealable-question hidden-prompt';
+                    el.dataset.fullText = `Q${i+1}. ${qText}`;
+                    el.dataset.hiddenText = `Click to REVEAL Question ${i+1}`;
+                    el.textContent = el.dataset.hiddenText;
+                    el.onclick = () => this.toggleReveal(el);
+                    list.appendChild(el);
+                });
+
+                // Timer
+                this.setTimer(this.currentTask.set_time_p4 || 240);
+            },
+
+            // --- UTILS ---
+
+            toggleReveal: function(el) {
+                if (el.classList.contains('hidden-prompt')) {
+                    el.textContent = el.dataset.fullText;
+                    el.classList.remove('hidden-prompt');
+                    el.classList.add('revealed-prompt');
+                } else {
+                    el.textContent = el.dataset.hiddenText;
+                    el.classList.remove('revealed-prompt');
+                    el.classList.add('hidden-prompt');
+                }
+            },
+
+            // --- TIMER ---
+
+            setTimer: function(seconds) {
+                this.pauseTimer();
+                this.timer.target = seconds;
+                this.resetTimer();
+            },
+
+            resetTimer: function() {
+                this.pauseTimer();
+                this.timer.remaining = this.timer.target;
+                this.updateTimerDisplay();
+                document.getElementById('start-pause-button').textContent = "▶";
+                document.getElementById('timer-label').classList.remove('time-alert');
+                document.getElementById('start-pause-button').disabled = false;
+            },
+
+            startTimer: function() {
+                if (this.timer.isRunning) return;
+                this.timer.isRunning = true;
+                document.getElementById('start-pause-button').textContent = "⏸";
+                
+                this.timer.interval = setInterval(() => {
+                    if (this.timer.remaining > 0) {
+                        this.timer.remaining--;
+                        this.updateTimerDisplay();
+                    } else {
+                        this.pauseTimer();
+                        document.getElementById('timer-label').textContent = "TIME UP!";
+                        document.getElementById('timer-label').classList.add('time-alert');
+                    }
+                }, 1000);
+            },
+
+            pauseTimer: function() {
+                clearInterval(this.timer.interval);
+                this.timer.isRunning = false;
+                document.getElementById('start-pause-button').textContent = "▶";
+            },
+
+            toggleTimer: function() {
+                if (this.timer.isRunning) this.pauseTimer();
+                else this.startTimer();
+            },
+
+            updateTimerDisplay: function() {
+                const m = Math.floor(this.timer.remaining / 60);
+                const s = this.timer.remaining % 60;
+                document.getElementById('timer-label').textContent = 
+                    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                
+                const label = document.getElementById('timer-label');
+                label.classList.remove('time-alert');
+                if (this.timer.remaining <= 10 && this.timer.remaining % 2 === 0 && this.timer.isRunning) {
+                    label.classList.add('time-alert');
+                }
             }
-        }
-        
-        startPauseButton.addEventListener('click', () => {
-             if (timeRemaining === targetTimeSeconds && timeRemaining > 0) {
-                 startTimer();
-             } else {
-                 toggleStartPause();
-             }
-        });
+        };
 
-        resetButton.addEventListener('click', resetTimerToTarget);
-        
-        // NEW: Timer Set Handlers
-        set4MinButton.addEventListener('click', () => setAndResetTimer(240));
-        set2MinButton.addEventListener('click', () => setAndResetTimer(120));
-        set1MinButton.addEventListener('click', () => setAndResetTimer(60));
-        
-        // Navigation
-        goToPart4Button.addEventListener('click', showPart4);
-        backToPart3Button.addEventListener('click', () => showPart3(false));
-        generateNewButtonP4.addEventListener('click', () => showPart3(true)); // Button on Part 4: Generate New Task
-        generateNewButtonP3.addEventListener('click', () => showPart3(true));
-        part3FollowUpQ.addEventListener('click', () => toggleReveal(part3FollowUpQ));
-        backToLevelsButtonP3.addEventListener('click', goBackToLevels); // Button on Part 3: Back to Tools
+        // --- Event Listeners ---
+        document.getElementById('start-pause-button').addEventListener('click', () => app.toggleTimer());
+        document.getElementById('reset-button').addEventListener('click', () => app.resetTimer());
+        document.getElementById('set-4min-button').addEventListener('click', () => app.setTimer(240));
+        document.getElementById('set-2min-button').addEventListener('click', () => app.setTimer(120));
+        document.getElementById('set-1min-button').addEventListener('click', () => app.setTimer(60));
 
-        // Top button handler for external link
-        backToToolsButtonTop.addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-
-        // --- Initialization (Updated to use async load) ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            const dataLoaded = await loadExamData();
-            if (dataLoaded) {
-                 showLevelSelection();
-            }
-        });
+        // Start
+        app.init();
     </script>
 </body>
 </html>
