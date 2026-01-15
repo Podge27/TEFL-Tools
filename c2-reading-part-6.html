@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Part 6: Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        #app-container { 
+            @apply w-full max-w-[95%] mx-auto mt-4 bg-white shadow-xl rounded-xl border border-slate-200;
+            display: flex; flex-direction: column; height: 90vh; overflow: hidden; 
+        }
+
+        /* --- TEXT STYLES --- */
+        .text-content { font-size: 1.15rem; line-height: 2.2; color: #334155; text-align: left; white-space: pre-wrap; }
+        .gap-number { @apply inline-block font-black text-indigo-400 mr-2 select-none text-sm; transform: translateY(-2px); }
+
+        /* Dropzone */
+        .dropzone { 
+            display: inline-flex; align-items: center; min-width: 100px; min-height: 40px; 
+            margin: 4px 0; background-color: #f8fafc; border: 2px dashed #cbd5e1; 
+            border-radius: 8px; vertical-align: middle; transition: all 0.2s; padding: 4px 8px; width: 95%; 
+        }
+        .dropzone.hovered { background-color: #e0e7ff; border-color: #6366f1; }
+        .dropzone.filled { border-style: solid; border-color: #94a3b8; background-color: #fff; width: auto; max-width: 100%; }
+
+        /* Classroom Gap */
+        .classroom-gap { @apply inline-block font-bold text-slate-400 cursor-pointer border-b-4 border-slate-200 px-2 mx-1 hover:text-slate-600 hover:border-slate-400 transition-all select-none; }
+        .classroom-gap.revealed { @apply text-indigo-900 border-indigo-500 bg-indigo-50 rounded px-2 border-b-2; }
+
+        /* Bank Cards */
+        .bank-card { 
+            @apply flex gap-3 p-4 bg-white border border-slate-200 rounded-lg shadow-sm mb-3 select-none text-sm leading-relaxed; 
+        }
+        .draggable { @apply cursor-grab hover:shadow-md hover:border-slate-300; }
+        .draggable:active { cursor: grabbing; }
+        .card-letter { @apply flex-shrink-0 w-6 h-6 bg-slate-700 text-white font-bold rounded flex items-center justify-center text-xs; }
+        
+        /* Dropped State */
+        .dropzone .draggable { margin-bottom: 0; border: none; box-shadow: none; background: transparent; padding: 0; }
+        .dropzone .draggable .card-letter { background-color: #475569; }
+
+        /* Feedback Badges */
+        .feedback-badge { @apply inline-flex items-center ml-2 px-3 py-1 rounded text-white font-bold text-xs uppercase tracking-wide shadow transition-all; }
+        .feedback-correct { @apply bg-green-500; }
+        .feedback-wrong { @apply bg-red-500; }
+
+        /* UI Elements */
+        .btn-action { @apply px-6 py-2 font-bold text-white rounded-lg shadow hover:opacity-90; }
+        
+        /* Level & Mode Buttons */
+        .level-btn { @apply text-4xl font-black py-8 rounded-2xl transition transform hover:scale-105 border-4 opacity-60 grayscale; }
+        .level-btn.active { @apply opacity-100 grayscale-0 ring-4 ring-offset-2 ring-slate-700; }
+        .btn-b2 { background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border-color: #C7D2FE; }
+        .btn-c1 { background: linear-gradient(135deg, #FF9800, #FFC107); color: #333; border-color: #FFECB3; }
+        .btn-c2 { background: linear-gradient(135deg, #8BC34A, #CDDC39); color: #333; border-color: #DCEDC8; }
+
+        .mode-btn { @apply border-4 border-slate-100 p-8 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition text-center text-slate-400; }
+        .mode-btn.active { @apply border-slate-700 bg-slate-50 text-slate-800 ring-2 ring-offset-2 ring-slate-700; }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+    <div id="app-container">
+        <div class="bg-white border-b border-slate-100 p-4 md:p-6 flex justify-between items-center z-50 flex-shrink-0">
+            
+            <div class="flex items-center gap-6">
+                <a href="reading_index.html" class="flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back
+                </a>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">Gapped Text <span class="text-indigo-600">Part 6</span></h1>
+            </div>
+            
+            <div id="exam-controls" class="hidden flex gap-3">
+                <span id="score-display" class="hidden font-bold text-xl mr-4 self-center"></span>
+                <button onclick="app.checkDragAnswers()" id="btn-check" class="btn-action bg-green-600">Check Answers</button>
+                <button onclick="app.resetActivity()" id="btn-reset" class="btn-action bg-amber-500 hidden">Retry</button>
+                <button onclick="app.showScreen('screen-dashboard')" class="text-slate-400 font-bold hover:text-slate-600 px-4">Exit</button>
+            </div>
+            
+            <div id="class-controls" class="hidden flex gap-3">
+                <button onclick="app.resetActivity()" class="btn-action bg-amber-500">Reset</button>
+                <button onclick="app.nextText()" class="btn-action bg-indigo-600">Next Text →</button>
+                <button onclick="app.showScreen('screen-dashboard')" class="text-slate-400 font-bold hover:text-slate-600 px-4">Exit</button>
+            </div>
+        </div>
+
+        <div id="main-viewport" class="flex-1 overflow-hidden relative">
+            
+            <div id="screen-dashboard" class="h-full overflow-y-auto p-8 max-w-4xl mx-auto w-full flex flex-col gap-10 justify-center">
+                <div id="level-section">
+                    <h3 class="text-xl font-bold text-center text-slate-400 uppercase tracking-wider mb-4">Select Level</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <button onclick="app.setLevel('B2')" id="btn-B2" class="level-btn btn-b2">B2</button>
+                        <button onclick="app.setLevel('C1')" id="btn-C1" class="level-btn btn-c1">C1</button>
+                        <button onclick="app.setLevel('C2')" id="btn-C2" class="level-btn btn-c2">C2</button>
+                    </div>
+                </div>
+
+                <div id="mode-section" class="opacity-50 pointer-events-none transition-opacity duration-300">
+                    <h3 class="text-xl font-bold text-center text-slate-400 uppercase tracking-wider mb-4">Select Mode</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="app.setMode('classroom')" id="btn-classroom" class="mode-btn">
+                            <div class="text-5xl mb-2">🏫</div>
+                            <div class="text-xl font-bold">Classroom</div>
+                            <div class="text-sm mt-1">Split Screen. Click gaps to reveal.</div>
+                        </button>
+                        <button onclick="app.setMode('exam')" id="btn-exam" class="mode-btn">
+                            <div class="text-5xl mb-2">✋</div>
+                            <div class="text-xl font-bold">Exam Mode</div>
+                            <div class="text-sm mt-1">Split Screen. Drag & Drop.</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8 pb-10">
+                    <button id="btn-start" onclick="app.start()" disabled class="bg-slate-800 text-white text-2xl font-bold px-12 py-4 rounded-xl shadow-xl opacity-30 cursor-not-allowed transition hover:scale-105">Start Activity</button>
+                    <div class="mt-4"><button id="btn-list" onclick="app.showList()" disabled class="text-slate-400 font-bold hover:text-slate-600">or Pick from List</button></div>
+                </div>
+            </div>
+
+            <div id="screen-list" class="hidden h-full overflow-y-auto p-8">
+                <h2 class="text-2xl font-bold mb-4">Select Text</h2>
+                <div id="list-container" class="space-y-2 pb-10"></div>
+                <button onclick="app.showScreen('screen-dashboard')" class="mt-6 font-bold text-slate-500">Cancel</button>
+            </div>
+
+            <div id="screen-activity" class="hidden h-full w-full flex flex-row">
+                
+                <div id="left-panel" class="h-full overflow-y-auto p-8 md:p-12 scroll-smooth bg-white w-[70%]">
+                    <h2 id="act-title" class="text-3xl font-black text-slate-800 mb-8 uppercase leading-tight"></h2>
+                    <div id="act-text" class="text-content pb-32"></div>
+                </div>
+
+                <div id="right-panel" class="flex w-[30%] bg-slate-50 border-l border-slate-200 flex-col h-full shadow-inner flex-shrink-0">
+                    <div class="p-4 bg-slate-100 border-b border-slate-200 font-bold text-slate-500 uppercase tracking-wider text-sm flex justify-between items-center shadow-sm z-10">
+                        <span>Sentence Bank</span>
+                        <span id="bank-subtitle" class="text-xs text-slate-400"></span>
+                    </div>
+                    <div id="sentence-bank" class="flex-1 overflow-y-auto p-4 space-y-3 pb-20">
+                        </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 🚨 MOCK DATA: B2, C1, C2
+        // ============================================================
+        const MOCK_DB = [
+            // --- B2 Text ---
+            {
+                "id": 1,
+                "level": "B2",
+                "title": "The Rise of the Machine (B2)",
+                "content": "Electronic music is often viewed as a strictly modern phenomenon, synonymous with 21st-century festivals and digital technology. However, its roots stretch back to the mid-20th century, where avant-garde composers began manipulating magnetic tape to create new soundscapes. [37] They were not trying to make people dance, but rather to challenge the very definition of what music could be.\n\nBy the 1970s, bands like Kraftwerk began to structure these synthesized sounds into pop songs, but the true explosion occurred in the late 1980s with the birth of Acid House and Techno. This era saw the rise of the illegal rave, often held in abandoned industrial spaces. [38] It was a cultural shift that prioritized rhythm and atmosphere over lyrics and melody.\n\nAs the millennium turned, technology democratized the genre. High-end synthesizers were replaced by powerful software that could run on a standard laptop. [39] Suddenly, the barrier to entry was gone; you didn't need a million-dollar studio to compete with the professionals, just a good ear and a CPU.\n\nToday, Electronic Dance Music (EDM) is a global industry worth billions. DJs headline massive stadiums, often standing behind a simple table. Critics frequently argue that these performances lack the physical skill of playing a traditional instrument, claiming the artist is merely \"pressing play.\" [40] The pyrotechnics and LED screens are now as integral to the show as the audio itself.\n\nDespite the commercialization, the underground scene remains vibrant. Sub-genres continue to splinter and evolve, driven by a community that values innovation. [41] It suggests that as long as there is electricity, artists will find ways to manipulate it.\n\nLooking forward, Artificial Intelligence is the next frontier. Algorithms are already capable of generating convincing melodies and beats. [42] Whether it becomes a tool for collaboration or a replacement for the artist is the question on everyone's lips.",
+                "options": {
+                    "A": "Consequently, a teenager in a bedroom could produce a track of the same audio quality as a top producer.",
+                    "B": "While this may be true, the visual spectacle of modern events has evolved to compensate for this lack of movement.",
+                    "C": "These early experiments were often academic in nature, confined to university laboratories and radio studios.",
+                    "D": "Whatever the style, the core appeal remains the intersection of human creativity and technological possibility.",
+                    "E": "Conversely, acoustic instruments saw a sharp decline in sales during this specific period.",
+                    "F": "However, many fear that this technology will remove the \"human touch\" that defines great art.",
+                    "G": "In these dark, concrete environments, the repetitive mechanical beat induced a trance-like state in the dancers."
+                },
+                "answers": { "37": "C", "38": "G", "39": "A", "40": "B", "41": "D", "42": "F" }
+            },
+            
+            // --- C1 Text ---
+            {
+                "id": 2,
+                "level": "C1",
+                "title": "A Classical Convert (C1)",
+                "content": "For twenty years, my world was defined by the rigidity of the score. As a classically trained violinist, I viewed music as a hierarchy of structure, harmony, and counterpoint, where every note had to be justified by centuries of tradition. I dismissed electronic music as trivial, a repetitive cacophony devoid of intellectual merit. [37] It was not a sudden epiphany, but a slow erosion of my prejudices, triggered by an accidental exposure to a piece that utilized a granular synthesizer to manipulate the sound of breaking glass.\n\nIntrigued, I began to explore the theory behind the noise. I soon realized that while classical music often prioritizes harmonic progression, electronic music frequently focuses on the manipulation of timbre and texture. [38] In this new world, the sound wave itself is the clay; the composer is a sculptor carving shapes out of pure frequency, utilizing envelopes and filters to create sonic landscapes that a traditional orchestra simply cannot replicate.\n\nFurthermore, the rhythmic complexity of genres like 'Intelligent Dance Music' (IDM) rivals that of Stravinsky. The patterns are often generative, created by algorithms that introduce probability and chaos into the loop. [39] This forces the listener to abandon the search for a predictable downbeat and instead surrender to a fluid, evolving pulse that mirrors the organic unpredictability of nature rather than the structured meter of a waltz.\n\nMy own composition process has been irrevocably altered. I no longer sit at the piano to sketch out melodies; I sit at a DAW (Digital Audio Workstation) and sculpt sounds. [40] The violin is still there, but it is now just one source material among many, processed through reverb and delay until it becomes a ghostly echo of its former self.\n\nSome of my peers argue that I have abandoned the purity of the acoustic instrument for the sterility of the machine. [41] They fail to see that the machine is not a replacement for human emotion, but a magnifying glass for it, allowing us to express the previously inexpressible.\n\nUltimately, the distinction between 'real' music and 'electronic' music is a false dichotomy. [42] Whether we pluck a string or oscillate a voltage, the goal remains the same: to organize sound in a way that moves the human spirit.",
+                "options": {
+                    "A": "I found myself obsessing over the 'attack' and 'decay' of a single note for hours, realizing that the envelope of a sound carries as much emotional weight as the chord it belongs to.",
+                    "B": "However, this dismissal was rooted in ignorance, a failure to understand that the tools of creation do not dictate the validity of the art.",
+                    "C": "Instead of linear development, these tracks offer a vertical depth, layering sounds in a way that creates a three-dimensional acoustic space.",
+                    "D": "Critics often point out that this reliance on technology removes the physical exertion of performance, making the concert experience less visceral.",
+                    "E": "This realization was humbling, as I discovered that a drum machine could execute polyrhythms with a precision that no human percussionist could ever hope to achieve.",
+                    "F": "This hybrid approach allows me to bridge the gap between the tactile warmth of wood and string and the infinite possibilities of digital processing.",
+                    "G": "Sound, regardless of its source, obeys the laws of physics, and the artistry lies in how we manipulate those laws to create meaning."
+                },
+                "answers": { "37": "B", "38": "A", "39": "E", "40": "F", "41": "C", "42": "G" } 
+            },
+
+            // --- C2 Text ---
+            {
+                "id": 3,
+                "level": "C2",
+                "title": "The Ghost in the Machine (C2)",
+                "content": "In the sprawling, neon-lit archipelagos of the modern metropolis, the nightclub has emerged not merely as a venue for hedonism, but as a secular cathedral for the disenfranchised. Here, amidst the strobe-lit haze and the subterranean thrum of bass, a distinct sociological phenomenon unfolds. Electronic music, often derided by cultural purists as synthetic and soulless, arguably serves as the most accurate reflection of our hyper-connected, yet paradoxically isolated, zeitgeist. [37] It is a genre that does not seek to mimic the natural world, but rather to construct a sonic architecture that mirrors the industrial and digital landscapes we inhabit.\n\nUnlike the rock concerts of the previous century, which relied heavily on the cult of personality and the messianic figure of the lead singer, the rave culture deconstructs the ego. The DJ is often a silhouette, a faceless technician operating in the shadows, focusing the collective gaze not on the stage, but inward, or onto the crowd itself. [38] This decentralization of the artist creates a unique form of communal intimacy, a 'collective effervescence' where the individual dissolves into the mass, finding solace in the anonymity of the beat.\n\nCritics often point to the repetitive nature of the music as evidence of its artistic bankruptcy, citing a lack of melodic progression or lyrical depth. [39] Yet, this repetition is precisely its power; it functions as a modern mantra, a looped temporal distortion that suspends the listener in an eternal present, offering a momentary escape from the linear tyranny of clock-time and productivity.\n\nFurthermore, the reliance on technology is not a rejection of humanity, but an interrogation of it. By interfacing so intimately with machines, producers expose the glitches, the artifacts, and the limits of digital perfection. [40] In genres like 'Glitch' or 'Lo-Fi', the error is fetishized, reminding us that there is a ghost in the machine, a chaotic variable that resists total quantification.\n\nWe are currently witnessing a paradigm shift where the boundaries between the biological and the technological are eroding. [41] As AI begins to generate music that is indistinguishable from human composition, we are forced to re-evaluate our definitions of creativity and authorship.\n\nUltimately, electronic music is the folk music of the Anthropocene. It is the sound of electricity coursing through the nervous system of the city. [42] It suggests that even in a world mediated by screens and silicon, the primal urge to gather, to move, and to synchronize our heartbeats remains undiminished.",
+                "options": {
+                    "A": "This shift from the worship of the individual to the immersion in the collective represents a fundamental democratization of the musical experience.",
+                    "B": "The intricate economy of the modern festival circuit, however, suggests that this idealism is often compromised by corporate sponsorship and the commodification of counter-culture.",
+                    "C": "Just as the Impressionists sought to capture the fleeting quality of light in a rapidly industrializing Paris, the techno producer captures the frenetic energy of the information age.",
+                    "D": "To the uninitiated ear, this monotony is alienation; to the devotee, it is a trance state, a hypnotic induction that bypasses the intellect to speak directly to the sympathetic nervous system.",
+                    "E": "It is this synthesis of the organic and the synthetic that defines the aesthetic, creating a hybrid reality that feels more authentic to the modern experience than the nostalgic strumming of an acoustic guitar.",
+                    "F": "This recursive relationship between creator and tool suggests that we are no longer just using technology to make music, but that technology is, in a sense, using us to express its own potential.",
+                    "G": "Far from being a cold, unfeeling wasteland, the dancefloor becomes a space of radical empathy, proving that the digital age has not killed our capacity for connection."
+                },
+                "answers": { "37": "C", "38": "A", "39": "D", "40": "E", "41": "F", "42": "G" } 
+            }
+        ];
+
+        const app = {
+            data: MOCK_DB,
+            filtered: [],
+            state: { level: null, mode: null, currentIdx: 0 },
+            
+            init: function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const levelParam = urlParams.get('level');
+                if (levelParam) {
+                    this.setLevel(levelParam);
+                    document.getElementById('level-section').classList.add('hidden');
+                }
+            },
+
+            setLevel: function(lvl) {
+                this.state.level = lvl;
+                ['B2','C1','C2'].forEach(l => document.getElementById(`btn-${l}`).classList.remove('active'));
+                const btn = document.getElementById(`btn-${lvl}`);
+                if(btn) btn.classList.add('active');
+                document.getElementById('mode-section').classList.remove('opacity-50', 'pointer-events-none');
+                this.updateStartBtn();
+            },
+
+            setMode: function(mode) {
+                this.state.mode = mode;
+                ['classroom','exam'].forEach(m => document.getElementById(`btn-${m}`).classList.remove('active'));
+                document.getElementById(`btn-${mode}`).classList.add('active');
+                this.updateStartBtn();
+            },
+
+            updateStartBtn: function() {
+                const ready = this.state.level && this.state.mode;
+                const btn = document.getElementById('btn-start');
+                const listBtn = document.getElementById('btn-list');
+                if(ready) {
+                    btn.disabled = false;
+                    listBtn.disabled = false;
+                    btn.classList.remove('opacity-30', 'cursor-not-allowed');
+                }
+            },
+
+            start: function() {
+                this.filtered = this.data.filter(i => i.level === this.state.level);
+                if(this.filtered.length === 0) return alert("No texts found.");
+                this.filtered.sort(() => Math.random() - 0.5); 
+                this.state.currentIdx = 0;
+                this.loadActivity();
+            },
+
+            showList: function() {
+                this.filtered = this.data.filter(i => i.level === this.state.level);
+                const container = document.getElementById('list-container');
+                container.innerHTML = '';
+                this.filtered.forEach((item, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-4 bg-slate-50 rounded hover:bg-slate-100 border border-slate-200 font-semibold";
+                    btn.innerText = item.title;
+                    btn.onclick = () => {
+                        this.state.currentIdx = idx;
+                        this.loadActivity();
+                    }
+                    container.appendChild(btn);
+                });
+                this.showScreen('screen-list');
+            },
+
+            loadActivity: function() {
+                const item = this.filtered[this.state.currentIdx];
+                document.getElementById('act-title').innerText = item.title;
+                const textDiv = document.getElementById('act-text');
+                const bankDiv = document.getElementById('sentence-bank');
+                
+                // UI Reset
+                document.getElementById('score-display').classList.add('hidden');
+                document.getElementById('btn-check').classList.remove('hidden');
+                document.getElementById('btn-reset').classList.add('hidden');
+                
+                let content = item.content;
+                let counter = 1;
+                bankDiv.innerHTML = '';
+
+                // SORT SENTENCES A-G
+                const entries = Object.entries(item.options);
+                entries.sort((a,b) => a[0].localeCompare(b[0]));
+
+                if (this.state.mode === 'classroom') {
+                    document.getElementById('exam-controls').classList.add('hidden');
+                    document.getElementById('class-controls').classList.remove('hidden');
+                    document.getElementById('bank-subtitle').innerText = "Read and Discuss";
+
+                    content = content.replace(/\[(\d+)\]/g, (match, id) => {
+                        const letter = item.answers[id]; 
+                        const fullSentence = item.options[letter];
+                        const safeSentence = fullSentence.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                        return `<span class="classroom-gap" data-original="[${counter}]" onclick="app.toggleGap(this, '${letter}', '${safeSentence}')">[${counter++}]</span>`;
+                    });
+
+                    entries.forEach(([key, sentence]) => {
+                        const div = document.createElement('div');
+                        div.className = 'bank-card';
+                        div.innerHTML = `<div class="card-letter">${key}</div><div>${sentence}</div>`;
+                        bankDiv.appendChild(div);
+                    });
+
+                } else {
+                    document.getElementById('exam-controls').classList.remove('hidden');
+                    document.getElementById('class-controls').classList.add('hidden');
+                    document.getElementById('bank-subtitle').innerText = "Drag to Gap";
+
+                    content = content.replace(/\[(\d+)\]/g, (match, id) => {
+                        return `<span class="gap-number">[${counter++}]</span><span class="dropzone" data-gap-id="${id}" ondragover="app.allowDrop(event)" ondrop="app.handleDrop(event)"></span>`;
+                    });
+
+                    entries.forEach(([key, sentence]) => {
+                        const div = document.createElement('div');
+                        div.className = 'bank-card draggable';
+                        div.draggable = true;
+                        div.id = `opt-${key}`;
+                        div.setAttribute('data-letter', key);
+                        div.innerHTML = `<div class="card-letter">${key}</div><div>${sentence}</div>`;
+                        
+                        div.ondragstart = (e) => {
+                            e.dataTransfer.setData("text", e.target.id);
+                            e.target.classList.add('opacity-50');
+                        };
+                        div.ondragend = (e) => e.target.classList.remove('opacity-50');
+                        
+                        bankDiv.appendChild(div);
+                    });
+                }
+
+                textDiv.innerHTML = content;
+                this.showScreen('screen-activity');
+            },
+
+            toggleGap: function(el, letter, sentence) {
+                if(el.classList.contains('revealed')) {
+                    el.innerHTML = el.getAttribute('data-original');
+                    el.classList.remove('revealed');
+                } else {
+                    el.innerHTML = `<span class="font-bold text-indigo-800 mr-2">${letter}</span><span class="text-indigo-600 font-semibold">${sentence}</span>`;
+                    el.classList.add('revealed');
+                }
+            },
+
+            allowDrop: function(ev) { ev.preventDefault(); ev.currentTarget.classList.add('hovered'); },
+            
+            handleDrop: function(ev) {
+                ev.preventDefault();
+                const dropzone = ev.currentTarget;
+                dropzone.classList.remove('hovered');
+                const data = ev.dataTransfer.getData("text");
+                const draggableElement = document.getElementById(data);
+                if(!draggableElement) return;
+
+                if (dropzone.children.length > 0) {
+                     document.getElementById('sentence-bank').appendChild(dropzone.children[0]);
+                }
+                dropzone.classList.add('filled');
+                dropzone.appendChild(draggableElement);
+            },
+
+            checkDragAnswers: function() {
+                const item = this.filtered[this.state.currentIdx];
+                let score = 0; let total = 0;
+                document.querySelectorAll('.dropzone').forEach(zone => {
+                    total++;
+                    const gapId = zone.getAttribute('data-gap-id');
+                    const correctLetter = item.answers[gapId];
+                    const oldBadge = zone.nextElementSibling;
+                    if(oldBadge && oldBadge.classList.contains('feedback-badge')) oldBadge.remove();
+
+                    const child = zone.querySelector('.bank-card');
+                    
+                    if(child) {
+                        const userLetter = child.getAttribute('data-letter');
+                        if(userLetter === correctLetter) {
+                            score++;
+                            zone.style.borderColor = "#22c55e"; zone.style.backgroundColor = "#dcfce7";
+                            this.addFeedback(zone, true, correctLetter);
+                        } else {
+                            zone.style.borderColor = "#ef4444"; zone.style.backgroundColor = "#fee2e2";
+                            this.addFeedback(zone, false, correctLetter);
+                        }
+                    } else {
+                        zone.style.borderColor = "#ef4444";
+                        this.addFeedback(zone, false, correctLetter);
+                    }
+                });
+
+                const disp = document.getElementById('score-display');
+                disp.innerText = `${score}/${total}`;
+                disp.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                disp.classList.add(score === total ? 'text-green-600' : 'text-red-600');
+                document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('btn-reset').classList.remove('hidden');
+            },
+
+            addFeedback: function(zone, isCorrect, correctLetter) {
+                const badge = document.createElement('span');
+                if(isCorrect) {
+                    badge.className = 'feedback-badge feedback-correct';
+                    badge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+                } else {
+                    badge.className = 'feedback-badge feedback-wrong';
+                    badge.innerHTML = `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg> Answer: ${correctLetter}`;
+                }
+                zone.parentNode.insertBefore(badge, zone.nextSibling);
+            },
+
+            resetActivity: function() { this.loadActivity(); },
+            nextText: function() {
+                this.state.currentIdx = (this.state.currentIdx + 1) % this.filtered.length;
+                this.loadActivity();
+            },
+
+            showScreen: function(id) {
+                ['screen-dashboard','screen-list','screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                if(id !== 'screen-activity') {
+                    document.getElementById('exam-controls').classList.add('hidden');
+                    document.getElementById('class-controls').classList.add('hidden');
+                }
+                window.scrollTo(0,0);
+            }
+        };
+
+        const bank = document.getElementById('sentence-bank');
+        bank.ondragover = (e) => { e.preventDefault(); };
+        bank.ondrop = (e) => {
+            e.preventDefault();
+            const data = e.dataTransfer.getData("text");
+            const el = document.getElementById(data);
+            if(el) {
+                bank.appendChild(el);
+                document.querySelectorAll('.dropzone').forEach(dz => {
+                    if(dz.children.length === 0) {
+                        dz.classList.remove('filled');
+                        dz.style.borderColor = "#cbd5e1"; dz.style.backgroundColor = "#f8fafc";
+                    }
+                });
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

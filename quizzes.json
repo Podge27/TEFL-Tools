@@ -1,0 +1,752 @@
+[
+  {
+    "id": "kids-nature-words",
+    "title": "Nature Words for Kids",
+    "category": "vocabulary",
+    "level": "kids",
+    "topic": "Nature",
+    "questions": [
+      {
+        "text": "It is very high and sometimes has snow on top. People like to climb it.",
+        "options": ["River", "Mountain", "Lake", "Field"],
+        "answer": 1,
+        "explanation": "A mountain is a very high landform, much bigger than a hill."
+      },
+      {
+        "text": "It is hard and often grey. You can hold a small one in your hand.",
+        "options": ["Cloud", "Flower", "Rock", "Tree"],
+        "answer": 2,
+        "explanation": "A rock is a hard piece of stone found in nature."
+      },
+      {
+        "text": "This is what you walk on when you are outside. It is under your feet.",
+        "options": ["Sky", "Ground", "Air", "Roof"],
+        "answer": 1,
+        "explanation": "The ground is the solid surface of the earth that we walk on."
+      },
+      {
+        "text": "This is a big area of water with land all around it. Ducks often swim here.",
+        "options": ["Lake", "Mountain", "Field", "Rock"],
+        "answer": 0,
+        "explanation": "A lake is a large body of water surrounded by land."
+      },
+      {
+        "text": "This is a big open space with grass or dirt. Farmers grow food here.",
+        "options": ["City", "House", "Field", "School"],
+        "answer": 2,
+        "explanation": "A field is an open area of land, often used for farming or playing sports."
+      },
+      {
+        "text": "It is green and grows in the park or garden. Cows and sheep like to eat it.",
+        "options": ["Snow", "Sand", "Rock", "Grass"],
+        "answer": 3,
+        "explanation": "Grass is a green plant that covers the ground in lawns and parks."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-simple-to-be",
+    "title": "Present Simple: To Be",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Verb To Be",
+    "questions": [
+      {
+        "text": "Jimmy ___ a very silly boy.",
+        "options": ["is", "am", "are", "be"],
+        "answer": 0,
+        "explanation": "We use 'is' for one person (he/she/it)."
+      },
+      {
+        "text": "I ___ hungry for pizza!",
+        "options": ["is", "am", "are", "be"],
+        "answer": 1,
+        "explanation": "We always use 'am' with 'I'."
+      },
+      {
+        "text": "Elephants ___ very big and grey.",
+        "options": ["is", "am", "are", "be"],
+        "answer": 2,
+        "explanation": "We use 'are' for many things (plural)."
+      },
+      {
+        "text": "The doctor ___ in the hospital right now.",
+        "options": ["am", "are", "is", "be"],
+        "answer": 2,
+        "explanation": "The doctor is one person (he or she), so we use 'is'."
+      },
+      {
+        "text": "We ___ happy because it is Saturday!",
+        "options": ["is", "am", "be", "are"],
+        "answer": 3,
+        "explanation": "We use 'are' with 'we'."
+      },
+      {
+        "text": "You ___ my best friend.",
+        "options": ["is", "am", "are", "be"],
+        "answer": 2,
+        "explanation": "We always use 'are' with 'you'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-simple-third-person",
+    "title": "Present Simple: Third Person 's'",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "He/She/It rules",
+    "questions": [
+      {
+        "text": "Jimmy ___ pizza for breakfast every day.",
+        "options": ["eat", "eats", "eating", "eated"],
+        "answer": 1,
+        "explanation": "For he/she/it, we add 's' to the verb."
+      },
+      {
+        "text": "My dog ___ very fast in the park.",
+        "options": ["run", "runs", "running", "runned"],
+        "answer": 1,
+        "explanation": "The dog is an 'it', so we say 'runs'."
+      },
+      {
+        "text": "The doctor ___ my tummy when I am sick.",
+        "options": ["check", "checks", "checking", "checkes"],
+        "answer": 1,
+        "explanation": "The doctor (he/she) 'checks'."
+      },
+      {
+        "text": "My sister ___ her homework in the kitchen.",
+        "options": ["do", "dos", "does", "doing"],
+        "answer": 2,
+        "explanation": "For 'do', the third person form is 'does'."
+      },
+      {
+        "text": "A monkey ___ bananas.",
+        "options": ["like", "likes", "liking", "liks"],
+        "answer": 1,
+        "explanation": "A monkey (it) 'likes' bananas."
+      },
+      {
+        "text": "Jimmy ___ his teeth with strawberry toothpaste.",
+        "options": ["brush", "brushs", "brushes", "brushing"],
+        "answer": 2,
+        "explanation": "If a verb ends in 'sh', we add 'es'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-simple-negative",
+    "title": "Present Simple: Negative",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Don't and Doesn't",
+    "questions": [
+      {
+        "text": "Jimmy ___ like homework!",
+        "options": ["don't", "isn't", "doesn't", "not"],
+        "answer": 2,
+        "explanation": "Jimmy is 'he', so we use 'doesn't'."
+      },
+      {
+        "text": "I ___ drink coffee. Yuck!",
+        "options": ["doesn't", "don't", "not", "no"],
+        "answer": 1,
+        "explanation": "With 'I', we use 'don't'."
+      },
+      {
+        "text": "Cats ___ fly.",
+        "options": ["doesn't", "don't", "isn't", "aren't"],
+        "answer": 1,
+        "explanation": "Cats (they) 'don't' fly."
+      },
+      {
+        "text": "She ___ have a fever today.",
+        "options": ["don't", "doesn't", "isn't", "hasn't"],
+        "answer": 1,
+        "explanation": "With 'she', we use 'doesn't' + the verb."
+      },
+      {
+        "text": "We ___ eat soup with a fork.",
+        "options": ["doesn't", "don't", "not", "aren't"],
+        "answer": 1,
+        "explanation": "With 'we', we use 'don't'."
+      },
+      {
+        "text": "The silly dog ___ meow.",
+        "options": ["don't", "doesn't", "isn't", "not"],
+        "answer": 1,
+        "explanation": "The dog (it) 'doesn't' meow."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-simple-questions",
+    "title": "Present Simple: Questions",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Do and Does",
+    "questions": [
+      {
+        "text": "___ Jimmy like cereal with orange juice?",
+        "options": ["Do", "Is", "Does", "Has"],
+        "answer": 2,
+        "explanation": "We use 'Does' for Jimmy (he)."
+      },
+      {
+        "text": "___ you have a headache?",
+        "options": ["Does", "Do", "Are", "Is"],
+        "answer": 1,
+        "explanation": "We use 'Do' with 'you'."
+      },
+      {
+        "text": "___ elephants eat peanuts?",
+        "options": ["Does", "Is", "Do", "Are"],
+        "answer": 2,
+        "explanation": "We use 'Do' for elephants (they)."
+      },
+      {
+        "text": "Where ___ the doctor work?",
+        "options": ["do", "does", "is", "are"],
+        "answer": 1,
+        "explanation": "The doctor is 'he' or 'she', so we use 'does'."
+      },
+      {
+        "text": "___ we have an exam today?",
+        "options": ["Does", "Do", "Is", "Are"],
+        "answer": 1,
+        "explanation": "We use 'Do' with 'we'."
+      },
+      {
+        "text": "___ your leg hurt?",
+        "options": ["Do", "Does", "Is", "Are"],
+        "answer": 1,
+        "explanation": "Your leg is 'it', so we use 'Does'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-simple-review",
+    "title": "Present Simple: Review",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Mixed Practice",
+    "questions": [
+      {
+        "text": "Jimmy ___ to school on a unicycle.",
+        "options": ["go", "goes", "is go", "going"],
+        "answer": 1,
+        "explanation": "He (Jimmy) goes."
+      },
+      {
+        "text": "___ you like chocolate frogs?",
+        "options": ["Does", "Are", "Do", "Is"],
+        "answer": 2,
+        "explanation": "Question with 'you' uses 'Do'."
+      },
+      {
+        "text": "I ___ not a doctor.",
+        "options": ["is", "am", "are", "does"],
+        "answer": 1,
+        "explanation": "I am not."
+      },
+      {
+        "text": "My foot ___ . Ouch!",
+        "options": ["hurts", "hurt", "hurting", "is hurt"],
+        "answer": 0,
+        "explanation": "My foot (it) hurts."
+      },
+      {
+        "text": "We ___ go to school on Sunday.",
+        "options": ["doesn't", "don't", "aren't", "isn't"],
+        "answer": 1,
+        "explanation": "Negative with 'we' uses 'don't'."
+      },
+      {
+        "text": "The giraffe ___ a very long neck.",
+        "options": ["have", "havs", "has", "haves"],
+        "answer": 2,
+        "explanation": "The giraffe (it) 'has'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-simple-vs-continuous",
+    "title": "Present Simple vs. Present Continuous",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Now vs. Every Day",
+    "questions": [
+      {
+        "text": "Jimmy usually ___ cereal for breakfast, but today he is eating pizza!",
+        "options": ["eats", "is eating", "eat", "are eating"],
+        "answer": 0,
+        "explanation": "We use the Present Simple with 'usually' for habits."
+      },
+      {
+        "text": "Look! The monkeys ___ in the tree right now!",
+        "options": ["play", "plays", "are playing", "is playing"],
+        "answer": 2,
+        "explanation": "We use the Present Continuous with 'Look!' and 'right now'."
+      },
+      {
+        "text": "I ___ my homework every day after school.",
+        "options": ["doing", "am doing", "do", "does"],
+        "answer": 2,
+        "explanation": "We use 'do' (Present Simple) with 'every day'."
+      },
+      {
+        "text": "Be quiet! The baby ___ at the moment.",
+        "options": ["sleeps", "sleep", "is sleeping", "are sleeping"],
+        "answer": 2,
+        "explanation": "We use the Present Continuous with 'at the moment'."
+      },
+      {
+        "text": "The doctor ___ sick people every day.",
+        "options": ["is helping", "helps", "help", "helping"],
+        "answer": 1,
+        "explanation": "We use 'helps' (Present Simple) for things that happen every day."
+      },
+      {
+        "text": "Right now, I ___ a funny movie about a dog.",
+        "options": ["watch", "watches", "am watching", "is watching"],
+        "answer": 2,
+        "explanation": "We use 'am watching' because it is happening 'right now'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-continuous-am-is-are",
+    "title": "Present Continuous: Am, Is, Are",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Verb To Be Helpers",
+    "questions": [
+      {
+        "text": "I ___ eating a giant chocolate cake right now.",
+        "options": ["is", "are", "am", "be"],
+        "answer": 2,
+        "explanation": "With 'I', we always use the helper verb 'am'."
+      },
+      {
+        "text": "Look! Jimmy ___ dancing on the table!",
+        "options": ["am", "are", "is", "be"],
+        "answer": 2,
+        "explanation": "Jimmy is one person (he), so we use 'is'."
+      },
+      {
+        "text": "We ___ watching a movie about space today.",
+        "options": ["is", "am", "are", "be"],
+        "answer": 2,
+        "explanation": "With 'we', we use the helper verb 'are'."
+      },
+      {
+        "text": "The silly dog ___ chasing its tail at the moment.",
+        "options": ["is", "am", "are", "be"],
+        "answer": 0,
+        "explanation": "The dog is one animal (it), so we use 'is'."
+      },
+      {
+        "text": "You ___ wearing a very cool t-shirt today.",
+        "options": ["is", "am", "be", "are"],
+        "answer": 3,
+        "explanation": "With 'you', we always use 'are'."
+      },
+      {
+        "text": "My friends ___ playing soccer in the park now.",
+        "options": ["is", "am", "are", "be"],
+        "answer": 2,
+        "explanation": "My friends (they) are many people, so we use 'are'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-continuous-negative",
+    "title": "Present Continuous: Negative",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Not Happening Now",
+    "questions": [
+      {
+        "text": "Jimmy ___ sleeping now. He is awake!",
+        "options": ["isn't", "aren't", "don't", "doesn't"],
+        "answer": 0,
+        "explanation": "For negatives with 'he', we use 'is not' or 'isn't'."
+      },
+      {
+        "text": "I ___ doing my homework at the moment. I am playing!",
+        "options": ["aren't", "isn't", "am not", "don't"],
+        "answer": 2,
+        "explanation": "With 'I', the negative form is always 'am not'."
+      },
+      {
+        "text": "Look! The elephants ___ flying. They are walking!",
+        "options": ["isn't", "aren't", "don't", "doesn't"],
+        "answer": 1,
+        "explanation": "Elephants (they) use 'are not' or 'aren't'."
+      },
+      {
+        "text": "We ___ eating soup today. We are eating burgers!",
+        "options": ["aren't", "isn't", "don't", "not"],
+        "answer": 0,
+        "explanation": "With 'we', we use 'aren't' for actions not happening now."
+      },
+      {
+        "text": "She ___ feeling sick right now. She is happy!",
+        "options": ["aren't", "don't", "doesn't", "isn't"],
+        "answer": 3,
+        "explanation": "With 'she', we use 'isn't' describing now."
+      },
+      {
+        "text": "The doctor ___ working today. He is on holiday.",
+        "options": ["isn't", "aren't", "don't", "doesn't"],
+        "answer": 0,
+        "explanation": "The doctor (he) 'isn't' working today."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-continuous-questions",
+    "title": "Present Continuous: Questions",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Asking about Now",
+    "questions": [
+      {
+        "text": "___ Jimmy eating a banana right now?",
+        "options": ["Are", "Is", "Do", "Does"],
+        "answer": 1,
+        "explanation": "We start the question with 'Is' for Jimmy (he)."
+      },
+      {
+        "text": "___ you feeling okay at the moment?",
+        "options": ["Is", "Do", "Are", "Does"],
+        "answer": 2,
+        "explanation": "We use 'Are' to ask a question to 'you'."
+      },
+      {
+        "text": "Where ___ the dog going now?",
+        "options": ["is", "are", "do", "does"],
+        "answer": 0,
+        "explanation": "The dog is one animal (it), so we use 'is'."
+      },
+      {
+        "text": "___ we playing a game right now?",
+        "options": ["Do", "Is", "Are", "Does"],
+        "answer": 2,
+        "explanation": "We use 'Are' with 'we' for questions happening now."
+      },
+      {
+        "text": "What ___ you doing right now?",
+        "options": ["is", "are", "do", "does"],
+        "answer": 1,
+        "explanation": "In 'Wh-' questions with 'you', we use 'are'."
+      },
+      {
+        "text": "___ the doctor checking your ears now?",
+        "options": ["Is", "Are", "Do", "Does"],
+        "answer": 0,
+        "explanation": "The doctor is one person, so we start with 'Is'."
+      }
+    ]
+  },
+  {
+    "id": "kids-present-continuous-review",
+    "title": "Present Continuous: Review",
+    "category": "grammar",
+    "level": "kids",
+    "topic": "Mixed Practice",
+    "questions": [
+      {
+        "text": "Listen! The birds ___ singing in the garden.",
+        "options": ["is", "are", "do", "does"],
+        "answer": 1,
+        "explanation": "'Listen!' tells us it is happening now. Birds (they) 'are' singing."
+      },
+      {
+        "text": "Jimmy never ___ his vegetables. Yuck!",
+        "options": ["eating", "is eating", "eats", "eat"],
+        "answer": 2,
+        "explanation": "'Never' is a key word for Present Simple (habit)."
+      },
+      {
+        "text": "I ___ not feeling well at the moment.",
+        "options": ["is", "am", "are", "do"],
+        "answer": 1,
+        "explanation": "I 'am' not feeling well now."
+      },
+      {
+        "text": "Look! The giraffe ___ eating leaves from the tall tree.",
+        "options": ["is", "are", "do", "does"],
+        "answer": 0,
+        "explanation": "'Look!' means now. The giraffe (it) 'is' eating."
+      },
+      {
+        "text": "We ___ studying for our exam right now. Shhh!",
+        "options": ["is", "am", "are", "be"],
+        "answer": 2,
+        "explanation": "Happening right now with 'we' uses 'are'."
+      },
+      {
+        "text": "My cat always ___ on my homework.",
+        "options": ["sit", "sits", "is sitting", "sitting"],
+        "answer": 1,
+        "explanation": "'Always' tells us it is a habit (Present Simple), so we use 'sits'."
+      }
+    ]
+  },
+  {
+    "id": "b1-modals-essential-rules",
+    "title": "Modals: Essential Rules",
+    "category": "grammar",
+    "level": "B1",
+    "topic": "Modal Verbs",
+    "questions": [
+      {
+        "text": "You ___ smoke in the hospital. It is strictly forbidden.",
+        "options": ["don't have to", "mustn't", "shouldn't", "couldn't"],
+        "answer": 1,
+        "explanation": "'Mustn't' indicates prohibition. 'Don't have to' means it's not necessary."
+      },
+      {
+        "text": "My brother is very clever. He ___ read when he was only three years old.",
+        "options": ["can", "could", "should", "must"],
+        "answer": 1,
+        "explanation": "We use 'could' to talk about general ability in the past."
+      },
+      {
+        "text": "___ I borrow your pen, please?",
+        "options": ["Must", "Have to", "Can", "Ought"],
+        "answer": 2,
+        "explanation": "'Can' is used to ask for permission politely."
+      },
+      {
+        "text": "You ___ wear a uniform at this school; it's the rule.",
+        "options": ["have to", "might", "can", "should"],
+        "answer": 0,
+        "explanation": "'Have to' indicates an external obligation (rules/laws)."
+      },
+      {
+        "text": "Look at those clouds! It ___ rain later.",
+        "options": ["must", "might", "has to", "should"],
+        "answer": 1,
+        "explanation": "'Might' is used to express possibility in the future."
+      },
+      {
+        "text": "If you have a headache, you ___ take an aspirin and rest.",
+        "options": ["must", "can't", "should", "had to"],
+        "answer": 2,
+        "explanation": "'Should' is used to give advice or recommendations."
+      }
+    ]
+  },
+  {
+    "id": "b1-reported-speech-intermediate",
+    "title": "Reported Speech: Intermediate",
+    "category": "grammar",
+    "level": "B1",
+    "topic": "Reported Speech",
+    "questions": [
+      {
+        "text": "\"I live in New York,\" said Tom. -> Tom said that he ___ in New York.",
+        "options": ["lives", "lived", "has lived", "was living"],
+        "answer": 1,
+        "explanation": "Present Simple usually changes to Past Simple in reported speech (backshift)."
+      },
+      {
+        "text": "\"I am studying for my exam,\" she said. -> She said that she ___ for her exam.",
+        "options": ["is studying", "studied", "was studying", "had studied"],
+        "answer": 2,
+        "explanation": "Present Continuous changes to Past Continuous in reported speech."
+      },
+      {
+        "text": "\"I will call you tomorrow,\" he told me. -> He told me that he ___ me the next day.",
+        "options": ["will call", "would call", "called", "had called"],
+        "answer": 1,
+        "explanation": "'Will' changes to 'would' in reported speech."
+      },
+      {
+        "text": "\"I have finished my homework,\" said the student. -> The student said that he ___ his homework.",
+        "options": ["has finished", "had finished", "finished", "was finishing"],
+        "answer": 1,
+        "explanation": "Present Perfect changes to Past Perfect in reported speech."
+      },
+      {
+        "text": "\"I can't come to the party,\" said Maria. -> Maria said that she ___ to the party.",
+        "options": ["can't come", "couldn't come", "doesn't come", "wouldn't come"],
+        "answer": 1,
+        "explanation": "'Can' changes to 'could' (and 'can't' to 'couldn't') in reported speech."
+      },
+      {
+        "text": "\"I saw this movie yesterday,\" John said. -> John said that he had seen ___ movie ___.",
+        "options": ["this / yesterday", "that / the day before", "that / yesterday", "this / the previous day"],
+        "answer": 1,
+        "explanation": "Demonstratives change ('this' -> 'that') and time expressions change ('yesterday' -> 'the day before') in reported speech."
+      }
+    ]
+  },
+  {
+    "id": "b2-modals-intermediate-use",
+    "title": "Modals: Intermediate Use",
+    "category": "grammar",
+    "level": "B2",
+    "topic": "Modal Verbs",
+    "questions": [
+      {
+        "text": "That woman ___ be Jack's mother. Jack is 50 and she looks 25!",
+        "options": ["mustn't", "can't", "shouldn't", "might not"],
+        "answer": 1,
+        "explanation": "We use 'can't' for logical deduction when we are sure something is impossible."
+      },
+      {
+        "text": "The phone is ringing. It ___ be the delivery driver; he said he was coming at noon.",
+        "options": ["can", "must", "shall", "ought"],
+        "answer": 1,
+        "explanation": "'Must' is used for positive logical deduction when we are almost certain."
+      },
+      {
+        "text": "You ___ told me you were going to be late! I was worried.",
+        "options": ["should have", "must have", "can have", "would have"],
+        "answer": 0,
+        "explanation": "'Should have' + PP is used to criticize a past action."
+      },
+      {
+        "text": "We ___ hurry. We have plenty of time before the movie starts.",
+        "options": ["mustn't", "needn't", "can't", "wouldn't"],
+        "answer": 1,
+        "explanation": "'Needn't' expresses a lack of necessity."
+      },
+      {
+        "text": "You ___ better see a doctor about that cough; it sounds terrible.",
+        "options": ["would", "should", "had", "did"],
+        "answer": 2,
+        "explanation": "The phrase is 'had better' (meaning strong advice)."
+      },
+      {
+        "text": "I ___ find my keys yesterday, even though the house was a mess.",
+        "options": ["could", "was able to", "might", "can"],
+        "answer": 1,
+        "explanation": "For a specific achievement in the past, we prefer 'was able to'."
+      }
+    ]
+  },
+  {
+    "id": "c1-modals-advanced-forms",
+    "title": "Modals: Advanced Forms",
+    "category": "grammar",
+    "level": "C1",
+    "topic": "Modal Verbs",
+    "questions": [
+      {
+        "text": "She ___ left the party early; her coat is still here.",
+        "options": ["mustn't have", "shouldn't have", "can't have", "needn't have"],
+        "answer": 2,
+        "explanation": "'Can't have' + PP is used to deduce that a past action was impossible."
+      },
+      {
+        "text": "I didn't need to buy bread, but I did. I ___ bought it.",
+        "options": ["needn't have", "didn't need to", "mustn't have", "shouldn't have"],
+        "answer": 0,
+        "explanation": "'Needn't have' means we did something unnecessary."
+      },
+      {
+        "text": "It's strange that he hasn't called. He ___ lost my number.",
+        "options": ["ought to have", "must have", "might have", "should have"],
+        "answer": 2,
+        "explanation": "'Might have' expresses a past possibility."
+      },
+      {
+        "text": "Why did you risk your life? You ___ been killed!",
+        "options": ["must have", "should have", "could have", "can have"],
+        "answer": 2,
+        "explanation": "'Could have' describes a past possibility that didn't happen."
+      },
+      {
+        "text": "Try as I might, I ___ open the jar.",
+        "options": ["couldn't", "wouldn't", "shouldn't", "mightn't"],
+        "answer": 0,
+        "explanation": "'Couldn't' is used here to express inability despite effort."
+      },
+      {
+        "text": "The presentation is at 9:00. They left at 8:00, so they ___ be there by now.",
+        "options": ["can", "shall", "should", "might"],
+        "answer": 2,
+        "explanation": "'Should' is used here to express logical expectation."
+      }
+    ]
+  },
+  {
+    "id": "c2-participle-clauses-advanced",
+    "title": "Participle Clauses: Advanced",
+    "category": "grammar",
+    "level": "C2",
+    "topic": "Participle Clauses",
+    "questions": [
+      {
+        "text": "Identify the sentence that is GRAMMATICALLY CORRECT.",
+        "options": [
+          "Walking through the forest, the trees towered above us.",
+          "Having finished the essay, the deadline had already passed.",
+          "Driven by ambition, he worked tirelessly to achieve his goals.",
+          "Covered in snow, we found the path difficult to follow."
+        ],
+        "answer": 2,
+        "explanation": "This is the only sentence without a dangling participle. The subject 'he' is the one who is 'driven'. In the other options, the subject of the main clause (trees, deadline, we) is not the logical subject of the participle phrase."
+      },
+      {
+        "text": "The weather ___ favorable, we decided to set sail immediately.",
+        "options": [
+          "being",
+          "been",
+          "is",
+          "to be"
+        ],
+        "answer": 0,
+        "explanation": "This is a nominative absolute construction where the participle 'being' has its own subject ('The weather')."
+      },
+      {
+        "text": "___ from the team, he decided to start his own consulting business.",
+        "options": [
+          "Dismissing",
+          "Having been dismissed",
+          "Been dismissed",
+          "To be dismissed"
+        ],
+        "answer": 1,
+        "explanation": "We use the perfect passive participle ('Having been' + past participle) to emphasize that the passive action happened before the main verb."
+      },
+      {
+        "text": "The hurricane swept through the island, ___ widespread destruction in its wake.",
+        "options": [
+          "caused",
+          "causing",
+          "having caused",
+          "to cause"
+        ],
+        "answer": 1,
+        "explanation": "We use the present participle ('causing') to describe a result or consequence of the main action."
+      },
+      {
+        "text": "___ strictly speaking, tomatoes are fruits, not vegetables.",
+        "options": [
+          "Speaking",
+          "Spoken",
+          "To speak",
+          "Speak"
+        ],
+        "answer": 0,
+        "explanation": "'Strictly speaking' is a fixed idiomatic participle phrase used to introduce a precise statement."
+      },
+      {
+        "text": "The instructions ___ on the box were impossible to follow.",
+        "options": [
+          "printing",
+          "having printed",
+          "printed",
+          "been printed"
+        ],
+        "answer": 2,
+        "explanation": "This is a reduced passive relative clause (The instructions *which were* printed...)."
+      }
+    ]
+  }
+]
