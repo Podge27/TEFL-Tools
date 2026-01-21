@@ -3,321 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speaking Exam Tool (Part 3 & 4)</title>
+    <title>Speaking Exam Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <style>
-        /* --- Configuration & Colors --- */
-        :root {
-            --deep-blue: #003366;
-            --cambridge-yellow: #FFC300;
-            --darker-blue: #002244;
-            --time-alert-red: #D32F2F;
-            --text-light-blue: #99cfff;
-            --input-bg: #004080;
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1rem; }
+        
+        #app-container { 
+            @apply w-full max-w-5xl bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[85vh] flex flex-col relative mt-6 mb-12 border border-slate-100; 
         }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow-y: auto;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--deep-blue);
-            color: white;
-            display: flex;
-            justify-content: center;
-        }
-        
-        #app-container {
-            max-width: 900px;
-            background-color: var(--deep-blue);
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem 2.5rem;
-        }
-        
-        .screen-wrapper {
-            width: 100%;
-            flex-grow: 1;
-            padding-top: 20px;
-        }
-        
-        .screen-wrapper.hidden { display: none !important; }
+        /* --- HEADER & TIMER --- */
+        .header-bar { @apply bg-white border-b border-slate-100 p-6 flex justify-between items-center; }
+        .timer-btn { @apply px-3 py-1 text-sm font-bold rounded border transition-colors; }
+        .timer-btn-sec { @apply bg-slate-100 text-slate-500 hover:bg-slate-200 border-slate-200; }
+        .timer-btn-pri { @apply bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50; }
+        .timer-display { @apply font-mono text-2xl font-black text-slate-700 bg-slate-50 px-4 py-1 rounded-lg border border-slate-200 min-w-[100px] text-center; }
+        .timer-display.alert { @apply text-red-600 bg-red-50 border-red-200; }
+        .control-btn { @apply w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 text-white hover:bg-slate-700 transition text-lg shadow-sm; }
 
-        /* --- Buttons --- */
-        .app-btn {
-            background-color: var(--cambridge-yellow);
-            color: var(--deep-blue);
-            padding: 1rem 1.5rem;
-            font-size: 1.25rem;
-            font-weight: 700;
-            border-radius: 10px;
-            transition: background-color 0.2s, transform 0.1s;
-            cursor: pointer;
-        }
-        .app-btn:hover { background-color: #FEDD5C; transform: translateY(-2px); }
-        .app-btn:active { transform: translateY(0); }
+        /* --- BUTTONS --- */
+        .btn-action { @apply px-8 py-4 font-bold rounded-xl shadow-lg transition transform hover:scale-[1.02] active:scale-95 text-white bg-indigo-600 hover:bg-indigo-700 text-lg w-full md:w-auto text-center cursor-pointer; }
+        .btn-secondary { @apply px-8 py-4 font-bold rounded-xl shadow-sm transition transform hover:scale-[1.02] active:scale-95 text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 text-lg w-full md:w-auto text-center cursor-pointer; }
         
-        .app-btn-secondary { background-color: #336699; color: white; }
-        .app-btn-secondary:hover { background-color: #4477aa; }
+        .back-link { @apply flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold transition mb-4 cursor-pointer; }
 
-        /* --- Topic List Buttons --- */
-        .topic-btn {
-            background-color: var(--darker-blue);
-            border: 1px solid var(--text-light-blue);
-            color: white;
-            padding: 15px;
-            text-align: left;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .topic-btn:hover {
-            background-color: var(--cambridge-yellow);
-            color: var(--deep-blue);
-            border-color: var(--cambridge-yellow);
-        }
+        /* --- LEVEL BUTTONS --- */
+        .level-btn { @apply w-40 h-32 flex items-center justify-center text-4xl font-black rounded-2xl transition transform hover:scale-105 border-4 opacity-100 shadow-md; }
+        .btn-b2 { background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border-color: #C7D2FE; }
+        .btn-c1 { background: linear-gradient(135deg, #FF9800, #FFC107); color: #333; border-color: #FFECB3; }
+        .btn-c2 { background: linear-gradient(135deg, #8BC34A, #CDDC39); color: #333; border-color: #DCEDC8; }
 
-        /* --- Search Input --- */
-        #topic-search-input {
-            width: 100%;
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid var(--text-light-blue);
-            background-color: var(--input-bg);
-            color: white;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            outline: none;
-        }
-        #topic-search-input:focus {
-            border-color: var(--cambridge-yellow);
-        }
-        #topic-search-input::placeholder { color: #aaa; }
+        /* --- LEVEL BADGE (Moved to Header) --- */
+        .level-badge { @apply ml-4 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest shadow-sm border hidden md:inline-block; }
+        .badge-b2 { @apply bg-indigo-50 text-indigo-600 border-indigo-200; }
+        .badge-c1 { @apply bg-amber-50 text-amber-600 border-amber-200; }
+        .badge-c2 { @apply bg-lime-50 text-lime-600 border-lime-200; }
 
-        /* --- Timer --- */
-        #timer-label {
-            background-color: var(--darker-blue);
-            color: white;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 8px;
-            min-width: 100px;
-            text-align: center;
-        }
-        .timer-control {
-            background-color: #336699;
-            color: white;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .time-alert {
-            background-color: var(--time-alert-red) !important;
-            color: var(--cambridge-yellow) !important;
-            border: 2px solid var(--cambridge-yellow);
-        }
-        .timer-set-button {
-            background-color: var(--darker-blue);
-            color: var(--cambridge-yellow);
-            font-weight: 700;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--cambridge-yellow);
-            transition: background-color 0.2s, color 0.2s;
-            font-size: 0.9rem;
-        }
-        .timer-set-button:hover { background-color: #336699; color: white; }
-        
-        /* --- Spidergram (Part 3) --- */
-        #spidergram-central {
-            background-color: var(--deep-blue);
-            color: var(--cambridge-yellow);
-            border: 3px solid var(--cambridge-yellow);
-            font-size: 1.375rem;
-            font-weight: bold;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-        }
-        .spidergram-topic {
-            background-color: var(--darker-blue);
-            color: white;
-            font-size: 1.125rem;
-            font-weight: bold;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid var(--cambridge-yellow);
-        }
+        /* --- SPIDERGRAM (B2/C1) --- */
+        #spidergram-central { @apply bg-indigo-600 text-white border-4 border-indigo-100 shadow-xl rounded-2xl p-4 flex items-center justify-center text-center font-black text-xl z-10 transform scale-110; }
+        .spidergram-topic { @apply bg-white text-slate-700 border-2 border-slate-100 shadow-md rounded-xl p-4 flex items-center justify-center text-center font-bold text-lg transition hover:border-indigo-200 hover:shadow-lg; }
 
-        /* --- Revealable Questions --- */
-        .revealable-question {
-            font-size: 1.25rem;
-            padding: 20px;
-            border-radius: 8px;
-            min-height: 70px;
-            margin-top: 15px;
-            text-align: center;
-            border: 2px solid var(--cambridge-yellow);
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .hidden-prompt {
-            background-color: var(--darker-blue);
-            color: var(--text-light-blue);
-            border: 3px dashed var(--cambridge-yellow);
-            font-size: 1rem;
-            font-style: italic;
-        }
-        .revealed-prompt {
-            color: var(--cambridge-yellow);
-            background-color: var(--deep-blue);
-            border: 3px solid var(--cambridge-yellow);
-            font-weight: 500;
-        }
-        
-        /* --- Screens --- */
-        #level-selection-screen, #mode-selection-screen, #topic-list-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* justify-content: center; Removed to allow scrolling in lists */
-            text-align: center;
-        }
-        
-        .back-button {
-            background-color: var(--darker-blue); 
-            color: white;
-            font-weight: bold;
-            padding: 8px 12px;
-            font-size: 1rem; 
-            transition: background-color 0.3s, color 0.3s;
-            border: 2px solid var(--text-light-blue); 
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .back-button:hover { background-color: #336699; color: var(--cambridge-yellow); }
+        /* --- C2 PROMPT CARD --- */
+        .prompt-card { @apply bg-white border-2 border-slate-200 rounded-2xl shadow-lg p-8 max-w-2xl mx-auto mb-8 relative; }
+        .card-label { @apply absolute -top-4 left-1/2 transform -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-sm; }
+        .card-question { @apply text-2xl font-black text-slate-800 text-center mb-8 leading-tight; }
+        .card-points { @apply space-y-4; }
+        .card-point { @apply bg-slate-50 p-4 rounded-lg border border-slate-100 text-slate-700 font-semibold text-center; }
+        .card-footer { @apply mt-8 text-center text-slate-400 text-sm font-bold uppercase tracking-widest border-t border-slate-100 pt-4; }
+
+        /* --- REVEAL TILES --- */
+        .reveal-tile { @apply w-full p-6 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 font-bold italic text-center cursor-pointer transition-all hover:bg-slate-100 hover:border-slate-400; }
+        .reveal-tile.revealed { @apply border-solid border-indigo-500 bg-white text-indigo-900 font-semibold shadow-md not-italic; }
+
+        /* --- TOPIC LIST --- */
+        .topic-list-btn { @apply w-full text-left p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-semibold text-slate-700 transition shadow-sm hover:shadow-md hover:border-indigo-300 hover:text-indigo-700; }
+        #topic-search-input { @apply w-full p-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition text-lg; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div id="app-container" class="w-full"> 
+    <div class="absolute top-6 left-6 z-50">
+        <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-indigo-700 font-bold transition group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            <span>Exit Tool</span>
+        </a>
+    </div>
 
-        <div class="flex justify-between items-center mb-6 px-4 sm:px-8 pt-4"> 
-            <div class="flex items-center gap-4">
-                <a id="main-menu-btn" href="exam_index.html" class="back-button hidden">← Menu</a>
-                <h1 class="text-xl font-bold text-white">Speaking Exam Practice</h1>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <button id="set-4min-button" class="timer-set-button app-btn-secondary">4 min</button>
-                <button id="set-2min-button" class="timer-set-button">2 min</button>
-                <button id="set-1min-button" class="timer-set-button app-btn-secondary">1 min</button>
-                <div id="timer-label" class="text-lg">02:00</div>
-                <button id="start-pause-button" class="timer-control">▶</button>
-                <button id="reset-button" class="timer-control">🔄</button>
-            </div>
-        </div>
+    <div id="app-container">
         
-        <div class="px-4 sm:px-8 pb-4 flex-1">
-
-            <div id="level-selection-screen" class="screen-wrapper justify-center">
-                <h2 class="text-3xl font-extrabold text-white mb-8">Select Exam Level</h2>
-                <div id="level-buttons-container" class="flex gap-6 justify-center flex-wrap"></div>
-                <p id="data-loading-status" class="text-gray-400 mt-12">Connecting to database...</p>
-            </div>
-
-            <div id="mode-selection-screen" class="screen-wrapper hidden justify-center">
-                <div class="w-full max-w-md">
-                    <div class="flex justify-start mb-6">
-                        <button onclick="app.showLevelSelection()" class="back-button">← Back</button>
-                    </div>
-                    <h2 class="text-3xl font-extrabold text-white mb-8">How would you like to choose?</h2>
-                    <div class="flex flex-col gap-6">
-                        <button onclick="app.showPart3(true)" class="app-btn">🎲 Random Topic</button>
-                        <button onclick="app.showTopicList()" class="app-btn app-btn-secondary">📋 Choose from List</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="topic-list-screen" class="screen-wrapper hidden">
-                <div class="w-full max-w-3xl">
-                    <div class="flex justify-start mb-4">
-                        <button onclick="app.showModeSelection()" class="back-button">← Back</button>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white mb-4">Select a Topic</h2>
-                    
-                    <input type="text" id="topic-search-input" placeholder="Type to search topics (e.g., 'Travel', 'Work')..." oninput="app.filterTopics(this.value)">
-                    
-                    <div id="topics-grid-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-h-[60vh] overflow-y-auto pr-2">
-                        </div>
-                </div>
-            </div>
-
-            <div id="part3-screen" class="screen-wrapper hidden">
-                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
-                    <button onclick="app.handleBackFromPart3()" class="back-button">← Back</button>
-                    <h2 class="text-2xl font-extrabold text-center text-white mr-auto ml-4">Part 3: Collaborative Task (<span id="current-level-display"></span>)</h2>
-                </div>
-                
-                <div id="spidergram-grid" class="grid grid-cols-3 gap-4"></div>
-                
-                <div id="part3-follow-up-container" class="mt-8">
-                    <p class="text-center text-gray-400 mb-2 text-sm">Follow-up Discussion Prompt (Click to Reveal):</p>
-                    <div id="part3-follow-up-q" class="revealable-question hidden-prompt" onclick="app.toggleReveal(this)">
-                        Click to REVEAL the prompt.
-                    </div>
-                </div>
-
-                <div class="flex justify-center mt-8 gap-4">
-                    <button onclick="app.showPart4()" class="app-btn app-btn-secondary w-full max-w-[200px]">Go to Part 4 >></button>
-                    <button onclick="app.showPart3(true)" class="app-btn w-full max-w-[200px]">New Random Task</button>
-                </div>
-            </div>
-
-            <div id="part4-screen" class="screen-wrapper hidden">
-                <h2 class="text-2xl font-extrabold text-center text-white mb-6">Part 4: Discussion Questions</h2>
-
-                <div id="part4-questions-list" class="space-y-4"></div>
-
-                <div class="flex justify-center mt-8 gap-4">
-                    <button onclick="app.showPart3(false)" class="app-btn app-btn-secondary w-full max-w-[200px]">&lt;&lt; Back to Part 3</button>
-                    <button onclick="app.showPart3(true)" class="app-btn w-full max-w-[200px]">New Random Task</button>
-                </div>
+        <div class="header-bar">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-extrabold text-slate-800 hidden md:block">Exam <span class="text-indigo-600">Tool</span></h1>
+                <div id="header-level-badge" class="level-badge hidden"></div>
             </div>
             
+            <div class="flex items-center gap-3 ml-auto">
+                <div class="flex gap-1 mr-2">
+                    <button id="set-4min-button" class="timer-btn timer-btn-pri">4m</button>
+                    <button id="set-2min-button" class="timer-btn timer-btn-sec">2m</button>
+                    <button id="set-1min-button" class="timer-btn timer-btn-sec">1m</button>
+                </div>
+                <div id="timer-label" class="timer-display">02:00</div>
+                <button id="start-pause-button" class="control-btn">▶</button>
+                <button id="reset-button" class="control-btn bg-slate-200 text-slate-600 hover:bg-slate-300">↻</button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 flex flex-col relative">
+
+            <div id="level-selection-screen" class="flex-1 flex flex-col items-center justify-center">
+                <h2 class="text-4xl font-extrabold text-slate-800 mb-2">Select Level</h2>
+                <p class="text-slate-400 mb-10">Choose your exam level to load topics.</p>
+                <div id="level-buttons-container" class="flex gap-6 justify-center flex-wrap"></div>
+                <p id="data-loading-status" class="text-slate-400 mt-12 font-mono text-sm">Connecting to database...</p>
+            </div>
+
+            <div id="mode-selection-screen" class="hidden flex-1 flex flex-col items-center justify-center">
+                <button onclick="app.showLevelSelection()" class="back-link self-start absolute top-8 left-8">← Change Level</button>
+                
+                <h2 class="text-3xl font-black text-slate-800 mb-6">Choose Activity</h2>
+                
+                <div class="flex bg-slate-100 p-1 rounded-xl mb-10">
+                    <button id="select-part2" onclick="app.setExamPart('part2')" class="px-6 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-700 transition">Part 2</button>
+                    <button id="select-part3" onclick="app.setExamPart('part3')" class="px-6 py-2 rounded-lg font-bold bg-white text-indigo-600 shadow-sm transition">Part 3</button>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
+                    <button onclick="app.prepareTask(true)" class="flex-1 p-8 rounded-2xl bg-indigo-50 border-2 border-indigo-100 hover:border-indigo-500 hover:bg-white hover:shadow-xl transition group text-left">
+                        <div class="text-5xl mb-4 group-hover:scale-110 transition duration-300">🎲</div>
+                        <div class="text-2xl font-bold text-slate-800">Random Topic</div>
+                        <div class="text-slate-500 mt-2">Simulate a real exam environment.</div>
+                    </button>
+                    <button onclick="app.showTopicList()" class="flex-1 p-8 rounded-2xl bg-white border-2 border-slate-200 hover:border-slate-400 hover:shadow-xl transition group text-left">
+                        <div class="text-5xl mb-4 group-hover:scale-110 transition duration-300">📋</div>
+                        <div class="text-2xl font-bold text-slate-800">Pick from List</div>
+                        <div class="text-slate-500 mt-2">Browse topics and choose specific one.</div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="topic-list-screen" class="hidden h-full flex flex-col">
+                <button onclick="app.showModeSelection()" class="back-link">← Back</button>
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Select a Topic</h2>
+                <input type="text" id="topic-search-input" placeholder="Search topics..." oninput="app.filterTopics(this.value)">
+                <div id="topics-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 pb-20"></div>
+            </div>
+
+            <div id="part2-screen" class="hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="app.showModeSelection()" class="back-link mb-0">← Back</button>
+                    <div class="flex gap-2">
+                        <span id="p2-dot-0" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="p2-dot-1" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="p2-dot-2" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="p2-dot-3" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                    </div>
+                </div>
+
+                <h2 id="p2-title" class="text-xl font-black text-indigo-600 uppercase tracking-widest text-center mb-4">Candidate A</h2>
+
+                <div id="p2-script-view" class="flex-1 flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
+                    <div class="bg-white p-10 rounded-3xl shadow-xl border-2 border-slate-100">
+                        <h3 class="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Examiner Script</h3>
+                        <p id="p2-script-text" class="text-2xl font-serif text-slate-800 leading-relaxed mb-8">
+                            Loading script...
+                        </p>
+                        <button onclick="app.nextPart2Step()" class="btn-action w-full">Show Photos →</button>
+                    </div>
+                </div>
+
+                <div id="p2-image-view" class="hidden flex-1 flex flex-col h-full">
+                    
+                    <div id="p2-images-container" class="flex-1 flex gap-4 w-full max-h-[50vh] mb-4 min-h-[250px]">
+                        <div class="flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group">
+                            <img id="p2-img-1" src="" class="w-full h-full object-cover" alt="Photo 1">
+                        </div>
+                        <div class="flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group">
+                            <img id="p2-img-2" src="" class="w-full h-full object-cover" alt="Photo 2">
+                        </div>
+                        <div id="p2-img-container-3" class="hidden flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group">
+                            <img id="p2-img-3" src="" class="w-full h-full object-cover" alt="Photo 3">
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border-2 border-indigo-100 shadow-sm mb-4 text-center">
+                        <p id="p2-main-question" class="text-xl font-bold text-slate-800 whitespace-pre-line">Loading...</p>
+                    </div>
+
+                    <div id="p2-partner-q-container" class="reveal-tile mb-6" onclick="app.toggleReveal(this)" data-hidden-text="Show Partner Question (Follow-up)">
+                        Show Partner Question (Follow-up)
+                    </div>
+
+                    <div class="mt-auto flex justify-center">
+                        <button id="p2-next-btn" onclick="app.nextPart2Step()" class="btn-secondary">Next Candidate →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="c2-part2-screen" class="hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-2">
+                    <button onclick="app.showModeSelection()" class="back-link mb-0">← Back</button>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Collaborative Task</div>
+                </div>
+
+                <div id="c2-p2-intro" class="flex-1 flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
+                    <div class="bg-white p-10 rounded-3xl shadow-xl border-2 border-slate-100">
+                        <h3 class="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Examiner Script</h3>
+                        <p id="c2-p2-script-text" class="text-2xl font-serif text-slate-800 leading-relaxed mb-8">Loading...</p>
+                        <button onclick="app.c2Part2Next()" class="btn-action w-full">Show Pictures →</button>
+                    </div>
+                </div>
+
+                <div id="c2-p2-main" class="hidden flex-1 flex flex-col h-full w-full">
+                    
+                    <div class="bg-indigo-600 text-white p-3 rounded-xl shadow-md text-center mb-3 flex-shrink-0">
+                        <p id="c2-p2-question-display" class="text-lg font-bold">Loading...</p>
+                    </div>
+
+                    <div class="flex-1 grid grid-cols-2 gap-3 w-full min-h-[50vh]">
+                        
+                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
+                            <img id="c2-p2-img-0" src="" class="w-full h-full object-cover">
+                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">1</span>
+                        </div>
+                        
+                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
+                            <img id="c2-p2-img-1" src="" class="w-full h-full object-cover">
+                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">2</span>
+                        </div>
+                        
+                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
+                            <img id="c2-p2-img-2" src="" class="w-full h-full object-cover">
+                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">3</span>
+                        </div>
+                        
+                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
+                            <img id="c2-p2-img-3" src="" class="w-full h-full object-cover">
+                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">4</span>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4 flex flex-col items-center gap-2 flex-shrink-0">
+                        <div id="c2-p2-decision-box" class="hidden w-full bg-amber-50 border border-amber-200 p-4 rounded-xl text-center shadow-sm">
+                            <p class="text-xs font-bold text-slate-400 uppercase mb-1 tracking-widest">Decision Phase</p>
+                            <p id="c2-p2-decision-text" class="text-xl font-bold text-amber-800">Decide...</p>
+                        </div>
+                        
+                        <button id="c2-p2-action-btn" onclick="app.c2Part2Next()" class="btn-secondary py-3 px-8 text-base w-full md:w-auto shadow-sm">Next Phase →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="part3-screen" class="hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <button onclick="app.handleBackFromPart3()" class="back-link mb-0">← Back</button>
+                    <span id="current-level-display" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wide"></span>
+                </div>
+                <div id="spidergram-grid" class="grid grid-cols-3 gap-6 max-w-4xl mx-auto w-full aspect-[4/3] md:aspect-[2/1] items-center"></div>
+                <div class="mt-10 max-w-2xl mx-auto w-full">
+                    <div id="part3-follow-up-q" class="reveal-tile" onclick="app.toggleReveal(this)">Click to Reveal Discussion Question</div>
+                </div>
+                <div class="mt-auto pt-8 flex justify-center gap-4">
+                    <button onclick="app.prepareTask(true)" class="btn-secondary">New Random Topic</button>
+                    <button onclick="app.showPart4()" class="btn-action">Go to Part 4 →</button>
+                </div>
+            </div>
+
+            <div id="part4-screen" class="hidden h-full flex flex-col max-w-3xl mx-auto w-full">
+                <h2 class="text-3xl font-black text-slate-800 mb-2 text-center">Part 4 Discussion</h2>
+                <div id="part4-questions-list" class="space-y-4 w-full mt-8"></div>
+                <div class="mt-auto pt-8 flex justify-center gap-4">
+                    <button onclick="app.returnToPart3()" class="btn-secondary">← Back to Part 3</button>
+                    <button onclick="app.finishExam()" class="btn-action bg-slate-800 hover:bg-slate-900">Finish Exam</button>
+                </div>
+            </div>
+
+            <div id="c2-wizard-screen" class="hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="app.handleBackFromPart3()" class="back-link mb-0">← Back</button>
+                    <div class="flex gap-2">
+                        <span id="c2-step-1" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="c2-step-2" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="c2-step-3" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="c2-step-4" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span id="c2-step-5" class="w-3 h-3 rounded-full bg-slate-300"></span>
+                    </div>
+                </div>
+
+                <div id="c2-content-area" class="flex-1 flex flex-col items-center justify-center w-full">
+                    </div>
+
+                <div class="mt-8 flex justify-between w-full">
+                    <button id="c2-prev-btn" onclick="app.c2PrevStep()" class="btn-secondary w-auto px-6">← Previous</button>
+                    <button id="c2-next-btn" onclick="app.c2NextStep()" class="btn-action w-auto px-6">Next Part →</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
         // ============================================================
-        // 👇 2. PASTE YOUR KEYS HERE
+        // 👇 PASTE SUPABASE KEYS HERE
         // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
@@ -326,21 +297,27 @@
 
         const app = {
             supabase: null,
-            data: [],
+            dataB2C1: [],
+            dataPart2: [], // Stores Part 2 items
+            dataC2: [],
+            dataC2Part2: [], // C2 Collaborative
             currentLevel: null,
             currentTask: null,
+            selectedPart: 'part2', // Default to the first tab
+            
+            // State trackers
+            c2Step: 0,
+            part2Step: 0, 
+            c2P2State: 0, // 0=Intro1, 1=Discussion, 2=Intro2, 3=Decision
             timer: { interval: null, remaining: 120, target: 120, isRunning: false },
 
             init: async function() {
                 const status = document.getElementById('data-loading-status');
-                
                 if (typeof supabase !== 'undefined') {
-                    this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 } else {
-                    status.innerText = "Error: Library not loaded.";
-                    return;
+                    status.innerText = "Error: Library not loaded."; return;
                 }
-
                 await this.loadData();
                 this.renderLevelButtons();
             },
@@ -348,276 +325,549 @@
             loadData: async function() {
                 const status = document.getElementById('data-loading-status');
                 try {
-                    status.innerText = "Loading data...";
+                    status.innerText = "Loading tasks...";
                     
-                    let { data, error } = await this.supabase
-                        .from('exam_speaking_tasks')
-                        .select('*');
+                    // Fetch Part 3
+                    let { data: d1 } = await this.supabase.from('exam_speaking_tasks').select('*');
+                    this.dataB2C1 = d1 || [];
 
-                    if (error) throw error;
+                    // Fetch Part 2 (New)
+                    let { data: d2 } = await this.supabase.from('exam_speaking_part2').select('*');
+                    this.dataPart2 = d2 || [];
                     
-                    this.data = data;
+                    // Fetch C2
+                    let { data: d3 } = await this.supabase.from('exam_speaking_tasks_c2').select('*');
+                    this.dataC2 = d3 || [];
+
+                    // Fetch C2 Part 2 (New Collab)
+                    let { data: d4 } = await this.supabase.from('exam_speaking_part2_c2').select('*');
+                    this.dataC2Part2 = d4 || [];
+                    
                     status.innerText = ""; 
                 } catch (error) {
-                    console.error("Connection Error:", error);
-                    status.innerText = "Error loading data. Check console.";
-                    status.className = "text-red-400 mt-12";
+                    console.error(error);
+                    status.innerText = "Error loading data.";
                 }
             },
 
             renderLevelButtons: function() {
                 const container = document.getElementById('level-buttons-container');
                 container.innerHTML = '';
-                
-                const levels = [...new Set(this.data.map(item => item.level))].sort();
-                
-                if (levels.length === 0) return;
-
-                levels.forEach(level => {
+                ['B2','C1','C2'].forEach(lvl => {
                     const btn = document.createElement('button');
-                    btn.textContent = level;
-                    btn.className = 'app-btn';
-                    btn.onclick = () => this.selectLevel(level);
+                    btn.textContent = lvl;
+                    let color = lvl==='B2' ? 'btn-b2' : (lvl==='C1' ? 'btn-c1' : 'btn-c2');
+                    btn.className = `level-btn ${color}`;
+                    btn.onclick = () => this.selectLevel(lvl);
                     container.appendChild(btn);
                 });
             },
 
             selectLevel: function(level) {
                 this.currentLevel = level;
-                document.getElementById('main-menu-btn').classList.add('hidden');
-                this.showModeSelection(); // CHANGED: Goes to Mode Selection instead of Part 3
+                
+                // Update Badge in Header
+                const badge = document.getElementById('header-level-badge');
+                badge.innerText = level;
+                
+                // Reset badge classes
+                badge.classList.remove('hidden', 'badge-b2', 'badge-c1', 'badge-c2');
+                
+                // Add correct class
+                const activeClass = level === 'B2' ? 'badge-b2' : (level === 'C1' ? 'badge-c1' : 'badge-c2');
+                badge.classList.add(activeClass);
+
+                // Update Toggle Buttons based on Level
+                const btn1 = document.getElementById('select-part2');
+                const btn2 = document.getElementById('select-part3');
+
+                if (level === 'C2') {
+                    // C2: Left button is Collab, Right is Long Turn (Card)
+                    btn1.innerText = "Part 2 (Collaborative)"; 
+                    btn2.innerText = "Part 3 (Long Turn)";
+                    
+                    // Set default to Part 2 (Collab) because it's first in order
+                    this.selectedPart = 'part2'; 
+                    this.setExamPart('part2');
+                } else {
+                    // B2/C1: Left button is Photos, Right is Collab
+                    btn1.innerText = "Part 2 (Photos)";
+                    btn2.innerText = "Part 3 & 4 (Collab)";
+                    this.selectedPart = 'part2'; // Default to Photos
+                    this.setExamPart(this.selectedPart);
+                }
+
+                this.showModeSelection();
             },
 
-            selectRandomTask: function() {
-                const pool = this.data.filter(t => t.level === this.currentLevel);
-                if (pool.length === 0) return null;
-                const randomIndex = Math.floor(Math.random() * pool.length);
-                return pool[randomIndex];
+            setExamPart: function(part) {
+                this.selectedPart = part;
+                
+                const btn1 = document.getElementById('select-part2');
+                const btn2 = document.getElementById('select-part3');
+
+                const activeClass = "px-6 py-2 rounded-lg font-bold bg-white text-indigo-600 shadow-sm transition";
+                const inactiveClass = "px-6 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-700 transition";
+
+                if (part === 'part2') {
+                    btn1.className = activeClass;
+                    btn2.className = inactiveClass;
+                } else {
+                    btn1.className = inactiveClass;
+                    btn2.className = activeClass;
+                }
             },
 
-            // --- SCREENS & NAVIGATION ---
-
+            // --- NAVIGATION ---
             hideAllScreens: function() {
-                ['level-selection-screen', 'mode-selection-screen', 'topic-list-screen', 'part3-screen', 'part4-screen'].forEach(id => {
+                ['level-selection-screen', 'mode-selection-screen', 'topic-list-screen', 'part2-screen', 'c2-part2-screen', 'part3-screen', 'part4-screen', 'c2-wizard-screen'].forEach(id => {
                     document.getElementById(id).classList.add('hidden');
                 });
             },
 
-            showLevelSelection: function() {
-                this.pauseTimer();
-                this.hideAllScreens();
-                document.getElementById('level-selection-screen').classList.remove('hidden');
-                document.getElementById('main-menu-btn').classList.remove('hidden');
+            showLevelSelection: function() { 
+                this.pauseTimer(); 
+                this.hideAllScreens(); 
+                document.getElementById('level-selection-screen').classList.remove('hidden'); 
+                // Hide header badge on selection screen
+                document.getElementById('header-level-badge').classList.add('hidden');
             },
-
-            showModeSelection: function() {
-                this.hideAllScreens();
-                document.getElementById('mode-selection-screen').classList.remove('hidden');
-            },
+            
+            showModeSelection: function() { this.hideAllScreens(); document.getElementById('mode-selection-screen').classList.remove('hidden'); },
+            handleBackFromPart3: function() { this.showModeSelection(); },
+            finishExam: function() { window.location.href = 'speaking.html'; },
 
             showTopicList: function() {
                 this.hideAllScreens();
                 document.getElementById('topic-list-screen').classList.remove('hidden');
-                document.getElementById('topic-search-input').value = ""; // Clear search
-                this.filterTopics(""); // Render all topics for current level
+                document.getElementById('topic-search-input').value = "";
+                this.filterTopics(""); 
             },
-
-            handleBackFromPart3: function() {
-                // Return to mode selection so user can choose Random or List again
-                this.showModeSelection();
-            },
-
-            // --- TOPIC SEARCH LOGIC ---
 
             filterTopics: function(query) {
                 const container = document.getElementById('topics-grid-container');
                 container.innerHTML = '';
+                const q = query.toLowerCase();
                 
-                const normalizedQuery = query.toLowerCase();
+                // Determine source data
+                let source = [];
                 
-                // Filter data by Level AND Search Query
-                const filtered = this.data.filter(t => 
-                    t.level === this.currentLevel && 
-                    (t.topic || "Untitled").toLowerCase().includes(normalizedQuery)
-                );
-
-                if (filtered.length === 0) {
-                    container.innerHTML = '<p class="text-gray-400 col-span-full text-center">No topics found.</p>';
-                    return;
+                if (this.currentLevel === 'C2') { 
+                    if (this.selectedPart === 'part3') {
+                         // C2 Part 3 (Long Turn)
+                         source = this.dataC2;
+                    } else {
+                         // C2 Part 2 (Collab)
+                         source = this.dataC2Part2; 
+                    }
                 }
+                else { 
+                    // B2/C1
+                    if (this.selectedPart === 'part2') { source = this.dataPart2.filter(t => t.level === this.currentLevel); }
+                    else { source = this.dataB2C1.filter(t => t.level === this.currentLevel); }
+                }
+                
+                const filtered = source.filter(t => (t.topic || "Untitled").toLowerCase().includes(q));
+                filtered.sort((a,b) => (a.topic||"").localeCompare(b.topic||""));
 
-                // Sort alphabetically by topic name
-                filtered.sort((a, b) => (a.topic || "").localeCompare(b.topic || ""));
+                if (filtered.length === 0) { 
+                    container.innerHTML = '<p class="text-slate-400 col-span-full text-center">No topics found.</p>'; 
+                    return; 
+                }
 
                 filtered.forEach(task => {
                     const btn = document.createElement('button');
                     btn.textContent = task.topic || "Untitled Topic";
-                    btn.className = 'topic-btn';
-                    // When clicked, load this specific task
-                    btn.onclick = () => {
-                        this.currentTask = task;
-                        this.showPart3(false); // false = don't generate random, use currentTask
-                    };
+                    btn.className = 'topic-list-btn';
+                    btn.onclick = () => { this.currentTask = task; this.launchTask(); };
                     container.appendChild(btn);
                 });
             },
 
-            // --- EXAM LOGIC ---
-
-            showPart3: function(generateRandom) {
-                if (generateRandom) {
-                    this.currentTask = this.selectRandomTask();
-                    if (!this.currentTask) return alert("No tasks found for this level.");
+            // --- TASK LAUNCHER ---
+            prepareTask: function(random) {
+                let source = [];
+                
+                if (this.currentLevel === 'C2') { 
+                     if(this.selectedPart === 'part3') source = this.dataC2;
+                     else source = this.dataC2Part2;
                 }
+                else if (this.selectedPart === 'part2') { source = this.dataPart2.filter(t => t.level === this.currentLevel); }
+                else { source = this.dataB2C1.filter(t => t.level === this.currentLevel); }
 
+                if(source.length === 0) return alert("No tasks found for this level/section.");
+                
+                if (random) {
+                    this.currentTask = source[Math.floor(Math.random() * source.length)];
+                }
+                this.launchTask();
+            },
+
+            launchTask: function() {
+                // C2 Logic
+                if (this.currentLevel === 'C2') {
+                    if (this.selectedPart === 'part3') {
+                        // Part 3 Long Turn
+                        this.c2Step = 0; 
+                        this.showC2Step();
+                    } else {
+                        // Part 2 Collab (New)
+                        this.launchC2Part2();
+                    }
+                } 
+                // B2/C1 Logic
+                else if (this.selectedPart === 'part2') {
+                    this.part2Step = 0;
+                    this.showPart2();
+                } else {
+                    this.showPart3B2C1();
+                }
+            },
+
+            // --- C2 PART 2 LOGIC (NEW COLLAB) ---
+            launchC2Part2: function() {
+                this.c2P2State = 0;
+                this.hideAllScreens();
+                document.getElementById('c2-part2-screen').classList.remove('hidden');
+                this.renderC2Part2();
+            },
+
+            renderC2Part2: function() {
+                const data = this.currentTask.content;
+                const introScreen = document.getElementById('c2-p2-intro');
+                const mainScreen = document.getElementById('c2-p2-main');
+                const scriptText = document.getElementById('c2-p2-script-text');
+                const qDisplay = document.getElementById('c2-p2-question-display');
+                const decisionBox = document.getElementById('c2-p2-decision-box');
+                const actionBtn = document.getElementById('c2-p2-action-btn');
+
+                // STEP 0: First Intro
+                if (this.c2P2State === 0) {
+                    introScreen.classList.remove('hidden');
+                    mainScreen.classList.add('hidden');
+                    scriptText.innerText = data.intro_text || "Look at pictures 1 and 3 and talk together about these situations.";
+                    this.setTimer(0);
+                }
+                // STEP 1: Discussion (Photos Visible)
+                else if (this.c2P2State === 1) {
+                    introScreen.classList.add('hidden');
+                    mainScreen.classList.remove('hidden');
+                    
+                    // Load Images
+                    [0,1,2,3].forEach(i => {
+                        document.getElementById(`c2-p2-img-${i}`).src = "images/" + data.images[i];
+                    });
+
+                    qDisplay.innerText = data.question_1;
+                    decisionBox.classList.add('hidden');
+                    actionBtn.innerText = "Next Phase →";
+                    this.setTimer(120); // 2 mins for discussion
+                }
+                // STEP 2: Second Intro (Decision Instructions)
+                else if (this.c2P2State === 2) {
+                    introScreen.classList.remove('hidden');
+                    mainScreen.classList.add('hidden');
+                    scriptText.innerText = data.intro_text_2 || "Now look at all the pictures and decide which issue is most urgent.";
+                    this.setTimer(0);
+                }
+                // STEP 3: Decision Phase
+                else if (this.c2P2State === 3) {
+                    introScreen.classList.add('hidden');
+                    mainScreen.classList.remove('hidden');
+                    
+                    qDisplay.innerText = data.question_2; // Usually "Talk about..."
+                    decisionBox.classList.remove('hidden');
+                    document.getElementById('c2-p2-decision-text').innerText = data.decision_question;
+                    
+                    actionBtn.innerText = "Finish Task";
+                    actionBtn.className = "btn-action py-2 text-sm w-full md:w-auto";
+                    this.setTimer(60); // 1 min for decision
+                }
+            },
+
+            c2Part2Next: function() {
+                if (this.c2P2State < 3) {
+                    this.c2P2State++;
+                    this.renderC2Part2();
+                } else {
+                    this.setExamPart('part3'); // Go to Part 3 (Long Turn)
+                    this.showModeSelection();
+                }
+            },
+
+            // --- PART 2 LOGIC (B2/C1 SCRIPT -> PHOTO FLOW) ---
+            showPart2: function() {
+                this.hideAllScreens();
+                document.getElementById('part2-screen').classList.remove('hidden');
+                this.renderPart2State();
+            },
+
+            renderPart2State: function() {
+                const content = this.currentTask.content; 
+                
+                // FLOW: 0=ScriptA, 1=PhotoA, 2=ScriptB, 3=PhotoB
+                const isCandA = this.part2Step <= 1;
+                const isScript = (this.part2Step % 2 === 0);
+                
+                const data = isCandA ? content.candidate_a : content.candidate_b;
+                
+                // Update Title & Dots
+                document.getElementById('p2-title').innerText = isCandA ? "Candidate A" : "Candidate B";
+                [0,1,2,3].forEach(i => {
+                    document.getElementById(`p2-dot-${i}`).className = i === this.part2Step ? "w-3 h-3 rounded-full bg-indigo-600" : "w-3 h-3 rounded-full bg-slate-300";
+                });
+
+                // VIEW 1: SCRIPT
+                if (isScript) {
+                    document.getElementById('p2-script-view').classList.remove('hidden');
+                    document.getElementById('p2-image-view').classList.add('hidden');
+                    
+                    document.getElementById('p2-script-text').innerText = data.intro_text || "Here are your photographs. I'd like you to compare them and answer the question below.";
+                    
+                    this.setTimer(0);
+                } 
+                
+                // VIEW 2: PHOTOS
+                else {
+                    document.getElementById('p2-script-view').classList.add('hidden');
+                    document.getElementById('p2-image-view').classList.remove('hidden');
+                    
+                    // 1. Load First Two Images
+                    document.getElementById('p2-img-1').src = "images/" + data.images[0];
+                    document.getElementById('p2-img-2').src = "images/" + data.images[1];
+                    
+                    // 2. Handle Third Image (C1 Check)
+                    const imgContainer3 = document.getElementById('p2-img-container-3');
+                    if (data.images.length >= 3) {
+                        imgContainer3.classList.remove('hidden');
+                        document.getElementById('p2-img-3').src = "images/" + data.images[2];
+                    } else {
+                        imgContainer3.classList.add('hidden');
+                    }
+
+                    document.getElementById('p2-main-question').innerText = data.question;
+                    
+                    const partnerTile = document.getElementById('p2-partner-q-container');
+                    partnerTile.dataset.fullText = data.partner_question;
+                    partnerTile.dataset.hiddenText = `Show Question for Candidate ${isCandA ? 'B' : 'A'}`;
+                    partnerTile.textContent = partnerTile.dataset.hiddenText;
+                    partnerTile.classList.remove('revealed');
+
+                    // Button Logic
+                    const btn = document.getElementById('p2-next-btn');
+                    if (isCandA) {
+                        btn.innerText = "Next Candidate →";
+                        btn.className = "btn-secondary";
+                    } else {
+                        btn.innerText = "Finish & Go to Part 3 →";
+                        btn.className = "btn-action";
+                    }
+                    btn.onclick = () => this.nextPart2Step(); 
+                    
+                    this.setTimer(60);
+                }
+            },
+
+            nextPart2Step: function() {
+                if (this.part2Step < 3) {
+                    this.part2Step++;
+                    this.renderPart2State();
+                } else {
+                    // Go to Part 3 Selection
+                    this.setExamPart('part3');
+                    this.showModeSelection();
+                }
+            },
+
+            // --- PART 3 LOGIC (B2/C1) ---
+            showPart3B2C1: function() {
                 this.hideAllScreens();
                 document.getElementById('part3-screen').classList.remove('hidden');
-                document.getElementById('current-level-display').innerText = this.currentLevel + (this.currentTask.topic ? ` - ${this.currentTask.topic}` : '');
+                document.getElementById('current-level-display').innerText = `${this.currentLevel} • ${this.currentTask.topic}`;
 
                 const data = this.currentTask.part3_data;
-                
-                // 1. Spidergram
                 const grid = document.getElementById('spidergram-grid');
                 grid.innerHTML = '';
                 
                 const central = document.createElement('div');
                 central.id = 'spidergram-central';
                 central.textContent = data.initial_q;
-                central.className = 'col-span-1 row-span-1';
+                central.className = 'col-span-1 row-span-1'; 
                 
-                // Grid positioning logic
                 const positions = [{r:0,c:0}, {r:0,c:2}, {r:2,c:0}, {r:2,c:2}, {r:2,c:1}];
-                
                 data.topics.forEach((topic, i) => {
                     const el = document.createElement('div');
-                    el.className = 'spidergram-topic';
-                    el.textContent = topic;
-                    if(positions[i]) {
-                        el.style.gridRow = positions[i].r + 1;
-                        el.style.gridColumn = positions[i].c + 1;
-                    }
+                    el.className = 'spidergram-topic'; el.textContent = topic;
+                    if(positions[i]) { el.style.gridRow = positions[i].r+1; el.style.gridColumn = positions[i].c+1; }
                     grid.appendChild(el);
                 });
                 
-                central.style.gridRow = 2;
-                central.style.gridColumn = 2;
+                central.style.gridRow = 2; central.style.gridColumn = 2;
                 grid.appendChild(central);
 
-                // 2. Follow up
                 const followUp = document.getElementById('part3-follow-up-q');
                 followUp.dataset.fullText = data.second_q;
-                followUp.dataset.hiddenText = "Click to REVEAL discussion question";
+                followUp.dataset.hiddenText = "Click to Reveal Discussion Question";
                 followUp.textContent = followUp.dataset.hiddenText;
-                followUp.className = 'revealable-question hidden-prompt';
+                followUp.classList.remove('revealed');
 
-                // Timer
                 this.setTimer(this.currentTask.set_time_p3 || 120);
             },
 
             showPart4: function() {
                 this.hideAllScreens();
                 document.getElementById('part4-screen').classList.remove('hidden');
-                
                 const list = document.getElementById('part4-questions-list');
                 list.innerHTML = '';
                 
-                const qs = this.currentTask.part3_data.part4_qs;
-                
-                qs.forEach((qText, i) => {
+                this.currentTask.part3_data.part4_qs.forEach((qText, i) => {
                     const el = document.createElement('div');
-                    el.className = 'revealable-question hidden-prompt';
-                    el.dataset.fullText = `Q${i+1}. ${qText}`;
-                    el.dataset.hiddenText = `Click to REVEAL Question ${i+1}`;
+                    el.className = 'reveal-tile';
+                    el.dataset.fullText = `${i+1}. ${qText}`;
+                    el.dataset.hiddenText = `Question ${i+1}`;
                     el.textContent = el.dataset.hiddenText;
                     el.onclick = () => this.toggleReveal(el);
                     list.appendChild(el);
                 });
-
-                // Timer
-                this.setTimer(this.currentTask.set_time_p4 || 240);
+                this.setTimer(240);
             },
 
-            // --- UTILS ---
+            returnToPart3: function() {
+                this.hideAllScreens();
+                document.getElementById('part3-screen').classList.remove('hidden');
+            },
 
-            toggleReveal: function(el) {
-                if (el.classList.contains('hidden-prompt')) {
-                    el.textContent = el.dataset.fullText;
-                    el.classList.remove('hidden-prompt');
-                    el.classList.add('revealed-prompt');
+            // --- C2 LOGIC ---
+            showC2Step: function() {
+                this.hideAllScreens();
+                const screen = document.getElementById('c2-wizard-screen');
+                screen.classList.remove('hidden');
+                const container = document.getElementById('c2-content-area');
+                container.innerHTML = '';
+
+                [0,1,2,3,4].forEach(i => {
+                    const d = document.getElementById(`c2-step-${i+1}`);
+                    d.classList.remove('bg-indigo-600', 'bg-slate-300');
+                    d.classList.add(i <= this.c2Step ? 'bg-indigo-600' : 'bg-slate-300');
+                });
+
+                const task = this.currentTask;
+
+                if (this.c2Step === 0) {
+                    this.renderC2Card("Candidate A", task.card_a);
+                    this.setTimer(120);
+                } else if (this.c2Step === 1) {
+                    this.renderC2FollowUp("Question for Candidate B", task.card_a_followup);
+                    this.setTimer(0); 
+                } else if (this.c2Step === 2) {
+                    this.renderC2Card("Candidate B", task.card_b);
+                    this.setTimer(120);
+                } else if (this.c2Step === 3) {
+                    this.renderC2FollowUp("Question for Candidate A", task.card_b_followup);
+                    this.setTimer(0);
                 } else {
+                    container.innerHTML = `<h2 class="text-3xl font-black text-slate-800 mb-6">General Discussion</h2><div id="c2-final-list" class="space-y-4 w-full max-w-2xl"></div>`;
+                    const list = document.getElementById('c2-final-list');
+                    task.part3_discussion.forEach((q, i) => {
+                        const el = document.createElement('div');
+                        el.className = 'reveal-tile';
+                        el.dataset.fullText = q;
+                        el.dataset.hiddenText = `Prompt ${i+1}`;
+                        el.textContent = el.dataset.hiddenText;
+                        el.onclick = () => this.toggleReveal(el);
+                        list.appendChild(el);
+                    });
+                    this.setTimer(240);
+                }
+
+                document.getElementById('c2-prev-btn').disabled = (this.c2Step === 0);
+                document.getElementById('c2-prev-btn').classList.toggle('opacity-50', this.c2Step === 0);
+                
+                const nextBtn = document.getElementById('c2-next-btn');
+                if (this.c2Step === 4) {
+                    nextBtn.innerText = "Finish Exam";
+                    nextBtn.onclick = () => this.finishExam();
+                } else {
+                    nextBtn.innerText = "Next Part →";
+                    nextBtn.onclick = () => app.c2NextStep();
+                }
+            },
+
+            renderC2Card: function(title, data) {
+                const container = document.getElementById('c2-content-area');
+                container.innerHTML = `
+                    <div class="prompt-card">
+                        <div class="card-label">${title}</div>
+                        <div class="card-question">${data.question}</div>
+                        <div class="card-points">
+                            ${data.points.map(p => `<div class="card-point">${p}</div>`).join('')}
+                        </div>
+                        <div class="card-footer"></div>
+                    </div>
+                `;
+            },
+
+            renderC2FollowUp: function(title, qs) {
+                const container = document.getElementById('c2-content-area');
+                container.innerHTML = `<h2 class="text-2xl font-bold text-slate-700 mb-6">${title}</h2><div class="space-y-4 w-full max-w-2xl" id="c2-fu-list"></div>`;
+                const list = document.getElementById('c2-fu-list');
+                qs.forEach((q, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'reveal-tile';
+                    el.dataset.fullText = q;
+                    el.dataset.hiddenText = `Question ${i+1}`;
                     el.textContent = el.dataset.hiddenText;
-                    el.classList.remove('revealed-prompt');
-                    el.classList.add('hidden-prompt');
+                    el.onclick = () => this.toggleReveal(el);
+                    list.appendChild(el);
+                });
+            },
+
+            c2NextStep: function() { if (this.c2Step < 4) { this.c2Step++; this.showC2Step(); } },
+            c2PrevStep: function() { if (this.c2Step > 0) { this.c2Step--; this.showC2Step(); } },
+
+            // --- UTILS ---
+            toggleReveal: function(el) {
+                if (!el.classList.contains('revealed')) {
+                    el.textContent = el.dataset.fullText; el.classList.add('revealed');
+                } else {
+                    el.textContent = el.dataset.hiddenText; el.classList.remove('revealed');
                 }
             },
 
             // --- TIMER ---
-
-            setTimer: function(seconds) {
-                this.pauseTimer();
-                this.timer.target = seconds;
-                this.resetTimer();
-            },
-
+            setTimer: function(seconds) { this.pauseTimer(); this.timer.target = seconds; this.resetTimer(); },
             resetTimer: function() {
-                this.pauseTimer();
-                this.timer.remaining = this.timer.target;
-                this.updateTimerDisplay();
+                this.pauseTimer(); this.timer.remaining = this.timer.target; this.updateTimerDisplay();
                 document.getElementById('start-pause-button').textContent = "▶";
-                document.getElementById('timer-label').classList.remove('time-alert');
-                document.getElementById('start-pause-button').disabled = false;
+                document.getElementById('timer-label').classList.remove('alert');
             },
-
             startTimer: function() {
                 if (this.timer.isRunning) return;
                 this.timer.isRunning = true;
                 document.getElementById('start-pause-button').textContent = "⏸";
-                
                 this.timer.interval = setInterval(() => {
-                    if (this.timer.remaining > 0) {
-                        this.timer.remaining--;
-                        this.updateTimerDisplay();
-                    } else {
-                        this.pauseTimer();
-                        document.getElementById('timer-label').textContent = "TIME UP!";
-                        document.getElementById('timer-label').classList.add('time-alert');
-                    }
+                    if (this.timer.remaining > 0) { this.timer.remaining--; this.updateTimerDisplay(); }
+                    else { this.pauseTimer(); document.getElementById('timer-label').textContent = "00:00"; document.getElementById('timer-label').classList.add('alert'); }
                 }, 1000);
             },
-
-            pauseTimer: function() {
-                clearInterval(this.timer.interval);
-                this.timer.isRunning = false;
-                document.getElementById('start-pause-button').textContent = "▶";
-            },
-
-            toggleTimer: function() {
-                if (this.timer.isRunning) this.pauseTimer();
-                else this.startTimer();
-            },
-
+            pauseTimer: function() { clearInterval(this.timer.interval); this.timer.isRunning = false; document.getElementById('start-pause-button').textContent = "▶"; },
+            toggleTimer: function() { if (this.timer.isRunning) this.pauseTimer(); else this.startTimer(); },
             updateTimerDisplay: function() {
-                const m = Math.floor(this.timer.remaining / 60);
-                const s = this.timer.remaining % 60;
-                document.getElementById('timer-label').textContent = 
-                    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                
+                const m = Math.floor(this.timer.remaining / 60); const s = this.timer.remaining % 60;
+                document.getElementById('timer-label').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
                 const label = document.getElementById('timer-label');
-                label.classList.remove('time-alert');
-                if (this.timer.remaining <= 10 && this.timer.remaining % 2 === 0 && this.timer.isRunning) {
-                    label.classList.add('time-alert');
-                }
+                label.classList.remove('alert');
+                if (this.timer.remaining <= 10 && this.timer.remaining > 0 && this.timer.remaining % 2 === 0 && this.timer.isRunning) label.classList.add('alert');
             }
         };
 
-        // --- Event Listeners ---
+        // Listeners
         document.getElementById('start-pause-button').addEventListener('click', () => app.toggleTimer());
         document.getElementById('reset-button').addEventListener('click', () => app.resetTimer());
         document.getElementById('set-4min-button').addEventListener('click', () => app.setTimer(240));
         document.getElementById('set-2min-button').addEventListener('click', () => app.setTimer(120));
         document.getElementById('set-1min-button').addEventListener('click', () => app.setTimer(60));
 
-        // Start
         app.init();
     </script>
 </body>

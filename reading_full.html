@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Reading Exam Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        #app-container { @apply w-full max-w-[95%] mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden h-[90vh] flex flex-col relative mt-4; }
+        
+        /* --- GENERAL UI --- */
+        .btn-nav { @apply px-8 py-3 font-bold rounded-lg shadow-md transition transform hover:scale-105 active:scale-95 text-white; }
+        .text-content { font-size: 1.15rem; line-height: 2.2; color: #374151; text-align: left; }
+        .progress-dot { @apply w-3 h-3 rounded-full bg-gray-300 transition-all duration-300; }
+        .progress-dot.active { @apply bg-indigo-600 scale-150; }
+        .progress-dot.completed { @apply bg-green-500; }
+        .s-span { @apply transition-colors duration-150 rounded px-1 -mx-1 border-b-2 border-transparent; }
+        .picking-mode .s-span:hover { @apply bg-slate-100 cursor-pointer border-slate-300; }
+        .status-icon { @apply w-5 h-5 inline-block align-middle ml-2; }
+
+        /* --- EVIDENCE --- */
+        .s-span.evidence-selected { @apply bg-yellow-100 border-yellow-400 text-slate-900; }
+        .evidence-tag { @apply ml-1 text-[0.6rem] align-top bg-slate-800 text-white px-1 rounded font-bold uppercase tracking-wider inline-block select-none; transform: translateY(2px); }
+        .ev-btn { @apply text-xs font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 cursor-pointer transition border border-slate-200 rounded px-2 py-1 hover:bg-slate-50 ml-2; }
+        .ev-btn.active { @apply bg-yellow-400 text-white border-yellow-500; }
+
+        /* --- PART 1 (CLOZE) --- */
+        .gap-slot { @apply inline-flex items-center justify-center min-w-[60px] h-8 px-2 mx-1 border-b-2 border-indigo-300 text-indigo-800 font-bold transition-all bg-indigo-50/50; vertical-align: baseline; }
+        .gap-slot.filled { @apply border-indigo-600 bg-indigo-100; }
+        .gap-slot.correct { @apply text-green-700 border-green-500 bg-green-100; }
+        .gap-correction { @apply text-white bg-green-600 px-2 py-0.5 rounded ml-2 font-bold no-underline inline-block text-sm shadow-sm; }
+        .p1-opt-btn { @apply flex justify-between items-center p-3 border rounded hover:bg-slate-50 cursor-pointer text-sm font-semibold transition; }
+        .p1-opt-btn.selected { @apply bg-indigo-600 text-white border-indigo-600; }
+        .p1-opt-btn.review-correct { @apply bg-green-100 border-green-500 text-green-800; }
+        .p1-opt-btn.review-wrong { @apply bg-red-100 border-red-500 text-red-800 opacity-70; }
+
+        /* --- PART 5 (MC) --- */
+        .p5-card { @apply p-4 border-2 border-transparent rounded-xl transition-all mb-6 bg-white shadow-sm border-slate-100; }
+        .p5-card.picking-active { @apply border-yellow-400 bg-yellow-50; }
+        .p5-card.status-correct { @apply border-green-500 bg-green-50/20; }
+        .p5-card.status-wrong { @apply border-red-500 bg-red-50/20; }
+        .p5-opt-btn { @apply flex justify-between items-center p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer text-sm font-medium mt-2; }
+        .p5-opt-btn.selected { @apply bg-indigo-50 border-indigo-500 text-indigo-900; }
+        .p5-opt-btn.review-correct { @apply bg-green-100 border-green-500 text-green-800 ring-1 ring-green-400; }
+        .p5-opt-btn.review-wrong { @apply bg-red-100 border-red-500 text-red-800 opacity-60; }
+        .p5-opt-btn.review-missed { @apply border-green-500 text-green-700 bg-white ring-2 ring-green-200 font-bold; }
+
+        /* --- GAPPED TEXT (Used for P6 in B2/C2, P7 in C1) --- */
+        .dropzone { display: inline-flex; align-items: center; min-width: 80px; min-height: 30px; margin: 0 4px; background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 6px; vertical-align: middle; transition: all 0.2s; position: relative; }
+        .dropzone.filled { border-style: solid; border-color: #94a3b8; background-color: #fff; }
+        .dropzone.review-correct { @apply border-green-500 bg-green-50 text-green-800 font-bold; }
+        .dropzone.review-wrong { @apply border-red-500 bg-red-50 w-auto px-2 decoration-red-500 decoration-2; }
+        .bank-card { @apply flex gap-2 p-3 bg-white border border-slate-200 rounded shadow-sm mb-2 text-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 transition; }
+        .bank-card.dragging { @apply opacity-50; }
+
+        /* --- CROSS TEXT (C1 Part 6) --- */
+        .highlight-0 { @apply bg-yellow-100 border-yellow-400 text-slate-900; }
+        .highlight-1 { @apply bg-blue-100 border-blue-400 text-slate-900; }
+        .highlight-2 { @apply bg-pink-100 border-pink-400 text-slate-900; }
+        .highlight-3 { @apply bg-orange-100 border-orange-400 text-slate-900; }
+        .tag-0 { @apply bg-yellow-600; }
+        .tag-1 { @apply bg-blue-600; }
+        .tag-2 { @apply bg-pink-600; }
+        .tag-3 { @apply bg-orange-600; }
+        
+        .p6-cross-card { @apply p-4 border-2 border-slate-100 rounded-lg bg-white shadow-sm mb-4 transition-all relative; }
+        .p6-cross-card.active-0 { @apply border-yellow-400 ring-1 ring-yellow-400 bg-yellow-50; }
+        .p6-cross-card.active-1 { @apply border-blue-400 ring-1 ring-blue-400 bg-blue-50; }
+        .p6-cross-card.active-2 { @apply border-pink-400 ring-1 ring-pink-400 bg-pink-50; }
+        .p6-cross-card.active-3 { @apply border-orange-400 ring-1 ring-orange-400 bg-orange-50; }
+        .p6-cross-card.status-correct { @apply border-emerald-500 bg-emerald-50/30; }
+        .p6-cross-card.status-wrong { @apply border-rose-500 bg-rose-50/30; }
+
+        .ev-btn.active-0 { @apply bg-yellow-400 text-white border-yellow-500; }
+        .ev-btn.active-1 { @apply bg-blue-400 text-white border-blue-500; }
+        .ev-btn.active-2 { @apply bg-pink-400 text-white border-pink-500; }
+        .ev-btn.active-3 { @apply bg-orange-400 text-white border-orange-500; }
+
+        .cross-opt-btn { @apply flex-1 py-2 text-center text-sm font-bold border border-slate-200 bg-white rounded cursor-pointer transition hover:bg-slate-50 select-none text-slate-500; }
+        .cross-opt-btn.selected { @apply bg-indigo-600 text-white border-indigo-600 shadow-md; }
+        .cross-opt-btn.review-correct { @apply bg-green-600 text-white border-green-600; }
+        .cross-opt-btn.review-wrong { @apply bg-red-500 text-white border-red-500 opacity-50; }
+
+        /* --- MULTIPLE MATCHING (Used for P7 in B2/C2, P8 in C1) --- */
+        .section-block { @apply mb-8 pb-8 border-b border-slate-100 last:border-0; }
+        .section-label { @apply text-xl font-black text-slate-800 mb-2 inline-block bg-slate-100 px-2 rounded; }
+        .p7-card { @apply bg-white p-4 rounded border-2 border-slate-200 mb-4 shadow-sm transition-all; }
+        .p7-card.status-correct { @apply border-green-500 bg-green-50/20; }
+        .p7-card.status-wrong { @apply border-red-500 bg-red-50/20; }
+        .p7-btn { @apply flex-1 py-2 text-center text-sm font-bold border border-slate-200 rounded cursor-pointer hover:bg-slate-50 transition flex justify-center items-center gap-2; }
+        .p7-btn.selected { @apply bg-indigo-600 text-white border-indigo-600; }
+        .p7-btn.review-correct { @apply bg-green-600 text-white border-green-600 shadow-sm; }
+        .p7-btn.review-wrong { @apply bg-red-500 text-white border-red-500 opacity-50; }
+
+        /* --- START SCREEN --- */
+        .level-btn { @apply text-4xl font-black py-10 rounded-3xl transition transform hover:scale-105 border-4 opacity-70 grayscale; }
+        .level-btn.active { @apply opacity-100 grayscale-0 ring-4 ring-offset-2 ring-indigo-500; }
+        .btn-b2 { background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border-color: #C7D2FE; }
+        .btn-c1 { background: linear-gradient(135deg, #FF9800, #FFC107); color: #333; border-color: #FFECB3; }
+        .btn-c2 { background: linear-gradient(135deg, #8BC34A, #CDDC39); color: #333; border-color: #DCEDC8; }
+        
+        .review-icon { @apply text-lg ml-2 font-bold inline-block; }
+
+        /* --- RESULTS GRID (CENTERED) --- */
+        #score-grid { @apply flex flex-wrap justify-center gap-6 w-full max-w-6xl mb-8; }
+        .result-card { @apply bg-white p-6 rounded-xl shadow-sm border border-slate-100 text-center w-40 md:w-48 shrink-0 flex flex-col justify-center; }
+    </style>
+</head>
+<body class="p-4 flex flex-col items-center">
+
+    <div class="w-full max-w-[95%] flex justify-between items-center mb-2">
+        <button onclick="app.handleBack()" class="flex items-center gap-2 text-gray-500 hover:text-indigo-700 font-bold transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <span id="nav-text">Exit Exam</span>
+        </button>
+        <div id="exam-header" class="hidden flex items-center gap-4">
+            <span id="level-badge" class="px-3 py-1 rounded bg-indigo-100 text-indigo-700 font-bold text-sm"></span>
+            <div class="flex gap-2">
+                <div id="dot-1" class="progress-dot"></div>
+                <div id="dot-2" class="progress-dot"></div>
+                <div id="dot-3" class="progress-dot"></div>
+                <div id="dot-4" class="progress-dot"></div>
+                <div id="dot-5" class="progress-dot hidden"></div> </div>
+        </div>
+    </div>
+
+    <div id="app-container">
+        
+        <div id="screen-start" class="flex-1 p-8 flex flex-col justify-center items-center gap-8 w-full h-full overflow-y-auto">
+            <h1 class="text-4xl font-extrabold text-gray-900">Full Reading <span class="text-indigo-600">Exam</span></h1>
+            <p class="text-gray-500 text-lg">Select your level to begin.</p>
+            <div id="level-selector" class="grid grid-cols-3 gap-6 w-full max-w-4xl">
+                <button onclick="app.selectLevel('B2')" id="btn-B2" class="level-btn btn-b2">B2</button>
+                <button onclick="app.selectLevel('C1')" id="btn-C1" class="level-btn btn-c1">C1</button>
+                <button onclick="app.selectLevel('C2')" id="btn-C2" class="level-btn btn-c2">C2</button>
+            </div>
+            <button onclick="app.startExam()" id="btn-start" disabled class="bg-gray-800 text-white text-2xl font-bold px-12 py-4 rounded-xl shadow-xl opacity-30 cursor-not-allowed transition hover:scale-105 mt-4">
+                Start Exam
+            </button>
+            <p id="status-msg" class="text-sm text-gray-400 font-mono">Waiting for selection...</p>
+        </div>
+
+        <div id="screen-part1" class="hidden flex-1 flex flex-col h-full">
+            <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-slate-700">Part 1: Multiple Choice Cloze</h3>
+                <span class="text-xs font-bold bg-white border border-slate-300 px-2 py-1 rounded">1 Mark Each</span>
+            </div>
+            <div class="flex-1 flex overflow-hidden">
+                <div class="w-2/3 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p1-title" class="text-2xl font-black text-slate-800 mb-6"></h2>
+                    <div id="p1-text" class="text-content"></div>
+                </div>
+                <div id="p1-sidebar" class="w-1/3 bg-slate-50 p-6 overflow-y-auto space-y-4"></div>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-end shrink-0">
+                <button onclick="app.nextSection()" class="btn-nav bg-indigo-600 hover:bg-indigo-700">Next Part →</button>
+            </div>
+        </div>
+
+        <div id="screen-part5" class="hidden flex-1 flex flex-col h-full">
+            <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-slate-700">Part 5: Multiple Choice</h3>
+                <span class="text-xs font-bold bg-white border border-slate-300 px-2 py-1 rounded">2 Marks Each</span>
+            </div>
+            <div class="flex-1 flex overflow-hidden">
+                <div class="w-2/3 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p5-title" class="text-2xl font-black text-slate-800 mb-6"></h2>
+                    <div id="p5-text" class="text-content"></div>
+                </div>
+                <div id="p5-sidebar" class="w-1/3 bg-slate-50 p-6 overflow-y-auto"></div>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-between shrink-0">
+                <button onclick="app.prevSection('screen-part1')" class="px-6 py-2 bg-gray-200 rounded text-gray-600 font-bold">← Back</button>
+                <button onclick="app.nextSection()" class="btn-nav bg-indigo-600 hover:bg-indigo-700">Next Part →</button>
+            </div>
+        </div>
+
+        <div id="screen-part6" class="hidden flex-1 flex flex-col h-full">
+            <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-slate-700">Part 6: <span id="p6-subtitle"></span></h3>
+                <span class="text-xs font-bold bg-white border border-slate-300 px-2 py-1 rounded">2 Marks Each</span>
+            </div>
+            <div id="p6-gapped-view" class="hidden flex-1 flex overflow-hidden w-full h-full">
+                <div class="w-3/4 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p6-title" class="text-2xl font-black text-slate-800 mb-6"></h2>
+                    <div id="p6-text" class="text-content"></div>
+                </div>
+                <div class="w-1/4 bg-slate-50 p-4 flex flex-col border-l border-slate-200 shadow-inner">
+                    <div class="text-xs font-bold text-slate-400 uppercase mb-2 text-center">Drag Sentences</div>
+                    <div id="p6-bank" class="flex-1 overflow-y-auto space-y-2 pb-10"></div>
+                </div>
+            </div>
+            <div id="p6-cross-view" class="hidden flex-1 flex overflow-hidden w-full h-full">
+                <div class="w-3/5 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p6-cross-title" class="text-2xl font-black text-slate-800 mb-6"></h2>
+                    <div id="p6-cross-text" class="text-content"></div>
+                </div>
+                <div class="w-2/5 bg-slate-50 p-6 overflow-y-auto border-l border-slate-200">
+                    <div class="text-xs font-bold text-slate-400 uppercase mb-4 text-center">Match Opinions (Use 🔍 for Evidence)</div>
+                    <div id="p6-cross-sidebar" class="space-y-4 pb-10"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-between shrink-0">
+                <button onclick="app.prevSection('screen-part5')" class="px-6 py-2 bg-gray-200 rounded text-gray-600 font-bold">← Back</button>
+                <button onclick="app.nextSection()" class="btn-nav bg-indigo-600 hover:bg-indigo-700">Next Part →</button>
+            </div>
+        </div>
+
+        <div id="screen-part7" class="hidden flex-1 flex flex-col h-full">
+            <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-slate-700">Part 7: <span id="p7-subtitle"></span></h3>
+                <span class="text-xs font-bold bg-white border border-slate-300 px-2 py-1 rounded" id="p7-marks"></span>
+            </div>
+            <div id="p7-matching-view" class="hidden flex-1 flex overflow-hidden w-full h-full">
+                <div class="w-2/3 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p7-match-title" class="text-2xl font-black text-slate-800 mb-2"></h2>
+                    <p id="p7-match-intro" class="italic text-slate-500 mb-6"></p>
+                    <div id="p7-match-text"></div>
+                </div>
+                <div id="p7-match-sidebar" class="w-1/3 bg-slate-50 p-6 overflow-y-auto"></div>
+            </div>
+            <div id="p7-gapped-view" class="hidden flex-1 flex overflow-hidden w-full h-full">
+                <div class="w-3/4 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p7-gap-title" class="text-2xl font-black text-slate-800 mb-6"></h2>
+                    <div id="p7-gap-text" class="text-content"></div>
+                </div>
+                <div class="w-1/4 bg-slate-50 p-4 flex flex-col border-l border-slate-200 shadow-inner">
+                    <div class="text-xs font-bold text-slate-400 uppercase mb-2 text-center">Drag Sentences</div>
+                    <div id="p7-gap-bank" class="flex-1 overflow-y-auto space-y-2 pb-10"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-between shrink-0">
+                <button onclick="app.prevSection('screen-part6')" class="px-6 py-2 bg-gray-200 rounded text-gray-600 font-bold">← Back</button>
+                <div class="flex gap-2">
+                    <button id="btn-finish-p7" onclick="app.finishExam()" class="hidden btn-nav bg-green-600 hover:bg-green-700">Finish Exam</button>
+                    <button id="btn-next-p8" onclick="app.nextSection()" class="hidden btn-nav bg-indigo-600 hover:bg-indigo-700">Next Part →</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-part8" class="hidden flex-1 flex flex-col h-full">
+            <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-slate-700">Part 8: Multiple Matching</h3>
+                <span class="text-xs font-bold bg-white border border-slate-300 px-2 py-1 rounded">1 Mark Each</span>
+            </div>
+            <div class="flex-1 flex overflow-hidden">
+                <div class="w-2/3 p-10 overflow-y-auto border-r border-slate-100">
+                    <h2 id="p8-title" class="text-2xl font-black text-slate-800 mb-2"></h2>
+                    <p id="p8-intro" class="italic text-slate-500 mb-6"></p>
+                    <div id="p8-text"></div>
+                </div>
+                <div id="p8-sidebar" class="w-1/3 bg-slate-50 p-6 overflow-y-auto"></div>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-between shrink-0">
+                <button onclick="app.prevSection('screen-part7')" class="px-6 py-2 bg-gray-200 rounded text-gray-600 font-bold">← Back</button>
+                <div class="flex gap-2">
+                    <button id="btn-finish-p8" onclick="app.finishExam()" class="btn-nav bg-green-600 hover:bg-green-700">Finish Exam</button>
+                    <button id="btn-return-results" onclick="app.switchScreen('screen-results')" class="hidden btn-nav bg-blue-600 hover:bg-blue-700">Return to Results</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-results" class="hidden flex-1 flex flex-col items-center justify-center p-8 bg-slate-50 overflow-y-auto">
+            <h2 class="text-5xl font-black text-slate-800 mb-8">Exam Complete</h2>
+            <div id="score-grid">
+                </div>
+            <div class="bg-white p-10 rounded-3xl shadow-xl border-4 border-slate-100 text-center mb-8">
+                <div class="text-sm font-bold text-slate-400 uppercase tracking-widest">Total Weighted Score</div>
+                <div id="total-percent" class="text-6xl font-black text-slate-800 my-2">0%</div>
+                <div id="total-fraction" class="text-slate-400 font-medium">0/0</div>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="app.enableReview()" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow hover:bg-indigo-700 transition">Review Answers</button>
+                <button onclick="location.reload()" class="px-8 py-3 bg-slate-800 text-white font-bold rounded-xl shadow hover:bg-slate-900 transition">New Exam</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // 👇 PASTE SUPABASE KEYS HERE
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        // ============================================================
+
+        const app = {
+            supabase: null,
+            db: { p1:[], p5:[], p6:[], p6Cross:[], p7:[] },
+            state: { 
+                level: null, 
+                data: { p1:null, p5:null, p6:null, p7:null, p8:null }, 
+                ans: { p1:{}, p5:{}, p6:{}, p7:{}, p8:{} },
+                activeEv: { p5:null, p6:null, p7:null, p8:null },
+                reviewMode: false
+            },
+
+            init: async function() {
+                const msg = document.getElementById('status-msg');
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                } else {
+                    msg.innerText = "Error: Library not loaded."; return;
+                }
+                const urlParams = new URLSearchParams(window.location.search);
+                const levelParam = urlParams.get('level');
+                msg.innerText = "Loading database...";
+                try {
+                    const [d1, d5, d6, d6Cross, d7] = await Promise.all([
+                        this.fetchData('reading_part_1'),
+                        this.fetchData('reading_part_5'),
+                        this.fetchData('reading_part_6'), 
+                        this.fetchData('reading_part_cross'), 
+                        this.fetchData('reading_part_7')
+                    ]);
+                    this.db.p1 = d1; this.db.p5 = d5; this.db.p6 = d6; this.db.p6Cross = d6Cross; this.db.p7 = d7;
+                    if (levelParam) { this.selectLevel(levelParam); this.startExam(); } 
+                    else { msg.innerText = "Ready. Select Level."; }
+                } catch(e) { console.error(e); msg.innerText = "Error loading data."; }
+            },
+
+            fetchData: async function(table) {
+                const { data, error } = await this.supabase.from(table).select('*');
+                return error ? [] : data;
+            },
+
+            selectLevel: function(lvl) {
+                this.state.level = lvl;
+                ['B2','C1','C2'].forEach(l => document.getElementById(`btn-${l}`).classList.remove('active'));
+                const btn = document.getElementById(`btn-${lvl}`);
+                if(btn) btn.classList.add('active');
+                document.getElementById('btn-start').disabled = false;
+                document.getElementById('btn-start').classList.remove('opacity-30', 'cursor-not-allowed');
+            },
+
+            startExam: function() {
+                const lvl = this.state.level;
+                if(!lvl) return;
+                const getRand = (arr) => arr.filter(i => i.level === lvl || (!i.level && lvl==='C1')).sort(()=>0.5-Math.random())[0];
+
+                // 1. Load Data
+                this.state.data.p1 = getRand(this.db.p1);
+                this.state.data.p5 = getRand(this.db.p5);
+
+                if(lvl === 'C1') {
+                    this.state.data.p6 = this.db.p6Cross.sort(()=>0.5-Math.random())[0]; 
+                    this.state.data.p6.type = 'cross';
+                    this.state.data.p7 = getRand(this.db.p6); // C1 P7 is Gapped
+                    if(this.state.data.p7) this.state.data.p7.type = 'gapped';
+                    this.state.data.p8 = getRand(this.db.p7); // C1 P8 is Matching
+                    if(this.state.data.p8) this.state.data.p8.type = 'matching';
+                    
+                    document.getElementById('dot-5').classList.remove('hidden'); 
+                    document.getElementById('btn-finish-p7').classList.add('hidden');
+                    document.getElementById('btn-next-p8').classList.remove('hidden');
+                } else {
+                    this.state.data.p6 = getRand(this.db.p6); // B2/C2 P6 is Gapped
+                    if(this.state.data.p6) this.state.data.p6.type = 'gapped';
+                    this.state.data.p7 = getRand(this.db.p7); // B2/C2 P7 is Matching
+                    if(this.state.data.p7) this.state.data.p7.type = 'matching';
+                    this.state.data.p8 = null;
+
+                    document.getElementById('dot-5').classList.add('hidden');
+                    document.getElementById('btn-finish-p7').classList.remove('hidden');
+                    document.getElementById('btn-next-p8').classList.add('hidden');
+                }
+
+                if(!this.state.data.p1 || !this.state.data.p5 || !this.state.data.p6 || !this.state.data.p7) {
+                    alert("Not enough data for this level yet."); return;
+                }
+
+                // 2. Calculate Continuous Numbering
+                // P1 is always 1-8. 
+                // P5 Starts at 9.
+                const p5Start = 9;
+                const p5Len = this.state.data.p5.questions.length;
+                
+                const p6Start = p5Start + p5Len;
+                const p6Len = this.state.data.p6.type === 'cross' ? this.state.data.p6.questions.length : Object.keys(this.state.data.p6.answers).length;
+
+                const p7Start = p6Start + p6Len;
+                const p7Len = this.state.data.p7.type === 'matching' ? this.state.data.p7.questions.length : Object.keys(this.state.data.p7.answers).length;
+
+                const p8Start = p7Start + p7Len; // Only used if C1
+
+                document.getElementById('level-badge').innerText = `${lvl} Exam`;
+                document.getElementById('exam-header').classList.remove('hidden');
+                
+                // 3. Render with Offsets
+                this.renderPart1();
+                this.renderPart5(p5Start); // Start at 9
+                
+                // P6
+                if(this.state.data.p6.type === 'cross') this.renderCrossText('p6', this.state.data.p6, p6Start);
+                else this.renderGappedText('p6', this.state.data.p6, p6Start);
+
+                // P7
+                if(lvl === 'C1') {
+                     this.renderGappedText('p7', this.state.data.p7, p7Start);
+                     if(this.state.data.p8) this.renderMatching('p8', this.state.data.p8, p8Start);
+                } else {
+                     this.renderMatching('p7', this.state.data.p7, p7Start);
+                }
+
+                this.switchScreen('screen-part1');
+                this.updateDots(1);
+            },
+
+            switchScreen: function(id) {
+                document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                const header = document.getElementById('exam-header');
+                const navText = document.getElementById('nav-text');
+                if (id === 'screen-start') { header.classList.add('hidden'); }
+                else if (id === 'screen-results') { header.classList.add('hidden'); navText.innerText = "Exit"; }
+                else { header.classList.remove('hidden'); navText.innerText = this.state.reviewMode ? "Back to Results" : "Exit Exam"; }
+            },
+
+            handleBack: function() {
+                // 1. If currently Reviewing, go back to Results and turn OFF review mode
+                if(this.state.reviewMode) {
+                    this.state.reviewMode = false; 
+                    this.switchScreen('screen-results');
+                } 
+                // 2. If already on Results screen, Exit immediately (no confirmation needed)
+                else if (!document.getElementById('screen-results').classList.contains('hidden')) {
+                     window.location.href = 'reading_index.html';
+                }
+                // 3. If in the middle of the Exam, ask for confirmation
+                else if(confirm("Exit exam? Progress will be lost.")) {
+                    window.location.href = 'reading_index.html';
+                }
+            },
+
+            nextSection: function() {
+                const visible = document.querySelector('[id^="screen-"]:not(.hidden)').id;
+                if(visible === 'screen-part1') { this.switchScreen('screen-part5'); this.updateDots(2); }
+                else if(visible === 'screen-part5') { this.switchScreen('screen-part6'); this.updateDots(3); }
+                else if(visible === 'screen-part6') { this.switchScreen('screen-part7'); this.updateDots(4); }
+                else if(visible === 'screen-part7' && this.state.level === 'C1') { this.switchScreen('screen-part8'); this.updateDots(5); }
+            },
+
+            prevSection: function(target) {
+                this.switchScreen(target);
+                if(target.includes('part1')) this.updateDots(1);
+                if(target.includes('part5')) this.updateDots(2);
+                if(target.includes('part6')) this.updateDots(3);
+                if(target.includes('part7')) this.updateDots(4);
+            },
+
+            updateDots: function(n) {
+                [1,2,3,4,5].forEach(i => {
+                    const dot = document.getElementById(`dot-${i}`);
+                    if(dot) {
+                        dot.classList.remove('active','completed');
+                        if(i < n) dot.classList.add('completed');
+                        if(i === n) dot.classList.add('active');
+                    }
+                });
+            },
+
+            // --- PART 1 ---
+            renderPart1: function() {
+                const item = this.state.data.p1;
+                document.getElementById('p1-title').innerText = item.title;
+                let gapCounter = 1;
+                let content = item.content.replace(/\[(\d+)\]/g, (m, id) => `<span id="p1-gap-${id}" class="gap-slot">[${gapCounter++}]</span>`);
+                document.getElementById('p1-text').innerHTML = content;
+                const sidebar = document.getElementById('p1-sidebar'); sidebar.innerHTML = '';
+                let qCounter = 1;
+                Object.keys(item.questions).sort((a,b)=>a-b).forEach(qNum => {
+                    const div = document.createElement('div'); div.className = "bg-white p-3 rounded border border-slate-200 shadow-sm";
+                    div.innerHTML = `<div class="text-xs font-bold text-slate-400 mb-2">Question ${qCounter++}</div><div class="flex flex-col gap-2" id="p1-opts-${qNum}"></div>`;
+                    const grid = div.querySelector(`[id^="p1-opts"]`);
+                    ['A','B','C','D'].forEach(opt => {
+                        const btn = document.createElement('div'); btn.className = "p1-opt-btn"; btn.id = `p1-btn-${qNum}-${opt}`;
+                        btn.innerHTML = `<span><span class="font-bold text-slate-400 mr-2">${opt}</span> ${item.questions[qNum][opt]}</span> <span class="status-icon"></span>`;
+                        btn.onclick = () => { if(this.state.reviewMode) return; grid.querySelectorAll('.p1-opt-btn').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); document.getElementById(`p1-gap-${qNum}`).innerText = item.questions[qNum][opt]; document.getElementById(`p1-gap-${qNum}`).classList.add('filled'); this.state.ans.p1[qNum] = opt; };
+                        grid.appendChild(btn);
+                    });
+                    sidebar.appendChild(div);
+                });
+            },
+
+            // --- PART 5 (Updated with Review Icon Span) ---
+            renderPart5: function(startNum) {
+                const item = this.state.data.p5;
+                document.getElementById('p5-title').innerText = item.title;
+                const wrapped = item.content.split(/\n\n/).map((para, pi) => `<p class="mb-4">${para.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g).map((s, si) => `<span class="s-span" id="p5-s-${pi}-${si}" onclick="app.toggleEvidence('p5', '${pi}-${si}')">${s}</span>`).join(' ')}</p>`).join('');
+                document.getElementById('p5-text').innerHTML = wrapped;
+                const sidebar = document.getElementById('p5-sidebar'); sidebar.innerHTML = '';
+                item.questions.forEach((q, index) => {
+                    const dispNum = startNum + index;
+                    const div = document.createElement('div'); div.className = "p5-card"; div.id = `p5-q-card-${q.id}`;
+                    div.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-800 text-sm">Q${dispNum} <span id="p5-res-icon-${q.id}" class="review-icon"></span></span><button id="p5-ev-${q.id}" onclick="app.activateEvidence('p5', '${q.id}', ${dispNum})" class="ev-btn">🔍 Evidence</button></div><div class="text-sm text-slate-600 mb-3 font-medium">${q.text}</div><div id="p5-opts-${q.id}"></div>`;
+                    const optContainer = div.querySelector(`[id^="p5-opts"]`);
+                    ['A','B','C','D'].forEach(let => {
+                        const btn = document.createElement('div'); btn.className = "p5-opt-btn"; btn.id = `p5-btn-${q.id}-${let}`;
+                        btn.innerHTML = `<span><span class="font-bold text-slate-400 mr-2">${let}</span> <span>${q.options[let]}</span></span> <span class="status-icon"></span>`;
+                        btn.onclick = () => { if(this.state.reviewMode) return; optContainer.querySelectorAll('.p5-opt-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); this.state.ans.p5[q.id] = let; };
+                        optContainer.appendChild(btn);
+                    });
+                    sidebar.appendChild(div);
+                });
+            },
+
+            // --- GAPPED TEXT ---
+            renderGappedText: function(partId, item, startNum) {
+                const viewId = partId === 'p6' ? 'p6-gapped-view' : 'p7-gapped-view';
+                const crossId = 'p6-cross-view'; const matchId = 'p7-matching-view';
+                
+                if(partId==='p6') { 
+                    document.getElementById('p6-subtitle').innerText = "Gapped Text"; 
+                    document.getElementById(crossId).classList.add('hidden'); 
+                    document.getElementById(viewId).classList.remove('hidden'); 
+                }
+                if(partId==='p7') { 
+                    document.getElementById('p7-subtitle').innerText = "Gapped Text"; 
+                    document.getElementById('p7-marks').innerText="2 Marks Each"; 
+                    document.getElementById(matchId).classList.add('hidden'); 
+                    document.getElementById(viewId).classList.remove('hidden'); 
+                }
+
+                // ID Correction
+                let titleElementId;
+                if(partId === 'p6') titleElementId = 'p6-title';
+                else titleElementId = 'p7-gap-title';
+
+                document.getElementById(titleElementId).innerText = item.title;
+
+                let gapCounter = startNum;
+                let content = item.content.replace(/\[(\d+)\]/g, (m, id) => {
+                    const disp = gapCounter++;
+                    return `<span class="gap-number text-indigo-400 font-black mr-1">[${disp}]</span><span class="dropzone" id="${partId}-drop-${id}" ondragover="event.preventDefault()" ondrop="app.handleDrop(event, '${partId}', '${id}')"></span>`;
+                });
+                document.getElementById(partId === 'p6' ? 'p6-text' : 'p7-gap-text').innerHTML = content;
+                
+                const bank = document.getElementById(partId === 'p6' ? 'p6-bank' : 'p7-gap-bank'); bank.innerHTML = '';
+                Object.entries(item.options).sort().forEach(([key, txt]) => {
+                    const div = document.createElement('div'); div.className = "bank-card"; div.draggable = true; div.id = `${partId}-drag-${key}`;
+                    div.innerHTML = `<span class="font-bold text-slate-500 bg-slate-100 px-1 rounded h-fit">${key}</span> <span>${txt}</span>`;
+                    div.ondragstart = (e) => { e.dataTransfer.setData('text', key); e.dataTransfer.setData('origin', partId); };
+                    bank.appendChild(div);
+                });
+            },
+
+            handleDrop: function(ev, partId, gapId) {
+                ev.preventDefault();
+                if(this.state.reviewMode) return;
+                const letter = ev.dataTransfer.getData('text');
+                const origin = ev.dataTransfer.getData('origin');
+                if(origin !== partId) return; 
+                const dragEl = document.getElementById(`${partId}-drag-${letter}`);
+                const zone = document.getElementById(`${partId}-drop-${gapId}`);
+                if(zone.children.length > 0) document.getElementById(partId === 'p6' ? 'p6-bank' : 'p7-gap-bank').appendChild(zone.children[0]);
+                zone.appendChild(dragEl); zone.classList.add('filled');
+                this.state.ans[partId][gapId] = letter;
+            },
+
+            // --- CROSS TEXT (Updated with Review Icon Span) ---
+            renderCrossText: function(partId, item, startNum) {
+                document.getElementById('p6-subtitle').innerText = "Cross-Text Matching";
+                document.getElementById('p6-gapped-view').classList.add('hidden');
+                document.getElementById('p6-cross-view').classList.remove('hidden');
+                document.getElementById('p6-cross-title').innerText = item.title;
+                const txtDiv = document.getElementById('p6-cross-text'); txtDiv.innerHTML = '';
+                Object.keys(item.sections).sort().forEach(secKey => {
+                    const block = document.createElement('div'); block.className = "section-block";
+                    const html = item.sections[secKey].match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g).map((s, i) => `<span class="s-span" id="p6-cross-s-${secKey}-${i}" onclick="app.toggleEvidence('p6', '${secKey}-${i}')">${s}</span>`).join(' ');
+                    block.innerHTML = `<h3 class="section-label">Section ${secKey}</h3><div class="text-content">${html}</div>`;
+                    txtDiv.appendChild(block);
+                });
+                const sidebar = document.getElementById('p6-cross-sidebar'); sidebar.innerHTML = '';
+                item.questions.forEach((q, idx) => {
+                    const disp = startNum + idx;
+                    const card = document.createElement('div'); card.className = "p6-cross-card"; card.id = `p6-cross-card-${q.id}`;
+                    card.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-800 text-sm">Q${disp} <span id="p6-cross-res-icon-${q.id}" class="review-icon"></span></span><button id="p6-cross-ev-${q.id}" onclick="app.activateEvidence('p6', '${q.id}', ${disp}, ${idx})" class="ev-btn">🔍 Evidence</button></div><div class="text-sm text-slate-600 mb-3 font-medium">${q.text}</div><div class="flex gap-2" id="p6-cross-opts-${q.id}"></div>`;
+                    const row = card.querySelector(`[id^="p6-cross-opts"]`);
+                    Object.keys(item.sections).sort().forEach(opt => {
+                        const btn = document.createElement('div'); btn.className = "cross-opt-btn"; btn.id = `p6-cross-btn-${q.id}-${opt}`; btn.innerText = opt;
+                        btn.onclick = () => { if(this.state.reviewMode) return; row.querySelectorAll('.cross-opt-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); this.state.ans.p6[q.id] = opt; };
+                        row.appendChild(btn);
+                    });
+                    sidebar.appendChild(card);
+                });
+            },
+
+            // --- MATCHING ---
+            renderMatching: function(partId, item, startNum) {
+                if(partId === 'p7') {
+                    document.getElementById('p7-subtitle').innerText = "Multiple Matching"; document.getElementById('p7-marks').innerText="1 Mark Each";
+                    document.getElementById('p7-gapped-view').classList.add('hidden'); document.getElementById('p7-matching-view').classList.remove('hidden');
+                }
+                
+                const titleId = partId === 'p7' ? 'p7-match-title' : 'p8-title';
+                const introId = partId === 'p7' ? 'p7-match-intro' : 'p8-intro';
+                const textId = partId === 'p7' ? 'p7-match-text' : 'p8-text';
+                const sideId = partId === 'p7' ? 'p7-match-sidebar' : 'p8-sidebar';
+
+                document.getElementById(titleId).innerText = item.title; document.getElementById(introId).innerText = item.intro;
+                const txtDiv = document.getElementById(textId); txtDiv.innerHTML = '';
+                Object.keys(item.sections).sort().forEach(sec => {
+                    const html = item.sections[sec].match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g).map((s, i) => `<span class="s-span" id="${partId}-s-${sec}-${i}" onclick="app.toggleEvidence('${partId}', '${sec}-${i}')">${s}</span>`).join(' ');
+                    const block = document.createElement('div'); block.className = "section-block";
+                    block.innerHTML = `<h3 class="section-label">Section ${sec}</h3><div class="text-content">${html}</div>`;
+                    txtDiv.appendChild(block);
+                });
+
+                const sidebar = document.getElementById(sideId); sidebar.innerHTML = '';
+                item.questions.forEach((q, index) => {
+                    const disp = startNum + index;
+                    const div = document.createElement('div'); div.className = "p7-card"; div.id = `${partId}-card-${q.id}`;
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2"><span class="font-bold text-xs uppercase text-slate-400">Q${disp} <span id="${partId}-res-icon-${q.id}" class="review-icon"></span></span><button id="${partId}-ev-${q.id}" onclick="app.activateEvidence('${partId}', '${q.id}', ${disp})" class="ev-btn">🔍</button></div>
+                        <div class="text-sm font-semibold text-slate-700 mb-2">${q.text}</div>
+                        <div class="flex gap-1" id="${partId}-opts-${q.id}"></div>
+                    `;
+                    const grid = div.querySelector(`[id^="${partId}-opts"]`);
+                    Object.keys(item.sections).sort().forEach(sec => {
+                        const btn = document.createElement('div'); btn.className = "p7-btn"; btn.id = `${partId}-btn-${q.id}-${sec}`; btn.innerText = sec;
+                        btn.onclick = () => { if(this.state.reviewMode) return; grid.querySelectorAll('.p7-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); this.state.ans[partId][q.id] = sec; };
+                        grid.appendChild(btn);
+                    });
+                    sidebar.appendChild(div);
+                });
+            },
+
+            activateEvidence: function(partId, qid, qNum, colorIdx=0) {
+                if(this.state.reviewMode) return;
+                const btnPrefix = partId === 'p6' && this.state.data.p6.type === 'cross' ? 'p6-cross-ev' : (partId === 'p5' ? 'p5-ev' : `${partId}-ev`);
+                const cardPrefix = partId === 'p6' && this.state.data.p6.type === 'cross' ? 'p6-cross-card' : (partId === 'p5' ? 'p5-q-card' : `${partId}-card`);
+                const containerId = partId === 'p6' && this.state.data.p6.type === 'cross' ? 'p6-cross-text' : (partId === 'p5' ? 'p5-text' : (partId === 'p7' && this.state.data.p7.type==='matching' ? 'p7-match-text' : 'p8-text'));
+
+                const txt = document.getElementById(containerId);
+                const btn = document.getElementById(`${btnPrefix}-${qid}`);
+                const card = document.getElementById(`${cardPrefix}-${qid}`);
+
+                if (this.state.activeEv[partId] && this.state.activeEv[partId].id !== qid) {
+                    const oldInfo = this.state.activeEv[partId];
+                    document.getElementById(`${btnPrefix}-${oldInfo.id}`).classList.remove('active', `active-${oldInfo.cIdx}`);
+                    document.getElementById(`${cardPrefix}-${oldInfo.id}`).classList.remove('picking-active', 'ring-2', 'ring-yellow-400', `active-${oldInfo.cIdx}`);
+                }
+
+                if (this.state.activeEv[partId] && this.state.activeEv[partId].id === qid) {
+                    this.state.activeEv[partId] = null;
+                    txt.classList.remove('picking-mode');
+                    btn.classList.remove('active', `active-${colorIdx}`);
+                    card.classList.remove('picking-active', 'ring-2', 'ring-yellow-400', `active-${colorIdx}`);
+                } else {
+                    this.state.activeEv[partId] = { id: qid, num: qNum, cIdx: colorIdx };
+                    txt.classList.add('picking-mode');
+                    btn.classList.add(partId==='p6'&&this.state.data.p6.type==='cross' ? `active-${colorIdx}` : 'active');
+                    card.classList.add(partId==='p6'&&this.state.data.p6.type==='cross' ? `active-${colorIdx}` : (partId==='p5'?'picking-active':'ring-2'), (partId!=='p5' && partId!=='p6')?'ring-yellow-400': 'active');
+                }
+            },
+
+            toggleEvidence: function(partId, uid) {
+                if(!this.state.activeEv[partId]) return;
+                const info = this.state.activeEv[partId];
+                let spanId = '';
+                if(partId === 'p5') spanId = `p5-s-${uid}`;
+                else if(partId === 'p6' && this.state.data.p6.type === 'cross') spanId = `p6-cross-s-${uid}`;
+                else if(partId === 'p7') spanId = `p7-s-${uid}`; 
+                else if(partId === 'p8') spanId = `p8-s-${uid}`;
+                
+                const el = document.getElementById(spanId);
+                if(!el) return;
+
+                const hasClass = partId==='p6' && this.state.data.p6.type==='cross' ? el.classList.contains(`highlight-${info.cIdx}`) : el.classList.contains('evidence-selected');
+                
+                if (hasClass && el.dataset.qid === info.id) {
+                    if(partId==='p6' && this.state.data.p6.type==='cross') el.classList.remove(`highlight-${info.cIdx}`);
+                    else el.classList.remove('evidence-selected');
+                    const badge = el.querySelector('.evidence-tag');
+                    if(badge) badge.remove();
+                } else {
+                    if(partId==='p6' && this.state.data.p6.type==='cross') el.classList.remove('highlight-0','highlight-1','highlight-2','highlight-3');
+                    else el.classList.add('evidence-selected');
+                    if(partId==='p6' && this.state.data.p6.type==='cross') el.classList.add(`highlight-${info.cIdx}`);
+                    el.dataset.qid = info.id;
+                    const old = el.querySelector('.evidence-tag'); if(old) old.remove();
+                    el.innerHTML += `<span class="evidence-tag ${partId==='p6'&&this.state.data.p6.type==='cross'?'tag-'+info.cIdx:''}">Q${info.num}</span>`;
+                }
+            },
+
+            finishExam: function() {
+                const parts = ['p1','p5','p6','p7'];
+                if(this.state.level === 'C1') parts.push('p8');
+                
+                let totalScore = 0;
+                let maxScore = 0;
+                const grid = document.getElementById('score-grid');
+                grid.innerHTML = '';
+
+                parts.forEach(pid => {
+                    const data = this.state.data[pid];
+                    const user = this.state.ans[pid];
+                    if(!data) return;
+
+                    let pScore = 0;
+                    let pMax = 0;
+                    let weight = 1;
+
+                    if (pid === 'p1') weight = 1;
+                    else if (pid === 'p5') weight = 2;
+                    else if (pid === 'p6') weight = 2;
+                    else if (pid === 'p7') weight = (this.state.level === 'C1' ? 2 : 1);
+                    else if (pid === 'p8') weight = 1;
+
+                    Object.keys(data.answers).forEach(qid => {
+                        if(user[qid] === data.answers[qid]) pScore += weight;
+                        pMax += weight;
+                    });
+                    
+                    totalScore += pScore;
+                    maxScore += pMax;
+
+                    const card = document.createElement('div');
+                    card.className = "result-card";
+                    let color = 'text-gray-800';
+                    if(pid === 'p1') color = 'text-indigo-600';
+                    if(pid === 'p5') color = 'text-purple-600';
+                    if(pid === 'p6') color = 'text-pink-600';
+                    if(pid === 'p7') color = 'text-teal-600';
+                    if(pid === 'p8') color = 'text-orange-600';
+
+                    card.innerHTML = `
+                        <div class="text-xs font-bold text-slate-400 uppercase">Part ${pid.replace('p','')}</div>
+                        <div class="text-3xl font-black ${color} mt-1">${pScore}</div>
+                        <div class="text-xs text-gray-400">${weight} Mark(s) Ea.</div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                const percent = Math.round((totalScore / maxScore) * 100);
+                document.getElementById('total-percent').innerText = `${percent}%`;
+                document.getElementById('total-fraction').innerText = `${totalScore}/${maxScore}`;
+                document.getElementById('total-percent').className = percent >= 60 ? 'text-6xl font-black text-green-600 my-2' : 'text-6xl font-black text-red-600 my-2';
+                
+                if(this.state.level === 'C1') {
+                    document.getElementById('btn-finish-p8').classList.add('hidden');
+                } else {
+                    document.getElementById('btn-finish-p7').classList.add('hidden');
+                }
+                document.getElementById('btn-return-results').classList.remove('hidden');
+                this.switchScreen('screen-results');
+            },
+
+            enableReview: function() {
+                this.state.reviewMode = true;
+                this.switchScreen('screen-part1');
+                this.updateDots(1);
+                const iconCheck = `<svg class="w-5 h-5 text-green-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+                const iconCross = `<svg class="w-5 h-5 text-red-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+
+                // --- P1 REVIEW ---
+                Object.keys(this.state.data.p1.answers).forEach(qid => {
+                    const cor = this.state.data.p1.answers[qid];
+                    const usr = this.state.ans.p1[qid];
+                    const gap = document.getElementById(`p1-gap-${qid}`);
+                    if(usr === cor) { 
+                        gap.classList.add('correct'); 
+                        gap.innerHTML += ` <span class="ml-1">${iconCheck}</span>`;
+                    } else { 
+                        gap.classList.remove('gap-slot'); gap.className = "inline-flex items-baseline mx-1"; 
+                        gap.innerHTML = `<span class="text-red-500 line-through mr-1 font-bold decoration-2 decoration-red-500">${usr ? this.state.data.p1.questions[qid][usr] : "---"}</span><span class="gap-correction">${this.state.data.p1.questions[qid][cor]} ${iconCheck}</span>`; 
+                    }
+                    if(usr && usr !== cor) { const b = document.getElementById(`p1-btn-${qid}-${usr}`); b.classList.add('review-wrong'); b.querySelector('.status-icon').innerHTML = iconCross; }
+                    const c = document.getElementById(`p1-btn-${qid}-${cor}`); c.classList.add('review-correct'); c.querySelector('.status-icon').innerHTML = iconCheck;
+                });
+
+                // --- P5 REVIEW ---
+                Object.keys(this.state.data.p5.answers).forEach(qid => {
+                    const cor = this.state.data.p5.answers[qid];
+                    const usr = this.state.ans.p5[qid];
+                    const card = document.getElementById(`p5-q-card-${qid}`);
+                    const iconSpan = document.getElementById(`p5-res-icon-${qid}`);
+
+                    if(usr === cor) {
+                        card.classList.add('status-correct');
+                        iconSpan.innerHTML = "✅";
+                    } else {
+                        card.classList.add('status-wrong');
+                        iconSpan.innerHTML = "❌";
+                    }
+                    
+                    if(usr && usr !== cor) document.getElementById(`p5-btn-${qid}-${usr}`).classList.add('review-wrong');
+                    document.getElementById(`p5-btn-${qid}-${cor}`).classList.add('review-correct');
+                });
+
+                const reviewGapped = (pid, data, ans) => {
+                    Object.keys(data.answers).forEach(gid => {
+                        const cor = data.answers[gid];
+                        const usr = ans[gid];
+                        const zone = document.getElementById(`${pid}-drop-${gid}`);
+                        if(usr === cor) { 
+                            zone.classList.add('review-correct'); 
+                            zone.innerHTML += ` ${iconCheck}`;
+                        } else { 
+                            zone.classList.add('review-wrong'); 
+                            zone.innerHTML = `<span class="line-through text-red-600 mr-2 font-bold decoration-2 opacity-70">${document.getElementById(`${pid}-drag-${usr}`)?.innerText || (usr||'?')}</span><span class="text-green-600 font-black">[${cor}]</span>`; 
+                        }
+                    });
+                };
+
+                const reviewMatching = (pid, data, ans) => {
+                    Object.keys(data.answers).forEach(qid => {
+                        const cor = data.answers[qid];
+                        const usr = ans[qid];
+                        const card = document.getElementById(`${pid}-card-${qid}`);
+                        const iconSpan = document.getElementById(`${pid}-res-icon-${qid}`);
+                        
+                        if(usr === cor) { 
+                            card.classList.add('status-correct'); 
+                            iconSpan.innerHTML = "✅";
+                        } else { 
+                            card.classList.add('status-wrong');
+                            iconSpan.innerHTML = "❌";
+                        }
+
+                        if(usr && usr !== cor) {
+                            const b = document.getElementById(`${pid}-btn-${qid}-${usr}`);
+                            b.classList.add('review-wrong');
+                        }
+                        const c = document.getElementById(`${pid}-btn-${qid}-${cor}`);
+                        c.classList.add('review-correct');
+                    });
+                };
+
+                // P6
+                if(this.state.data.p6.type === 'gapped') reviewGapped('p6', this.state.data.p6, this.state.ans.p6);
+                else {
+                    // P6 CROSS TEXT REVIEW
+                    Object.keys(this.state.data.p6.answers).forEach(qid => {
+                        const cor = this.state.data.p6.answers[qid];
+                        const usr = this.state.ans.p6[qid];
+                        const card = document.getElementById(`p6-cross-card-${qid}`);
+                        const iconSpan = document.getElementById(`p6-cross-res-icon-${qid}`);
+
+                        if(usr===cor) {
+                            card.classList.add('status-correct');
+                            iconSpan.innerHTML = "✅";
+                        } else {
+                            card.classList.add('status-wrong');
+                            iconSpan.innerHTML = "❌";
+                        }
+
+                        if(usr && usr!==cor) document.getElementById(`p6-cross-btn-${qid}-${usr}`).classList.add('review-wrong');
+                        document.getElementById(`p6-cross-btn-${qid}-${cor}`).classList.add('review-correct');
+                    });
+                }
+
+                // P7
+                if(this.state.data.p7.type === 'gapped') reviewGapped('p7', this.state.data.p7, this.state.ans.p7);
+                else reviewMatching('p7', this.state.data.p7, this.state.ans.p7);
+
+                // P8
+                if(this.state.data.p8) reviewMatching('p8', this.state.data.p8, this.state.ans.p8);
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

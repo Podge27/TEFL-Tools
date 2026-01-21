@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Part 5: Multiple Choice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        #app-container { 
+            @apply w-full max-w-[95%] mx-auto mt-4 bg-white shadow-xl rounded-xl border border-slate-200;
+            display: flex; flex-direction: column; height: 90vh; overflow: hidden; 
+        }
+
+        /* --- TEXT STYLES --- */
+        .text-content { font-size: 1.15rem; line-height: 2.2; color: #334155; text-align: left; }
+        
+        /* Paragraph spacing for Part 5 */
+        .text-content p { margin-bottom: 1.5rem; }
+
+        /* --- EVIDENCE HIGHLIGHTER STYLES --- */
+        .s-span { @apply transition-colors duration-150 rounded px-1 -mx-1 border-b-2 border-transparent; }
+        
+        /* Hover state only when picking mode is active */
+        .picking-mode .s-span:hover { @apply bg-slate-100 cursor-pointer border-slate-300; }
+        
+        /* Selected State */
+        .s-span.evidence-selected { @apply bg-yellow-100 border-yellow-400 text-slate-900; }
+        
+        /* The Tag [Q31] */
+        .evidence-tag { @apply ml-1 text-[0.6rem] align-top bg-slate-800 text-white px-1 rounded font-bold uppercase tracking-wider inline-block select-none; transform: translateY(2px); }
+
+
+        /* --- SIDEBAR QUESTIONS --- */
+        .question-block { @apply mb-6 p-4 border-2 border-transparent rounded-xl transition-all; }
+        
+        /* Active Question State (When picking evidence) */
+        .question-block.picking-active { @apply border-yellow-400 bg-yellow-50; }
+        
+        /* Feedback States for the whole block */
+        .question-block.status-correct { @apply border-emerald-500 bg-emerald-50/30; }
+        .question-block.status-wrong { @apply border-rose-500 bg-rose-50/30; }
+
+        .q-header-row { @apply flex justify-between items-start mb-4; }
+        .q-header-text { @apply font-bold text-slate-800 text-lg; }
+        .q-tag { @apply inline-block bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded mr-2 mb-2 align-middle; }
+
+        /* Evidence Toggle Button */
+        .ev-btn { @apply text-xs font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 cursor-pointer transition border border-slate-200 rounded px-2 py-1 hover:bg-slate-50 ml-2 flex-shrink-0; }
+        .ev-btn.active { @apply bg-yellow-400 text-white border-yellow-500 shadow-sm; }
+
+        /* Option Buttons */
+        .opt-grid { @apply flex flex-col gap-3; }
+        .opt-btn { 
+            @apply flex items-start justify-between p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition text-left text-sm text-slate-600 select-none cursor-pointer; 
+        }
+        
+        .opt-content { @apply flex items-start; } 
+        .opt-letter { @apply font-bold text-slate-400 mr-3 mt-0.5; }
+        .opt-text { @apply font-medium; }
+        .opt-icon { @apply ml-2 flex-shrink-0 w-6 h-6 flex items-center justify-center; }
+
+        /* Selection State */
+        .opt-btn.selected { @apply bg-indigo-50 border-indigo-500 ring-1 ring-indigo-500 text-indigo-900; }
+        .opt-btn.selected .opt-letter { @apply text-indigo-600; }
+
+        /* High Visibility Feedback */
+        .opt-btn.state-correct { @apply bg-emerald-50 border-emerald-600 text-emerald-900 ring-1 ring-emerald-200; }
+        .opt-btn.state-correct .opt-letter { @apply text-emerald-700; }
+        
+        .opt-btn.state-wrong { @apply bg-rose-50 border-rose-500 text-rose-900 ring-1 ring-rose-200 opacity-80; }
+        .opt-btn.state-wrong .opt-letter { @apply text-rose-700; }
+        
+        .opt-btn.state-missed { @apply border-emerald-600 text-emerald-800 bg-white ring-2 ring-emerald-100 font-bold; }
+
+        /* Header Elements */
+        .btn-action { @apply px-6 py-2 font-bold text-white rounded-lg shadow hover:opacity-90; }
+        .level-btn { @apply text-4xl font-black py-8 rounded-2xl transition transform hover:scale-105 border-4 opacity-60 grayscale; }
+        .level-btn.active { @apply opacity-100 grayscale-0 ring-4 ring-offset-2 ring-slate-700; }
+        .btn-b2 { background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border-color: #C7D2FE; }
+        .btn-c1 { background: linear-gradient(135deg, #FF9800, #FFC107); color: #333; border-color: #FFECB3; }
+        .btn-c2 { background: linear-gradient(135deg, #8BC34A, #CDDC39); color: #333; border-color: #DCEDC8; }
+        .mode-btn { @apply border-4 border-slate-100 p-8 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition text-center text-slate-400; }
+        .mode-btn.active { @apply border-slate-700 bg-slate-50 text-slate-800 ring-2 ring-offset-2 ring-slate-700; }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+    <div id="app-container">
+        <div class="bg-white border-b border-slate-100 p-4 md:p-6 flex justify-between items-center z-50 flex-shrink-0">
+            <div class="flex items-center gap-6">
+                <a href="reading_index.html" class="flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back
+                </a>
+                
+                <div class="flex flex-col md:flex-row md:items-center md:gap-3">
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">
+                        Part 5 <span class="text-indigo-600">Multiple Choice</span>
+                    </h1>
+                    <span id="level-badge" class="hidden px-2 py-1 bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider rounded border border-slate-200"></span>
+                </div>
+            </div>
+            
+            <div id="exam-controls" class="hidden flex gap-3">
+                <span id="score-display" class="hidden font-bold text-xl mr-4 self-center"></span>
+                <button onclick="app.checkAnswers()" id="btn-check" class="btn-action bg-green-600">Check Answers</button>
+                <button onclick="app.resetActivity()" id="btn-reset" class="btn-action bg-amber-500 hidden">Retry</button>
+                <button onclick="app.showScreen('screen-dashboard')" class="text-slate-400 font-bold hover:text-slate-600 px-4">Exit</button>
+            </div>
+            
+            <div id="class-controls" class="hidden flex gap-3">
+                <button onclick="app.resetActivity()" class="btn-action bg-amber-500">Reset</button>
+                <button onclick="app.nextText()" class="btn-action bg-indigo-600">Next Text →</button>
+                <button onclick="app.showScreen('screen-dashboard')" class="text-slate-400 font-bold hover:text-slate-600 px-4">Exit</button>
+            </div>
+        </div>
+
+        <div id="main-viewport" class="flex-1 overflow-hidden relative">
+            
+            <div id="screen-dashboard" class="h-full overflow-y-auto p-8 max-w-4xl mx-auto w-full flex flex-col gap-10 justify-center">
+                <div id="level-section">
+                    <h3 class="text-xl font-bold text-center text-slate-400 uppercase tracking-wider mb-4">Select Level</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <button onclick="app.setLevel('B2')" id="btn-B2" class="level-btn btn-b2">B2</button>
+                        <button onclick="app.setLevel('C1')" id="btn-C1" class="level-btn btn-c1">C1</button>
+                        <button onclick="app.setLevel('C2')" id="btn-C2" class="level-btn btn-c2">C2</button>
+                    </div>
+                </div>
+
+                <div id="mode-section" class="opacity-50 pointer-events-none transition-opacity duration-300">
+                    <h3 class="text-xl font-bold text-center text-slate-400 uppercase tracking-wider mb-4">Select Mode</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="app.setMode('classroom')" id="btn-classroom" class="mode-btn">
+                            <div class="text-5xl mb-2">🏫</div>
+                            <div class="text-xl font-bold">Classroom</div>
+                            <div class="text-sm mt-1">Instant feedback on click.</div>
+                        </button>
+                        <button onclick="app.setMode('exam')" id="btn-exam" class="mode-btn">
+                            <div class="text-5xl mb-2">📝</div>
+                            <div class="text-xl font-bold">Exam Mode</div>
+                            <div class="text-sm mt-1">Select and score at end.</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8 pb-10">
+                    <button id="btn-start" onclick="app.start()" disabled class="bg-slate-800 text-white text-2xl font-bold px-12 py-4 rounded-xl shadow-xl opacity-30 cursor-not-allowed transition hover:scale-105">Start Activity</button>
+                    <div class="mt-4"><button id="btn-list" onclick="app.showList()" disabled class="text-slate-400 font-bold hover:text-slate-600">or Pick from List</button></div>
+                </div>
+                <p id="status-msg" class="text-center text-gray-400 text-sm mt-2"></p>
+            </div>
+
+            <div id="screen-list" class="hidden h-full overflow-y-auto p-8">
+                <h2 class="text-2xl font-bold mb-4">Select Text</h2>
+                <div id="list-container" class="space-y-2 pb-10"></div>
+                <button onclick="app.showScreen('screen-dashboard')" class="mt-6 font-bold text-slate-500">Cancel</button>
+            </div>
+
+            <div id="screen-activity" class="hidden h-full w-full flex flex-row">
+                <div id="left-panel" class="h-full overflow-y-auto p-8 md:p-12 scroll-smooth bg-white w-[60%]">
+                    <h2 id="act-title" class="text-3xl font-black text-slate-800 mb-8 uppercase leading-tight"></h2>
+                    <div id="act-text" class="text-content pb-32"></div>
+                </div>
+
+                <div id="right-panel" class="flex w-[40%] bg-slate-50 border-l border-slate-200 flex-col h-full shadow-inner flex-shrink-0">
+                    <div class="p-4 bg-slate-100 border-b border-slate-200 font-bold text-slate-500 uppercase tracking-wider text-sm shadow-sm z-10 text-center flex justify-between items-center">
+                        <span>Questions</span>
+                        <span class="text-xs text-slate-400 font-normal">Use 🔍 to highlight evidence</span>
+                    </div>
+                    <div id="options-container" class="flex-1 overflow-y-auto p-6 pb-20">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 👇 PASTE SUPABASE KEYS HERE
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        // ============================================================
+
+        const app = {
+            supabase: null,
+            data: [],
+            filtered: [],
+            state: { level: null, mode: null, currentIdx: 0, userAnswers: {}, activePickerQ: null },
+            
+            init: async function() {
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    await this.loadData();
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const levelParam = urlParams.get('level');
+                if (levelParam) {
+                    this.setLevel(levelParam);
+                    document.getElementById('level-section').classList.add('hidden');
+                }
+            },
+
+            loadData: async function() {
+                try {
+                    let { data, error } = await this.supabase.from('reading_part_5').select('*');
+                    if (error) throw error;
+                    this.data = data;
+                } catch (e) { console.error(e); }
+                this.updateStartBtn();
+            },
+
+            setLevel: function(lvl) {
+                this.state.level = lvl;
+                ['B2','C1','C2'].forEach(l => document.getElementById(`btn-${l}`).classList.remove('active'));
+                const btn = document.getElementById(`btn-${lvl}`);
+                if(btn) btn.classList.add('active');
+                document.getElementById('mode-section').classList.remove('opacity-50', 'pointer-events-none');
+                
+                const badge = document.getElementById('level-badge');
+                let badgeClass = "ml-3 px-2 py-1 text-xs font-bold uppercase tracking-wider rounded border inline-block ";
+                let badgeText = "";
+                if (lvl === 'B2') { badgeText = "B2 First"; badgeClass += "bg-indigo-100 text-indigo-700 border-indigo-200"; }
+                else if (lvl === 'C1') { badgeText = "C1 Advanced"; badgeClass += "bg-amber-100 text-amber-700 border-amber-200"; }
+                else { badgeText = "C2 Proficiency"; badgeClass += "bg-lime-100 text-lime-700 border-lime-200"; }
+                badge.innerText = badgeText;
+                badge.className = badgeClass;
+                badge.classList.remove('hidden');
+
+                this.updateStartBtn();
+            },
+
+            setMode: function(mode) {
+                this.state.mode = mode;
+                ['classroom','exam'].forEach(m => document.getElementById(`btn-${m}`).classList.remove('active'));
+                document.getElementById(`btn-${mode}`).classList.add('active');
+                this.updateStartBtn();
+            },
+
+            updateStartBtn: function() {
+                const ready = this.state.level && this.state.mode && this.data.length > 0;
+                const btn = document.getElementById('btn-start');
+                const listBtn = document.getElementById('btn-list');
+                if(ready) {
+                    btn.disabled = false;
+                    listBtn.disabled = false;
+                    btn.classList.remove('opacity-30', 'cursor-not-allowed');
+                }
+            },
+
+            start: function() {
+                this.filtered = this.data.filter(i => i.level === this.state.level);
+                if(this.filtered.length === 0) return alert("No texts found.");
+                this.filtered.sort(() => Math.random() - 0.5); 
+                this.state.currentIdx = 0;
+                this.loadActivity();
+            },
+
+            showList: function() {
+                this.filtered = this.data.filter(i => i.level === this.state.level);
+                const container = document.getElementById('list-container');
+                container.innerHTML = '';
+                this.filtered.forEach((item, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-4 bg-slate-50 rounded hover:bg-slate-100 border border-slate-200 font-semibold";
+                    btn.innerText = item.title;
+                    btn.onclick = () => {
+                        this.state.currentIdx = idx;
+                        this.loadActivity();
+                    }
+                    container.appendChild(btn);
+                });
+                this.showScreen('screen-list');
+            },
+
+            // --- TEXT WRAPPING FOR PART 5 (PARAGRAPH AWARE) ---
+            wrapText: function(text) {
+                // Split by double newlines to get paragraphs
+                const paragraphs = text.split(/\n\n/);
+                
+                return paragraphs.map((para, pIndex) => {
+                    // Split each paragraph into sentences
+                    const segments = para.match( /[^.!?]+[.!?]+["']?|[^.!?]+$/g );
+                    
+                    if (!segments) return `<p>${para}</p>`;
+                    
+                    const wrappedSentences = segments.map((seg, sIndex) => {
+                        return `<span class="s-span" id="s-${pIndex}-${sIndex}" onclick="app.toggleEvidence('${pIndex}-${sIndex}')">${seg}</span>`;
+                    }).join(' ');
+                    
+                    return `<p>${wrappedSentences}</p>`;
+                }).join('');
+            },
+
+            // --- EVIDENCE LOGIC ---
+            toggleEvidence: function(sentenceUid) {
+                if (!this.state.activePickerQ) return; 
+                const qId = this.state.activePickerQ;
+                const el = document.getElementById(`s-${sentenceUid}`);
+                
+                if (el.classList.contains('evidence-selected') && el.dataset.qid === qId) {
+                    el.classList.remove('evidence-selected');
+                    delete el.dataset.qid;
+                    const badge = el.querySelector('.evidence-tag');
+                    if(badge) badge.remove();
+                } else {
+                    el.classList.add('evidence-selected');
+                    el.dataset.qid = qId;
+                    el.innerHTML += `<span class="evidence-tag">Q${qId}</span>`;
+                }
+            },
+
+            activatePicker: function(qId) {
+                const textContainer = document.getElementById('act-text');
+                const btn = document.getElementById(`ev-btn-${qId}`);
+                const block = document.getElementById(`q-block-${qId}`);
+
+                // Toggle off if clicking same
+                if (this.state.activePickerQ === qId) {
+                    this.state.activePickerQ = null;
+                    textContainer.classList.remove('picking-mode');
+                    btn.classList.remove('active');
+                    block.classList.remove('picking-active');
+                    return;
+                }
+
+                // Deactivate previous
+                if (this.state.activePickerQ) {
+                    const prevBtn = document.getElementById(`ev-btn-${this.state.activePickerQ}`);
+                    const prevBlock = document.getElementById(`q-block-${this.state.activePickerQ}`);
+                    if(prevBtn) prevBtn.classList.remove('active');
+                    if(prevBlock) prevBlock.classList.remove('picking-active');
+                }
+
+                // Activate new
+                this.state.activePickerQ = qId;
+                textContainer.classList.add('picking-mode');
+                btn.classList.add('active');
+                block.classList.add('picking-active');
+            },
+
+            loadActivity: function() {
+                const item = this.filtered[this.state.currentIdx];
+                this.state.userAnswers = {}; 
+                this.state.activePickerQ = null;
+                
+                document.getElementById('act-title').innerText = item.title;
+                
+                // NEW: Use the wrapper function
+                document.getElementById('act-text').innerHTML = this.wrapText(item.content);
+                
+                const optionsDiv = document.getElementById('options-container');
+                optionsDiv.innerHTML = '';
+
+                document.getElementById('score-display').classList.add('hidden');
+                document.getElementById('btn-check').classList.remove('hidden');
+                document.getElementById('btn-reset').classList.add('hidden');
+
+                const isClassroom = this.state.mode === 'classroom';
+                if (isClassroom) {
+                    document.getElementById('exam-controls').classList.add('hidden');
+                    document.getElementById('class-controls').classList.remove('hidden');
+                } else {
+                    document.getElementById('exam-controls').classList.remove('hidden');
+                    document.getElementById('class-controls').classList.add('hidden');
+                }
+
+                item.questions.forEach(q => {
+                    const block = document.createElement('div');
+                    block.className = 'question-block';
+                    block.id = `q-block-${q.id}`;
+                    
+                    const headerRow = document.createElement('div');
+                    headerRow.className = "q-header-row";
+                    
+                    const headerText = document.createElement('div');
+                    headerText.className = "q-header-text";
+                    // Add Status Icon Span
+                    headerText.innerHTML = `<span class="q-tag">${q.id}</span> ${q.text} <span id="status-icon-${q.id}" class="inline-flex ml-2 align-bottom"></span>`;
+                    
+                    const evBtn = document.createElement('div');
+                    evBtn.className = "ev-btn";
+                    evBtn.id = `ev-btn-${q.id}`;
+                    evBtn.innerHTML = `<span>🔍</span> Evidence`;
+                    evBtn.onclick = () => this.activatePicker(q.id);
+
+                    headerRow.appendChild(headerText);
+                    headerRow.appendChild(evBtn);
+                    block.appendChild(headerRow);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'opt-grid';
+
+                    ['A','B','C','D'].forEach(letter => {
+                        const btn = document.createElement('div');
+                        btn.className = `opt-btn btn-q${q.id}`;
+                        btn.id = `btn-${q.id}-${letter}`;
+                        btn.innerHTML = `
+                            <div class="opt-content">
+                                <span class="opt-letter">${letter}</span>
+                                <span class="opt-text">${q.options[letter]}</span>
+                            </div>
+                            <div class="opt-icon" id="icon-${q.id}-${letter}"></div>
+                        `;
+                        
+                        btn.onclick = () => {
+                            if (isClassroom) {
+                                const correct = item.answers[q.id];
+                                if (letter === correct) {
+                                    btn.classList.add('state-correct');
+                                    document.getElementById(`icon-${q.id}-${letter}`).innerHTML = 
+                                        `<svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+                                    document.querySelectorAll(`.btn-q${q.id}`).forEach(b => {
+                                        if(b !== btn) {
+                                            b.classList.remove('state-correct', 'state-wrong');
+                                            b.querySelector('.opt-icon').innerHTML = '';
+                                        }
+                                    });
+                                } else {
+                                    btn.classList.add('state-wrong');
+                                    document.getElementById(`icon-${q.id}-${letter}`).innerHTML = 
+                                        `<svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                                }
+                            } else {
+                                document.querySelectorAll(`.btn-q${q.id}`).forEach(b => b.classList.remove('selected'));
+                                btn.classList.add('selected');
+                                this.state.userAnswers[q.id] = letter;
+                            }
+                        };
+                        grid.appendChild(btn);
+                    });
+
+                    block.appendChild(grid);
+                    optionsDiv.appendChild(block);
+                });
+
+                this.showScreen('screen-activity');
+            },
+
+            checkAnswers: function() {
+                const item = this.filtered[this.state.currentIdx];
+                let score = 0;
+                let total = item.questions.length;
+
+                item.questions.forEach(q => {
+                    const correctLetter = item.answers[q.id];
+                    const userLetter = this.state.userAnswers[q.id];
+                    const correctBtn = document.getElementById(`btn-${q.id}-${correctLetter}`);
+                    const userBtn = userLetter ? document.getElementById(`btn-${q.id}-${userLetter}`) : null;
+                    const block = document.getElementById(`q-block-${q.id}`);
+                    const statusIcon = document.getElementById(`status-icon-${q.id}`);
+
+                    document.querySelectorAll(`.btn-q${q.id}`).forEach(b => {
+                        b.style.pointerEvents = 'none'; 
+                        b.classList.remove('selected');
+                    });
+
+                    // Always mark correct
+                    if(correctBtn) {
+                        document.getElementById(`icon-${q.id}-${correctLetter}`).innerHTML = 
+                            `<svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+                    }
+
+                    if (userLetter === correctLetter) {
+                        score++;
+                        if(userBtn) userBtn.classList.add('state-correct');
+                        
+                        // CARD FEEDBACK
+                        block.classList.add('status-correct');
+                        // HEADER ICON
+                        statusIcon.innerHTML = `<svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+                    } else {
+                        if(userBtn) {
+                            userBtn.classList.add('state-wrong');
+                            document.getElementById(`icon-${q.id}-${userLetter}`).innerHTML = 
+                                `<svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                        }
+                        if(correctBtn) correctBtn.classList.add('state-missed');
+                        
+                        // CARD FEEDBACK
+                        block.classList.add('status-wrong');
+                        // HEADER ICON
+                        statusIcon.innerHTML = `<svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                    }
+                });
+
+                const disp = document.getElementById('score-display');
+                disp.innerText = `${score}/${total}`;
+                disp.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                disp.classList.add(score === total ? 'text-green-600' : 'text-red-600');
+                
+                document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('btn-reset').classList.remove('hidden');
+                
+                // Turn off evidence
+                this.state.activePickerQ = null;
+                document.getElementById('act-text').classList.remove('picking-mode');
+            },
+
+            resetActivity: function() { this.loadActivity(); },
+            nextText: function() {
+                this.state.currentIdx = (this.state.currentIdx + 1) % this.filtered.length;
+                this.loadActivity();
+            },
+
+            showScreen: function(id) {
+                ['screen-dashboard','screen-list','screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                if(id !== 'screen-activity') {
+                    document.getElementById('exam-controls').classList.add('hidden');
+                    document.getElementById('class-controls').classList.add('hidden');
+                }
+                window.scrollTo(0,0);
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

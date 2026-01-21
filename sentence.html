@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Scramble Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- THEME --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        #app-container {
+            width: 100%;
+            height: 95vh;
+            max-width: 1200px;
+            background-color: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        /* --- HEADER & CONTROLS --- */
+        #header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #F1F5F9;
+        }
+
+        .btn-back {
+            color: #94A3B8;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+        }
+        .btn-back:hover { color: #00BCD4; }
+
+        /* --- GAME AREA --- */
+        #game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        /* 1. Answer Zone */
+        #answer-zone {
+            flex-grow: 1;
+            background-color: #F8FAFC;
+            border: 3px dashed #CBD5E1;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 12px;
+            min-height: 150px;
+            transition: all 0.3s;
+        }
+        
+        #answer-zone.correct { border-color: #10B981; background-color: #ECFDF5; }
+        #answer-zone.incorrect { border-color: #EF4444; background-color: #FEF2F2; }
+
+        /* 2. Word Pool */
+        #pool-zone {
+            min-height: 180px;
+            padding: 20px;
+            background-color: #E2E8F0;
+            border-radius: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            align-content: center;
+        }
+
+        /* --- BLOCKS --- */
+        .word-block {
+            background-color: white;
+            color: #1E293B;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 #94A3B8;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s, box-shadow 0.1s;
+            border: 2px solid #E2E8F0;
+        }
+
+        .word-block:active { transform: translateY(4px); box-shadow: 0 0 0 #94A3B8; }
+        .word-block:hover { border-color: #00BCD4; color: #00BCD4; }
+
+        /* --- SETUP PANEL --- */
+        #setup-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 20px; }
+
+        .setup-box {
+            background-color: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 20px;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            flex-grow: 1;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #CBD5E1;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-family: monospace;
+            resize: none;
+            outline: none;
+        }
+        textarea:focus { border-color: #00BCD4; }
+
+        /* --- BUTTONS --- */
+        .btn-action {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: white;
+            border-radius: 16px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+        
+        .btn-orange { background-color: #FF6600; box-shadow: 0 6px 0 #CC5200; }
+        .btn-blue { background-color: #2563EB; box-shadow: 0 6px 0 #1D4ED8; }
+        .btn-green { background-color: #10B981; box-shadow: 0 6px 0 #059669; }
+        
+        .file-upload-label {
+            background-color: white;
+            border: 3px dashed #CBD5E1;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 100%;
+        }
+        .file-upload-label:hover { border-color: #00BCD4; background-color: #F0FDFA; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <div id="header-bar">
+            <button id="back-btn" class="btn-back">
+                <span>←</span> <span id="back-text">Back to Tools</span>
+            </button>
+            <div id="progress-indicator" class="text-slate-400 font-bold uppercase tracking-widest hidden">
+                Sentence <span id="current-count" class="text-slate-800 text-xl">1</span> / <span id="total-count">10</span>
+            </div>
+        </div>
+
+        <div id="setup-screen" class="h-full flex flex-col">
+            <h1 class="text-3xl font-black text-slate-800 mb-2 text-center uppercase">Sentence Scramble</h1>
+            <p class="text-center text-slate-500 mb-6 font-medium">Upload a CSV or paste text to begin.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
+                
+                <div class="setup-box">
+                    <h2 class="text-xl font-bold text-slate-700 mb-4">Option A: Upload CSV</h2>
+                    <label class="file-upload-label">
+                        <span class="text-4xl mb-2">📂</span>
+                        <span id="file-name" class="font-bold text-slate-500">Click to Select CSV File</span>
+                        <p class="text-xs text-slate-400 mt-2 text-center">Smart CSV Reader:<br>Handles quotes "..." correctly!</p>
+                        <input type="file" id="csv-input" accept=".csv" class="hidden">
+                    </label>
+                </div>
+
+                <div class="setup-box">
+                    <h2 class="text-xl font-bold text-slate-700 mb-4">Option B: Manual Text</h2>
+                    <textarea id="manual-input" placeholder="The | big dog | ran.&#10;However, | she stayed | home.&#10;(Use | to split phrases)"></textarea>
+                    <p class="text-xs text-slate-400 mt-2">Use <strong>|</strong> (pipe) to split phrases manually.</p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button id="start-btn" class="btn-action btn-orange">START GAME</button>
+            </div>
+        </div>
+
+        <div id="game-screen" class="hidden h-full flex-col">
+            
+            <div id="answer-zone">
+                <p id="placeholder-text" class="text-slate-300 font-bold text-2xl w-full text-center self-center pointer-events-none">
+                    Tap blocks below to place them here...
+                </p>
+            </div>
+
+            <div id="feedback-area" class="h-12 flex items-center justify-center">
+                <p id="feedback-msg" class="text-xl font-black text-slate-800"></p>
+            </div>
+
+            <div id="pool-zone"></div>
+
+            <div class="mt-auto pt-4 grid grid-cols-2 gap-4">
+                <button id="check-btn" class="btn-action btn-blue">CHECK</button>
+                <button id="next-btn" class="btn-action btn-green hidden">NEXT ➜</button>
+                <button id="skip-btn" class="btn-action bg-slate-400 text-white shadow-[0_6px_0_#94a3b8] active:translate-y-1 active:shadow-none">SKIP</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- STATE ---
+        let sentences = []; 
+        let currentIdx = 0;
+        let currentBlocks = []; 
+        let placedBlocks = [];
+
+        // --- DOM ---
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const backBtn = document.getElementById('back-btn');
+        const backText = document.getElementById('back-text');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const currentCountEl = document.getElementById('current-count');
+        const totalCountEl = document.getElementById('total-count');
+        const csvInput = document.getElementById('csv-input');
+        const fileNameLabel = document.getElementById('file-name');
+        const manualInput = document.getElementById('manual-input');
+        const startBtn = document.getElementById('start-btn');
+        const answerZone = document.getElementById('answer-zone');
+        const poolZone = document.getElementById('pool-zone');
+        const placeholderText = document.getElementById('placeholder-text');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const feedbackMsg = document.getElementById('feedback-msg');
+
+        // --- NAVIGATION ---
+        backBtn.addEventListener('click', () => {
+            if (!gameScreen.classList.contains('hidden')) {
+                gameScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                progressIndicator.classList.add('hidden');
+                backText.innerText = "Back to Tools";
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // --- SETUP LOGIC ---
+        csvInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            fileNameLabel.innerText = "📄 " + file.name;
+            fileNameLabel.classList.add('text-slate-800');
+        });
+
+        startBtn.addEventListener('click', () => {
+            const file = csvInput.files[0];
+            const manualText = manualInput.value.trim();
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => processData(e.target.result, 'csv');
+                reader.readAsText(file);
+            } else if (manualText) {
+                processData(manualText, 'manual');
+            } else {
+                alert("Please upload a file or type some sentences.");
+            }
+        });
+
+        function processData(content, type) {
+            const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+            sentences = [];
+
+            lines.forEach(line => {
+                let parts = [];
+                
+                if (type === 'csv') {
+                    // --- SMART CSV PARSING ---
+                    // This regex matches: quoted strings OR non-comma strings
+                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    
+                    if (matches) {
+                        parts = matches.map(p => {
+                            // Remove surrounding quotes if they exist
+                            if (p.startsWith('"') && p.endsWith('"')) {
+                                return p.slice(1, -1).trim();
+                            }
+                            return p.trim();
+                        });
+                    } else {
+                        // Fallback if regex fails (simple split)
+                        parts = line.split(',').map(p => p.trim());
+                    }
+                } else {
+                    // Manual Mode
+                    if (line.includes('|')) {
+                        parts = line.split('|').map(p => p.trim());
+                    } else {
+                        parts = line.split(' ').map(p => p.trim());
+                    }
+                }
+                
+                // Filter empty parts
+                parts = parts.filter(p => p !== '');
+
+                if (parts.length > 1) {
+                    sentences.push(parts);
+                }
+            });
+
+            if (sentences.length === 0) {
+                alert("No valid sentences found.");
+                return;
+            }
+
+            // Shuffle Sentence Order
+            sentences.sort(() => Math.random() - 0.5);
+
+            currentIdx = 0;
+            totalCountEl.innerText = sentences.length;
+            
+            setupScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            progressIndicator.classList.remove('hidden');
+            backText.innerText = "Back to Setup";
+            
+            loadRound();
+        }
+
+        // --- GAMEPLAY LOGIC ---
+        function loadRound() {
+            currentCountEl.innerText = currentIdx + 1;
+            
+            answerZone.innerHTML = '';
+            answerZone.appendChild(placeholderText);
+            placeholderText.style.display = 'block';
+            answerZone.className = ''; 
+            poolZone.innerHTML = '';
+            feedbackMsg.innerText = '';
+            
+            checkBtn.classList.remove('hidden');
+            skipBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+
+            placedBlocks = [];
+            
+            const targetParts = sentences[currentIdx];
+            currentBlocks = targetParts.map((text, index) => ({ id: index, text: text }));
+
+            const shuffled = [...currentBlocks].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach(block => {
+                createBlockBtn(block, poolZone, 'pool');
+            });
+        }
+
+        function createBlockBtn(blockData, container, location) {
+            const btn = document.createElement('div');
+            btn.className = 'word-block';
+            btn.innerText = blockData.text;
+            btn.dataset.id = blockData.id; 
+            
+            btn.addEventListener('click', () => {
+                moveBlock(btn, blockData, location);
+            });
+
+            container.appendChild(btn);
+        }
+
+        function moveBlock(btnElement, blockData, currentLocation) {
+            if (!nextBtn.classList.contains('hidden')) return;
+
+            btnElement.remove();
+
+            if (currentLocation === 'pool') {
+                placeholderText.style.display = 'none';
+                createBlockBtn(blockData, answerZone, 'answer');
+                placedBlocks.push(blockData);
+            } else {
+                createBlockBtn(blockData, poolZone, 'pool');
+                placedBlocks = placedBlocks.filter(b => b.id !== blockData.id);
+                
+                if (placedBlocks.length === 0) {
+                    placeholderText.style.display = 'block';
+                    answerZone.appendChild(placeholderText);
+                }
+            }
+            
+            answerZone.className = ''; 
+            feedbackMsg.innerText = '';
+        }
+
+        checkBtn.addEventListener('click', () => {
+            if (placedBlocks.length === 0) return;
+            
+            let isCorrect = true;
+            
+            if (placedBlocks.length !== currentBlocks.length) {
+                isCorrect = false;
+            } else {
+                for (let i = 0; i < placedBlocks.length; i++) {
+                    if (placedBlocks[i].id !== i) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isCorrect) {
+                answerZone.className = 'correct'; 
+                feedbackMsg.innerText = "Correct! 🎉";
+                feedbackMsg.className = "text-xl font-black text-green-600 animate-bounce";
+                
+                checkBtn.classList.add('hidden');
+                skipBtn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                answerZone.className = 'incorrect shake'; 
+                feedbackMsg.innerText = "Try again...";
+                feedbackMsg.className = "text-xl font-black text-red-500";
+                setTimeout(() => answerZone.classList.remove('shake'), 400);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIdx < sentences.length - 1) {
+                currentIdx++;
+                loadRound();
+            } else {
+                finishSet();
+            }
+        });
+
+        skipBtn.addEventListener('click', () => {
+            answerZone.innerHTML = '';
+            poolZone.innerHTML = '';
+            
+            currentBlocks.forEach(block => {
+                const btn = document.createElement('div');
+                btn.className = 'word-block';
+                btn.innerText = block.text;
+                btn.style.cursor = 'default';
+                btn.style.borderColor = '#94A3B8';
+                answerZone.appendChild(btn);
+            });
+
+            feedbackMsg.innerText = "Skipped.";
+            feedbackMsg.className = "text-xl font-black text-slate-400";
+            
+            checkBtn.classList.add('hidden');
+            skipBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+        });
+
+        function finishSet() {
+            gameScreen.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center text-center">
+                    <h1 class="text-6xl mb-4">🏆</h1>
+                    <h2 class="text-4xl font-black text-slate-800 mb-4">Set Complete!</h2>
+                    <button onclick="location.reload()" class="btn-action btn-orange max-w-sm">Start New Set</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

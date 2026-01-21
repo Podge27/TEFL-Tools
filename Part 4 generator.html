@@ -146,6 +146,7 @@
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
+
         // ============================================================
 
         const app = {
@@ -253,28 +254,41 @@
             },
 
             showFreeQuestion: function() {
-                if(this.filteredData.length === 0) return;
+                if (this.filteredData.length === 0) return;
                 const q = this.filteredData[this.state.currentIndex];
-                
+
                 document.getElementById('fs-level-display').innerText = this.state.level;
                 document.getElementById('fs-sentence1').innerText = `1. ${q.sentence1}`;
                 document.getElementById('fs-key-word').innerText = q.key_word;
                 document.getElementById('fs-sentence2-pre').innerText = `2. ${q.sentence2_pre}`;
                 document.getElementById('fs-sentence2-post').innerText = q.sentence2_post;
-                
+
                 const elGap = document.getElementById('fs-answer-gap');
                 elGap.innerText = "[Click for Answer]";
                 elGap.classList.remove('revealed');
                 elGap.dataset.revealed = 'false';
-                
-                // Determine clean answer
-                let ans = "";
-                if(Array.isArray(q.answers)) ans = q.answers[0];
-                else if(q.answer) ans = q.answer;
-                else if(q.answers) ans = q.answers; 
-                
-                elGap.dataset.answer = ans.replace(/\s*\|\s*/g, ' '); 
-                
+
+                // 👇 UNIVERSAL FIX START
+                let raw = q.answers || q.answer;
+
+                // 1. Force everything into a list
+                if (!Array.isArray(raw)) {
+                    raw = [raw];
+                }
+
+                // 2. Flatten nested lists and remove empty/null items
+                const validItems = raw.flat(Infinity).filter(item => item);
+
+                // 3. Join multiple answers with " OR "
+                let ans = validItems.join(" OR ");
+
+                // 4. Ensure it is text
+                ans = String(ans || "");
+
+                // 5. Clean up the pipes (|) for display
+                elGap.dataset.answer = ans.replace(/\s*\|\s*/g, ' ');
+                // 👆 UNIVERSAL FIX END
+
                 const rule = this.getWordCountRule();
                 document.getElementById('fs-feedback').innerText = `The answer is between ${rule}.`;
                 document.getElementById('fs-feedback').className = "text-xl font-semibold mt-4 mb-6 text-center min-h-[30px] text-gray-600";
@@ -367,11 +381,13 @@
             },
 
             cleanText: function(text) {
-                return text.toUpperCase().replace(/[.,;!]/g, '').replace(/\s\s+/g, ' ').trim();
+                // If 'text' is null/undefined, make it an empty string so .toUpperCase() doesn't crash
+                if (!text) return ""; 
+                return String(text).toUpperCase().replace(/[.,;!]/g, '').replace(/\s\s+/g, ' ').trim();
             },
 
             submitExam: function() {
-                clearInterval(this.state.timer);
+                if (this.state.timer) clearInterval(this.state.timer);
                 document.getElementById('submit-exam-button').classList.add('hidden');
                 
                 let totalScore = 0;
@@ -379,9 +395,12 @@
 
                 this.examQuestions.forEach((q, idx) => {
                     const input = document.getElementById(`input-${idx}`);
+                    // Safety: Ensure cleanText handles non-strings by wrapping in String() inside the call if needed, 
+                    // but usually input.value is always a string.
                     const userVal = this.cleanText(input.value);
                     
                     let validAnswers = [];
+                    // Handle different database formats (arrays, strings, or single objects)
                     if (Array.isArray(q.answers)) validAnswers = q.answers;
                     else if (q.answer) validAnswers = [q.answer];
                     else if (q.answers) validAnswers = [q.answers];
@@ -389,14 +408,23 @@
                     let points = 0;
                     let correctDisplay = "";
 
+                    // --- THE FIX STARTS HERE ---
                     for (let rawOption of validAnswers) {
-                        const rawOptionUpper = rawOption.toUpperCase();
+                        // 1. Skip empty/null data
+                        if (!rawOption) continue; 
+
+                        // 2. Force data to be Text (String) before capitalizing
+                        // This prevents the "toUpperCase is not a function" crash
+                        const rawOptionString = String(rawOption);
+                        const rawOptionUpper = rawOptionString.toUpperCase();
+
                         const cleanOption = this.cleanText(rawOptionUpper.replace(/\s*\|\s*/g, ' '));
                         let currentPoints = 0;
 
                         if (userVal === cleanOption) {
                             currentPoints = 2;
                         } else if (rawOptionUpper.includes('|')) {
+                            // Split using the safe string
                             const parts = rawOptionUpper.split('|').map(p => this.cleanText(p));
                             if (userVal.startsWith(parts[0])) currentPoints++;
                             if (userVal.endsWith(parts[1])) currentPoints++;
@@ -406,7 +434,12 @@
                             correctDisplay = cleanOption;
                         }
                     }
-                    if (points === 0 && !correctDisplay) correctDisplay = this.cleanText(validAnswers[0].replace(/\s*\|\s*/g, ' '));
+                    // --- THE FIX ENDS HERE ---
+
+                    // Safety fix for the "Correct Answer" display text if user got 0 points
+                    if (points === 0 && !correctDisplay && validAnswers.length > 0) {
+                        correctDisplay = this.cleanText(String(validAnswers[0]).replace(/\s*\|\s*/g, ' '));
+                    }
 
                     totalScore += points;
                     
@@ -419,7 +452,8 @@
                         q, 
                         userVal, 
                         points, 
-                        correct: validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR ') 
+                        // Safety fix for the final review list
+                        correct: validAnswers.map(a => String(a).replace(/\s*\|\s*/g, ' ')).join(' OR ') 
                     });
                 });
 

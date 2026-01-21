@@ -369,38 +369,75 @@
                 }
 
                 // Grading Part 4
-                let s4 = 0;
-                this.examState.part4Items.forEach((q, idx) => {
-                    const el = document.getElementById(`p4-input-${idx}`);
-                    if (!el) return;
-                    const userVal = this.cleanText(el.value);
-                    let validAnswers = [];
-                    if (Array.isArray(q.answers)) validAnswers = q.answers;
-                    else if (q.answer) validAnswers = [q.answer];
+// ... inside finishExam(), inside the Part 4 loop ...
 
-                    let points = 0;
-                    let matchedCleanCorrect = ""; 
+                    let s4 = 0;
+                    this.examState.part4Items.forEach((q, idx) => {
+                        const el = document.getElementById(`p4-input-${idx}`);
+                        if (!el) return;
+                        const userVal = this.cleanText(el.value);
+                        
+                        let validAnswers = [];
+                        // Handle both old "answer" and new "answers" formats
+                        if (Array.isArray(q.answers)) validAnswers = q.answers;
+                        else if (q.answer) validAnswers = [q.answer];
+                        // If Supabase sends a single string in the plural column by mistake
+                        else if (typeof q.answers === 'string') validAnswers = [q.answers];
 
-                    for (let rawOption of validAnswers) {
-                        const rawOptionUpper = rawOption.toUpperCase();
-                        const cleanOption = this.cleanText(rawOptionUpper.replace(/\s*\|\s*/g, ' '));
-                        let currentPoints = 0;
-                        if (userVal === cleanOption) { currentPoints = 2; } 
-                        else if (rawOptionUpper.includes('|')) {
-                            const parts = rawOptionUpper.split('|').map(p => this.cleanText(p));
-                            if (userVal.startsWith(parts[0])) currentPoints++;
-                            if (userVal.endsWith(parts[1])) currentPoints++;
+                        let points = 0;
+                        let matchedCleanCorrect = ""; 
+
+                        for (let rawOption of validAnswers) {
+                            // 1. Safety check: Skip if the option is empty/null
+                            if (!rawOption) continue;
+
+                            // 2. THE FIX: Force rawOption to be a String() before using .toUpperCase()
+                            // This prevents the "not a function" crash on numbers
+                            const rawOptionString = String(rawOption);
+                            const rawOptionUpper = rawOptionString.toUpperCase();
+                            
+                            const cleanOption = this.cleanText(rawOptionUpper.replace(/\s*\|\s*/g, ' '));
+                            
+                            let currentPoints = 0;
+                            if (userVal === cleanOption) { currentPoints = 2; } 
+                            else if (rawOptionUpper.includes('|')) {
+                                const parts = rawOptionUpper.split('|').map(p => this.cleanText(p));
+                                if (userVal.startsWith(parts[0])) currentPoints++;
+                                if (userVal.endsWith(parts[1])) currentPoints++;
+                            }
+                            if (currentPoints > points) { points = currentPoints; matchedCleanCorrect = cleanOption; }
                         }
-                        if (currentPoints > points) { points = currentPoints; matchedCleanCorrect = cleanOption; }
-                    }
-                    if (points === 0 && !matchedCleanCorrect && validAnswers.length > 0) { matchedCleanCorrect = this.cleanText(validAnswers[0].replace(/\s*\|\s*/g, ' ')); }
+                        
+                        // Fallback for displaying the correct answer if user got 0 points
+                        if (points === 0 && !matchedCleanCorrect && validAnswers.length > 0) { 
+                             // Same safety fix here for the display text
+                             matchedCleanCorrect = this.cleanText(String(validAnswers[0]).replace(/\s*\|\s*/g, ' ')); 
+                        }
 
-                    s4 += points;
-                    el.disabled = true;
-                    if (points === 2) { el.classList.add('input-correct'); } 
-                    else if (points === 1) { el.classList.add('input-partial'); const badge = document.createElement('div'); badge.className = 'text-sm text-yellow-600 font-bold mt-1'; const niceAnswers = validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR '); badge.innerText = `Correct: ${niceAnswers} (1/2 Marks)`; el.parentElement.appendChild(badge); } 
-                    else { el.classList.add('input-wrong'); const badge = document.createElement('div'); badge.className = 'text-sm text-red-600 font-bold mt-1'; const niceAnswers = validAnswers.map(a => a.replace(/\s*\|\s*/g, ' ')).join(' OR '); badge.innerText = `Correct: ${niceAnswers}`; el.parentElement.appendChild(badge); }
-                });
+                        s4 += points;
+                        el.disabled = true;
+                        
+                        // ... (The rest of the badge logic stays the same) ...
+                        if (points === 2) { el.classList.add('input-correct'); } 
+                        else if (points === 1) { 
+                            el.classList.add('input-partial'); 
+                            const badge = document.createElement('div'); 
+                            badge.className = 'text-sm text-yellow-600 font-bold mt-1'; 
+                            // Safety fix for badge text map
+                            const niceAnswers = validAnswers.map(a => String(a).replace(/\s*\|\s*/g, ' ')).join(' OR '); 
+                            badge.innerText = `Correct: ${niceAnswers} (1/2 Marks)`; 
+                            el.parentElement.appendChild(badge); 
+                        } 
+                        else { 
+                            el.classList.add('input-wrong'); 
+                            const badge = document.createElement('div'); 
+                            badge.className = 'text-sm text-red-600 font-bold mt-1'; 
+                            // Safety fix for badge text map
+                            const niceAnswers = validAnswers.map(a => String(a).replace(/\s*\|\s*/g, ' ')).join(' OR '); 
+                            badge.innerText = `Correct: ${niceAnswers}`; 
+                            el.parentElement.appendChild(badge); 
+                        }
+                    });
 
                 document.getElementById('score-p2').innerText = s2;
                 document.getElementById('score-p3').innerText = s3;
