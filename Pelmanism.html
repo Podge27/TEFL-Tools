@@ -4,18 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fun Pelmanism Match Game</title>
-    <!-- Load Tailwind CSS for utility classes --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Tone.js for dynamic sound effects --><script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    
+    <link rel="stylesheet" href="global.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap" rel="stylesheet">
     
     <style>
-        /* Global & Layout Styles */
+        /* --- Tool-Specific Styles --- */
+
         body {
-            font-family: 'Inter', sans-serif;
+            /* Font is handled by global.css */
             background: linear-gradient(135deg, #1f2937, #374151);
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px; /* Overrides global padding:0 */
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -34,7 +38,7 @@
             align-items: center;
         }
         
-        /* Game Board Grid (Responsive for touch) */
+        /* Game Board Grid */
         #game-board {
             width: 100%;
             display: grid;
@@ -44,7 +48,7 @@
 
         /* Card Styles */
         .card {
-            aspect-ratio: 1 / 1; /* Ensures cards are square */
+            aspect-ratio: 1 / 1; 
             cursor: pointer;
             perspective: 1000px;
             position: relative;
@@ -55,7 +59,7 @@
             font-size: 1.1rem;
             font-weight: 700;
             user-select: none;
-            touch-action: manipulation; /* Optimizes for touchscreens */
+            touch-action: manipulation;
         }
 
         .card-inner {
@@ -68,7 +72,7 @@
             border-radius: 12px;
         }
 
-        /* Flipping animation for Traditional mode */
+        /* Flipping animation */
         .flipped .card-inner {
             transform: rotateY(180deg);
         }
@@ -93,29 +97,45 @@
             line-height: 1.2;
         }
         
-        /* Back face (Hidden) */
+        /* Back face */
         .card-back {
             background: linear-gradient(45deg, #FF7E5F, #FEB47B);
             color: white;
             font-size: 2.5rem;
             transform: rotateY(0deg);
-            /* Centering the SVG/icon */
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        /* SVG Styling for the happy face */
-        .card-back svg {
-            width: 70%; /* Takes up most of the card */
-            height: 70%;
-            max-width: 100px;
-            max-height: 100px;
-            stroke: white; /* Line color */
-            stroke-width: 3;
-            fill: none; /* No fill on the face circle */
+        /* Front face */
+        .card-front {
+            background-color: #f0fdf4;
+            color: #16a34a;
+            border: 4px solid #10b981;
+            transform: rotateY(180deg);
         }
         
+        /* Visible Mode Styling */
+        .visible-mode .card {
+            transform: none !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .visible-mode .card-inner {
+            transform: none !important;
+            border: 4px solid #6366f1;
+        }
+        .visible-mode .card-back { display: none; }
+        .visible-mode .card-front {
+            transform: none !important;
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+        .visible-mode .card-match {
+            background-color: #d1fae5 !important;
+            border-color: #34d399 !important;
+        }
+
         /* Team Scoreboard Styling */
         .team-score-card {
             min-width: 100px;
@@ -127,79 +147,46 @@
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
             border: 3px solid white;
         }
-
-        /* Front face (Content) */
-        .card-front {
-            background-color: #f0fdf4;
-            color: #16a34a;
-            border: 4px solid #10b981;
-            transform: rotateY(180deg);
-        }
-        
-        /* Visible Mode Styling: No flip, content always visible, distinct border */
-        .visible-mode .card {
-            transform: none !important;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .visible-mode .card-inner {
-            transform: none !important;
-            border: 4px solid #6366f1;
-        }
-        .visible-mode .card-back {
-            display: none;
-        }
-        .visible-mode .card-front {
-            transform: none !important;
-            background-color: #eef2ff;
-            color: #4f46e5;
-        }
-
-        /* Match found for Visible Mode */
-        .visible-mode .card-match {
-            background-color: #d1fae5 !important;
-            border-color: #34d399 !important;
-        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
         
+        <div class="w-full flex justify-start mb-4">
+            <a href="index.html" class="btn-back">← Back to Tools</a>
+        </div>
+        
         <h1 class="text-4xl font-extrabold text-gray-800 mb-6 text-center">Memory Match Fun!</h1>
 
-        <!-- Back to Tools Button -->
-        <a href="index.html" class="mb-4 text-blue-500 hover:text-blue-700 font-medium">← Back to Tools Selector</a>
-        
-        <!-- Mode & File Selection Screen -->
         <div id="start-screen" class="space-y-6 w-full max-w-lg mb-8 p-6 bg-gray-100 rounded-lg shadow-inner">
             <div class="flex flex-col items-center">
                 <h2 class="text-xl font-bold text-gray-700 mb-4">1. Load Card Content (CSV)</h2>
                 <button onclick="document.getElementById('file-upload').click()" 
-                        class="px-6 py-3 bg-blue-500 text-white rounded-xl shadow-lg hover:bg-blue-600 transition duration-150">
+                        class="px-6 py-3 bg-blue-500 text-white rounded-xl shadow-lg hover:bg-blue-600 transition duration-150 font-bold">
                     Upload CSV/TXT File
                 </button>
                 <input type="file" id="file-upload" accept=".csv, .txt" style="display: none;" onchange="window.handleFileUpload(event)">
-                <p id="file-status" class="mt-3 text-sm text-gray-600">No file loaded.</p>
+                <p id="file-status" class="mt-3 text-sm text-gray-600 font-medium">No file loaded.</p>
             </div>
 
             <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">2. Select Game Mode</h2>
             <div class="flex justify-center space-x-4">
                 <button id="mode-traditional" disabled onclick="window.startGame('traditional')"
-                        class="flex-1 px-4 py-3 bg-indigo-500 text-white rounded-xl shadow-lg hover:bg-indigo-600 transition duration-150 disabled:opacity-50">
-                    Traditional Pelmanism (Flip & Remember)
+                        class="flex-1 px-4 py-3 bg-indigo-500 text-white rounded-xl shadow-lg hover:bg-indigo-600 transition duration-150 disabled:opacity-50 font-bold">
+                    Traditional (Memory)
                 </button>
                 <button id="mode-visible" disabled onclick="window.startGame('visible')"
-                        class="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl shadow-lg hover:bg-green-600 transition duration-150 disabled:opacity-50">
-                    Visible Match (See All)
+                        class="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl shadow-lg hover:bg-green-600 transition duration-150 disabled:opacity-50 font-bold">
+                    Visible (Match)
                 </button>
             </div>
 
-            <!-- Team Selection Setup -->
             <h2 class="text-xl font-bold text-gray-700 mb-2 text-center">3. Team Setup (Optional)</h2>
             <div class="flex flex-col items-center space-y-3">
-                <label for="num-teams" class="text-gray-600">Number of Teams (1 = Solo Play):</label>
-                <select id="num-teams" class="p-2 border rounded-lg w-32 text-center text-gray-800">
-                    <option value="1">1 Team (Solo)</option>
+                <label for="num-teams" class="text-gray-600 font-medium">Number of Teams (1 = Solo):</label>
+                <select id="num-teams" class="p-2 border rounded-lg w-32 text-center text-gray-800 font-bold">
+                    <option value="1">1 Team</option>
                     <option value="2">2 Teams</option>
                     <option value="3">3 Teams</option>
                     <option value="4">4 Teams</option>
@@ -209,18 +196,14 @@
             </div>
         </div>
 
-        <!-- Game Info and Reset -->
         <div id="game-info" class="w-full max-w-lg mb-6 hidden">
-            <!-- Solo Mode Scoreboard -->
             <div id="solo-scoreboard" class="flex justify-between items-center bg-yellow-100 p-3 rounded-lg shadow-md mb-4">
-                <p class="text-lg font-bold text-gray-700">Pairs Found: <span id="score">0</span> / <span id="total-pairs">0</span></p>
+                <p class="text-lg font-bold text-gray-700">Pairs: <span id="score">0</span> / <span id="total-pairs">0</span></p>
                 <p class="text-lg font-bold text-gray-700">Tries: <span id="tries">0</span></p>
             </div>
 
-            <!-- Team Mode Scoreboard -->
             <div id="team-scoreboard" class="hidden flex flex-wrap justify-center gap-2 p-3 bg-gray-800 rounded-lg shadow-md mb-4">
-                <!-- Team score cards injected here -->
-            </div>
+                </div>
 
             <button id="reset-game-btn" onclick="window.resetGameToStart()"
                     class="w-full px-4 py-2 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition">
@@ -228,12 +211,9 @@
             </button>
         </div>
 
-        <!-- Game Board -->
         <div id="game-board" class="hidden">
-            <!-- Cards will be injected here -->
-        </div>
+            </div>
 
-        <!-- Win/Message Modal -->
         <div id="win-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center z-50">
             <div class="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md">
                 <h3 id="win-title" class="text-4xl font-extrabold text-indigo-600 mb-4">🥳 You Win! 🥳</h3>
@@ -247,44 +227,39 @@
 
     </div>
     
-    <!-- Toast/Notification Area -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
     <script>
         // --- Global State ---
-        let CARDS = []; // Array of card objects: {id: 1, text: 'Apple', matchId: 2}
-        let cardContentPairs = []; // Loaded data: [['Apple', 'Manzana'], ['Dog', 'Perro']]
-        let cardsFlipped = []; // Indices of currently flipped cards
+        let CARDS = []; 
+        let cardContentPairs = []; 
+        let cardsFlipped = []; 
         let pairsFound = 0;
         let triesCount = 0;
         let gameMode = 'traditional';
-        let isProcessing = false; // Prevent rapid clicking
+        let isProcessing = false; 
 
         // --- Team State ---
         let teamMode = false;
         let numTeams = 1;
         let teamScores = [];
         let currentTeamIndex = 0;
-        const TEAM_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']; // Red, Amber, Emerald, Blue, Violet, Pink
-        // --- Configuration & Sounds ---
+        const TEAM_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']; 
         
-        // REPLACED STICK MAN SVG with a simple HAPPY FACE SVG
+        // --- Configuration ---
+        // Simple Happy Face SVG for card back
         const STICK_MAN_SVG = `
             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <!-- Head -->
                 <circle cx="50" cy="50" r="45" fill="none" stroke="white" stroke-width="3"/>
-                <!-- Eyes -->
                 <circle cx="35" cy="40" r="4" fill="white" stroke="none"/>
                 <circle cx="65" cy="40" r="4" fill="white" stroke="none"/>
-                <!-- Mouth (Happy Arc) -->
                 <path d="M 30 65 Q 50 85 70 65" stroke="white" stroke-width="3" fill="none"/>
             </svg>
         `;
-        const MAX_PAIRS = 12; // New limit for 24 cards total
+        const MAX_PAIRS = 12;
 
         let toneLoaded = false;
         try {
-            // Check if Tone.js is ready
             if (typeof Tone !== 'undefined') {
                 toneLoaded = true;
             }
@@ -295,34 +270,28 @@
         const POSITIVE_SOUND = () => {
             if (!toneLoaded) return;
             try {
-                if (Tone.context.state !== 'running') {
-                    Tone.context.resume();
-                }
+                if (Tone.context.state !== 'running') { Tone.context.resume(); }
                 const synth = new Tone.MembraneSynth().toDestination();
                 synth.triggerAttackRelease("G5", "8n", Tone.now(), 0.5);
-            } catch (e) { console.error("Tone.js error:", e); }
+            } catch (e) { console.error("Tone error"); }
         };
 
         const MATCH_SOUND = () => {
             if (!toneLoaded) return;
             try {
-                if (Tone.context.state !== 'running') {
-                    Tone.context.resume();
-                }
+                if (Tone.context.state !== 'running') { Tone.context.resume(); }
                 const synth = new Tone.PolySynth(Tone.Synth).toDestination();
                 synth.triggerAttackRelease(["C5", "E5", "G5"], "4n");
-            } catch (e) { console.error("Tone.js error:", e); }
+            } catch (e) { console.error("Tone error"); }
         };
 
         const ERROR_SOUND = () => {
             if (!toneLoaded) return;
             try {
-                if (Tone.context.state !== 'running') {
-                    Tone.context.resume();
-                }
+                if (Tone.context.state !== 'running') { Tone.context.resume(); }
                 const synth = new Tone.NoiseSynth().toDestination();
                 synth.triggerAttackRelease("16n", Tone.now(), 0.8, 0.5);
-            } catch (e) { console.error("Tone.js error:", e); }
+            } catch (e) { console.error("Tone error"); }
         };
         
         // --- UI Elements ---
@@ -344,62 +313,40 @@
             winMessage: document.getElementById('win-message')
         };
 
-        /** Shows a simple, transient notification (Toast). */
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toast-container');
             if (!toastContainer) return;
-
-            const colors = {
-                info: 'bg-blue-500', 
-                success: 'bg-green-500', 
-                error: 'bg-red-500'
-            };
+            const colors = { info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500' };
             const color = colors[type] || colors.info;
-
             const toast = document.createElement('div');
             toast.className = `p-3 text-white rounded-lg shadow-xl ${color} transition-opacity duration-300`;
             toast.textContent = message;
-            
             toastContainer.appendChild(toast);
-
-            // Auto-remove after 4 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 400);
             }, 4000);
         }
 
-        // --- Team Logic (Updated for 'No Extra Turn') ---
-
-        /** Switches the turn to the next team OR increments the solo tries count. */
+        // --- Team Logic ---
         function endTurn(matched) {
             if (teamMode) {
-                // Team Mode: Always switch turn after a pair of flips
                 currentTeamIndex = (currentTeamIndex + 1) % numTeams;
                 renderTeamScoreboard();
-                showToast(matched 
-                    ? `Team ${currentTeamIndex + 1}'s turn next!` 
-                    : `Team ${currentTeamIndex + 1}'s turn.`, 
-                    'info'
-                );
+                showToast(matched ? `Team ${currentTeamIndex + 1}'s turn next!` : `Team ${currentTeamIndex + 1}'s turn.`, 'info');
             } else {
-                // Solo Mode: Increment total attempts
                 triesCount++;
                 updateScoreboard();
-                showToast(matched ? 'Match found! Next attempt.' : 'No match. Next attempt.', matched ? 'success' : 'error');
+                showToast(matched ? 'Match found!' : 'No match.', matched ? 'success' : 'error');
             }
         }
         
-        /** Renders the team scoreboard dynamically. */
         function renderTeamScoreboard() {
             if (!teamMode) return;
-
             let html = '';
             for (let i = 0; i < numTeams; i++) {
                 const isCurrent = (i === currentTeamIndex);
-                // Team 1 score card is skipped as it is solo mode
                 if (i === 0 && numTeams === 1) continue; 
-                
                 html += `
                     <div id="team-${i}" class="team-score-card ${isCurrent ? 'current-turn' : ''}" style="background-color: ${TEAM_COLORS[i]};">
                         <div class="text-base font-semibold">Team ${i + 1}</div>
@@ -410,12 +357,7 @@
             ui.teamScoreboard.innerHTML = html;
         }
 
-
         // --- File Loading ---
-
-        /**
-         * Handles the file upload event, reads CSV content, and prepares pairs.
-         */
         window.handleFileUpload = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -424,18 +366,13 @@
             reader.onload = (e) => {
                 const content = e.target.result;
                 cardContentPairs = [];
-                
                 const lines = content.split('\n').filter(line => line.trim().length > 0);
                 
                 lines.forEach(line => {
-                    // Split line by comma, take max 2 elements
                     const parts = line.split(',').map(p => p.trim());
-                    
                     if (parts.length >= 2 && parts[0] && parts[1]) {
-                        // Store as a pair [Value 1, Value 2]
                         cardContentPairs.push([parts[0], parts[1]]);
                     } else if (parts.length === 1 && parts[0]) {
-                        // Handle single-column input by doubling up (e.g., matching 'Dog' to 'Dog')
                         cardContentPairs.push([parts[0], parts[0]]);
                     }
                 });
@@ -445,7 +382,7 @@
                     ui.modeTraditional.disabled = false;
                     ui.modeVisible.disabled = false;
                 } else {
-                    ui.fileStatus.textContent = "Error: No valid data found. Check your CSV format (Col 1, Col 2).";
+                    ui.fileStatus.textContent = "Error: No valid data found.";
                     ui.modeTraditional.disabled = true;
                     ui.modeVisible.disabled = true;
                 }
@@ -454,70 +391,50 @@
         };
         
         // --- Game Setup ---
-
-        /**
-         * Initializes and starts the game in the selected mode.
-         */
         window.startGame = function(mode) {
-            if (cardContentPairs.length === 0) {
-                showToast('Please upload a valid CSV file first!', 'error');
-                return;
-            }
+            if (cardContentPairs.length === 0) return;
             
-            // Determine Team Mode Status
             numTeams = parseInt(ui.numTeamsSelect.value);
-            // Team mode is active if number of teams is > 1
             teamMode = numTeams > 1;
 
-            // --- Enforce 24 Card Limit (12 Pairs) ---
-            let pairsToUse = [...cardContentPairs]; // Clone the full list
-
+            let pairsToUse = [...cardContentPairs]; 
             if (pairsToUse.length > MAX_PAIRS) {
-                // 1. Randomly shuffle all loaded pairs
                 pairsToUse.sort(() => Math.random() - 0.5);
-                // 2. Select only the first MAX_PAIRS elements (12 pairs = 24 cards)
                 pairsToUse = pairsToUse.slice(0, MAX_PAIRS);
-                showToast(`Game limited to ${MAX_PAIRS * 2} cards. Randomly selected ${MAX_PAIRS} pairs.`, 'info');
+                showToast(`Game limited to ${MAX_PAIRS * 2} cards.`, 'info');
             } else {
                  showToast(`Starting game with ${pairsToUse.length * 2} cards.`, 'success');
             }
-            // --- END NEW LOGIC ---
-
 
             gameMode = mode;
             pairsFound = 0;
             triesCount = 0;
             cardsFlipped = [];
             
-            // 1. Initialize Team Scores if needed
             teamScores = Array(numTeams).fill(0);
             currentTeamIndex = 0;
 
-            // 2. Prepare card array using pairsToUse
+            // Generate Cards
             const cardData = [];
             let cardId = 0;
             pairsToUse.forEach(pair => {
                 const [val1, val2] = pair;
-                // Card 1
-                cardData.push({ id: cardId++, text: val1, matchId: cardId });
-                // Card 2 (Match)
-                cardData.push({ id: cardId++, text: val2, matchId: cardId - 2 });
+                // Add cards with simple IDs
+                cardData.push({ id: cardId++, text: val1 });
+                cardData.push({ id: cardId++, text: val2 });
             });
 
-            // 3. Shuffle cards
             CARDS = cardData.sort(() => Math.random() - 0.5);
 
-            // 4. Update UI visibility
+            // UI
             ui.startScreen.classList.add('hidden');
             ui.gameInfo.classList.remove('hidden');
             ui.gameBoard.classList.remove('hidden');
             ui.gameBoard.classList.toggle('visible-mode', mode === 'visible');
             
-            // Show the appropriate scoreboard
             ui.soloScoreboard.classList.toggle('hidden', teamMode);
             ui.teamScoreboard.classList.toggle('hidden', !teamMode);
             
-            // 5. Update Scoreboard and draw teams
             ui.totalPairs.textContent = pairsToUse.length;
             if (teamMode) {
                 renderTeamScoreboard();
@@ -525,41 +442,26 @@
                 updateScoreboard();
             }
 
-
-            // 6. Draw the board
             renderBoard();
         };
         
-        /**
-         * Resets the game to the initial file and mode selection screen.
-         */
         window.resetGameToStart = function() {
             ui.gameInfo.classList.add('hidden');
             ui.gameBoard.classList.add('hidden');
             ui.startScreen.classList.remove('hidden');
             ui.winModal.classList.add('hidden');
             
-            // Reset team state
             teamMode = false;
             numTeams = 1;
-            teamScores = [];
-            currentTeamIndex = 0;
-            ui.numTeamsSelect.value = 1;
-
             CARDS = [];
             ui.gameBoard.innerHTML = '';
         };
 
-        /**
-         * Renders the cards onto the board grid.
-         */
         function renderBoard() {
             ui.gameBoard.innerHTML = '';
-            
-            // Adjust grid columns based on the number of cards for responsive layout
             const totalCards = CARDS.length;
             let columns = 4;
-            if (totalCards > 20) { columns = 6; } // 24 cards max means 6x4 layout
+            if (totalCards > 20) { columns = 6; }
             else if (totalCards > 12) { columns = 5; }
             else if (totalCards > 8) { columns = 4; }
             else { columns = 3; }
@@ -572,37 +474,26 @@
                 cardElement.dataset.index = index;
                 cardElement.onclick = () => window.handleClick(index);
 
-                // Determine base background color for the card front based on the match ID parity
-                const baseColor = (card.matchId % 2 === 0) ? '#f0f9ff' : '#fff7ed'; // Light blue or light orange
-                const borderColor = (card.matchId % 2 === 0) ? '#3b82f6' : '#f97316'; // Blue or Orange
-
-                // For visible mode, cards start face up
                 if (gameMode === 'visible') {
                     cardElement.classList.add('visible-mode');
                     cardElement.innerHTML = `
-                        <div class="card-inner" style="border: 4px solid ${borderColor}; background-color: ${baseColor}; color: ${borderColor};">
+                        <div class="card-inner">
                             <div class="card-face card-front">${card.text}</div>
                         </div>
                     `;
-                    // Mark as "flipped" so the front face is always shown in this mode
                     cardElement.classList.add('flipped');
                 } else {
-                    // Traditional Mode: Starts face down
-                     cardElement.innerHTML = `
+                      cardElement.innerHTML = `
                         <div class="card-inner">
                             <div class="card-face card-back">${STICK_MAN_SVG}</div>
-                            <div class="card-face card-front" style="background-color: ${baseColor}; border-color: ${borderColor}; color: ${borderColor};">${card.text}</div>
+                            <div class="card-face card-front">${card.text}</div>
                         </div>
                     `;
                 }
-
                 ui.gameBoard.appendChild(cardElement);
             });
         }
         
-        /**
-         * Updates the score and tries displayed on the screen (Solo Mode Only).
-         */
         function updateScoreboard() {
             if (!teamMode) {
                 ui.score.textContent = pairsFound;
@@ -612,41 +503,45 @@
 
         // --- Game Logic ---
 
-        /**
-         * Handles a card click event.
-         */
+        // Checks if text1 matches text2 in ANY valid pair from the loaded list
+        function isValidPair(text1, text2) {
+            for (let i = 0; i < cardContentPairs.length; i++) {
+                const pair = cardContentPairs[i];
+                // Check if text1 and text2 match the pair in either order
+                if ((pair[0] === text1 && pair[1] === text2) || (pair[0] === text2 && pair[1] === text1)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         window.handleClick = function(index) {
             const cardElement = ui.gameBoard.children[index];
             const card = CARDS[index];
 
-            // Ignore if card is matched, currently flipping, or already flipped
             if (cardElement.classList.contains('card-match') || isProcessing || cardsFlipped.includes(index)) {
                 return;
             }
             
-            isProcessing = true; // Lock controls
+            isProcessing = true; 
 
-            // 1. Flip the card
             cardsFlipped.push(index);
             cardElement.classList.add('flipped');
             POSITIVE_SOUND();
 
             if (cardsFlipped.length === 2) {
-                // 2. We have two cards flipped, check for match
                 const index1 = cardsFlipped[0];
                 const index2 = cardsFlipped[1];
                 const card1 = CARDS[index1];
                 const card2 = CARDS[index2];
                 
-                let isMatch = card1.matchId === card2.id;
-
+                // --- NEW MATCH LOGIC: Check Text Content ---
+                let isMatch = isValidPair(card1.text, card2.text);
 
                 if (isMatch) {
-                    // Match Found!
                     MATCH_SOUND();
                     pairsFound++;
 
-                    // Award point
                     if (teamMode) {
                         teamScores[currentTeamIndex]++;
                         renderTeamScoreboard();
@@ -654,54 +549,40 @@
                         ui.score.textContent = pairsFound;
                     }
 
-                    // Mark cards as matched (visually hide/dim them)
                     ui.gameBoard.children[index1].classList.add('card-match');
                     ui.gameBoard.children[index2].classList.add('card-match');
 
-                    cardsFlipped = []; // Clear flipped list
+                    cardsFlipped = []; 
                     
-                    // Check for win condition immediately
                     if (pairsFound === parseInt(ui.totalPairs.textContent)) { 
                         setTimeout(showWinScreen, 800);
-                        // Do not unlock isProcessing, let showWinScreen handle the end state
                         return; 
                     }
 
                 } else {
-                    // No Match (Error sound happens inside the loop)
                     ERROR_SOUND();
-                    cardsFlipped = []; // Clear flipped list
+                    cardsFlipped = []; 
                 }
                 
-                // --- Unified Turn End Logic (Turn always passes after 2 flips) ---
                 setTimeout(() => {
-                    // Flip cards back after a short delay if no match and not visible mode
                     if (!isMatch && gameMode === 'traditional') {
                         ui.gameBoard.children[index1].classList.remove('flipped');
                         ui.gameBoard.children[index2].classList.remove('flipped');
                     }
-                    
-                    endTurn(isMatch); // Pass turn or increment tries
-                    isProcessing = false; // Unlock controls
+                    endTurn(isMatch); 
+                    isProcessing = false; 
                 }, 1200);
 
-
             } else {
-                // Only one card flipped, wait for the second click
-                isProcessing = false; // Unlock immediately for the next click
+                isProcessing = false; 
             }
         };
         
-        /**
-         * Displays the end-of-game modal.
-         */
         function showWinScreen() {
             let message;
             if (teamMode) {
-                // Determine winner(s)
                 const maxScore = Math.max(...teamScores);
-                const winners = teamScores.map((score, i) => ({ score, team: i + 1 }))
-                                          .filter(t => t.score === maxScore);
+                const winners = teamScores.map((score, i) => ({ score, team: i + 1 })).filter(t => t.score === maxScore);
                 
                 if (winners.length === 1) {
                     message = `Team ${winners[0].team} wins with ${maxScore} pairs!`;
@@ -709,25 +590,17 @@
                     const winnerNames = winners.map(t => `Team ${t.team}`).join(' & ');
                     message = `It's a tie! ${winnerNames} tied with ${maxScore} pairs!`;
                 }
-
                 ui.winTitle.textContent = "🏆 Game Over! 🏆";
-                
             } else {
                 message = `You found all ${pairsFound} pairs in **${triesCount}** attempts!`;
                 ui.winTitle.textContent = "🥳 You Win! 🥳";
             }
-            
             ui.winMessage.innerHTML = message;
             ui.winModal.classList.remove('hidden');
         }
 
-        // --- Initialization ---
-
         document.addEventListener('DOMContentLoaded', () => {
-             // Initial check if Tone is ready for the first click to activate AudioContext
-             if (typeof Tone !== 'undefined') {
-                 toneLoaded = true;
-             }
+             if (typeof Tone !== 'undefined') { toneLoaded = true; }
         });
     </script>
 </body>

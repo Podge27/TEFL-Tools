@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guess Who: Grammar Edition</title>
+    
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* Override global body settings just for this page */
+        body { 
+            background-color: #222; 
+            color: white; 
+            text-align: center;
+            /* We keep margin:0 from global, but add padding for the fixed input */
+            padding-bottom: 120px; 
+        }
+
+        h1 { margin-top: 20px; color: #87CEEB; }
+
+        /* The Grid of Faces */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 faces per row */
+            gap: 15px;
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background-color: #444;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: opacity 0.5s, transform 0.3s;
+            position: relative;
+        }
+
+        /* Number label on card */
+        .card-number {
+            position: absolute;
+            top: 5px; left: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+        }
+
+        /* When eliminated, fade out */
+        .eliminated {
+            opacity: 0.1;
+            filter: grayscale(100%);
+        }
+
+        /* THE INPUT AREA (Fixed at bottom) */
+        #inputArea {
+            background-color: #333;
+            padding: 20px;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            border-top: 3px solid #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        input[type="text"] {
+            padding: 15px;
+            font-size: 22px;
+            width: 500px;
+            border-radius: 8px;
+            border: 2px solid #666;
+            background-color: #eee;
+            outline: none;
+            /* Force input to use your Brand Font */
+            font-family: inherit; 
+        }
+        
+        input[type="text"]:focus { border-color: #007bff; background-color: white; }
+
+        /* Game specific buttons */
+        .btn-game {
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-game:hover { background-color: #0056b3; }
+
+        .btn-reset {
+            background-color: #d9534f;
+            font-size: 16px;
+            padding: 15px 20px;
+        }
+        .btn-reset:hover { background-color: #c9302c; }
+
+        #messageArea {
+            font-size: 28px;
+            margin: 10px 0;
+            font-weight: bold;
+            height: 40px; 
+            color: #ffd700;
+        }
+
+        /* Animation for wrong grammar */
+        .shake { animation: shake 0.4s; border: 3px solid red !important; background-color: #ffdddd !important; }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div style="text-align: left; padding: 20px;">
+    <a href="index.html" class="btn-back">← Back to Menu</a>
+</div>
+
+<h1>Guess Who!</h1>
+<div id="messageArea">Type your question!</div>
+
+<div id="board">
+    </div>
+
+<div id="inputArea">
+    <input type="text" id="questionInput" placeholder="e.g. Has he got a beard?" autocomplete="off">
+    <button class="btn-game" onclick="checkGrammar()">ASK</button>
+    <button class="btn-game btn-reset" onclick="resetGame()">Reset Game</button>
+</div>
+
+<script>
+    // ==========================================
+    // 1. THE DATABASE (20 FACES)
+    // ==========================================
+    const people = [
+        // Row 1
+        { id: 1,  tags: ['male', 'beard', 'hat', 'tshirt-blue', 't-shirt', 'eyes-blue', 'sad'] },
+        { id: 2,  tags: ['female', 'glasses', 'hair-blonde', 'hair-long', 'scarf-red', 'scarf', 'eyes-brown', 'happy'] },
+        { id: 3,  tags: ['male', 'moustache', 'hair-dark', 'hair-short', 'tshirt-yellow', 't-shirt', 'eyes-green', 'angry'] },
+        { id: 4,  tags: ['female', 'hat', 'hair-red', 'hair-curly', 'scarf-green', 'scarf', 'eyes-blue', 'tired'] },
+        { id: 5,  tags: ['male', 'glasses', 'hair-blonde', 'hair-short', 'tshirt-white', 't-shirt', 'eyes-brown', 'happy'] },
+        
+        // Row 2
+        { id: 6,  tags: ['female', 'hair-fair', 'hair-straight', 'hair-long', 'hair-blonde', 'tshirt-pink', 't-shirt', 'eyes-green', 'sad'] },
+        { id: 7,  tags: ['male', 'beard', 'hair-grey', 'hair-curly', 'tshirt-black', 't-shirt', 'eyes-blue', 'angry'] },
+        { id: 8,  tags: ['female', 'glasses', 'hair-dark', 'hair-short', 'scarf-purple', 'scarf', 'eyes-brown', 'happy'] },
+        { id: 9,  tags: ['male', 'hat', 'hair-red', 'hair-straight', 'tshirt-orange', 't-shirt', 'eyes-green', 'happy'] },
+        { id: 10, tags: ['female', 'hair-blonde', 'hair-curly', 'hair-long', 'scarf-yellow', 'scarf', 'eyes-blue', 'sad'] },
+        
+        // Row 3
+        { id: 11, tags: ['male', 'moustache', 'hair-fair', 'hair-short', 'scarf-blue', 'scarf', 'eyes-brown', 'angry'] },
+        { id: 12, tags: ['female', 'hat', 'hair-grey', 'hair-straight', 'tshirt-red', 't-shirt', 'eyes-green', 'happy'] },
+        { id: 13, tags: ['male', 'glasses', 'hair-dark', 'hair-curly', 'tshirt-green', 't-shirt', 'eyes-blue', 'happy'] },
+        { id: 14, tags: ['female', 'hair-red', 'hair-short', 'hair-straight', 'scarf-white', 'scarf', 'eyes-brown', 'sad'] },
+        { id: 15, tags: ['male', 'beard', 'hair-blonde', 'hair-long', 'scarf-black', 'scarf', 'eyes-green', 'angry'] },
+        
+        // Row 4
+        { id: 16, tags: ['female', 'glasses', 'hair-fair', 'hair-curly', 'tshirt-pink', 't-shirt', 'eyes-blue', 'tired'] },
+        { id: 17, tags: ['male', 'hat', 'hair-grey', 'hair-short', 'tshirt-purple', 't-shirt', 'eyes-brown', 'happy'] },
+        { id: 18, tags: ['female', 'hair-dark', 'hair-long', 'hair-straight', 'scarf-orange', 'scarf', 'eyes-green', 'happy'] },
+        { id: 19, tags: ['male', 'moustache', 'hair-red', 'hair-curly', 'scarf-yellow', 'scarf', 'eyes-blue', 'angry'] },
+        { id: 20, tags: ['female', 'hat', 'hair-blonde', 'hair-short', 'tshirt-blue', 't-shirt', 'eyes-brown', 'tired'] }
+    ];
+
+    // ==========================================
+    // 2. THE GRAMMAR DICTIONARY
+    // ==========================================
+    const validQuestions = {
+        // --- GENDER ---
+        "is he male": "male", "is it a man": "male", "is it a boy": "male",
+        "is she female": "female", "is it a woman": "female", "is it a girl": "female",
+
+        // --- EMOTIONS ---
+        "is he happy": "happy", "is she happy": "happy",
+        "is he sad": "sad", "is she sad": "sad",
+        "is he angry": "angry", "is she angry": "angry",
+        "is he tired": "tired", "is she tired": "tired",
+
+        // --- ACCESSORIES ---
+        "has he got a hat": "hat", "does he have a hat": "hat", "is he wearing a hat": "hat",
+        "has she got a hat": "hat", "does she have a hat": "hat", "is she wearing a hat": "hat",
+
+        "has he got glasses": "glasses", "does he have glasses": "glasses", "is he wearing glasses": "glasses",
+        "has she got glasses": "glasses", "does she have glasses": "glasses", "is she wearing glasses": "glasses",
+
+        "has he got a beard": "beard", "does he have a beard": "beard",
+        "has he got a moustache": "moustache", "does he have a moustache": "moustache",
+
+        // --- EYES ---
+        "has he got blue eyes": "eyes-blue", "does he have blue eyes": "eyes-blue", "has she got blue eyes": "eyes-blue", "does she have blue eyes": "eyes-blue",
+        "has he got brown eyes": "eyes-brown", "does he have brown eyes": "eyes-brown", "has she got brown eyes": "eyes-brown", "does she have brown eyes": "eyes-brown",
+        "has he got green eyes": "eyes-green", "does he have green eyes": "eyes-green", "has she got green eyes": "eyes-green", "does she have green eyes": "eyes-green",
+
+        // --- HAIR ---
+        "has he got curly hair": "hair-curly", "does he have curly hair": "hair-curly",
+        "has she got curly hair": "hair-curly", "does she have curly hair": "hair-curly",
+        "has he got straight hair": "hair-straight", "does he have straight hair": "hair-straight",
+        "has she got straight hair": "hair-straight", "does she have straight hair": "hair-straight",
+        "has he got short hair": "hair-short", "does he have short hair": "hair-short",
+        "has she got short hair": "hair-short", "does she have short hair": "hair-short",
+        "has he got long hair": "hair-long", "does he have long hair": "hair-long",
+        "has she got long hair": "hair-long", "does she have long hair": "hair-long",
+
+        // --- HAIR COLORS ---
+        "has he got blonde hair": "hair-blonde", "does he have blonde hair": "hair-blonde", "is he blonde": "hair-blonde",
+        "has she got blonde hair": "hair-blonde", "does she have blonde hair": "hair-blonde", "is she blonde": "hair-blonde",
+        "has he got red hair": "hair-red", "does he have red hair": "hair-red",
+        "has she got red hair": "hair-red", "does she have red hair": "hair-red",
+        "has he got dark hair": "hair-dark", "does he have dark hair": "hair-dark",
+        "has she got dark hair": "hair-dark", "does she have dark hair": "hair-dark",
+        "has he got fair hair": "hair-fair", "does he have fair hair": "hair-fair",
+        "has she got fair hair": "hair-fair", "does she have fair hair": "hair-fair",
+        "has he got grey hair": "hair-grey", "does he have grey hair": "hair-grey",
+        "has she got grey hair": "hair-grey", "does she have grey hair": "hair-grey",
+
+        // --- CLOTHES (Generic) ---
+        "is he wearing a scarf": "scarf", "is she wearing a scarf": "scarf",
+        "does he have a scarf": "scarf", "does she have a scarf": "scarf",
+        "has he got a scarf": "scarf", "has she got a scarf": "scarf",
+
+        "is he wearing a t-shirt": "t-shirt", "is she wearing a t-shirt": "t-shirt",
+        "does he have a t-shirt": "t-shirt", "does she have a t-shirt": "t-shirt",
+        "has he got a t-shirt": "t-shirt", "has she got a t-shirt": "t-shirt",
+
+        // --- CLOTHES (Specific Colors) ---
+// --- CLOTHES (Specific Colors) ---
+        // RED SCARF
+        "is he wearing a red scarf": "scarf-red",   "is she wearing a red scarf": "scarf-red",
+        "has he got a red scarf": "scarf-red",      "has she got a red scarf": "scarf-red",
+        
+        // BLUE SCARF
+        "is he wearing a blue scarf": "scarf-blue", "is she wearing a blue scarf": "scarf-blue",
+        "has he got a blue scarf": "scarf-blue",    "has she got a blue scarf": "scarf-blue",
+        
+        // GREEN SCARF
+        "is he wearing a green scarf": "scarf-green", "is she wearing a green scarf": "scarf-green",
+        "has he got a green scarf": "scarf-green",    "has she got a green scarf": "scarf-green",
+        
+        // YELLOW SCARF
+        "is he wearing a yellow scarf": "scarf-yellow", "is she wearing a yellow scarf": "scarf-yellow",
+        "has he got a yellow scarf": "scarf-yellow",    "has she got a yellow scarf": "scarf-yellow",
+        
+        // PURPLE SCARF
+        "is he wearing a purple scarf": "scarf-purple", "is she wearing a purple scarf": "scarf-purple",
+        "has he got a purple scarf": "scarf-purple",    "has she got a purple scarf": "scarf-purple",
+        
+        // WHITE SCARF
+        "is he wearing a white scarf": "scarf-white",   "is she wearing a white scarf": "scarf-white",
+        "has he got a white scarf": "scarf-white",      "has she got a white scarf": "scarf-white",
+        
+        // BLACK SCARF
+        "is he wearing a black scarf": "scarf-black",   "is she wearing a black scarf": "scarf-black",
+        "has he got a black scarf": "scarf-black",      "has she got a black scarf": "scarf-black",
+        
+        // ORANGE SCARF
+        "is he wearing an orange scarf": "scarf-orange", "is she wearing an orange scarf": "scarf-orange",
+        "has he got an orange scarf": "scarf-orange",    "has she got an orange scarf": "scarf-orange",
+
+        // BLUE T-SHIRT
+        "is he wearing a blue t-shirt": "tshirt-blue",   "is she wearing a blue t-shirt": "tshirt-blue",
+        "has he got a blue t-shirt": "tshirt-blue",      "has she got a blue t-shirt": "tshirt-blue",
+        
+        // YELLOW T-SHIRT
+        "is he wearing a yellow t-shirt": "tshirt-yellow", "is she wearing a yellow t-shirt": "tshirt-yellow",
+        "has he got a yellow t-shirt": "tshirt-yellow",    "has she got a yellow t-shirt": "tshirt-yellow",
+        
+        // WHITE T-SHIRT
+        "is he wearing a white t-shirt": "tshirt-white", "is she wearing a white t-shirt": "tshirt-white",
+        "has he got a white t-shirt": "tshirt-white",    "has she got a white t-shirt": "tshirt-white",
+        
+        // PINK T-SHIRT
+        "is he wearing a pink t-shirt": "tshirt-pink",   "is she wearing a pink t-shirt": "tshirt-pink",
+        "has he got a pink t-shirt": "tshirt-pink",      "has she got a pink t-shirt": "tshirt-pink",
+        
+        // BLACK T-SHIRT
+        "is he wearing a black t-shirt": "tshirt-black", "is she wearing a black t-shirt": "tshirt-black",
+        "has he got a black t-shirt": "tshirt-black",    "has she got a black t-shirt": "tshirt-black",
+        
+        // ORANGE T-SHIRT
+        "is he wearing an orange t-shirt": "tshirt-orange", "is she wearing an orange t-shirt": "tshirt-orange",
+        "has he got an orange t-shirt": "tshirt-orange",    "has she got an orange t-shirt": "tshirt-orange",
+        
+        // RED T-SHIRT
+        "is he wearing a red t-shirt": "tshirt-red",     "is she wearing a red t-shirt": "tshirt-red",
+        "has he got a red t-shirt": "tshirt-red",        "has she got a red t-shirt": "tshirt-red",
+        
+        // GREEN T-SHIRT
+        "is he wearing a green t-shirt": "tshirt-green", "is she wearing a green t-shirt": "tshirt-green",
+        "has he got a green t-shirt": "tshirt-green",    "has she got a green t-shirt": "tshirt-green",
+        
+        // PURPLE T-SHIRT
+        "is he wearing a purple t-shirt": "tshirt-purple", "is she wearing a purple t-shirt": "tshirt-purple",
+        "has he got a purple t-shirt": "tshirt-purple",    "has she got a purple t-shirt": "tshirt-purple"
+    };
+
+    // ==========================================
+    // 3. GAME ENGINE
+    // ==========================================
+
+    let secretPerson = null;
+    let gameActive = true;
+
+    function initGame() {
+        const board = document.getElementById('board');
+        board.innerHTML = ''; 
+
+        people.forEach(person => {
+            let card = document.createElement('div');
+            card.className = 'card';
+            card.id = 'person-' + person.id;
+            
+            let numLabel = document.createElement('div');
+            numLabel.className = 'card-number';
+            numLabel.innerText = person.id;
+
+            let img = document.createElement('img');
+            img.src = 'images/' + person.id + '.png'; 
+            img.alt = "Person " + person.id;
+            img.onerror = function() { this.style.display='none'; this.parentNode.innerHTML += '<div style="color:white; padding:20px;">Image Missing<br>'+person.id+'.png</div>'; };
+            
+            card.appendChild(numLabel);
+            card.appendChild(img);
+            board.appendChild(card);
+        });
+
+        secretPerson = people[Math.floor(Math.random() * people.length)];
+        console.log("Teacher Cheat: Secret Person is #" + secretPerson.id);
+        
+        document.getElementById('messageArea').innerText = "Type your question! Your grammar must be correct!";
+        document.getElementById('messageArea').style.color = "#ffd700";
+        document.getElementById('questionInput').value = "";
+        gameActive = true;
+    }
+
+    function checkGrammar() {
+        if (!gameActive) return;
+        
+        const inputField = document.getElementById('questionInput');
+        const msg = document.getElementById('messageArea');
+        
+        // Clean text: Lowercase, remove '?' and extra spaces
+        let text = inputField.value.toLowerCase().trim().replace(/\?/g, '');
+
+        if (validQuestions[text]) {
+            inputField.classList.remove('shake');
+            let attributeToCheck = validQuestions[text];
+            askQuestion(attributeToCheck);
+            inputField.value = ''; 
+        } else {
+            msg.innerText = "Check your grammar! (Has he got...? / Is he...?)";
+            msg.style.color = "#ff9999";
+            inputField.classList.add('shake');
+            setTimeout(() => inputField.classList.remove('shake'), 500);
+        }
+    }
+
+function askQuestion(attribute) {
+        // 1. Check if the secret person has the attribute
+        const hasIt = secretPerson.tags.includes(attribute);
+        const msg = document.getElementById('messageArea');
+
+        // 2. Logic to eliminate people
+        if (hasIt) {
+            msg.innerText = "YES! The person matches: " + attribute;
+            msg.style.color = "#4CAF50"; 
+            
+            people.forEach(p => {
+                if (!p.tags.includes(attribute)) {
+                    document.getElementById('person-' + p.id).classList.add('eliminated');
+                }
+            });
+
+        } else {
+            msg.innerText = "NO! The person does NOT match: " + attribute;
+            msg.style.color = "#f44336"; 
+
+            people.forEach(p => {
+                if (p.tags.includes(attribute)) {
+                    document.getElementById('person-' + p.id).classList.add('eliminated');
+                }
+            });
+        }
+
+        // 3. WIN CONDITION CHECK
+        // We count how many cards do NOT have the 'eliminated' class
+        const remainingCards = document.querySelectorAll('.card:not(.eliminated)');
+
+        if (remainingCards.length === 1) {
+            // Only one person left!
+            const winner = remainingCards[0];
+            const winnerId = winner.id.replace('person-', ''); // Get the ID number
+
+            // Update the message to celebrate
+            msg.innerHTML = "🎉 YOU FOUND THEM! IT'S PERSON " + winnerId + "! 🎉";
+            msg.style.color = "#FFD700"; // Gold color
+            
+            // Visual celebration on the card
+            winner.style.transform = "scale(1.2)";
+            winner.style.zIndex = "100";
+            winner.style.border = "4px solid gold";
+            winner.style.boxShadow = "0 0 30px gold";
+
+            // Stop the game so they can't keep typing
+            gameActive = false;
+        }
+    }
+    function resetGame() {
+        initGame();
+    }
+
+    document.getElementById("questionInput").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") checkGrammar();
+    });
+
+    // Start!
+    initGame();
+</script>
+</body>
+</html>

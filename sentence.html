@@ -203,14 +203,14 @@
                     <label class="file-upload-label">
                         <span class="text-4xl mb-2">📂</span>
                         <span id="file-name" class="font-bold text-slate-500">Click to Select CSV File</span>
-                        <p class="text-xs text-slate-400 mt-2 text-center">Smart CSV Reader:<br>Handles quotes "..." correctly!</p>
+                        <p class="text-xs text-slate-400 mt-2 text-center">Correctly handles phrases with spaces<br>and quoted commas!</p>
                         <input type="file" id="csv-input" accept=".csv" class="hidden">
                     </label>
                 </div>
 
                 <div class="setup-box">
                     <h2 class="text-xl font-bold text-slate-700 mb-4">Option B: Manual Text</h2>
-                    <textarea id="manual-input" placeholder="The | big dog | ran.&#10;However, | she stayed | home.&#10;(Use | to split phrases)"></textarea>
+                    <textarea id="manual-input" placeholder="The | big dog | ran.&#10;She is | as tall | as me.&#10;(Use | to split phrases)"></textarea>
                     <p class="text-xs text-slate-400 mt-2">Use <strong>|</strong> (pipe) to split phrases manually.</p>
                 </div>
             </div>
@@ -313,24 +313,21 @@
                 let parts = [];
                 
                 if (type === 'csv') {
-                    // --- SMART CSV PARSING ---
-                    // This regex matches: quoted strings OR non-comma strings
-                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    
-                    if (matches) {
-                        parts = matches.map(p => {
-                            // Remove surrounding quotes if they exist
-                            if (p.startsWith('"') && p.endsWith('"')) {
-                                return p.slice(1, -1).trim();
-                            }
-                            return p.trim();
-                        });
-                    } else {
-                        // Fallback if regex fails (simple split)
-                        parts = line.split(',').map(p => p.trim());
-                    }
+                    // --- FIXED SMART CSV PARSING ---
+                    // This regex correctly splits by comma only if not inside quotes
+                    // AND preserves spaces within the values.
+                    parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => {
+                        let val = p.trim();
+                        // Remove surrounding quotes if they exist
+                        if (val.startsWith('"') && val.endsWith('"')) {
+                            val = val.slice(1, -1);
+                            // Unescape double double-quotes if any (CSV standard)
+                            val = val.replace(/""/g, '"');
+                        }
+                        return val.trim();
+                    });
                 } else {
-                    // Manual Mode
+                    // Manual Parsing
                     if (line.includes('|')) {
                         parts = line.split('|').map(p => p.trim());
                     } else {
@@ -338,9 +335,7 @@
                     }
                 }
                 
-                // Filter empty parts
                 parts = parts.filter(p => p !== '');
-
                 if (parts.length > 1) {
                     sentences.push(parts);
                 }
@@ -351,9 +346,7 @@
                 return;
             }
 
-            // Shuffle Sentence Order
             sentences.sort(() => Math.random() - 0.5);
-
             currentIdx = 0;
             totalCountEl.innerText = sentences.length;
             
@@ -428,19 +421,24 @@
             feedbackMsg.innerText = '';
         }
 
+        // --- CHECKING LOGIC (Using Text Comparison) ---
         checkBtn.addEventListener('click', () => {
             if (placedBlocks.length === 0) return;
             
-            let isCorrect = true;
-            
             if (placedBlocks.length !== currentBlocks.length) {
-                isCorrect = false;
-            } else {
-                for (let i = 0; i < placedBlocks.length; i++) {
-                    if (placedBlocks[i].id !== i) {
-                        isCorrect = false;
-                        break;
-                    }
+                answerZone.className = 'incorrect shake';
+                feedbackMsg.innerText = "Not enough blocks!";
+                feedbackMsg.className = "text-xl font-black text-red-500";
+                setTimeout(() => answerZone.classList.remove('shake'), 400);
+                return;
+            }
+
+            // CHECK: Compare TEXT content, not just ID
+            let isCorrect = true;
+            for (let i = 0; i < placedBlocks.length; i++) {
+                if (placedBlocks[i].text !== currentBlocks[i].text) {
+                    isCorrect = false;
+                    break;
                 }
             }
 

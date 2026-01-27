@@ -274,6 +274,15 @@
                 <div id="total-percent" class="text-6xl font-black text-slate-800 my-2">0%</div>
                 <div id="total-fraction" class="text-slate-400 font-medium">0/0</div>
             </div>
+            <div id="history-container" class="w-full max-w-4xl mt-8 bg-white p-6 rounded-2xl shadow-sm hidden">
+    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <h3 class="font-bold text-slate-500 uppercase tracking-widest text-sm">Exam History</h3>
+        <button onclick="app.clearHistory()" class="text-xs text-red-500 font-bold hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition">
+            🗑️ RESET TO 0
+        </button>
+    </div>
+    <div id="history-list" class="flex flex-wrap gap-2"></div>
+</div>
             <div class="flex gap-4">
                 <button onclick="app.enableReview()" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow hover:bg-indigo-700 transition">Review Answers</button>
                 <button onclick="location.reload()" class="px-8 py-3 bg-slate-800 text-white font-bold rounded-xl shadow hover:bg-slate-900 transition">New Exam</button>
@@ -750,8 +759,60 @@
                     document.getElementById('btn-finish-p7').classList.add('hidden');
                 }
                 document.getElementById('btn-return-results').classList.remove('hidden');
+                this.saveHistory(totalScore, maxScore, this.state.level);
                 this.switchScreen('screen-results');
             },
+            // --- HISTORY FUNCTIONS ---
+    saveHistory: function(score, max, level) {
+        // 1. Get existing list (using a unique key for Reading)
+        const history = JSON.parse(localStorage.getItem('readingExamHistory') || '[]');
+        
+        // 2. Add new result to the top
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            score: score,
+            total: max,
+            level: level.toUpperCase()
+        });
+
+        // 3. Save back to browser memory
+        localStorage.setItem('readingExamHistory', JSON.stringify(history));
+        this.renderHistory();
+    },
+
+    renderHistory: function() {
+        const history = JSON.parse(localStorage.getItem('readingExamHistory') || '[]');
+        const container = document.getElementById('history-container');
+        const list = document.getElementById('history-list');
+
+        if (history.length === 0) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        
+        // Create the chips
+        list.innerHTML = history.map(item => {
+            const percent = Math.round((item.score / item.total) * 100);
+            // Green for >= 60%, Red for fail
+            let colorClass = percent >= 60 ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-100';
+
+            return `
+            <div class="${colorClass} border px-3 py-1 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm select-none">
+                <span class="text-xs uppercase opacity-75">${item.level}</span>
+                <span>${percent}%</span>
+            </div>
+            `;
+        }).join('');
+    },
+
+    clearHistory: function() {
+        if(confirm("Delete all Reading exam results?")) {
+            localStorage.removeItem('readingExamHistory'); 
+            this.renderHistory(); 
+        }
+    },
 
             enableReview: function() {
                 this.state.reviewMode = true;

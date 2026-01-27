@@ -18,17 +18,39 @@
       "game": "https://www.wikipedia.org"
     }
   },
-  {
-    "level": "B2",
-    "topic": "The Passive Voice",
-    "slug": "b2-passive",
-    "description": "Shifting focus to the action rather than the person.",
-    "resources": {
-      "sentences": [
-        "The Mona Lisa was painted by Da Vinci.",
-        "Our house is being renovated this month."
-      ],
-      "presentation": "https://www.wikipedia.org"
-    }
-  }
+          {
+            "level": "B2",
+            "topic": "Past Modals: Speculation & Regret",
+            "slug": "b2-past-modals",
+            "description": "Talking about past mistakes, possibilities, and deductions.",
+            "resources": {
+              "reading_highlight": "<div style='font-size: 1.5rem; line-height: 2;'><h3>The 2022 World Cup Final</h3><p>It was one of the greatest games in history. Argentina <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>must have felt</span> confident leading 2-0. France <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>could have given up</span>, but Mbappé scored twice. Many fans thought Argentina <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>might have lost</span> their chance. In the end, Messi <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>must have been</span> relieved to finally lift the trophy. The French defenders <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>shouldn't have let</span> Di Maria score that first goal!</p><p style='font-size:1rem; color:#666;'>(Click the past modals to highlight them)</p></div>",
+              
+              "video_task": "<div style='text-align:center'><video controls width='100%' style='border-radius:15px; max-height:500px;'><source src='assets/Coffee_Machine_Explosion_Video_Generated.mp4' type='video/mp4'>Your browser does not support the video tag.</video></div>",
+              
+              "video_gapfill": [
+                { "q": "He ___ the note. (advice)", "a": "should have read" },
+                { "q": "He ___ the button. (regret)", "a": "shouldn't have pressed" },
+                { "q": "The machine ___ working that day. (deduction)", "a": "must have stopped" },
+                { "q": "The cup ___ ! (surprise)", "a": "shouldn't have disappeared" }
+              ],
+
+              "structure": "<div style='text-align:center; font-size: 1.8rem;'><div style='background:white; padding:20px; border-radius:15px; border:2px solid #CBD5E0; display:inline-block;'><strong>MODAL VERB</strong> + <span style='color:#D69E2E'>HAVE</span> + <strong>PAST PARTICIPLE</strong></div><br><br><p><em>She <strong>must</strong> <span style='color:#D69E2E'>have</span> <strong>forgotten</strong> her keys.</em></p></div>",
+
+              "probability_scale": "<ul style='list-style:none; padding:0; font-size:1.4rem;'><li style='margin-bottom:20px; border-left: 5px solid #38A169; padding-left:15px;'><strong>90-100% (Certainty)</strong><br>Must have / Can't have</li><li style='margin-bottom:20px; border-left: 5px solid #D69E2E; padding-left:15px;'><strong>50% (Possibility)</strong><br>Could have / May have / Might have</li></ul>",
+
+              "alternatives": "<ul style='font-size:1.5rem;'><li><strong>Supposed to have</strong> (Plan failed)<br><em>'The train was supposed to have arrived.'</em></li><br><li><strong>Needed to have</strong> (Necessary)<br><em>'You needed to have submitted the form.'</em></li></ul>",
+
+              "practice_gaps": [
+                { "q": "The streets are wet. It ___ (rain).", "a": "must have rained" },
+                { "q": "She walked past me! She ___ (see) me.", "a": "can't have seen" }
+              ],
+
+              "speaking": "<ul style='font-size:1.6rem; line-height:1.6;'><li>Tell me about a time you made a mistake. What <strong>should you have done</strong> differently?</li><li>Think of a time you were late. What <strong>might have happened</strong> if you had arrived on time?</li></ul>",
+
+              "pronunciation": "<div style='text-align:center; font-size:1.5rem;'><h3>The Weak 'Have' (/əv/)</h3><p>When we speak quickly, 'have' is NOT stressed.</p><div style='font-size:2rem;'>Must have ➝ <strong>Must'av</strong></div><div style='font-size:2rem;'>Should have ➝ <strong>Should'av</strong></div></div>",
+
+              "cartoon_visual": "assets/pastmodalcartoon.png"
+            }
+          }
 ]

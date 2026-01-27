@@ -6,6 +6,7 @@
     <title>Dice Roller</title>
     <!-- Load Tailwind CSS for utility classes (used only for basic layout and button consistency) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -181,7 +182,9 @@
     </style>
 </head>
 <body>
-
+<div class="absolute top-4 left-4">
+    <a href="index.html" class="btn-back">← Back</a>
+</div>
     <header class="mb-8 text-center">
         <h1 class="text-4xl font-extrabold text-white">Click on the Dice to roll</h1>
         <p class="text-gray-400 mt-2">TEFL Tools</p>
@@ -200,7 +203,6 @@
             <option value="6">6</option>
         </select>
         <button onclick="window.throwAllDice()">Throw All</button>
-        <button onclick="window.location.href = 'index.html'" class="bg-gray-700 hover:bg-gray-600">Back to Tools</button>
     </div>
 
     <!-- Dice Display Area (Up to 6 containers) -->

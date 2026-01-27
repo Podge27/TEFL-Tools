@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Classroom Tabletop</title>
+    
+    <link rel="stylesheet" href="global.css">
+    
+    <style>
+        /* --- GAME SPECIFIC STYLES --- */
+        
+        body { 
+            background: #fff9c4; /* Pale Yellow / Parchment */
+            color: #333; 
+            height: 100vh;
+            overflow: hidden; /* Prevents scrolling during game */
+        }
+
+        /* --- THE BOARD --- */
+        #gameContainer {
+            position: absolute;
+            top: 40px; left: 40px; right: 40px; bottom: 40px;
+            display: none;
+        }
+
+        /* TILE STYLING */
+        .tile {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 700;
+            box-sizing: border-box;
+            padding: 8px;
+            word-wrap: break-word;
+            line-height: 1.1;
+            background: white;
+            border: 2px solid #5d4037;
+            border-radius: 8px;
+            box-shadow: 2px 4px 0 rgba(93, 64, 55, 0.2);
+            z-index: 1;
+            color: #3e2723;
+        }
+
+        /* TILE VARIANTS */
+        .tile.Start { background: #66bb6a; color: white; border-color: #2e7d32; }
+        .tile.Finish { background: #ffca28; color: black; border-color: #f57f17; }
+        .tile.Action { background: #ff7043; color: white; border-color: #d84315; }
+        
+        /* Questions Palette */
+        .tile-q1 { background: #e1f5fe; }
+        .tile-q2 { background: #f3e5f5; }
+        .tile-q3 { background: #e0f2f1; }
+        .tile-q4 { background: #fff3e0; }
+
+        /* --- PLAYERS --- */
+        .player-token {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 3px solid white;
+            position: absolute;
+            z-index: 20;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 14px; font-weight: bold; color: white;
+            text-shadow: 0 0 2px black;
+        }
+
+        /* --- CENTER STAGE --- */
+        #centerStage {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 300px;
+            z-index: 10;
+        }
+
+        #turnIndicator {
+            background: white; color: #333;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-size: 24px; font-weight: 800;
+            margin-bottom: 30px;
+            display: inline-block;
+            border: 4px solid #333;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+        }
+
+        /* --- 3D DICE & COIN --- */
+        .scene { width: 120px; height: 120px; margin: 0 auto; perspective: 600px; cursor: pointer; }
+        .cube {
+            width: 100%; height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+        }
+        .cube__face {
+            position: absolute; width: 120px; height: 120px;
+            background: white; border: 2px solid #333;
+            border-radius: 20px;
+            box-shadow: inset 0 0 10px #eee;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 10px;
+        }
+        .pip { background: #333; border-radius: 50%; margin: 6px; }
+        .face-1 .pip:nth-child(5) { background: #d32f2f; }
+        
+        .cube__face--1  { transform: rotateY(  0deg) translateZ(60px); }
+        .cube__face--2  { transform: rotateY( 90deg) translateZ(60px); }
+        .cube__face--3  { transform: rotateY(180deg) translateZ(60px); }
+        .cube__face--4  { transform: rotateY(-90deg) translateZ(60px); }
+        .cube__face--5  { transform: rotateX( 90deg) translateZ(60px); }
+        .cube__face--6  { transform: rotateX(-90deg) translateZ(60px); }
+
+        #coinBtn {
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbc02d, #f57f17);
+            border: 6px solid white;
+            color: #3e2723;
+            font-weight: 800; font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* --- MODALS --- */
+        #questionModal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,249,196, 0.9);
+            z-index: 100;
+            justify-content: center; align-items: center;
+        }
+        #card {
+            background: white; color: #333;
+            width: 600px; padding: 50px;
+            border-radius: 20px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border: 4px solid #333;
+            position: relative;
+        }
+        #cardType { font-size: 14px; text-transform: uppercase; color: #888; letter-spacing: 2px; margin-bottom: 10px; }
+        #cardText { font-size: 48px; font-weight: 800; margin: 30px 0; color: #222; font-family: 'Times New Roman', serif; }
+
+        .btn-verdict { width: 160px; padding: 15px; margin: 15px; font-size: 18px; border:none; border-radius:50px; cursor:pointer; font-weight: bold; color: white; transition: transform 0.1s; }
+        .btn-correct { background: #43a047; box-shadow: 0 4px 0 #2e7d32; }
+        .btn-wrong { background: #e53935; box-shadow: 0 4px 0 #c62828; }
+        .btn-verdict:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- SETUP SCREEN --- */
+        #setupScreen {
+            background: white; color: #333;
+            max-width: 500px; margin: 60px auto;
+            padding: 40px; border-radius: 12px; text-align: left;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+        }
+        .row { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 10px; color: #555; font-size: 18px;}
+        select, input { padding: 12px; width: 100%; box-sizing: border-box; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; background: #fafafa; }
+        select:focus, input:focus { border-color: #fbc02d; outline: none; }
+
+        /* --- FIXED MENU BUTTON --- */
+        #exitBtn {
+            position: fixed; 
+            top: 20px; 
+            left: 20px;
+            z-index: 200;
+            display: none; /* Hidden until game starts */
+        }
+        
+    </style>
+</head>
+<body>
+
+<div id="exitBtn" class="btn-back" onclick="location.reload()">← Menu</div>
+
+<div id="setupScreen">
+    <a href="index.html" class="btn-back" style="float:left;">← Main Menu</a>
+    
+    <h1 style="text-align:center; margin-top:0; color:#fbc02d; text-shadow: 1px 1px 0 #333;">Tabletop Setup</h1>
+    
+    <div class="row">
+        <label>1. Question List (CSV)</label>
+        <input type="file" id="csvInput" accept=".csv">
+    </div>
+
+    <div class="row">
+        <label>2. Players</label>
+        <select id="playerCount">
+            <option value="2">2 Players</option>
+            <option value="3">3 Players</option>
+            <option value="4" selected>4 Players</option>
+            <option value="5">5 Players</option>
+            <option value="6">6 Players</option>
+            <option value="8">8 Players</option>
+            <option value="10">10 Players</option>
+            <option value="12">12 Players</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <label>3. Randomizer</label>
+        <select id="rngStyle">
+            <option value="dice">3D Dice</option>
+            <option value="coin">Coin Flip</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <label>4. Random Actions?</label>
+        <select id="addHazards">
+            <option value="no">No (Pure Questions)</option>
+            <option value="yes">Yes (Add "Go Back", "Roll Again")</option>
+        </select>
+    </div>
+
+    <button class="btn-back" onclick="startGame()" style="width:100%; text-align:center; font-size: 18px; background: linear-gradient(135deg, #fbc02d, #f57f17); border-color: #fbc02d;">START GAME</button>
+</div>
+
+<div id="gameContainer"></div>
+
+<div id="centerStage" style="display:none;">
+    <div id="turnIndicator">Player 1</div>
+    <div class="scene" id="diceScene" onclick="rollRNG()">
+        <div class="cube" id="cube">
+            <div class="cube__face cube__face--1 face-1"><div class="pip" style="grid-column:2; grid-row:2;"></div></div>
+            <div class="cube__face cube__face--2"><div class="pip" style="grid-column:1; grid-row:1;"></div><div class="pip" style="grid-column:3; grid-row:3;"></div></div>
+            <div class="cube__face cube__face--3"><div class="pip" style="grid-column:1; grid-row:1;"></div><div class="pip" style="grid-column:2; grid-row:2;"></div><div class="pip" style="grid-column:3; grid-row:3;"></div></div>
+            <div class="cube__face cube__face--4"><div class="pip" style="grid-column:1; grid-row:1;"></div><div class="pip" style="grid-column:3; grid-row:1;"></div><div class="pip" style="grid-column:1; grid-row:3;"></div><div class="pip" style="grid-column:3; grid-row:3;"></div></div>
+            <div class="cube__face cube__face--5"><div class="pip" style="grid-column:1; grid-row:1;"></div><div class="pip" style="grid-column:3; grid-row:1;"></div><div class="pip" style="grid-column:2; grid-row:2;"></div><div class="pip" style="grid-column:1; grid-row:3;"></div><div class="pip" style="grid-column:3; grid-row:3;"></div></div>
+            <div class="cube__face cube__face--6"><div class="pip" style="grid-column:1; grid-row:1;"></div><div class="pip" style="grid-column:3; grid-row:1;"></div><div class="pip" style="grid-column:1; grid-row:2;"></div><div class="pip" style="grid-column:3; grid-row:2;"></div><div class="pip" style="grid-column:1; grid-row:3;"></div><div class="pip" style="grid-column:3; grid-row:3;"></div></div>
+        </div>
+    </div>
+    <button id="coinBtn" style="display:none;" onclick="rollRNG()">FLIP</button>
+</div>
+
+<div id="questionModal">
+    <div id="card">
+        <div id="cardType">Question</div>
+        <div id="cardText">...</div>
+        <div>
+            <button class="btn-verdict btn-correct" onclick="teacherVerdict(true)">Correct ✔</button>
+            <button class="btn-verdict btn-wrong" onclick="teacherVerdict(false)">Incorrect ✖</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tiles = [];
+    let players = [];
+    let currentPlayer = 0;
+    let turnStartPos = 0; 
+    let isDice = true;
+    let paletteIndex = 0;
+
+    const hazards = [
+        { text: "Go Back 2", value: -2 },
+        { text: "Go Forward 1", value: 1 },
+        { text: "Roll Again", value: 0 },
+        { text: "Go Back 1", value: -1 },
+        { text: "Miss Turn", value: 99 }
+    ];
+
+    function startGame() {
+        const fileInput = document.getElementById('csvInput');
+        if (!fileInput.files[0]) return alert("Please load a CSV file!");
+
+        isDice = document.getElementById('rngStyle').value === 'dice';
+        const useHazards = document.getElementById('addHazards').value === 'yes';
+        const playerCount = parseInt(document.getElementById('playerCount').value);
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (lines[0].toLowerCase().includes('content')) lines.shift();
+
+            tiles = [];
+            tiles.push({ type: 'Start', text: 'START', value: 0 });
+
+            lines.forEach(line => {
+                paletteIndex = (paletteIndex % 4) + 1;
+                tiles.push({ type: 'tile-q' + paletteIndex, text: line, value: 0 });
+                if (useHazards && Math.random() < 0.3) {
+                    const h = hazards[Math.floor(Math.random() * hazards.length)];
+                    tiles.push({ type: 'Action', text: h.text, value: h.value });
+                }
+            });
+            tiles.push({ type: 'Finish', text: 'FINISH', value: 0 });
+
+            buildBoard();
+            initPlayers(playerCount);
+            
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('centerStage').style.display = 'block';
+            document.getElementById('exitBtn').style.display = 'inline-block';
+            
+            if (!isDice) {
+                document.getElementById('diceScene').style.display = 'none';
+                document.getElementById('coinBtn').style.display = 'inline-block';
+            }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+
+    function buildBoard() {
+        const container = document.getElementById('gameContainer');
+        const count = tiles.length;
+        
+        const base = Math.floor(count / 4);
+        const rem = count % 4;
+        
+        const s1 = base + (rem > 0 ? 1 : 0); // Top
+        const s2 = base + (rem > 1 ? 1 : 0); // Right
+        const s3 = base + (rem > 2 ? 1 : 0); // Bottom
+        const s4 = base; // Left
+
+        tiles.forEach((tile, i) => {
+            let div = document.createElement('div');
+            div.className = 'tile ' + tile.type;
+            div.id = 'tile-' + i;
+            div.innerText = tile.text;
+
+            let len = tile.text.length;
+            let fontSize = '22px'; 
+            if (len > 10) fontSize = '18px';
+            if (len > 25) fontSize = '14px';
+            if (len > 50) fontSize = '11px';
+            div.style.fontSize = fontSize;
+            
+            if (i < s1) {
+                // TOP
+                div.style.top = '0';
+                div.style.left = (i * (100/s1)) + '%';
+                div.style.width = (100/s1) + '%';
+                div.style.height = '14%';
+            } 
+            else if (i < s1 + s2) {
+                // RIGHT
+                let idx = i - s1;
+                div.style.right = '0';
+                div.style.top = (14 + (idx * (86/s2))) + '%';
+                div.style.width = '14%';
+                div.style.height = (86/s2) + '%';
+            } 
+            else if (i < s1 + s2 + s3) {
+                // BOTTOM
+                let idx = i - (s1 + s2);
+                div.style.bottom = '0';
+                div.style.right = (14 + (idx * (86/s3))) + '%';
+                div.style.width = (86/s3) + '%';
+                div.style.height = '14%';
+            } 
+            else {
+                // LEFT
+                let idx = i - (s1 + s2 + s3);
+                div.style.left = '0';
+                div.style.bottom = (14 + (idx * (72/s4))) + '%';
+                div.style.width = '14%';
+                div.style.height = (72/s4) + '%';
+            }
+            container.appendChild(div);
+        });
+    }
+
+    function initPlayers(num) {
+        const colors = ['#d32f2f', '#1976d2', '#388e3c', '#fbc02d', '#7b1fa2', '#e64a19', '#0097a7', '#5d4037', '#455a64', '#c2185b', '#303f9f', '#afb42b'];
+        for (let i=0; i<num; i++) {
+            players.push({ id: i, pos: 0, color: colors[i], missTurn: false });
+            let p = document.createElement('div');
+            p.className = 'player-token';
+            p.id = 'p-'+i;
+            p.innerText = (i+1);
+            p.style.backgroundColor = colors[i];
+            document.getElementById('tile-0').appendChild(p);
+        }
+        updateUI();
+    }
+
+    function rollRNG() {
+        const p = players[currentPlayer];
+        if (p.missTurn) {
+            alert("Player " + (currentPlayer+1) + " misses this turn!");
+            p.missTurn = false; nextTurn(); return;
+        }
+        turnStartPos = p.pos;
+
+        let roll = isDice ? Math.floor(Math.random() * 6) + 1 : Math.floor(Math.random() * 2) + 1;
+        
+        if(isDice) animateDice(roll);
+        else {
+            const btn = document.getElementById('coinBtn');
+            btn.style.transform = "rotateX(720deg)";
+            setTimeout(() => { 
+                btn.style.transform = "rotateX(0deg)";
+                btn.innerText = roll;
+                movePlayer(roll);
+            }, 500);
+        }
+    }
+
+    function animateDice(res) {
+        const cube = document.getElementById('cube');
+        const xRand = Math.floor(Math.random() * 4 + 5) * 360; 
+        const yRand = Math.floor(Math.random() * 4 + 5) * 360;
+        cube.style.transform = `rotateX(${xRand}deg) rotateY(${yRand}deg)`;
+        
+        setTimeout(() => {
+            let rX=0, rY=0;
+            if(res===1) { rX=0; rY=0; }
+            if(res===2) { rX=0; rY=-90; }
+            if(res===3) { rX=0; rY=180; }
+            if(res===4) { rX=0; rY=90; }
+            if(res===5) { rX=-90; rY=0; }
+            if(res===6) { rX=90; rY=0; }
+            cube.style.transform = `rotateX(${rX}deg) rotateY(${rY}deg)`;
+            setTimeout(() => movePlayer(res), 800);
+        }, 800);
+    }
+
+    function movePlayer(steps) {
+        const p = players[currentPlayer];
+        let next = p.pos + steps;
+        if (next >= tiles.length) next = next % tiles.length;
+        
+        document.getElementById('tile-'+next).appendChild(document.getElementById('p-'+p.id));
+        p.pos = next;
+
+        setTimeout(() => {
+            const tile = tiles[next];
+            if (tile.type.includes('tile-q')) {
+                document.getElementById('cardText').innerText = tile.text;
+                document.getElementById('cardType').innerText = "Question";
+                document.getElementById('questionModal').style.display = 'flex';
+            } 
+            else if (tile.type === 'Action') processAction(tile);
+            else if (tile.type === 'Finish') { alert("PLAYER " + (currentPlayer+1) + " WINS!"); location.reload(); }
+            else nextTurn();
+        }, 600);
+    }
+
+    function processAction(tile) {
+        alert(tile.text);
+        const p = players[currentPlayer];
+        if (tile.value === 99) { p.missTurn = true; nextTurn(); }
+        else if (tile.value === 0) { updateUI(); }
+        else {
+            let newPos = p.pos + tile.value;
+            if (newPos < 0) newPos = 0;
+            document.getElementById('tile-'+newPos).appendChild(document.getElementById('p-'+p.id));
+            p.pos = newPos;
+            nextTurn();
+        }
+    }
+
+    function teacherVerdict(correct) {
+        document.getElementById('questionModal').style.display = 'none';
+        if (correct) nextTurn();
+        else {
+            const p = players[currentPlayer];
+            p.pos = turnStartPos;
+            document.getElementById('tile-'+turnStartPos).appendChild(document.getElementById('p-'+p.id));
+            setTimeout(() => { alert("Incorrect! Back to start of turn."); nextTurn(); }, 300);
+        }
+    }
+
+    function nextTurn() {
+        currentPlayer = (currentPlayer + 1) % players.length;
+        updateUI();
+    }
+
+    function updateUI() {
+        const ind = document.getElementById('turnIndicator');
+        ind.innerText = "Player " + (currentPlayer+1);
+        ind.style.borderColor = players[currentPlayer].color;
+        ind.style.color = players[currentPlayer].color;
+    }
+</script>
+</body>
+</html>

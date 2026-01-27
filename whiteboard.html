@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Whiteboard Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* BASE LAYOUT */
+        body { background-color: #f4f4f4; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .btn-back { padding: 8px 16px; font-size: 0.9rem; flex-shrink: 0; }
+        
+        /* HEADER */
+        header {
+            background: white; height: 60px; flex-shrink: 0; display: flex; align-items: center; 
+            padding: 0 20px; border-bottom: 1px solid #ddd; gap: 20px; z-index: 20;
+        }
+        h1 { font-size: 1.2rem; color: #333; margin: 0; flex-grow: 1; }
+
+        /* MAIN CONTAINER */
+        #main-wrapper {
+            flex: 1; display: flex; overflow: hidden; position: relative;
+        }
+
+        /* SIDEBAR */
+        #page-sidebar {
+            width: 220px; background: #e5e5e5; border-right: 1px solid #ccc;
+            display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+            transition: margin-left 0.3s ease;
+        }
+        #page-sidebar.collapsed { margin-left: -220px; }
+
+        .sidebar-header {
+            padding: 10px; background: #ddd; font-weight: bold; font-size: 0.85rem; color: #555;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 5;
+        }
+
+        .page-card {
+            background: white; margin: 10px; padding: 5px; border-radius: 6px;
+            cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .page-card:hover { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .page-card.active { border-color: #2563EB; box-shadow: 0 0 0 2px #2563EB; }
+        
+        .thumb-box {
+            height: 120px; background: #f0f0f0; border: 1px solid #eee; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .thumb-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .page-num { font-size: 0.8rem; font-weight: bold; color: #666; text-align: center;}
+
+        /* CANVAS AREA */
+        #app-container {
+            flex: 1; display: flex; flex-direction: column;
+            padding: 15px; box-sizing: border-box; position: relative;
+            background: #f4f4f4;
+        }
+
+        /* TOOLBAR */
+        #wb-toolbar {
+            display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
+            background: white; padding: 8px; border-radius: 8px; border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-shrink: 0; z-index: 10;
+        }
+
+        /* TOOL BUTTONS */
+        .tool-btn {
+            padding: 8px 12px; border: 1px solid #ccc; border-bottom: 2px solid #ccc;
+            background: #f9f9f9; border-radius: 6px; cursor: pointer; font-weight: 600; 
+            color: #555; font-family: 'Inter', sans-serif; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tool-btn:active { transform: translateY(2px); border-bottom: 1px solid #ccc; }
+        .tool-btn.active { background: #333; color: white; border-color: #000; }
+        
+        /* Special buttons */
+        .btn-delete { color: #d32f2f; border-color: #feb2b2; background: #fff5f5; } 
+        .btn-delete:hover { background: #fee2e2; }
+        
+        .sep { width: 1px; height: 20px; background: #ddd; margin: 0 2px; }
+        .menu-sep { width: 100%; height: 1px; background: #eee; margin: 5px 0; }
+
+        /* DROPDOWNS */
+        .dropdown-container { position: relative; }
+        .dropdown-menu {
+            position: absolute; top: 110%; left: 0; background: white;
+            border: 1px solid #ccc; border-radius: 8px; padding: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 5px; z-index: 20;
+            min-width: 170px;
+        }
+        #shapes-menu { flex-direction: row; }
+        #save-menu { right: 0; left: auto; }
+
+        /* CANVAS SCROLL FRAME */
+        .canvas-frame {
+            flex: 1; width: 100%; 
+            background: #e5e5e5; 
+            border: 1px solid #ccc; border-radius: 8px; 
+            position: relative; overflow: auto;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        
+        .canvas-container {
+            background-color: white; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px; margin-bottom: 60px;
+        }
+
+        /* FLOATING EXTEND BUTTON */
+        #btn-extend-float {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; border: none; padding: 10px 20px;
+            border-radius: 20px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 5;
+            transition: transform 0.1s;
+        }
+        #btn-extend-float:hover { transform: translateX(-50%) scale(1.05); }
+
+        /* UTILS */
+        .hidden { display: none !important; }
+        #color-palette { display: flex; align-items: center; }
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; margin: 0 3px; border: 2px solid transparent; box-shadow: 0 0 0 1px #ddd; }
+        .color-dot.active { transform: scale(1.2); border-color: #333; }
+
+        /* CURSORS */
+        .cursor-pen { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>') 0 24, auto !important; }
+        .cursor-marker { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="deeppink"><path d="M18.5 2.5L21.5 5.5L7.5 19.5H4.5V16.5L18.5 2.5Z"/></svg>') 0 24, auto !important; }
+        .cursor-rubber { cursor: cell !important; }
+
+        /* HELP MODAL */
+        #help-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 100; display: flex; justify-content: center; align-items: center;
+        }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; }
+        .btn-help { background: #E2E8F0; color: #333; border-radius: 50%; width:30px; height:30px; padding:0; justify-content:center; font-size:1.1rem;}
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="btn-back">← Exit</a> 
+        <button class="tool-btn" onclick="toggleSidebar()" style="margin-right:10px;">☰ Slides</button>
+        <h1>Classroom Whiteboard</h1>
+        <button class="tool-btn btn-help" onclick="toggleHelp()">?</button>
+    </header>
+
+    <div id="main-wrapper">
+        
+        <aside id="page-sidebar" class="collapsed">
+            <div class="sidebar-header">
+                <span>SLIDES</span>
+                <button onclick="addPage()" style="border:none; background:none; cursor:pointer; font-weight:bold; font-size:1.2rem;">+</button>
+            </div>
+            <div id="sidebar-content">
+                </div>
+        </aside>
+
+        <div id="app-container">
+            <div id="wb-toolbar">
+                <button class="tool-btn" onclick="undo()" title="Undo">↩</button>
+                <button class="tool-btn" onclick="redo()" title="Redo">↪</button>
+                <div class="sep"></div>
+                
+                <button class="tool-btn active" id="btn-pen" onclick="setTool('pen', this)">🖊 Pen</button>
+                <button class="tool-btn" id="btn-marker" onclick="setTool('marker', this)">🖍 Marker</button>
+                <button class="tool-btn" onclick="setTool('rubber', this)">⬜ Rubber</button>
+                <div class="sep"></div>
+                
+                <button class="tool-btn" onclick="setTool('text', this)">Tt Type</button>
+                
+                <div class="dropdown-container">
+                    <button class="tool-btn" onclick="toggleDropdown('shapes-menu')">📐 Shapes ▾</button>
+                    <div id="shapes-menu" class="dropdown-menu hidden">
+                        <button class="tool-btn" onclick="addShape('line')">╱ Line</button>
+                        <button class="tool-btn" onclick="addShape('rect')">⬜ Box</button>
+                        <button class="tool-btn" onclick="addShape('circle')">⚪ Circle</button>
+                        <button class="tool-btn" onclick="addShape('triangle')">🔺 Tri</button>
+                        <button class="tool-btn" onclick="addShape('speech')">💬 Speech</button>
+                        <button class="tool-btn" onclick="addShape('thought')">💭 Thought</button>
+                    </div>
+                </div>
+
+                <button class="tool-btn" onclick="triggerImageUpload()">🖼️ Image</button>
+                <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="addImage(this)">
+
+                <div class="dropdown-container">
+                    <button class="tool-btn" onclick="toggleDropdown('arrange-menu')">📚 Arrange ▾</button>
+                    <div id="arrange-menu" class="dropdown-menu hidden">
+                        <button class="tool-btn" onclick="setLayer('back')">⬇ To Back</button>
+                        <button class="tool-btn" onclick="setLayer('front')">⬆ To Front</button>
+                        <div class="menu-sep"></div>
+                        <button class="tool-btn" onclick="flipObject('h')">↔ Flip Horiz</button>
+                        <button class="tool-btn" onclick="groupObjects()">🔗 Group</button>
+                        <button class="tool-btn" onclick="ungroupObjects()">💔 Ungroup</button>
+                    </div>
+                </div>
+
+                <button class="tool-btn" onclick="toggleCurtain()" id="btn-curtain">🛑 Curtain</button>
+                <button class="tool-btn btn-delete" onclick="deleteSelected()">🗑 Delete</button>
+                <div class="sep"></div>
+                
+                <div class="dropdown-container">
+                    <button class="tool-btn" onclick="toggleDropdown('bg-menu')">📄 Paper ▾</button>
+                    <div id="bg-menu" class="dropdown-menu hidden">
+                        <button class="tool-btn" onclick="setPaper('blank')">Blank</button>
+                        <button class="tool-btn" onclick="setPaper('lines')">Lines</button>
+                        <button class="tool-btn" onclick="setPaper('grid')">Grid</button>
+                    </div>
+                </div>
+                
+                <div class="sep"></div>
+                <div id="color-palette"></div>
+                <div class="sep"></div>
+
+                <button class="tool-btn" onclick="prevPage()">⬅</button>
+                <span id="page-indicator" style="font-weight:600; font-size:0.9rem; color:#333; min-width:40px; text-align:center;">1 / 1</span>
+                <button class="tool-btn" onclick="nextPage()">➡</button>
+                <button class="tool-btn" onclick="addPage()">+ New Page</button>
+                
+                <div style="flex:1;"></div> 
+                
+                <div class="dropdown-container">
+                    <button class="tool-btn" onclick="toggleDropdown('save-menu')">💾 Save ▾</button>
+                    <div id="save-menu" class="dropdown-menu hidden">
+                        <button class="tool-btn" onclick="downloadBackup()">Save File</button>
+                        <button class="tool-btn" onclick="exportPDF()">Export PDF</button>
+                    </div>
+                </div>
+                <button class="tool-btn" onclick="triggerLoad()">⬆ Load</button>
+                <input type="file" id="file-upload" accept=".json" style="display:none" onchange="loadBackup(this)">
+                
+                <div class="sep"></div>
+                <button class="tool-btn" onclick="clearPage()">🧹 Clear</button>
+            </div>
+
+            <div class="canvas-frame">
+                <canvas id="c"></canvas>
+                <button id="btn-extend-float" onclick="extendPage()">⬇ Extend Page</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="hidden" onclick="toggleHelp()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2>New Features</h2>
+            <ul>
+                <li><strong>Navigation:</strong> Use the arrows (⬅ ➡) in the toolbar OR open the sidebar (☰).</li>
+                <li><strong>Arranging:</strong> Use the "Arrange" menu to Group, Flip, or Layer items.</li>
+                <li><strong>Thumbnails:</strong> Previews generate automatically as you edit pages.</li>
+                <li><strong>Extend:</strong> Click "⬇ Extend Page" at the bottom to make the page longer.</li>
+            </ul>
+            <button class="tool-btn active" style="width:100%; justify-content: center;" onclick="toggleHelp()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        let canvas; 
+        let wbPages = []; // Stores JSON strings
+        let wbBackgrounds = []; 
+        let wbThumbnails = []; // Stores DataURLs
+        let currentPageIndex = 0;
+        let currentTool = 'pen';
+        let currentColor = '#333333';
+        
+        const PALETTES = {
+            pen: ['#333333', '#2563EB', '#DC2626', '#16A34A'], 
+            marker: ['#FEF08A', '#FBCFE8', '#A5B4FC', '#67E8F9'] 
+        };
+        const SVG_SPEECH = "M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z";
+        const SVG_THOUGHT = "M18,4c-1.1,0-2.1,0.3-3,0.8C14.1,3,12.1,2,10,2C6.7,2,4,4.7,4,8c0,0.3,0,0.6,0.1,0.9C2.8,9.6,2,10.7,2,12c0,1.6,1.1,3,2.7,3.4C4.9,17.1,6.8,18,9,18h9c2.2,0,4-1.8,4-4C22,11.8,20.2,10,18,4z M5.5,21 C4.7,21,4,20.3,4,19.5C4,18.7,4.7,18,5.5,18C6.3,18,7,18.7,7,19.5C7,20.3,6.3,21,5.5,21z M2.5,18C1.7,18,1,17.3,1,16.5 C1,15.7,1.7,15,2.5,15C3.3,15,4,15.7,4,16.5C4,17.3,3.3,18,2.5,18z";
+
+        let history = []; let historyStep = -1; let isHistoryProcessing = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initWhiteboard();
+            window.addEventListener('resize', handleResize);
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.dropdown-container')) {
+                    document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+                }
+            });
+        });
+
+        // --- INIT ---
+        function initWhiteboard() {
+            canvas = new fabric.Canvas('c', { isDrawingMode: true, backgroundColor: 'white', selection: true });
+            
+            // Save hooks
+            canvas.on('path:created', onCanvasChange);
+            canvas.on('object:modified', onCanvasChange);
+            canvas.on('object:added', (e) => { if(!isHistoryProcessing && !e.target.isCurtain) onCanvasChange(); });
+
+            const saved = localStorage.getItem('proWb_data');
+            
+            if (saved) { 
+                const data = JSON.parse(saved);
+                wbPages = data.pages || [];
+                wbBackgrounds = data.bgs || [];
+                wbThumbnails = data.thumbs || [];
+                // Fix for old save data without thumbnails
+                if(wbThumbnails.length < wbPages.length) {
+                    wbThumbnails = new Array(wbPages.length).fill(null);
+                }
+                loadPage(0);
+            } else { 
+                wbPages = [JSON.stringify(canvas)]; 
+                wbBackgrounds = ['blank'];
+                wbThumbnails = [null];
+                saveHistory(); 
+                resizeCanvas();
+            }
+            
+            setTool('pen', document.getElementById('btn-pen'));
+            renderSidebar();
+        }
+
+        function onCanvasChange() {
+            saveHistory();
+            // Debounce thumbnail generation to prevent lag
+            if(this.thumbTimeout) clearTimeout(this.thumbTimeout);
+            this.thumbTimeout = setTimeout(() => {
+                generateThumbnail();
+            }, 500);
+        }
+
+        function resizeCanvas() {
+            const frame = document.querySelector('.canvas-frame');
+            // Default width/height based on container
+            const w = frame.clientWidth - 4;
+            let h = frame.clientHeight - 4;
+            
+            // If current page is taller (extended), respect that
+            const currentH = canvas.getHeight();
+            if (currentH > h) h = currentH;
+
+            canvas.setWidth(w);
+            canvas.setHeight(h);
+            canvas.renderAll(); 
+            canvas.calcOffset();
+        }
+        function handleResize() { resizeCanvas(); }
+
+        // --- SIDEBAR & THUMBNAILS ---
+        function toggleSidebar() {
+            document.getElementById('page-sidebar').classList.toggle('collapsed');
+        }
+
+        function renderSidebar() {
+            const container = document.getElementById('sidebar-content');
+            container.innerHTML = '';
+            
+            wbPages.forEach((pg, idx) => {
+                const card = document.createElement('div');
+                card.className = `page-card ${idx === currentPageIndex ? 'active' : ''}`;
+                card.onclick = () => { if(idx !== currentPageIndex) switchPage(idx); };
+                
+                const thumbBox = document.createElement('div');
+                thumbBox.className = 'thumb-box';
+                
+                if (wbThumbnails[idx]) {
+                    const img = document.createElement('img');
+                    img.src = wbThumbnails[idx];
+                    thumbBox.appendChild(img);
+                } else {
+                    thumbBox.innerText = `Page ${idx + 1}`;
+                }
+
+                const num = document.createElement('div');
+                num.className = 'page-num';
+                num.innerText = `Slide ${idx + 1}`;
+
+                card.appendChild(thumbBox);
+                card.appendChild(num);
+                container.appendChild(card);
+            });
+        }
+
+        function generateThumbnail() {
+            // Create low-res snapshot of current canvas
+            const dataUrl = canvas.toDataURL({
+                format: 'jpeg',
+                quality: 0.5,
+                multiplier: 0.2 // Scale down to 20%
+            });
+            wbThumbnails[currentPageIndex] = dataUrl;
+            
+            // Update sidebar image live
+            const cards = document.querySelectorAll('.page-card');
+            if(cards[currentPageIndex]) {
+                const box = cards[currentPageIndex].querySelector('.thumb-box');
+                box.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                box.appendChild(img);
+            }
+            saveToStorage();
+        }
+
+        // --- PAGE LOGIC ---
+        function switchPage(index) {
+            saveCurrentState(); // Save old page first
+            currentPageIndex = index;
+            loadPage(index);
+            renderSidebar();
+        }
+
+        function loadPage(index) {
+            const data = wbPages[index];
+            const json = JSON.parse(data);
+            
+            // Handle Dimensions
+            const frame = document.querySelector('.canvas-frame');
+            let targetH = frame.clientHeight - 4;
+            if(json.height && json.height > targetH) targetH = json.height;
+            
+            canvas.setHeight(targetH);
+            canvas.setWidth(frame.clientWidth - 4);
+
+            canvas.loadFromJSON(data, () => { 
+                setPaper(wbBackgrounds[index] || 'blank');
+                history = [data]; historyStep = 0; applyToolSettings();
+            });
+            currentPageIndex = index; updateUI();
+        }
+
+        function addPage() {
+            saveCurrentState();
+            canvas.clear(); 
+            resizeCanvas(); // Reset size
+            canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
+            
+            wbPages.push(JSON.stringify(canvas));
+            wbBackgrounds.push('blank');
+            wbThumbnails.push(null); // No thumbnail yet
+            
+            currentPageIndex = wbPages.length - 1;
+            history = []; historyStep = -1; saveHistory();
+            updateUI(); renderSidebar();
+        }
+
+        function extendPage() {
+            canvas.setHeight(canvas.getHeight() + 600);
+            setPaper(wbBackgrounds[currentPageIndex]); // Redraw bg
+            // Scroll to bottom
+            const frame = document.querySelector('.canvas-frame');
+            setTimeout(() => { frame.scrollTo({ top: frame.scrollHeight, behavior: 'smooth' }); }, 100);
+            onCanvasChange();
+        }
+
+        function saveCurrentState() {
+            wbPages[currentPageIndex] = JSON.stringify(canvas);
+            saveToStorage();
+        }
+
+        function saveToStorage() {
+            const data = { 
+                pages: wbPages, 
+                bgs: wbBackgrounds,
+                thumbs: wbThumbnails 
+            };
+            localStorage.setItem('proWb_data', JSON.stringify(data));
+        }
+
+        function prevPage() {
+            if(currentPageIndex > 0) { switchPage(currentPageIndex - 1); }
+        }
+
+        function nextPage() {
+            if(currentPageIndex === wbPages.length - 1) { addPage(); }
+            else { switchPage(currentPageIndex + 1); }
+        }
+
+        // --- TOOLS & HELPERS ---
+        function setTool(tool, btn) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+            if (tool === 'pen') renderColors('pen');
+            else if (tool === 'marker') renderColors('marker');
+            applyToolSettings();
+        }
+
+        function applyToolSettings() {
+            const canvasEl = document.querySelector('.upper-canvas');
+            canvas.isDrawingMode = false; canvas.selection = true;
+            if (currentTool === 'pen') {
+                canvas.isDrawingMode = true; canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                canvas.freeDrawingBrush.width = 3; canvas.freeDrawingBrush.color = currentColor;
+                if(canvasEl) canvasEl.className = 'upper-canvas cursor-pen';
+            } else if (currentTool === 'marker') {
+                canvas.isDrawingMode = true; canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                canvas.freeDrawingBrush.width = 25; canvas.freeDrawingBrush.color = hexToRgba(currentColor, 0.4);
+                if(canvasEl) canvasEl.className = 'upper-canvas cursor-marker';
+            } else if (currentTool === 'rubber') {
+                canvas.isDrawingMode = true; canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                canvas.freeDrawingBrush.width = 40; canvas.freeDrawingBrush.color = 'white'; 
+                if(canvasEl) canvasEl.className = 'upper-canvas cursor-rubber';
+            } else if (currentTool === 'text') {
+                const text = new fabric.IText('Type here...', { left: 100, top: 100, fontSize: 30, fontFamily: 'Inter', fill: currentColor });
+                canvas.add(text); canvas.setActiveObject(text); setTool('select');
+                if(canvasEl) canvasEl.className = 'upper-canvas';
+            } else { if(canvasEl) canvasEl.className = 'upper-canvas'; }
+        }
+
+        function toggleDropdown(id) {
+            const menu = document.getElementById(id);
+            const isHidden = menu.classList.contains('hidden');
+            document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+            if(isHidden) menu.classList.remove('hidden');
+        }
+
+        function setPaper(type) {
+            wbBackgrounds[currentPageIndex] = type;
+            if (type === 'blank') {
+                canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
+            } else {
+                const pC = document.createElement('canvas'); const ctx = pC.getContext('2d');
+                if (type === 'lines') {
+                    pC.width = 40; pC.height = 40; ctx.fillStyle = 'white'; ctx.fillRect(0,0,40,40);
+                    ctx.beginPath(); ctx.moveTo(0, 39); ctx.lineTo(40, 39); ctx.strokeStyle = '#add8e6'; ctx.stroke();
+                } else if (type === 'grid') {
+                    pC.width = 30; pC.height = 30; ctx.fillStyle = 'white'; ctx.fillRect(0,0,30,30);
+                    ctx.beginPath(); ctx.moveTo(0, 29); ctx.lineTo(30, 29); ctx.moveTo(29, 0); ctx.lineTo(29, 30); ctx.strokeStyle = '#ddd'; ctx.stroke();
+                }
+                canvas.setBackgroundColor(new fabric.Pattern({ source: pC, repeat: 'repeat' }), canvas.renderAll.bind(canvas));
+            }
+            document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+            saveHistory();
+        }
+
+        function addShape(type) {
+            let shape; const opts = { left: 150, top: 150, fill: 'transparent', stroke: currentColor, strokeWidth: 3 };
+            switch(type) {
+                case 'line': shape = new fabric.Line([50, 100, 200, 100], { ...opts, fill: currentColor }); break;
+                case 'rect': shape = new fabric.Rect({ ...opts, width: 100, height: 100 }); break;
+                case 'circle': shape = new fabric.Circle({ ...opts, radius: 50 }); break;
+                case 'triangle': shape = new fabric.Triangle({ ...opts, width: 100, height: 100 }); break;
+                case 'speech': shape = new fabric.Path(SVG_SPEECH, { ...opts, scaleX:3, scaleY:3 }); break;
+                case 'thought': shape = new fabric.Path(SVG_THOUGHT, { ...opts, scaleX:3, scaleY:3 }); break;
+            }
+            if(shape) { canvas.add(shape); canvas.setActiveObject(shape); setTool('select'); }
+            document.getElementById('shapes-menu').classList.add('hidden');
+        }
+
+        function triggerImageUpload() { document.getElementById('img-upload').click(); }
+        function addImage(input) {
+            const file = input.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fabric.Image.fromURL(e.target.result, function(img) {
+                    if (img.width > canvas.width/2) img.scaleToWidth(canvas.width/2);
+                    canvas.add(img); canvas.setActiveObject(img); input.value = ''; 
+                });
+            }; reader.readAsDataURL(file);
+        }
+
+        function deleteSelected() { const ao = canvas.getActiveObject(); if(ao) { if(ao.type==='activeSelection') ao.forEachObject(o=>canvas.remove(o)); else canvas.remove(ao); canvas.discardActiveObject(); saveHistory(); } }
+        
+        function renderColors(type) {
+            const container = document.getElementById('color-palette'); container.innerHTML = '';
+            const palette = PALETTES[type] || PALETTES['pen'];
+            palette.forEach((color, index) => {
+                const dot = document.createElement('div'); dot.className = 'color-dot'; dot.style.backgroundColor = color;
+                if (index === 0) { dot.classList.add('active'); currentColor = color; }
+                dot.onclick = () => { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); dot.classList.add('active'); setColor(color); };
+                container.appendChild(dot);
+            }); setColor(palette[0]);
+        }
+        function setColor(color) { currentColor = color; const ao = canvas.getActiveObject(); if(ao && currentTool === 'select') { if(ao.type==='i-text') ao.set('fill', color); else ao.set('stroke', color); canvas.renderAll(); saveHistory(); } if(currentTool!=='rubber') applyToolSettings(); }
+        function toggleHelp() { document.getElementById('help-modal').classList.toggle('hidden'); }
+        function hexToRgba(hex, alpha) {
+            let c; if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){ c= hex.substring(1).split(''); if(c.length== 3){ c= [c[0], c[0], c[1], c[1], c[2], c[2]]; } c= '0x'+c.join(''); return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')'; } return hex;
+        }
+
+        function setLayer(a) { const o = canvas.getActiveObject(); if(!o) return; a==='back'?canvas.sendToBack(o):canvas.bringToFront(o); saveHistory(); }
+        function flipObject(d) { const o = canvas.getActiveObject(); if(!o) return; d==='h'?o.toggle('flipX'):o.toggle('flipY'); canvas.renderAll(); saveHistory(); }
+        function groupObjects() { const o = canvas.getActiveObject(); if(o && o.type==='activeSelection') { o.toGroup(); canvas.requestRenderAll(); saveHistory(); } }
+        function ungroupObjects() { const o = canvas.getActiveObject(); if(o && o.type==='group') { o.toActiveSelection(); canvas.requestRenderAll(); saveHistory(); } }
+        function toggleCurtain() { 
+            const cur = canvas.getObjects().find(o => o.isCurtain);
+            if(cur) { canvas.remove(cur); document.getElementById('btn-curtain').classList.remove('active'); }
+            else { const c = new fabric.Rect({left:0,top:0,width:canvas.getWidth(),height:canvas.getHeight(),fill:'rgba(100,100,100,0.95)',selectable:true,hasControls:false,isCurtain:true}); canvas.add(c); canvas.setActiveObject(c); setTool('select'); document.getElementById('btn-curtain').classList.add('active'); }
+        }
+
+        function undo() { if (historyStep > 0) { isHistoryProcessing = true; historyStep--; canvas.loadFromJSON(history[historyStep], () => { canvas.renderAll(); isHistoryProcessing = false; applyToolSettings(); }); }}
+        function redo() { if (historyStep < history.length - 1) { isHistoryProcessing = true; historyStep++; canvas.loadFromJSON(history[historyStep], () => { canvas.renderAll(); isHistoryProcessing = false; applyToolSettings(); }); }}
+        function saveHistory() { if (isHistoryProcessing) return; if (historyStep < history.length - 1) history = history.slice(0, historyStep + 1); history.push(JSON.stringify(canvas)); historyStep++; }
+        function clearPage() { canvas.clear(); setPaper(wbBackgrounds[currentPageIndex]); saveHistory(); }
+        function updateUI() { document.getElementById('page-indicator').innerText = `${currentPageIndex + 1} / ${wbPages.length}`; document.getElementById('btn-curtain').classList.remove('active'); }
+
+        function downloadBackup() {
+            saveCurrentState();
+            let name = prompt("Filename:", "lesson"); if(!name) return;
+            const data = { pages: wbPages, bgs: wbBackgrounds, thumbs: wbThumbnails };
+            const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+            a.download = name + ".json"; document.body.appendChild(a); a.click(); a.remove();
+        }
+        function triggerLoad() { document.getElementById('file-upload').click(); }
+        function loadBackup(input) {
+            const f = input.files[0]; if(!f) return;
+            const r = new FileReader();
+            r.onload = (e) => {
+                try {
+                    const d = JSON.parse(e.target.result);
+                    wbPages = d.pages || d; wbBackgrounds = d.bgs || new Array(wbPages.length).fill('blank'); wbThumbnails = d.thumbs || new Array(wbPages.length).fill(null);
+                    currentPageIndex = 0; loadPage(0); renderSidebar(); alert("Loaded!");
+                } catch(err) { alert("Error loading."); }
+            }; r.readAsText(f);
+        }
+        async function exportPDF() {
+            saveCurrentState(); const { jsPDF } = window.jspdf; const pdf = new jsPDF('l', 'px', [canvas.width, canvas.height]);
+            const tC = document.createElement('canvas'); const hF = new fabric.Canvas(tC);
+            for(let i=0; i<wbPages.length; i++) {
+                const pd = JSON.parse(wbPages[i]);
+                hF.setWidth(pd.width||canvas.width); hF.setHeight(pd.height||canvas.height);
+                if(i>0) pdf.addPage([hF.getWidth(), hF.getHeight()]);
+                await new Promise(r => hF.loadFromJSON(wbPages[i], () => {
+                   const bg = wbBackgrounds[i];
+                   if(bg!=='blank') {
+                       const p=document.createElement('canvas');const x=p.getContext('2d');
+                       if(bg==='lines'){p.width=40;p.height=40;x.fillStyle='white';x.fillRect(0,0,40,40);x.beginPath();x.moveTo(0,39);x.lineTo(40,39);x.strokeStyle='#add8e6';x.stroke();}
+                       else{p.width=30;p.height=30;x.fillStyle='white';x.fillRect(0,0,30,30);x.beginPath();x.moveTo(0,29);x.lineTo(30,29);x.moveTo(29,0);x.lineTo(29,30);x.strokeStyle='#ddd';x.stroke();}
+                       hF.setBackgroundColor(new fabric.Pattern({source:p,repeat:'repeat'}), r);
+                   } else hF.setBackgroundColor('white', r);
+                }));
+                pdf.addImage(hF.toDataURL("image/jpeg", 0.8), 'JPEG', 0, 0, hF.getWidth(), hF.getHeight());
+            } pdf.save("export.pdf");
+        }
+    </script>
+</body>
+</html>
