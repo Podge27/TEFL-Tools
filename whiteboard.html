@@ -20,7 +20,7 @@
         /* HEADER */
         header {
             background: white; height: 60px; flex-shrink: 0; display: flex; align-items: center; 
-            padding: 0 20px; border-bottom: 1px solid #ddd; gap: 20px; z-index: 20;
+            padding: 0 20px; border-bottom: 1px solid #ddd; gap: 15px; z-index: 20;
         }
         h1 { font-size: 1.2rem; color: #333; margin: 0; flex-grow: 1; }
 
@@ -70,6 +70,21 @@
             display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
             background: white; padding: 8px; border-radius: 8px; border: 1px solid #ccc;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-shrink: 0; z-index: 10;
+            
+            /* Animation Properties */
+            transition: all 0.3s ease;
+            max-height: 200px; /* Arbitrary large number */
+            opacity: 1;
+            overflow: visible; /* Allows dropdowns to escape */
+        }
+
+        #wb-toolbar.collapsed {
+            max-height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+            opacity: 0;
+            overflow: hidden; /* Hide contents when closed */
         }
 
         /* TOOL BUTTONS */
@@ -82,7 +97,6 @@
         .tool-btn:active { transform: translateY(2px); border-bottom: 1px solid #ccc; }
         .tool-btn.active { background: #333; color: white; border-color: #000; }
         
-        /* Special buttons */
         .btn-delete { color: #d32f2f; border-color: #feb2b2; background: #fff5f5; } 
         .btn-delete:hover { background: #fee2e2; }
         
@@ -95,7 +109,7 @@
             position: absolute; top: 110%; left: 0; background: white;
             border: 1px solid #ccc; border-radius: 8px; padding: 5px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 5px; z-index: 20;
-            min-width: 170px;
+            min-width: 160px;
         }
         #shapes-menu { flex-direction: row; }
         #save-menu { right: 0; left: auto; }
@@ -107,6 +121,7 @@
             border: 1px solid #ccc; border-radius: 8px; 
             position: relative; overflow: auto;
             display: flex; flex-direction: column; align-items: center;
+            transition: all 0.3s ease; /* Smooth resize when toolbar hides */
         }
         
         .canvas-container {
@@ -149,7 +164,8 @@
 
     <header>
         <a href="index.html" class="btn-back">← Exit</a> 
-        <button class="tool-btn" onclick="toggleSidebar()" style="margin-right:10px;">☰ Slides</button>
+        <button class="tool-btn" onclick="toggleSidebar()">☰ Slides</button>
+        <button class="tool-btn" onclick="toggleToolbar()">✎ Tools</button>
         <h1>Classroom Whiteboard</h1>
         <button class="tool-btn btn-help" onclick="toggleHelp()">?</button>
     </header>
@@ -161,8 +177,7 @@
                 <span>SLIDES</span>
                 <button onclick="addPage()" style="border:none; background:none; cursor:pointer; font-weight:bold; font-size:1.2rem;">+</button>
             </div>
-            <div id="sidebar-content">
-                </div>
+            <div id="sidebar-content"></div>
         </aside>
 
         <div id="app-container">
@@ -254,7 +269,7 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <h2>New Features</h2>
             <ul>
-                <li><strong>Navigation:</strong> Use the arrows (⬅ ➡) in the toolbar OR open the sidebar (☰).</li>
+                <li><strong>Tools Toggle:</strong> Click "✎ Tools" in the header to hide/show the toolbar for full screen mode.</li>
                 <li><strong>Arranging:</strong> Use the "Arrange" menu to Group, Flip, or Layer items.</li>
                 <li><strong>Thumbnails:</strong> Previews generate automatically as you edit pages.</li>
                 <li><strong>Extend:</strong> Click "⬇ Extend Page" at the bottom to make the page longer.</li>
@@ -351,9 +366,16 @@
         }
         function handleResize() { resizeCanvas(); }
 
-        // --- SIDEBAR & THUMBNAILS ---
+        // --- SIDEBAR & TOOLBAR ---
         function toggleSidebar() {
             document.getElementById('page-sidebar').classList.toggle('collapsed');
+        }
+
+        function toggleToolbar() {
+            const toolbar = document.getElementById('wb-toolbar');
+            toolbar.classList.toggle('collapsed');
+            // Wait for transition to finish then resize canvas
+            setTimeout(() => { resizeCanvas(); }, 350);
         }
 
         function renderSidebar() {

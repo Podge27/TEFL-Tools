@@ -9,10 +9,10 @@
         /* --- GAME SPECIFIC STYLES --- */
         
         body { 
-            background: #fff9c4; /* Pale Yellow / Parchment */
+            background: #fff9c4; 
             color: #333; 
             height: 100vh;
-            overflow: hidden; /* Prevents scrolling during game */
+            overflow: hidden; 
         }
 
         /* --- THE BOARD --- */
@@ -90,12 +90,15 @@
 
         /* --- 3D DICE & COIN --- */
         .scene { width: 120px; height: 120px; margin: 0 auto; perspective: 600px; cursor: pointer; }
+        
         .cube {
             width: 100%; height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 1s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+            /* FIXED: Use simple ease-out for natural deceleration (Friction) */
+            transition: transform 1s ease-out;
         }
+        
         .cube__face {
             position: absolute; width: 120px; height: 120px;
             background: white; border: 2px solid #333;
@@ -257,6 +260,17 @@
     let turnStartPos = 0; 
     let isDice = true;
     let paletteIndex = 0;
+    
+    // --- FIXED RANDOMIZER LOGIC ---
+    let currentDiceRotation = { x: 0, y: 0 };
+    const diceRotations = {
+        1: { x: 0, y: 0 },
+        2: { x: 0, y: -90 },
+        3: { x: 0, y: 180 },
+        4: { x: 0, y: 90 },
+        5: { x: -90, y: 0 },
+        6: { x: 90, y: 0 }
+    };
 
     const hazards = [
         { text: "Go Back 2", value: -2 },
@@ -383,6 +397,9 @@
     }
 
     function rollRNG() {
+        // Prevent double clicks during animation
+        if(document.getElementById('diceScene').style.pointerEvents === 'none') return;
+
         const p = players[currentPlayer];
         if (p.missTurn) {
             alert("Player " + (currentPlayer+1) + " misses this turn!");
@@ -392,8 +409,9 @@
 
         let roll = isDice ? Math.floor(Math.random() * 6) + 1 : Math.floor(Math.random() * 2) + 1;
         
-        if(isDice) animateDice(roll);
-        else {
+        if(isDice) {
+            animateDice(roll);
+        } else {
             const btn = document.getElementById('coinBtn');
             btn.style.transform = "rotateX(720deg)";
             setTimeout(() => { 
@@ -406,21 +424,32 @@
 
     function animateDice(res) {
         const cube = document.getElementById('cube');
-        const xRand = Math.floor(Math.random() * 4 + 5) * 360; 
-        const yRand = Math.floor(Math.random() * 4 + 5) * 360;
-        cube.style.transform = `rotateX(${xRand}deg) rotateY(${yRand}deg)`;
+        const scene = document.getElementById('diceScene');
+        
+        scene.style.pointerEvents = 'none'; // Lock
+
+        const targetRot = diceRotations[res];
+        
+        // Use a LARGE base spin (5 full rotations = 1800 deg) to normalize speed
+        const spinBase = 1800; 
+        
+        // Add minimal randomness to feel organic, but not enough to change speed perceivably
+        const randomVar = (Math.floor(Math.random() * 2) * 360); 
+
+        // Update global rotation accumulator
+        currentDiceRotation.x += (spinBase + randomVar);
+        currentDiceRotation.y += (spinBase + randomVar);
+
+        // Add target face offset
+        const finalX = currentDiceRotation.x + targetRot.x;
+        const finalY = currentDiceRotation.y + targetRot.y;
+
+        cube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
         
         setTimeout(() => {
-            let rX=0, rY=0;
-            if(res===1) { rX=0; rY=0; }
-            if(res===2) { rX=0; rY=-90; }
-            if(res===3) { rX=0; rY=180; }
-            if(res===4) { rX=0; rY=90; }
-            if(res===5) { rX=-90; rY=0; }
-            if(res===6) { rX=90; rY=0; }
-            cube.style.transform = `rotateX(${rX}deg) rotateY(${rY}deg)`;
-            setTimeout(() => movePlayer(res), 800);
-        }, 800);
+            movePlayer(res);
+            scene.style.pointerEvents = 'auto'; // Unlock
+        }, 1000); // 1s matches the CSS ease-out duration
     }
 
     function movePlayer(steps) {

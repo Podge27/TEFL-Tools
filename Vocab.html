@@ -73,11 +73,33 @@
 
         /* Common Styles */
         select {
-            @apply bg-white border-2 border-slate-400 text-slate-800 text-base rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2 font-bold cursor-pointer shadow-sm h-12;
+            background-color: white;
+            border: 2px solid #94a3b8;
+            color: #1e293b;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            display: block;
+            padding: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            height: 3rem;
         }
 
         button, .btn-look {
-            @apply transition-all duration-150 transform active:scale-95 font-bold rounded-lg shadow-md flex items-center justify-center cursor-pointer select-none;
+            transition: all 0.15s ease-in-out;
+            transform: scale(1);
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        button:active, .btn-look:active {
+            transform: scale(0.95);
         }
 
         /* 1. CSV Button - SOLID BLUE */
@@ -109,7 +131,10 @@
         #random-button:hover:not(:disabled) { background-color: #ff751a; }
         #random-button:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #cc5200; }
         #random-button:disabled {
-            @apply bg-slate-300 text-slate-500 cursor-not-allowed shadow-none;
+            background-color: #cbd5e1;
+            color: #64748b;
+            cursor: not-allowed;
+            box-shadow: none;
             transform: none;
         }
 
@@ -128,8 +153,10 @@
         }
 
         /* Nav & Timer Buttons */
-        .btn-nav { @apply bg-slate-700 text-white hover:bg-slate-800 py-2 px-4; }
-        .btn-timer { @apply bg-slate-800 text-white hover:bg-slate-900 py-2 px-4 text-sm; }
+        .btn-nav { background-color: #334155; color: white; padding: 0.5rem 1rem; }
+        .btn-nav:hover { background-color: #1e293b; }
+        .btn-timer { background-color: #1e293b; color: white; padding: 0.5rem 1rem; font-size: 0.875rem; }
+        .btn-timer:hover { background-color: #0f172a; }
 
         /* Toast */
         #toast-container {
@@ -142,7 +169,15 @@
             gap: 10px;
         }
         .toast {
-            @apply px-4 py-3 rounded-lg shadow-lg text-white font-bold text-sm flex items-center gap-2 animate-bounce;
+            padding: 12px 16px;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             animation: slideIn 0.3s ease-out forwards;
         }
         @keyframes slideIn {
@@ -239,10 +274,11 @@
             const colors = {
                 info: 'bg-slate-700', 
                 success: 'bg-green-500', 
-                error: 'bg-red-500'
+                error: 'bg-red-500',
+                warning: 'bg-orange-500'
             };
             const icons = {
-                info: 'ℹ️', success: '✅', error: '⚠️'
+                info: 'ℹ️', success: '✅', error: '⚠️', warning: '⟳'
             };
             const color = colors[type] || colors.info;
             const icon = icons[type] || '';
@@ -298,11 +334,29 @@
 
                         for (const line of lines) {
                             if (line.trim() === '') continue;
-                            const row = line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
+                            
+                            // *** FIX 1: SMART CSV SPLITTER ***
+                            // Regex looks for comma only if it's NOT inside quotes
+                            // It handles: "This, has, commas", definition, example
+                            const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                            
+                            // If regex fails (simple line), fallback to standard split, but usually regex works better
+                            let row = [];
+                            if (matches.length > 0) {
+                                row = matches.map(m => m.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
+                            } else {
+                                // Fallback for very simple CSVs
+                                row = line.split(',').map(item => item.trim());
+                            }
+
+                            // Ensure we have at least 3 columns to avoid crashing, fill with empty string if missing
                             const word = row[0] || "";
                             const example = row[1] || "";
                             const definition = row[2] || "";
-                            vocabData.push({ 'word': word, 'example': example, 'definition': definition });
+                            
+                            if (word) { // Only add if there is a word
+                                vocabData.push({ 'word': word, 'example': example, 'definition': definition });
+                            }
                         }
                         resolve(vocabData);
                     };
@@ -311,25 +365,46 @@
                 });
             }
 
-            function getUniqueWords(numItems, columnName) {
-                if (vocabulary_list.length === 0) return [];
-                const validVocab = vocabulary_list.filter(d => d[columnName]);
-                const unusedWordsData = validVocab.filter(d => !used_vocabulary_list.includes(d));
-
-                if (unusedWordsData.length === 0) {
-                    used_vocabulary_list = [];
-                    return getUniqueWords(numItems, columnName);
+            // *** FIX 2: BETTER SHUFFLER (Fisher-Yates) ***
+            function fisherYatesShuffle(array) {
+                let currentIndex = array.length, randomIndex;
+                // While there remain elements to shuffle.
+                while (currentIndex != 0) {
+                    // Pick a remaining element.
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    // And swap it with the current element.
+                    [array[currentIndex], array[randomIndex]] = [
+                        array[randomIndex], array[currentIndex]];
                 }
-
-                const numItemsToSelect = Math.min(numItems, unusedWordsData.length);
-                const selectedWordsData = randomSample(unusedWordsData, numItemsToSelect);
-                used_vocabulary_list.push(...selectedWordsData);
-                return selectedWordsData;
+                return array;
             }
 
-            function randomSample(array, size) {
-                const shuffled = array.slice(0).sort(() => 0.5 - Math.random());
-                return shuffled.slice(0, size);
+            function getUniqueWords(numItems, columnName) {
+                if (vocabulary_list.length === 0) return [];
+                
+                // Filter words that haven't been used yet
+                let unusedWordsData = vocabulary_list.filter(item => !used_vocabulary_list.includes(item));
+
+                // If we ran out of words (or have fewer than requested), reset!
+                if (unusedWordsData.length === 0) {
+                    used_vocabulary_list = []; // Reset history
+                    showToast("All words shown! Reshuffling...", "warning"); // Tell the user
+                    unusedWordsData = [...vocabulary_list]; // Refill pool
+                }
+
+                // If we have fewer words left than requested (e.g. 2 left, requested 5)
+                // We show the 2, and next click will trigger reset.
+                const numItemsToSelect = Math.min(numItems, unusedWordsData.length);
+                
+                // Shuffle the available words and pick top N
+                const shuffled = fisherYatesShuffle([...unusedWordsData]);
+                const selectedWordsData = shuffled.slice(0, numItemsToSelect);
+                
+                // Add to used list so they aren't picked again this cycle
+                used_vocabulary_list.push(...selectedWordsData);
+                
+                return selectedWordsData;
             }
 
             function _displayHistoryItem() {
@@ -347,22 +422,20 @@
                 
                 // --- DYNAMIC FONT SIZING LOGIC ---
                 const itemCount = display_text_list.length;
-                let fontSize = '2rem'; // Default
+                let fontSize = '2rem'; 
 
-                if (itemCount === 1) fontSize = '5rem'; // Huge for 1 word
+                if (itemCount === 1) fontSize = '5rem';
                 else if (itemCount === 2) fontSize = '4rem';
                 else if (itemCount === 3) fontSize = '3rem';
                 else if (itemCount === 4) fontSize = '2.5rem';
-                else fontSize = '1.8rem'; // Small enough for 5 lines to fit
+                else fontSize = '1.8rem'; 
 
-                // Use VH units to ensure it fits vertically on short screens
                 if (window.innerHeight < 600) {
                      if (itemCount > 3) fontSize = '1.5rem';
                 }
 
                 wordLabel.style.fontSize = fontSize;
-                // ---------------------------------
-
+                
                 // Animation for text change
                 wordLabel.style.opacity = 0;
                 setTimeout(() => {
@@ -389,7 +462,6 @@
                 if (file) {
                     try {
                         fileLabelText.textContent = "📄 " + file.name;
-                        // Keep text white on blue button
                         
                         vocabulary_list = await loadVocabulary(file);
                         used_vocabulary_list = [];
@@ -436,7 +508,8 @@
                     current_column_index = COLUMN_NAMES.indexOf(displayColumn);
                     _displayHistoryItem();
                 } else {
-                    showToast("Word pool reset!", 'info');
+                    // Should be handled by the toast inside getUniqueWords, but just in case
+                    showToast("Word pool reset!", 'warning');
                 }
             });
 

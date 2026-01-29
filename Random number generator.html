@@ -50,14 +50,20 @@
             animation: pop 0.4s ease-out;
         }
         
-        /* Reset button is Red to indicate it clears the memory */
         #reset-pool-button {
             background-color: #dc2626;
             color: white;
-            min-width: 100px; /* Added width so it doesn't look too small */
+            min-width: 100px; 
         }
         #reset-pool-button:hover {
             background-color: #b91c1c;
+        }
+
+        /* Disabled state for the generate button */
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
         }
     </style>
 </head>
@@ -135,6 +141,7 @@
         const resultsList = document.getElementById('results-list');
         const resultsContainer = document.getElementById('results-list-container');
         const uniqueInfo = document.getElementById('unique-info');
+        const generateBtn = document.getElementById('generate-button');
 
         // Helper: Show Message
         function showMessage(text, isError = true) {
@@ -201,30 +208,67 @@
                 showMessage("Not enough numbers left. Reshuffled!", false);
             }
 
-            // Draw
-            let drawnNumbers = [];
+            // --- ANIMATION START ---
+            generateBtn.disabled = true; // Lock button
+            
+            // Determine FINAL result first (from the hat logic)
+            let finalNumbers = [];
             for (let i = 0; i < count; i++) {
-                let num = numberPool.pop(); 
-                drawnNumbers.push(num);
-                addResultPill(num);
+                finalNumbers.push(numberPool.pop()); 
             }
 
-            // Update UI
-            uniqueInfo.textContent = `Numbers left in pool: ${numberPool.length}`;
-            
-            display.classList.remove('pop-animation');
-            void display.offsetWidth; 
-            display.classList.add('pop-animation');
-            
-            if (drawnNumbers.length === 1) {
-                display.textContent = drawnNumbers[0];
-            } else {
-                display.textContent = drawnNumbers.join(', ');
-                display.style.fontSize = "4rem"; 
-            }
+            // Animation Loop
+            let duration = 500; // ms to run animation
+            let intervalSpeed = 50; // ms between updates
+            let endTime = Date.now() + duration;
+
+            let interval = setInterval(() => {
+                // Show purely random visual numbers while waiting
+                let tempNumbers = [];
+                for(let i=0; i<count; i++) {
+                    tempNumbers.push(Math.floor(Math.random() * (currentMax - currentMin + 1)) + currentMin);
+                }
+                
+                // Formatting based on count
+                if (count === 1) {
+                    display.textContent = tempNumbers[0];
+                    display.style.fontSize = "";
+                } else {
+                    display.textContent = tempNumbers.join(', ');
+                    display.style.fontSize = "4rem";
+                }
+
+                // CHECK: Is animation done?
+                if (Date.now() > endTime) {
+                    clearInterval(interval);
+                    finalizeResult(finalNumbers);
+                }
+            }, intervalSpeed);
         }
 
-        // 3. MANUAL RESET
+        // 3. FINISH ANIMATION & SHOW REAL RESULT
+        function finalizeResult(finalNumbers) {
+            // Update Display
+            if (finalNumbers.length === 1) {
+                display.textContent = finalNumbers[0];
+            } else {
+                display.textContent = finalNumbers.join(', ');
+            }
+
+            // Add Pop Effect
+            display.classList.remove('pop-animation');
+            void display.offsetWidth; // Trigger reflow
+            display.classList.add('pop-animation');
+
+            // Update History Pills
+            finalNumbers.forEach(num => addResultPill(num));
+
+            // Update UI Info
+            uniqueInfo.textContent = `Numbers left in pool: ${numberPool.length}`;
+            generateBtn.disabled = false; // Unlock button
+        }
+
+        // 4. MANUAL RESET
         function forceReset() {
             const min = parseInt(minInput.value);
             const max = parseInt(maxInput.value);
