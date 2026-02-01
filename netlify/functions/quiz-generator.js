@@ -1,5 +1,5 @@
 // functions/quiz-generator.js
-// SWITCHED TO GEMINI 1.5 FLASH FOR BETTER COMPATIBILITY
+// SWITCHED TO 'gemini-pro' (The most compatible model)
 
 exports.handler = async function(event, context) {
   const API_KEY = process.env.GEMINI_API_KEY;
@@ -35,8 +35,8 @@ exports.handler = async function(event, context) {
       }
     `;
 
-    // CHANGED MODEL TO 'gemini-1.5-flash'
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+    // CHANGE: Using 'gemini-pro' which is the standard model
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -46,8 +46,7 @@ exports.handler = async function(event, context) {
 
     const data = await response.json();
     
-    // BETTER ERROR LOGGING
-    // If Google sends an error, we will now see it on screen
+    // ERROR LOGGING
     if (data.error) {
         return { statusCode: 500, body: JSON.stringify({ error: "Google Error: " + data.error.message }) };
     }

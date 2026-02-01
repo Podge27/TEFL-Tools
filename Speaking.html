@@ -19,7 +19,6 @@
         .header-bar { @apply bg-white border-b border-slate-100 p-6 flex justify-between items-center; }
         .timer-btn { @apply px-3 py-1 text-sm font-bold rounded border transition-colors; }
         .timer-btn-sec { @apply bg-slate-100 text-slate-500 hover:bg-slate-200 border-slate-200; }
-        .timer-btn-pri { @apply bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50; }
         .timer-display { @apply font-mono text-2xl font-black text-slate-700 bg-slate-50 px-4 py-1 rounded-lg border border-slate-200 min-w-[100px] text-center; }
         .timer-display.alert { @apply text-red-600 bg-red-50 border-red-200; }
         .control-btn { @apply w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 text-white hover:bg-slate-700 transition text-lg shadow-sm; }
@@ -32,19 +31,27 @@
 
         /* --- LEVEL BUTTONS --- */
         .level-btn { @apply w-40 h-32 flex items-center justify-center text-4xl font-black rounded-2xl transition transform hover:scale-105 border-4 opacity-100 shadow-md; }
+        .btn-b1 { background: linear-gradient(135deg, #EC4899, #F472B6); color: white; border-color: #FBCFE8; }
         .btn-b2 { background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border-color: #C7D2FE; }
         .btn-c1 { background: linear-gradient(135deg, #FF9800, #FFC107); color: #333; border-color: #FFECB3; }
         .btn-c2 { background: linear-gradient(135deg, #8BC34A, #CDDC39); color: #333; border-color: #DCEDC8; }
 
-        /* --- LEVEL BADGE (Moved to Header) --- */
+        /* --- LEVEL BADGE --- */
         .level-badge { @apply ml-4 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest shadow-sm border hidden md:inline-block; }
+        .badge-b1 { @apply bg-pink-50 text-pink-600 border-pink-200; }
         .badge-b2 { @apply bg-indigo-50 text-indigo-600 border-indigo-200; }
         .badge-c1 { @apply bg-amber-50 text-amber-600 border-amber-200; }
         .badge-c2 { @apply bg-lime-50 text-lime-600 border-lime-200; }
 
-        /* --- SPIDERGRAM (B2/C1) --- */
-        #spidergram-central { @apply bg-indigo-600 text-white border-4 border-indigo-100 shadow-xl rounded-2xl p-4 flex items-center justify-center text-center font-black text-xl z-10 transform scale-110; }
-        .spidergram-topic { @apply bg-white text-slate-700 border-2 border-slate-100 shadow-md rounded-xl p-4 flex items-center justify-center text-center font-bold text-lg transition hover:border-indigo-200 hover:shadow-lg; }
+        /* --- MODE TOGGLE --- */
+        .mode-toggle-group { @apply flex bg-slate-100 p-1 rounded-xl mb-10 mx-auto w-fit; }
+        .mode-btn { @apply px-6 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-700 transition; }
+        .mode-btn.active { @apply bg-white text-indigo-600 shadow-sm; }
+
+        /* --- SPIDERGRAM (FIXED: Now a class, not ID, to allow hiding) --- */
+        .spidergram-visible { @apply grid grid-cols-3 gap-6 max-w-4xl mx-auto w-full aspect-[4/3] md:aspect-[2/1] items-center; }
+        .spidergram-central { @apply bg-indigo-600 text-white border-4 border-indigo-100 shadow-xl rounded-2xl p-4 flex items-center justify-center text-center font-black text-xl z-10 transform scale-110 col-span-1 row-span-1; grid-row: 2; grid-column: 2; }
+        .spidergram-topic { @apply bg-white text-slate-700 border-2 border-slate-100 shadow-md rounded-xl p-4 flex items-center justify-center text-center font-bold text-lg transition hover:border-indigo-200 hover:shadow-lg h-full w-full; }
 
         /* --- C2 PROMPT CARD --- */
         .prompt-card { @apply bg-white border-2 border-slate-200 rounded-2xl shadow-lg p-8 max-w-2xl mx-auto mb-8 relative; }
@@ -61,6 +68,11 @@
         /* --- TOPIC LIST --- */
         .topic-list-btn { @apply w-full text-left p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-semibold text-slate-700 transition shadow-sm hover:shadow-md hover:border-indigo-300 hover:text-indigo-700; }
         #topic-search-input { @apply w-full p-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition text-lg; }
+
+        /* --- PART 1 SPECIFIC --- */
+        .script-box { @apply bg-slate-50 border-l-4 border-indigo-400 p-6 text-slate-700 mb-8 rounded-r-lg text-lg leading-relaxed shadow-sm; }
+        .topic-card { @apply bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-lg max-w-xl mx-auto text-center transform transition-all duration-300; }
+        .script-speaker { @apply font-bold text-indigo-700 uppercase text-xs tracking-wider mb-1 block mt-4; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -82,11 +94,11 @@
             
             <div class="flex items-center gap-3 ml-auto">
                 <div class="flex gap-1 mr-2">
-                    <button id="set-4min-button" class="timer-btn timer-btn-pri">4m</button>
+                    <button id="set-4min-button" class="timer-btn timer-btn-sec">4m</button>
                     <button id="set-2min-button" class="timer-btn timer-btn-sec">2m</button>
                     <button id="set-1min-button" class="timer-btn timer-btn-sec">1m</button>
                 </div>
-                <div id="timer-label" class="timer-display">02:00</div>
+                <div id="timer-label" class="timer-display">00:00</div>
                 <button id="start-pause-button" class="control-btn">▶</button>
                 <button id="reset-button" class="control-btn bg-slate-200 text-slate-600 hover:bg-slate-300">↻</button>
             </div>
@@ -103,15 +115,24 @@
 
             <div id="mode-selection-screen" class="hidden flex-1 flex flex-col items-center justify-center">
                 <button onclick="app.showLevelSelection()" class="back-link self-start absolute top-8 left-8">← Change Level</button>
-                
                 <h2 class="text-3xl font-black text-slate-800 mb-6">Choose Activity</h2>
                 
-                <div class="flex bg-slate-100 p-1 rounded-xl mb-10">
-                    <button id="select-part2" onclick="app.setExamPart('part2')" class="px-6 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-700 transition">Part 2</button>
-                    <button id="select-part3" onclick="app.setExamPart('part3')" class="px-6 py-2 rounded-lg font-bold bg-white text-indigo-600 shadow-sm transition">Part 3</button>
+                <div class="mode-toggle-group">
+                    <button id="btn-part1" onclick="app.setExamPart('part1')" class="mode-btn">Part 1</button>
+                    <button id="btn-part2" onclick="app.setExamPart('part2')" class="mode-btn">Part 2</button>
+                    <button id="btn-part3" onclick="app.setExamPart('part3')" class="mode-btn">Part 3</button>
                 </div>
 
-                <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
+                <div id="menu-part1" class="hidden text-center w-full max-w-2xl">
+                    <div class="p-8 rounded-2xl bg-teal-50 border-2 border-teal-100 mb-6">
+                        <div class="text-5xl mb-4">💬</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Interview</h3>
+                        <p class="text-slate-500 mt-2">Introduction and general questions (2 mins).</p>
+                    </div>
+                    <button onclick="app.launchPart1()" class="btn-action w-full">Start Part 1 →</button>
+                </div>
+
+                <div id="menu-part23" class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
                     <button onclick="app.prepareTask(true)" class="flex-1 p-8 rounded-2xl bg-indigo-50 border-2 border-indigo-100 hover:border-indigo-500 hover:bg-white hover:shadow-xl transition group text-left">
                         <div class="text-5xl mb-4 group-hover:scale-110 transition duration-300">🎲</div>
                         <div class="text-2xl font-bold text-slate-800">Random Topic</div>
@@ -122,6 +143,49 @@
                         <div class="text-2xl font-bold text-slate-800">Pick from List</div>
                         <div class="text-slate-500 mt-2">Browse topics and choose specific one.</div>
                     </button>
+                </div>
+            </div>
+
+            <div id="part1-intro-screen" class="hidden h-full flex flex-col max-w-2xl mx-auto w-full pt-10">
+                <button onclick="app.showModeSelection()" class="back-link mb-4">← Back</button>
+                <h2 class="text-3xl font-black text-slate-800 mb-6">Part 1: Introduction</h2>
+                
+                <div id="fs-container-intro" class="flex items-center gap-3 mb-6 bg-white p-3 rounded-lg border shadow-sm w-fit">
+                    <span class="font-bold text-slate-600 text-sm uppercase">Variant:</span>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="fs-toggle-intro" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" onchange="app.syncFS(this.checked)">
+                        <span class="text-slate-800 font-semibold">For Schools</span>
+                    </label>
+                </div>
+
+                <div id="p1-script-box" class="script-box"></div>
+                <button onclick="app.showPart1Shuffle()" class="btn-action w-full mt-auto">Go to Topics →</button>
+            </div>
+
+            <div id="part1-shuffle-screen" class="hidden h-full flex flex-col w-full">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <button onclick="app.launchPart1()" class="back-link mb-0">← Back to Intro</button>
+                    
+                    <div id="fs-container-shuffle" class="flex items-center gap-3 bg-white p-2 px-4 rounded-lg border shadow-sm">
+                        <span class="font-bold text-slate-400 text-xs uppercase">Variant:</span>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="fs-toggle-shuffle" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" onchange="app.syncFS(this.checked)">
+                            <span class="text-slate-700 font-semibold text-sm">For Schools</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <div id="p1-topic-card" class="topic-card w-full mb-8">
+                        <h2 id="p1-topic-title" class="text-3xl font-black text-indigo-600 mb-6 uppercase tracking-wide">Loading...</h2>
+                        <ul id="p1-topic-questions" class="text-left text-lg text-slate-700 space-y-4 list-disc pl-6 font-medium"></ul>
+                    </div>
+                    
+                    <button onclick="app.shufflePart1Topic()" class="bg-indigo-100 text-indigo-700 px-8 py-3 rounded-xl font-bold hover:bg-indigo-200 transition shadow-sm mb-6 text-lg w-full md:w-auto">🔄 Shuffle Topic</button>
+                    
+                    <button onclick="app.finishPart1()" class="btn-action w-full md:w-auto">Go to Part 2 →</button>
+                    
+                    <p class="text-slate-400 italic text-sm text-center mt-8">The examiner will select one or more questions from this list for you to answer.</p>
                 </div>
             </div>
 
@@ -142,109 +206,38 @@
                         <span id="p2-dot-3" class="w-3 h-3 rounded-full bg-slate-300"></span>
                     </div>
                 </div>
-
                 <h2 id="p2-title" class="text-xl font-black text-indigo-600 uppercase tracking-widest text-center mb-4">Candidate A</h2>
-
                 <div id="p2-script-view" class="flex-1 flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
                     <div class="bg-white p-10 rounded-3xl shadow-xl border-2 border-slate-100">
                         <h3 class="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Examiner Script</h3>
-                        <p id="p2-script-text" class="text-2xl font-serif text-slate-800 leading-relaxed mb-8">
-                            Loading script...
-                        </p>
+                        <p id="p2-script-text" class="text-2xl font-serif text-slate-800 leading-relaxed mb-8">Loading script...</p>
                         <button onclick="app.nextPart2Step()" class="btn-action w-full">Show Photos →</button>
                     </div>
                 </div>
-
                 <div id="p2-image-view" class="hidden flex-1 flex flex-col h-full">
-                    
-                    <div id="p2-images-container" class="flex-1 flex gap-4 w-full max-h-[50vh] mb-4 min-h-[250px]">
-                        <div class="flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group">
-                            <img id="p2-img-1" src="" class="w-full h-full object-cover" alt="Photo 1">
-                        </div>
-                        <div class="flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group">
-                            <img id="p2-img-2" src="" class="w-full h-full object-cover" alt="Photo 2">
-                        </div>
-                        <div id="p2-img-container-3" class="hidden flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group">
-                            <img id="p2-img-3" src="" class="w-full h-full object-cover" alt="Photo 3">
-                        </div>
+                    <div id="p2-images-container" class="flex-1 flex gap-4 w-full max-h-[50vh] mb-4 min-h-[250px] justify-center">
+                        <div class="flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group max-w-2xl"><img id="p2-img-1" class="w-full h-full object-cover"></div>
+                        <div id="p2-img-container-2" class="flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group max-w-2xl"><img id="p2-img-2" class="w-full h-full object-cover"></div>
+                        <div id="p2-img-container-3" class="hidden flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative group max-w-2xl"><img id="p2-img-3" class="w-full h-full object-cover"></div>
                     </div>
-
-                    <div class="bg-white p-4 rounded-xl border-2 border-indigo-100 shadow-sm mb-4 text-center">
-                        <p id="p2-main-question" class="text-xl font-bold text-slate-800 whitespace-pre-line">Loading...</p>
-                    </div>
-
-                    <div id="p2-partner-q-container" class="reveal-tile mb-6" onclick="app.toggleReveal(this)" data-hidden-text="Show Partner Question (Follow-up)">
-                        Show Partner Question (Follow-up)
-                    </div>
-
-                    <div class="mt-auto flex justify-center">
-                        <button id="p2-next-btn" onclick="app.nextPart2Step()" class="btn-secondary">Next Candidate →</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="c2-part2-screen" class="hidden h-full flex flex-col">
-                <div class="flex justify-between items-center mb-2">
-                    <button onclick="app.showModeSelection()" class="back-link mb-0">← Back</button>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Collaborative Task</div>
-                </div>
-
-                <div id="c2-p2-intro" class="flex-1 flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
-                    <div class="bg-white p-10 rounded-3xl shadow-xl border-2 border-slate-100">
-                        <h3 class="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Examiner Script</h3>
-                        <p id="c2-p2-script-text" class="text-2xl font-serif text-slate-800 leading-relaxed mb-8">Loading...</p>
-                        <button onclick="app.c2Part2Next()" class="btn-action w-full">Show Pictures →</button>
-                    </div>
-                </div>
-
-                <div id="c2-p2-main" class="hidden flex-1 flex flex-col h-full w-full">
-                    
-                    <div class="bg-indigo-600 text-white p-3 rounded-xl shadow-md text-center mb-3 flex-shrink-0">
-                        <p id="c2-p2-question-display" class="text-lg font-bold">Loading...</p>
-                    </div>
-
-                    <div class="flex-1 grid grid-cols-2 gap-3 w-full min-h-[50vh]">
-                        
-                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
-                            <img id="c2-p2-img-0" src="" class="w-full h-full object-cover">
-                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">1</span>
-                        </div>
-                        
-                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
-                            <img id="c2-p2-img-1" src="" class="w-full h-full object-cover">
-                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">2</span>
-                        </div>
-                        
-                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
-                            <img id="c2-p2-img-2" src="" class="w-full h-full object-cover">
-                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">3</span>
-                        </div>
-                        
-                        <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
-                            <img id="c2-p2-img-3" src="" class="w-full h-full object-cover">
-                            <span class="absolute top-2 left-2 bg-white/90 text-slate-800 px-3 py-1 rounded-md text-sm font-black shadow-sm">4</span>
-                        </div>
-
-                    </div>
-
-                    <div class="mt-4 flex flex-col items-center gap-2 flex-shrink-0">
-                        <div id="c2-p2-decision-box" class="hidden w-full bg-amber-50 border border-amber-200 p-4 rounded-xl text-center shadow-sm">
-                            <p class="text-xs font-bold text-slate-400 uppercase mb-1 tracking-widest">Decision Phase</p>
-                            <p id="c2-p2-decision-text" class="text-xl font-bold text-amber-800">Decide...</p>
-                        </div>
-                        
-                        <button id="c2-p2-action-btn" onclick="app.c2Part2Next()" class="btn-secondary py-3 px-8 text-base w-full md:w-auto shadow-sm">Next Phase →</button>
-                    </div>
+                    <div class="bg-white p-4 rounded-xl border-2 border-indigo-100 shadow-sm mb-4 text-center"><p id="p2-main-question" class="text-xl font-bold text-slate-800 whitespace-pre-line">Loading...</p></div>
+                    <div id="p2-partner-q-container" class="reveal-tile mb-6" onclick="app.toggleReveal(this)">Show Partner Question</div>
+                    <div class="mt-auto flex justify-center"><button id="p2-next-btn" onclick="app.nextPart2Step()" class="btn-secondary">Next Candidate →</button></div>
                 </div>
             </div>
 
             <div id="part3-screen" class="hidden h-full flex flex-col">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex justify-between items-center mb-4">
                     <button onclick="app.handleBackFromPart3()" class="back-link mb-0">← Back</button>
                     <span id="current-level-display" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wide"></span>
                 </div>
-                <div id="spidergram-grid" class="grid grid-cols-3 gap-6 max-w-4xl mx-auto w-full aspect-[4/3] md:aspect-[2/1] items-center"></div>
-                <div class="mt-10 max-w-2xl mx-auto w-full">
+                <div id="part3-prompt-display" class="text-center font-bold text-slate-800 text-lg mb-4 hidden"></div>
+                
+                <div id="spidergram-grid" class="hidden"></div>
+                
+                <div id="b1-single-image-view" class="hidden w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-xl border-4 border-slate-100"></div>
+                
+                <div id="part3-reveal-wrapper" class="mt-10 max-w-2xl mx-auto w-full">
                     <div id="part3-follow-up-q" class="reveal-tile" onclick="app.toggleReveal(this)">Click to Reveal Discussion Question</div>
                 </div>
                 <div class="mt-auto pt-8 flex justify-center gap-4">
@@ -255,7 +248,7 @@
 
             <div id="part4-screen" class="hidden h-full flex flex-col max-w-3xl mx-auto w-full">
                 <h2 class="text-3xl font-black text-slate-800 mb-2 text-center">Part 4 Discussion</h2>
-                <div id="part4-questions-list" class="space-y-4 w-full mt-8"></div>
+                <div id="part4-questions-list" class="space-y-4 w-full mt-8 pb-20 overflow-y-auto"></div>
                 <div class="mt-auto pt-8 flex justify-center gap-4">
                     <button onclick="app.returnToPart3()" class="btn-secondary">← Back to Part 3</button>
                     <button onclick="app.finishExam()" class="btn-action bg-slate-800 hover:bg-slate-900">Finish Exam</button>
@@ -265,22 +258,28 @@
             <div id="c2-wizard-screen" class="hidden h-full flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <button onclick="app.handleBackFromPart3()" class="back-link mb-0">← Back</button>
-                    <div class="flex gap-2">
-                        <span id="c2-step-1" class="w-3 h-3 rounded-full bg-slate-300"></span>
-                        <span id="c2-step-2" class="w-3 h-3 rounded-full bg-slate-300"></span>
-                        <span id="c2-step-3" class="w-3 h-3 rounded-full bg-slate-300"></span>
-                        <span id="c2-step-4" class="w-3 h-3 rounded-full bg-slate-300"></span>
-                        <span id="c2-step-5" class="w-3 h-3 rounded-full bg-slate-300"></span>
-                    </div>
+                    <div class="flex gap-2"><span id="c2-step-1" class="w-3 h-3 rounded-full bg-slate-300"></span><span id="c2-step-2" class="w-3 h-3 rounded-full bg-slate-300"></span><span id="c2-step-3" class="w-3 h-3 rounded-full bg-slate-300"></span><span id="c2-step-4" class="w-3 h-3 rounded-full bg-slate-300"></span><span id="c2-step-5" class="w-3 h-3 rounded-full bg-slate-300"></span></div>
                 </div>
-
-                <div id="c2-content-area" class="flex-1 flex flex-col items-center justify-center w-full">
-                    </div>
-
+                <div id="c2-content-area" class="flex-1 flex flex-col items-center justify-center w-full"></div>
                 <div class="mt-8 flex justify-between w-full">
                     <button id="c2-prev-btn" onclick="app.c2PrevStep()" class="btn-secondary w-auto px-6">← Previous</button>
                     <button id="c2-next-btn" onclick="app.c2NextStep()" class="btn-action w-auto px-6">Next Part →</button>
                 </div>
+            </div>
+            
+            <div id="c2-part2-screen" class="hidden h-full flex flex-col">
+               <div class="flex justify-between items-center mb-2"><button onclick="app.showModeSelection()" class="back-link mb-0">← Back</button><div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Collaborative Task</div></div>
+               <div id="c2-p2-intro" class="flex-1 flex flex-col items-center justify-center text-center max-w-2xl mx-auto"><div class="bg-white p-10 rounded-3xl shadow-xl border-2 border-slate-100"><h3 class="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Examiner Script</h3><p id="c2-p2-script-text" class="text-2xl font-serif text-slate-800 leading-relaxed mb-8">Loading...</p><button onclick="app.c2Part2Next()" class="btn-action w-full">Show Pictures →</button></div></div>
+               <div id="c2-p2-main" class="hidden flex-1 flex flex-col h-full w-full">
+                   <div class="bg-indigo-600 text-white p-3 rounded-xl shadow-md text-center mb-3 flex-shrink-0"><p id="c2-p2-question-display" class="text-lg font-bold">Loading...</p></div>
+                   <div class="flex-1 grid grid-cols-2 gap-3 w-full min-h-[50vh]">
+                       <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"><img id="c2-p2-img-0" src="" class="w-full h-full object-cover"></div>
+                       <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"><img id="c2-p2-img-1" src="" class="w-full h-full object-cover"></div>
+                       <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"><img id="c2-p2-img-2" src="" class="w-full h-full object-cover"></div>
+                       <div class="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"><img id="c2-p2-img-3" src="" class="w-full h-full object-cover"></div>
+                   </div>
+                   <div class="mt-4 flex flex-col items-center gap-2 flex-shrink-0"><div id="c2-p2-decision-box" class="hidden w-full bg-amber-50 border border-amber-200 p-4 rounded-xl text-center shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase mb-1 tracking-widest">Decision Phase</p><p id="c2-p2-decision-text" class="text-xl font-bold text-amber-800">Decide...</p></div><button id="c2-p2-action-btn" onclick="app.c2Part2Next()" class="btn-secondary py-3 px-8 text-base w-full md:w-auto shadow-sm">Next Phase →</button></div>
+               </div>
             </div>
 
         </div>
@@ -288,580 +287,337 @@
 
     <script>
         // ============================================================
-        // 👇 PASTE SUPABASE KEYS HERE
-        // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
         // ============================================================
+        
+        const BASE_IMAGE_PATH = "images/"; 
 
         const app = {
             supabase: null,
-            dataB2C1: [],
-            dataPart2: [], // Stores Part 2 items
-            dataC2: [],
-            dataC2Part2: [], // C2 Collaborative
-            currentLevel: null,
-            currentTask: null,
-            selectedPart: 'part2', // Default to the first tab
-            
-            // State trackers
-            c2Step: 0,
-            part2Step: 0, 
-            c2P2State: 0, // 0=Intro1, 1=Discussion, 2=Intro2, 3=Decision
-            timer: { interval: null, remaining: 120, target: 120, isRunning: false },
+            dataB1: [], dataB2C1: [], dataPart2: [], dataC2: [], dataC2Part2: [], dataPart1: [],
+            currentLevel: null, currentTask: null, selectedPart: 'part2', isFS: false,
+            usedPart1Topics: [], 
+            c2Step: 0, part2Step: 0, c2P2State: 0, 
+            timer: { interval: null, remaining: 0, target: 0, isRunning: false },
 
             init: async function() {
-                const status = document.getElementById('data-loading-status');
-                if (typeof supabase !== 'undefined') {
-                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                } else {
-                    status.innerText = "Error: Library not loaded."; return;
-                }
+                if (typeof supabase !== 'undefined') { this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
+                else { return; }
                 await this.loadData();
                 this.renderLevelButtons();
             },
 
             loadData: async function() {
-                const status = document.getElementById('data-loading-status');
-                try {
-                    status.innerText = "Loading tasks...";
-                    
-                    // Fetch Part 3
-                    let { data: d1 } = await this.supabase.from('exam_speaking_tasks').select('*');
-                    this.dataB2C1 = d1 || [];
-
-                    // Fetch Part 2 (New)
-                    let { data: d2 } = await this.supabase.from('exam_speaking_part2').select('*');
-                    this.dataPart2 = d2 || [];
-                    
-                    // Fetch C2
-                    let { data: d3 } = await this.supabase.from('exam_speaking_tasks_c2').select('*');
-                    this.dataC2 = d3 || [];
-
-                    // Fetch C2 Part 2 (New Collab)
-                    let { data: d4 } = await this.supabase.from('exam_speaking_part2_c2').select('*');
-                    this.dataC2Part2 = d4 || [];
-                    
-                    status.innerText = ""; 
-                } catch (error) {
-                    console.error(error);
-                    status.innerText = "Error loading data.";
-                }
+                document.getElementById('data-loading-status').innerText = "Loading tasks...";
+                let { data: b1 } = await this.supabase.from('exam_speaking_b1').select('*'); this.dataB1 = b1 || [];
+                let { data: d1 } = await this.supabase.from('exam_speaking_tasks').select('*'); this.dataB2C1 = d1 || [];
+                let { data: d2 } = await this.supabase.from('exam_speaking_part2').select('*'); this.dataPart2 = d2 || [];
+                let { data: d3 } = await this.supabase.from('exam_speaking_tasks_c2').select('*'); this.dataC2 = d3 || [];
+                let { data: d4 } = await this.supabase.from('exam_speaking_part2_c2').select('*'); this.dataC2Part2 = d4 || [];
+                let { data: p1 } = await this.supabase.from('exam_speaking_part1').select('*'); this.dataPart1 = p1 || [];
+                document.getElementById('data-loading-status').innerText = "";
             },
 
             renderLevelButtons: function() {
-                const container = document.getElementById('level-buttons-container');
-                container.innerHTML = '';
-                ['B2','C1','C2'].forEach(lvl => {
-                    const btn = document.createElement('button');
-                    btn.textContent = lvl;
-                    let color = lvl==='B2' ? 'btn-b2' : (lvl==='C1' ? 'btn-c1' : 'btn-c2');
-                    btn.className = `level-btn ${color}`;
-                    btn.onclick = () => this.selectLevel(lvl);
+                const container = document.getElementById('level-buttons-container'); container.innerHTML = '';
+                ['B1','B2','C1','C2'].forEach(lvl => {
+                    const btn = document.createElement('button'); btn.textContent = lvl;
+                    let color = 'btn-b2';
+                    if(lvl==='B1') color = 'btn-b1'; if(lvl==='C1') color = 'btn-c1'; if(lvl==='C2') color = 'btn-c2';
+                    btn.className = `level-btn ${color}`; btn.onclick = () => this.selectLevel(lvl);
                     container.appendChild(btn);
                 });
             },
 
             selectLevel: function(level) {
                 this.currentLevel = level;
-                
-                // Update Badge in Header
                 const badge = document.getElementById('header-level-badge');
                 badge.innerText = level;
-                
-                // Reset badge classes
-                badge.classList.remove('hidden', 'badge-b2', 'badge-c1', 'badge-c2');
-                
-                // Add correct class
-                const activeClass = level === 'B2' ? 'badge-b2' : (level === 'C1' ? 'badge-c1' : 'badge-c2');
+                badge.classList.remove('hidden', 'badge-b1', 'badge-b2', 'badge-c1', 'badge-c2');
+                let activeClass = 'badge-b2';
+                if(level==='B1') activeClass = 'badge-b1'; if(level==='C1') activeClass = 'badge-c1'; if(level==='C2') activeClass = 'badge-c2';
                 badge.classList.add(activeClass);
-
-                // Update Toggle Buttons based on Level
-                const btn1 = document.getElementById('select-part2');
-                const btn2 = document.getElementById('select-part3');
-
-                if (level === 'C2') {
-                    // C2: Left button is Collab, Right is Long Turn (Card)
-                    btn1.innerText = "Part 2 (Collaborative)"; 
-                    btn2.innerText = "Part 3 (Long Turn)";
-                    
-                    // Set default to Part 2 (Collab) because it's first in order
-                    this.selectedPart = 'part2'; 
-                    this.setExamPart('part2');
-                } else {
-                    // B2/C1: Left button is Photos, Right is Collab
-                    btn1.innerText = "Part 2 (Photos)";
-                    btn2.innerText = "Part 3 & 4 (Collab)";
-                    this.selectedPart = 'part2'; // Default to Photos
-                    this.setExamPart(this.selectedPart);
-                }
-
+                
+                this.usedPart1Topics = []; 
+                this.setExamPart('part1'); 
                 this.showModeSelection();
             },
 
             setExamPart: function(part) {
                 this.selectedPart = part;
-                
-                const btn1 = document.getElementById('select-part2');
-                const btn2 = document.getElementById('select-part3');
-
-                const activeClass = "px-6 py-2 rounded-lg font-bold bg-white text-indigo-600 shadow-sm transition";
-                const inactiveClass = "px-6 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-700 transition";
-
-                if (part === 'part2') {
-                    btn1.className = activeClass;
-                    btn2.className = inactiveClass;
-                } else {
-                    btn1.className = inactiveClass;
-                    btn2.className = activeClass;
-                }
+                ['btn-part1', 'btn-part2', 'btn-part3'].forEach(id => document.getElementById(id).classList.remove('active'));
+                document.getElementById(`btn-${part}`).classList.add('active');
+                document.getElementById('menu-part1').classList.add('hidden');
+                document.getElementById('menu-part23').classList.add('hidden');
+                if (part === 'part1') { document.getElementById('menu-part1').classList.remove('hidden'); } 
+                else { document.getElementById('menu-part23').classList.remove('hidden'); }
             },
 
-            // --- NAVIGATION ---
             hideAllScreens: function() {
-                ['level-selection-screen', 'mode-selection-screen', 'topic-list-screen', 'part2-screen', 'c2-part2-screen', 'part3-screen', 'part4-screen', 'c2-wizard-screen'].forEach(id => {
-                    document.getElementById(id).classList.add('hidden');
-                });
+                const screens = ['level-selection-screen', 'mode-selection-screen', 'topic-list-screen', 'part2-screen', 
+                               'c2-part2-screen', 'part3-screen', 'part4-screen', 'c2-wizard-screen', 
+                               'part1-intro-screen', 'part1-shuffle-screen'];
+                screens.forEach(id => document.getElementById(id).classList.add('hidden'));
             },
 
-            showLevelSelection: function() { 
-                this.pauseTimer(); 
-                this.hideAllScreens(); 
-                document.getElementById('level-selection-screen').classList.remove('hidden'); 
-                // Hide header badge on selection screen
-                document.getElementById('header-level-badge').classList.add('hidden');
-            },
-            
+            showLevelSelection: function() { this.pauseTimer(); this.hideAllScreens(); document.getElementById('level-selection-screen').classList.remove('hidden'); document.getElementById('header-level-badge').classList.add('hidden'); },
             showModeSelection: function() { this.hideAllScreens(); document.getElementById('mode-selection-screen').classList.remove('hidden'); },
             handleBackFromPart3: function() { this.showModeSelection(); },
             finishExam: function() { window.location.href = 'speaking.html'; },
 
-            showTopicList: function() {
+            // --- PART 1 LOGIC ---
+            launchPart1: function() {
                 this.hideAllScreens();
-                document.getElementById('topic-list-screen').classList.remove('hidden');
-                document.getElementById('topic-search-input').value = "";
-                this.filterTopics(""); 
+                document.getElementById('part1-intro-screen').classList.remove('hidden');
+                document.getElementById('fs-toggle-intro').checked = this.isFS;
+                
+                const isAdvanced = ['C1', 'C2'].includes(this.currentLevel);
+                const displayStyle = isAdvanced ? 'none' : 'flex';
+                document.getElementById('fs-container-intro').style.display = displayStyle;
+                
+                this.renderPart1Script();
             },
 
-            filterTopics: function(query) {
-                const container = document.getElementById('topics-grid-container');
-                container.innerHTML = '';
-                const q = query.toLowerCase();
+            syncFS: function(val) {
+                this.isFS = val;
+                document.getElementById('fs-toggle-intro').checked = val;
+                document.getElementById('fs-toggle-shuffle').checked = val;
                 
-                // Determine source data
-                let source = [];
+                if(!document.getElementById('part1-intro-screen').classList.contains('hidden')){
+                    this.renderPart1Script();
+                }
+            },
+
+            renderPart1Script: function() {
+                const box = document.getElementById('p1-script-box');
+                const lvl = this.currentLevel;
+                const isFS = this.isFS;
                 
-                if (this.currentLevel === 'C2') { 
-                    if (this.selectedPart === 'part3') {
-                         // C2 Part 3 (Long Turn)
-                         source = this.dataC2;
+                let script = "";
+
+                if (lvl === 'B1') {
+                    if (isFS) {
+                        script = `
+                        <div class="mb-4"><span class="script-speaker">Interlocutor</span><p>Good morning/afternoon. Can I have your mark sheets, please? I'm [Name] and this is [Name].</p></div>
+                        <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>What’s your name? How old are you?</p></div>
+                        <div class="mb-4"><span class="script-speaker">To Candidate A</span><p>And what’s your name? How old are you?</p></div>
+                        <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>Where do you live?</p></div>
+                        <div><span class="script-speaker">To Candidate A</span><p>And where do you live?</p></div>`;
                     } else {
-                         // C2 Part 2 (Collab)
-                         source = this.dataC2Part2; 
-                    }
-                }
-                else { 
-                    // B2/C1
-                    if (this.selectedPart === 'part2') { source = this.dataPart2.filter(t => t.level === this.currentLevel); }
-                    else { source = this.dataB2C1.filter(t => t.level === this.currentLevel); }
-                }
-                
-                const filtered = source.filter(t => (t.topic || "Untitled").toLowerCase().includes(q));
-                filtered.sort((a,b) => (a.topic||"").localeCompare(b.topic||""));
-
-                if (filtered.length === 0) { 
-                    container.innerHTML = '<p class="text-slate-400 col-span-full text-center">No topics found.</p>'; 
-                    return; 
-                }
-
-                filtered.forEach(task => {
-                    const btn = document.createElement('button');
-                    btn.textContent = task.topic || "Untitled Topic";
-                    btn.className = 'topic-list-btn';
-                    btn.onclick = () => { this.currentTask = task; this.launchTask(); };
-                    container.appendChild(btn);
-                });
-            },
-
-            // --- TASK LAUNCHER ---
-            prepareTask: function(random) {
-                let source = [];
-                
-                if (this.currentLevel === 'C2') { 
-                     if(this.selectedPart === 'part3') source = this.dataC2;
-                     else source = this.dataC2Part2;
-                }
-                else if (this.selectedPart === 'part2') { source = this.dataPart2.filter(t => t.level === this.currentLevel); }
-                else { source = this.dataB2C1.filter(t => t.level === this.currentLevel); }
-
-                if(source.length === 0) return alert("No tasks found for this level/section.");
-                
-                if (random) {
-                    this.currentTask = source[Math.floor(Math.random() * source.length)];
-                }
-                this.launchTask();
-            },
-
-            launchTask: function() {
-                // C2 Logic
-                if (this.currentLevel === 'C2') {
-                    if (this.selectedPart === 'part3') {
-                        // Part 3 Long Turn
-                        this.c2Step = 0; 
-                        this.showC2Step();
-                    } else {
-                        // Part 2 Collab (New)
-                        this.launchC2Part2();
+                        script = `
+                        <div class="mb-4"><span class="script-speaker">Interlocutor</span><p>Good morning/afternoon. Can I have your mark sheets, please? I'm [Name] and this is [Name].</p></div>
+                        <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>What’s your name? Where do you live?</p></div>
+                        <div class="mb-4"><span class="script-speaker">To Candidate A</span><p>And what’s your name? Where do you live?</p></div>
+                        <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>Do you work or are you a student? ... What do you do/study?</p></div>
+                        <div><span class="script-speaker">To Candidate A</span><p>And do you work or are you a student? ... What do you do/study?</p></div>`;
                     }
                 } 
-                // B2/C1 Logic
-                else if (this.selectedPart === 'part2') {
-                    this.part2Step = 0;
-                    this.showPart2();
-                } else {
-                    this.showPart3B2C1();
+                else if (lvl === 'B2') {
+                    script = `
+                    <div class="mb-4"><span class="script-speaker">Interlocutor</span><p>Good morning/afternoon/evening. My name is [Name] and this is my colleague [Name].</p><p class="mt-2">And your names are? ... Can I have your mark sheets, please? Thank you.</p></div>
+                    <div class="mb-4"><span class="script-speaker">To Candidate A</span><p>Where do you live?</p></div>
+                    <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>And you?</p></div>
+                    <div><p class="font-bold text-slate-800">First we’d like to know something about you.</p></div>`;
                 }
+                else if (lvl === 'C1') {
+                    script = `
+                    <div class="mb-4"><span class="script-speaker">Interlocutor</span><p>Good morning/afternoon/evening. My name is [Name] and this is my colleague [Name].</p><p class="mt-2">And your names are? ... Can I have your mark sheets, please? Thank you.</p></div>
+                    <div class="mb-4"><p class="font-bold text-slate-800">First of all, we’d like to know something about you.</p><p class="text-sm text-slate-500 mt-1 italic">Select one or two questions and ask candidates in turn, as appropriate.</p></div>
+                    <ul class="list-disc pl-5 space-y-2"><li>Where do you live?</li><li>What do you do here/there?</li><li>How long have you been studying English?</li><li>What do you enjoy most about learning English?</li></ul>`;
+                }
+                else if (lvl === 'C2') {
+                    script = `
+                    <div class="mb-4"><span class="script-speaker">Interlocutor</span><p>Good morning/afternoon. My name is [Name] and this is my colleague [Name].</p><p class="mt-2">And your names are ...? Could I have your mark sheets, please? Thank you.</p></div>
+                    <div class="mb-4"><p class="font-bold text-slate-800">First of all, we’d like to know something about you.</p></div>
+                    <div class="mb-4"><span class="script-speaker">To Candidate A</span><p>Where do you live?</p></div>
+                    <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>And you?</p></div>
+                    <div class="mb-4"><span class="script-speaker">To Candidate B</span><p>Are you working or studying at the moment?</p></div>
+                    <div><span class="script-speaker">To Candidate A</span><p>And you?</p></div>`;
+                }
+
+                box.innerHTML = script;
             },
 
-            // --- C2 PART 2 LOGIC (NEW COLLAB) ---
-            launchC2Part2: function() {
-                this.c2P2State = 0;
+            showPart1Shuffle: function() {
                 this.hideAllScreens();
-                document.getElementById('c2-part2-screen').classList.remove('hidden');
-                this.renderC2Part2();
-            },
-
-            renderC2Part2: function() {
-                const data = this.currentTask.content;
-                const introScreen = document.getElementById('c2-p2-intro');
-                const mainScreen = document.getElementById('c2-p2-main');
-                const scriptText = document.getElementById('c2-p2-script-text');
-                const qDisplay = document.getElementById('c2-p2-question-display');
-                const decisionBox = document.getElementById('c2-p2-decision-box');
-                const actionBtn = document.getElementById('c2-p2-action-btn');
-
-                // STEP 0: First Intro
-                if (this.c2P2State === 0) {
-                    introScreen.classList.remove('hidden');
-                    mainScreen.classList.add('hidden');
-                    scriptText.innerText = data.intro_text || "Look at pictures 1 and 3 and talk together about these situations.";
-                    this.setTimer(0);
-                }
-                // STEP 1: Discussion (Photos Visible)
-                else if (this.c2P2State === 1) {
-                    introScreen.classList.add('hidden');
-                    mainScreen.classList.remove('hidden');
-                    
-                    // Load Images
-                    [0,1,2,3].forEach(i => {
-                        document.getElementById(`c2-p2-img-${i}`).src = "images/" + data.images[i];
-                    });
-
-                    qDisplay.innerText = data.question_1;
-                    decisionBox.classList.add('hidden');
-                    actionBtn.innerText = "Next Phase →";
-                    this.setTimer(120); // 2 mins for discussion
-                }
-                // STEP 2: Second Intro (Decision Instructions)
-                else if (this.c2P2State === 2) {
-                    introScreen.classList.remove('hidden');
-                    mainScreen.classList.add('hidden');
-                    scriptText.innerText = data.intro_text_2 || "Now look at all the pictures and decide which issue is most urgent.";
-                    this.setTimer(0);
-                }
-                // STEP 3: Decision Phase
-                else if (this.c2P2State === 3) {
-                    introScreen.classList.add('hidden');
-                    mainScreen.classList.remove('hidden');
-                    
-                    qDisplay.innerText = data.question_2; // Usually "Talk about..."
-                    decisionBox.classList.remove('hidden');
-                    document.getElementById('c2-p2-decision-text').innerText = data.decision_question;
-                    
-                    actionBtn.innerText = "Finish Task";
-                    actionBtn.className = "btn-action py-2 text-sm w-full md:w-auto";
-                    this.setTimer(60); // 1 min for decision
-                }
-            },
-
-            c2Part2Next: function() {
-                if (this.c2P2State < 3) {
-                    this.c2P2State++;
-                    this.renderC2Part2();
-                } else {
-                    this.setExamPart('part3'); // Go to Part 3 (Long Turn)
-                    this.showModeSelection();
-                }
-            },
-
-            // --- PART 2 LOGIC (B2/C1 SCRIPT -> PHOTO FLOW) ---
-            showPart2: function() {
-                this.hideAllScreens();
-                document.getElementById('part2-screen').classList.remove('hidden');
-                this.renderPart2State();
-            },
-
-            renderPart2State: function() {
-                const content = this.currentTask.content; 
+                document.getElementById('part1-shuffle-screen').classList.remove('hidden');
+                document.getElementById('fs-toggle-shuffle').checked = this.isFS;
                 
-                // FLOW: 0=ScriptA, 1=PhotoA, 2=ScriptB, 3=PhotoB
-                const isCandA = this.part2Step <= 1;
-                const isScript = (this.part2Step % 2 === 0);
+                const isAdvanced = ['C1', 'C2'].includes(this.currentLevel);
+                const displayStyle = isAdvanced ? 'none' : 'flex';
+                document.getElementById('fs-container-shuffle').style.display = displayStyle;
+
+                this.shufflePart1Topic();
+                this.setTimer(120);
+            },
+
+            finishPart1: function() {
+                this.setExamPart('part2');
+                this.showModeSelection();
+            },
+
+            shufflePart1Topic: function() {
+                const isFS = document.getElementById('fs-toggle-shuffle').checked; 
+                const validTopics = this.dataPart1.filter(t => {
+                    const levelMatch = t.level.toUpperCase() === this.currentLevel.toUpperCase();
+                    const variantMatch = isFS ? (t.variant === 'fs' || t.variant === 'both') : (t.variant === 'adults' || t.variant === 'both');
+                    return levelMatch && variantMatch;
+                });
+
+                if (validTopics.length === 0) {
+                    document.getElementById('p1-topic-title').innerText = "No Topics Found";
+                    document.getElementById('p1-topic-questions').innerHTML = "";
+                    return;
+                }
+
+                let availableTopics = validTopics.filter(t => !this.usedPart1Topics.includes(t.id));
+
+                if (availableTopics.length === 0) {
+                    this.usedPart1Topics = []; 
+                    availableTopics = validTopics; 
+                }
+
+                const topic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
                 
-                const data = isCandA ? content.candidate_a : content.candidate_b;
-                
-                // Update Title & Dots
+                this.usedPart1Topics.push(topic.id);
+
+                document.getElementById('p1-topic-title').innerText = topic.topic;
+                const list = document.getElementById('p1-topic-questions');
+                list.innerHTML = "";
+                topic.questions.forEach(q => { const li = document.createElement('li'); li.innerText = q; list.appendChild(li); });
+            },
+
+            // --- PART 2/3/4 LOGIC ---
+            showTopicList: function() { this.hideAllScreens(); document.getElementById('topic-list-screen').classList.remove('hidden'); document.getElementById('topic-search-input').value = ""; this.filterTopics(""); },
+            filterTopics: function(query) { /* ... */ 
+                const container = document.getElementById('topics-grid-container'); container.innerHTML = ''; const q = query.toLowerCase(); let source = [];
+                if (this.currentLevel === 'C2') { if(this.selectedPart === 'part3') source = this.dataC2; else source = this.dataC2Part2; } 
+                else if (this.currentLevel === 'B1') { source = this.dataB1; } 
+                else { if (this.selectedPart === 'part2') source = this.dataPart2.filter(t => t.level === this.currentLevel); else source = this.dataB2C1.filter(t => t.level === this.currentLevel); }
+                const filtered = source.filter(t => (t.topic || "Untitled").toLowerCase().includes(q)); filtered.sort((a,b) => (a.topic||"").localeCompare(b.topic||""));
+                if (filtered.length === 0) { container.innerHTML = '<p class="text-slate-400 col-span-full text-center">No topics found.</p>'; return; }
+                filtered.forEach(task => { const btn = document.createElement('button'); btn.textContent = task.topic || "Untitled Topic"; btn.className = 'topic-list-btn'; btn.onclick = () => { this.currentTask = task; this.launchTask(); }; container.appendChild(btn); });
+            },
+            prepareTask: function(random) { /* ... */ 
+                let source = []; if (this.currentLevel === 'C2') { if(this.selectedPart === 'part3') source = this.dataC2; else source = this.dataC2Part2; } else if (this.currentLevel === 'B1') { source = this.dataB1; } else if (this.selectedPart === 'part2') { source = this.dataPart2.filter(t => t.level === this.currentLevel); } else { source = this.dataB2C1.filter(t => t.level === this.currentLevel); }
+                if(source.length === 0) return alert("No tasks found."); if (random) this.currentTask = source[Math.floor(Math.random() * source.length)]; this.launchTask();
+            },
+            launchTask: function() { 
+                if (this.currentLevel === 'C2') { if (this.selectedPart === 'part3') { this.c2Step = 0; this.showC2Step(); } else { this.launchC2Part2(); } } 
+                else if (this.currentLevel === 'B1') { if (this.selectedPart === 'part2') { this.part2Step = 0; this.showPart2(); } else { this.showPart3B1(); } } 
+                else { if (this.selectedPart === 'part2') { this.part2Step = 0; this.showPart2(); } else { this.showPart3B2C1(); } } 
+            },
+            showPart2: function() { this.hideAllScreens(); document.getElementById('part2-screen').classList.remove('hidden'); this.renderPart2State(); },
+            renderPart2State: function() { 
+                const isB1 = this.currentLevel === 'B1'; const content = isB1 ? this.currentTask.part2 : this.currentTask.content; 
+                const isCandA = this.part2Step <= 1; const isScript = (this.part2Step % 2 === 0); const data = isCandA ? content.candidate_a : content.candidate_b;
                 document.getElementById('p2-title').innerText = isCandA ? "Candidate A" : "Candidate B";
-                [0,1,2,3].forEach(i => {
-                    document.getElementById(`p2-dot-${i}`).className = i === this.part2Step ? "w-3 h-3 rounded-full bg-indigo-600" : "w-3 h-3 rounded-full bg-slate-300";
-                });
-
-                // VIEW 1: SCRIPT
-                if (isScript) {
-                    document.getElementById('p2-script-view').classList.remove('hidden');
-                    document.getElementById('p2-image-view').classList.add('hidden');
-                    
-                    document.getElementById('p2-script-text').innerText = data.intro_text || "Here are your photographs. I'd like you to compare them and answer the question below.";
-                    
-                    this.setTimer(0);
+                [0,1,2,3].forEach(i => document.getElementById(`p2-dot-${i}`).className = i === this.part2Step ? "w-3 h-3 rounded-full bg-indigo-600" : "w-3 h-3 rounded-full bg-slate-300");
+                if (isScript) { document.getElementById('p2-script-view').classList.remove('hidden'); document.getElementById('p2-image-view').classList.add('hidden'); let text = data.intro_text || "Here are your photographs."; if (isB1 && data.label) { text = `Here is your photo. It shows ${data.label}. Tell us what you can see.`; } document.getElementById('p2-script-text').innerText = text; this.setTimer(0); } 
+                else { 
+                    document.getElementById('p2-script-view').classList.add('hidden'); document.getElementById('p2-image-view').classList.remove('hidden'); 
+                    const img1 = document.getElementById('p2-img-1'); const img2 = document.getElementById('p2-img-2'); const img3 = document.getElementById('p2-img-3'); 
+                    const box2 = document.getElementById('p2-img-container-2'); const box3 = document.getElementById('p2-img-container-3'); 
+                    if (data.images && Array.isArray(data.images)) { 
+                        img1.src = BASE_IMAGE_PATH + data.images[0]; 
+                        box2.classList.remove('hidden'); img2.src = BASE_IMAGE_PATH + data.images[1]; 
+                        if (data.images.length > 2) { box3.classList.remove('hidden'); img3.src = BASE_IMAGE_PATH + data.images[2]; } else { box3.classList.add('hidden'); } 
+                        document.getElementById('p2-partner-q-container').classList.remove('hidden'); 
+                    } else if (data.image) { 
+                        img1.src = BASE_IMAGE_PATH + data.image; 
+                        box2.classList.add('hidden'); box3.classList.add('hidden'); 
+                        document.getElementById('p2-partner-q-container').classList.add('hidden'); 
+                    } 
+                    document.getElementById('p2-main-question').innerText = data.question; 
+                    if (!isB1) { const partnerTile = document.getElementById('p2-partner-q-container'); partnerTile.dataset.fullText = data.partner_question; partnerTile.dataset.hiddenText = `Show Question for Candidate ${isCandA ? 'B' : 'A'}`; partnerTile.textContent = partnerTile.dataset.hiddenText; partnerTile.classList.remove('revealed'); } 
+                    const btn = document.getElementById('p2-next-btn'); if (isCandA) { btn.innerText = "Next Candidate →"; btn.className = "btn-secondary"; } else { btn.innerText = "Finish & Go to Part 3 →"; btn.className = "btn-action"; } this.setTimer(60); 
+                }
+            },
+            nextPart2Step: function() { if (this.part2Step < 3) { this.part2Step++; this.renderPart2State(); } else { this.setExamPart('part3'); this.showModeSelection(); } },
+            
+            // --- FIX FOR B1 WHITE SPACE: Removed CSS collision ---
+            showPart3B1: function() { 
+                this.hideAllScreens(); 
+                document.getElementById('part3-screen').classList.remove('hidden'); 
+                document.getElementById('current-level-display').innerText = `B1 • ${this.currentTask.topic}`;
+                
+                // Hide Spidergram by REMOVING active class
+                const grid = document.getElementById('spidergram-grid');
+                grid.classList.remove('spidergram-visible');
+                grid.classList.add('hidden');
+                
+                const b1Container = document.getElementById('b1-single-image-view'); 
+                b1Container.classList.remove('hidden'); 
+                b1Container.innerHTML = '';
+                
+                const data = this.currentTask.part3; 
+                document.getElementById('part3-prompt-display').classList.remove('hidden'); 
+                document.getElementById('part3-prompt-display').innerText = data.question;
+                
+                if (data.grid_image) { 
+                    const img = document.createElement('img'); 
+                    img.src = BASE_IMAGE_PATH + data.grid_image; 
+                    img.className = "w-full h-auto shadow-sm rounded-xl"; 
+                    b1Container.appendChild(img); 
                 } 
                 
-                // VIEW 2: PHOTOS
-                else {
-                    document.getElementById('p2-script-view').classList.add('hidden');
-                    document.getElementById('p2-image-view').classList.remove('hidden');
-                    
-                    // 1. Load First Two Images
-                    document.getElementById('p2-img-1').src = "images/" + data.images[0];
-                    document.getElementById('p2-img-2').src = "images/" + data.images[1];
-                    
-                    // 2. Handle Third Image (C1 Check)
-                    const imgContainer3 = document.getElementById('p2-img-container-3');
-                    if (data.images.length >= 3) {
-                        imgContainer3.classList.remove('hidden');
-                        document.getElementById('p2-img-3').src = "images/" + data.images[2];
-                    } else {
-                        imgContainer3.classList.add('hidden');
-                    }
-
-                    document.getElementById('p2-main-question').innerText = data.question;
-                    
-                    const partnerTile = document.getElementById('p2-partner-q-container');
-                    partnerTile.dataset.fullText = data.partner_question;
-                    partnerTile.dataset.hiddenText = `Show Question for Candidate ${isCandA ? 'B' : 'A'}`;
-                    partnerTile.textContent = partnerTile.dataset.hiddenText;
-                    partnerTile.classList.remove('revealed');
-
-                    // Button Logic
-                    const btn = document.getElementById('p2-next-btn');
-                    if (isCandA) {
-                        btn.innerText = "Next Candidate →";
-                        btn.className = "btn-secondary";
-                    } else {
-                        btn.innerText = "Finish & Go to Part 3 →";
-                        btn.className = "btn-action";
-                    }
-                    btn.onclick = () => this.nextPart2Step(); 
-                    
-                    this.setTimer(60);
-                }
+                document.getElementById('part3-reveal-wrapper').classList.add('hidden'); 
+                this.setTimer(120); 
             },
-
-            nextPart2Step: function() {
-                if (this.part2Step < 3) {
-                    this.part2Step++;
-                    this.renderPart2State();
-                } else {
-                    // Go to Part 3 Selection
-                    this.setExamPart('part3');
-                    this.showModeSelection();
-                }
-            },
-
-            // --- PART 3 LOGIC (B2/C1) ---
-            showPart3B2C1: function() {
-                this.hideAllScreens();
-                document.getElementById('part3-screen').classList.remove('hidden');
+            
+            showPart3B2C1: function() { 
+                this.hideAllScreens(); 
+                document.getElementById('part3-screen').classList.remove('hidden'); 
                 document.getElementById('current-level-display').innerText = `${this.currentLevel} • ${this.currentTask.topic}`;
-
-                const data = this.currentTask.part3_data;
-                const grid = document.getElementById('spidergram-grid');
-                grid.innerHTML = '';
+                document.getElementById('b1-single-image-view').classList.add('hidden'); 
                 
-                const central = document.createElement('div');
-                central.id = 'spidergram-central';
-                central.textContent = data.initial_q;
-                central.className = 'col-span-1 row-span-1'; 
+                // Show Spidergram by ADDING active class
+                const grid = document.getElementById('spidergram-grid'); 
+                grid.classList.remove('hidden'); 
+                grid.classList.add('spidergram-visible');
+                grid.innerHTML = ''; 
                 
-                const positions = [{r:0,c:0}, {r:0,c:2}, {r:2,c:0}, {r:2,c:2}, {r:2,c:1}];
-                data.topics.forEach((topic, i) => {
-                    const el = document.createElement('div');
-                    el.className = 'spidergram-topic'; el.textContent = topic;
-                    if(positions[i]) { el.style.gridRow = positions[i].r+1; el.style.gridColumn = positions[i].c+1; }
-                    grid.appendChild(el);
-                });
-                
-                central.style.gridRow = 2; central.style.gridColumn = 2;
+                document.getElementById('part3-prompt-display').classList.add('hidden');
+                const data = this.currentTask.part3_data; 
+                const central = document.createElement('div'); central.className = 'spidergram-central'; central.textContent = data.initial_q;
+                const positions = [{r:0,c:0}, {r:0,c:2}, {r:2,c:0}, {r:2,c:2}, {r:2,c:1}]; 
+                data.topics.forEach((topic, i) => { 
+                    const el = document.createElement('div'); el.className = 'spidergram-topic'; el.textContent = topic; 
+                    if(positions[i]) { el.style.gridRow = positions[i].r+1; el.style.gridColumn = positions[i].c+1; } 
+                    grid.appendChild(el); 
+                }); 
                 grid.appendChild(central);
-
-                const followUp = document.getElementById('part3-follow-up-q');
-                followUp.dataset.fullText = data.second_q;
-                followUp.dataset.hiddenText = "Click to Reveal Discussion Question";
-                followUp.textContent = followUp.dataset.hiddenText;
-                followUp.classList.remove('revealed');
-
+                document.getElementById('part3-reveal-wrapper').classList.remove('hidden');
+                const followUp = document.getElementById('part3-follow-up-q'); followUp.dataset.fullText = data.second_q; followUp.dataset.hiddenText = "Click to Reveal Discussion Question"; followUp.textContent = followUp.dataset.hiddenText; followUp.classList.remove('revealed'); followUp.onclick = () => app.toggleReveal(followUp);
                 this.setTimer(this.currentTask.set_time_p3 || 120);
             },
-
-            showPart4: function() {
-                this.hideAllScreens();
-                document.getElementById('part4-screen').classList.remove('hidden');
-                const list = document.getElementById('part4-questions-list');
-                list.innerHTML = '';
-                
-                this.currentTask.part3_data.part4_qs.forEach((qText, i) => {
-                    const el = document.createElement('div');
-                    el.className = 'reveal-tile';
-                    el.dataset.fullText = `${i+1}. ${qText}`;
-                    el.dataset.hiddenText = `Question ${i+1}`;
-                    el.textContent = el.dataset.hiddenText;
-                    el.onclick = () => this.toggleReveal(el);
-                    list.appendChild(el);
-                });
-                this.setTimer(240);
+            
+            showPart4: function() { 
+                this.hideAllScreens(); document.getElementById('part4-screen').classList.remove('hidden'); const list = document.getElementById('part4-questions-list'); list.innerHTML = '';
+                let questions = []; if (this.currentLevel === 'B1') questions = this.currentTask.part4.questions; else questions = this.currentTask.part3_data.part4_qs;
+                questions.forEach((qText, i) => { const el = document.createElement('div'); el.className = 'reveal-tile'; el.dataset.fullText = `${i+1}. ${qText}`; el.dataset.hiddenText = `Question ${i+1}`; el.textContent = el.dataset.hiddenText; el.onclick = () => this.toggleReveal(el); list.appendChild(el); });
+                this.setTimer(this.currentLevel === 'B1' ? 180 : 240);
             },
-
-            returnToPart3: function() {
-                this.hideAllScreens();
-                document.getElementById('part3-screen').classList.remove('hidden');
-            },
-
-            // --- C2 LOGIC ---
-            showC2Step: function() {
-                this.hideAllScreens();
-                const screen = document.getElementById('c2-wizard-screen');
-                screen.classList.remove('hidden');
-                const container = document.getElementById('c2-content-area');
-                container.innerHTML = '';
-
-                [0,1,2,3,4].forEach(i => {
-                    const d = document.getElementById(`c2-step-${i+1}`);
-                    d.classList.remove('bg-indigo-600', 'bg-slate-300');
-                    d.classList.add(i <= this.c2Step ? 'bg-indigo-600' : 'bg-slate-300');
-                });
-
-                const task = this.currentTask;
-
-                if (this.c2Step === 0) {
-                    this.renderC2Card("Candidate A", task.card_a);
-                    this.setTimer(120);
-                } else if (this.c2Step === 1) {
-                    this.renderC2FollowUp("Question for Candidate B", task.card_a_followup);
-                    this.setTimer(0); 
-                } else if (this.c2Step === 2) {
-                    this.renderC2Card("Candidate B", task.card_b);
-                    this.setTimer(120);
-                } else if (this.c2Step === 3) {
-                    this.renderC2FollowUp("Question for Candidate A", task.card_b_followup);
-                    this.setTimer(0);
-                } else {
-                    container.innerHTML = `<h2 class="text-3xl font-black text-slate-800 mb-6">General Discussion</h2><div id="c2-final-list" class="space-y-4 w-full max-w-2xl"></div>`;
-                    const list = document.getElementById('c2-final-list');
-                    task.part3_discussion.forEach((q, i) => {
-                        const el = document.createElement('div');
-                        el.className = 'reveal-tile';
-                        el.dataset.fullText = q;
-                        el.dataset.hiddenText = `Prompt ${i+1}`;
-                        el.textContent = el.dataset.hiddenText;
-                        el.onclick = () => this.toggleReveal(el);
-                        list.appendChild(el);
-                    });
-                    this.setTimer(240);
-                }
-
-                document.getElementById('c2-prev-btn').disabled = (this.c2Step === 0);
-                document.getElementById('c2-prev-btn').classList.toggle('opacity-50', this.c2Step === 0);
-                
-                const nextBtn = document.getElementById('c2-next-btn');
-                if (this.c2Step === 4) {
-                    nextBtn.innerText = "Finish Exam";
-                    nextBtn.onclick = () => this.finishExam();
-                } else {
-                    nextBtn.innerText = "Next Part →";
-                    nextBtn.onclick = () => app.c2NextStep();
-                }
-            },
-
-            renderC2Card: function(title, data) {
-                const container = document.getElementById('c2-content-area');
-                container.innerHTML = `
-                    <div class="prompt-card">
-                        <div class="card-label">${title}</div>
-                        <div class="card-question">${data.question}</div>
-                        <div class="card-points">
-                            ${data.points.map(p => `<div class="card-point">${p}</div>`).join('')}
-                        </div>
-                        <div class="card-footer"></div>
-                    </div>
-                `;
-            },
-
-            renderC2FollowUp: function(title, qs) {
-                const container = document.getElementById('c2-content-area');
-                container.innerHTML = `<h2 class="text-2xl font-bold text-slate-700 mb-6">${title}</h2><div class="space-y-4 w-full max-w-2xl" id="c2-fu-list"></div>`;
-                const list = document.getElementById('c2-fu-list');
-                qs.forEach((q, i) => {
-                    const el = document.createElement('div');
-                    el.className = 'reveal-tile';
-                    el.dataset.fullText = q;
-                    el.dataset.hiddenText = `Question ${i+1}`;
-                    el.textContent = el.dataset.hiddenText;
-                    el.onclick = () => this.toggleReveal(el);
-                    list.appendChild(el);
-                });
-            },
-
+            returnToPart3: function() { this.hideAllScreens(); document.getElementById('part3-screen').classList.remove('hidden'); },
+            launchC2Part2: function() { this.c2P2State = 0; this.hideAllScreens(); document.getElementById('c2-part2-screen').classList.remove('hidden'); this.renderC2Part2(); },
+            renderC2Part2: function() { /* ... */ const data = this.currentTask.content; const introScreen = document.getElementById('c2-p2-intro'); const mainScreen = document.getElementById('c2-p2-main'); const scriptText = document.getElementById('c2-p2-script-text'); const qDisplay = document.getElementById('c2-p2-question-display'); const decisionBox = document.getElementById('c2-p2-decision-box'); const actionBtn = document.getElementById('c2-p2-action-btn'); if (this.c2P2State === 0) { introScreen.classList.remove('hidden'); mainScreen.classList.add('hidden'); scriptText.innerText = data.intro_text || "Look at pictures 1 and 3 and talk together about these situations."; this.setTimer(0); } else if (this.c2P2State === 1) { introScreen.classList.add('hidden'); mainScreen.classList.remove('hidden'); [0,1,2,3].forEach(i => document.getElementById(`c2-p2-img-${i}`).src = BASE_IMAGE_PATH + data.images[i]); qDisplay.innerText = data.question_1; decisionBox.classList.add('hidden'); actionBtn.innerText = "Next Phase →"; this.setTimer(120); } else if (this.c2P2State === 2) { introScreen.classList.remove('hidden'); mainScreen.classList.add('hidden'); scriptText.innerText = data.intro_text_2 || "Now look at all the pictures and decide which issue is most urgent."; this.setTimer(0); } else if (this.c2P2State === 3) { introScreen.classList.add('hidden'); mainScreen.classList.remove('hidden'); qDisplay.innerText = data.question_2; decisionBox.classList.remove('hidden'); document.getElementById('c2-p2-decision-text').innerText = data.decision_question; actionBtn.innerText = "Finish Task"; this.setTimer(60); } },
+            c2Part2Next: function() { if (this.c2P2State < 3) { this.c2P2State++; this.renderC2Part2(); } else { this.setExamPart('part3'); this.showModeSelection(); } },
+            showC2Step: function() { /* ... */ this.hideAllScreens(); document.getElementById('c2-wizard-screen').classList.remove('hidden'); const container = document.getElementById('c2-content-area'); container.innerHTML = ''; [0,1,2,3,4].forEach(i => { const d = document.getElementById(`c2-step-${i+1}`); d.classList.remove('bg-indigo-600', 'bg-slate-300'); d.classList.add(i <= this.c2Step ? 'bg-indigo-600' : 'bg-slate-300'); }); const task = this.currentTask; if (this.c2Step === 0) { this.renderC2Card("Candidate A", task.card_a); this.setTimer(120); } else if (this.c2Step === 1) { this.renderC2FollowUp("Question for Candidate B", task.card_a_followup); this.setTimer(0); } else if (this.c2Step === 2) { this.renderC2Card("Candidate B", task.card_b); this.setTimer(120); } else if (this.c2Step === 3) { this.renderC2FollowUp("Question for Candidate A", task.card_b_followup); this.setTimer(0); } else { container.innerHTML = `<h2 class="text-3xl font-black text-slate-800 mb-6">General Discussion</h2><div id="c2-final-list" class="space-y-4 w-full max-w-2xl"></div>`; const list = document.getElementById('c2-final-list'); task.part3_discussion.forEach((q, i) => { const el = document.createElement('div'); el.className = 'reveal-tile'; el.dataset.fullText = q; el.dataset.hiddenText = `Prompt ${i+1}`; el.textContent = el.dataset.hiddenText; el.onclick = () => this.toggleReveal(el); list.appendChild(el); }); this.setTimer(240); } document.getElementById('c2-prev-btn').disabled = (this.c2Step === 0); const nextBtn = document.getElementById('c2-next-btn'); if (this.c2Step === 4) { nextBtn.innerText = "Finish Exam"; nextBtn.onclick = () => this.finishExam(); } else { nextBtn.innerText = "Next Part →"; nextBtn.onclick = () => app.c2NextStep(); } },
+            renderC2Card: function(title, data) { document.getElementById('c2-content-area').innerHTML = `<div class="prompt-card"><div class="card-label">${title}</div><div class="card-question">${data.question}</div><div class="card-points">${data.points.map(p => `<div class="card-point">${p}</div>`).join('')}</div><div class="card-footer"></div></div>`; },
+            renderC2FollowUp: function(title, qs) { document.getElementById('c2-content-area').innerHTML = `<h2 class="text-2xl font-bold text-slate-700 mb-6">${title}</h2><div class="space-y-4 w-full max-w-2xl" id="c2-fu-list"></div>`; const list = document.getElementById('c2-fu-list'); qs.forEach((q, i) => { const el = document.createElement('div'); el.className = 'reveal-tile'; el.dataset.fullText = q; el.dataset.hiddenText = `Question ${i+1}`; el.textContent = el.dataset.hiddenText; el.onclick = () => this.toggleReveal(el); list.appendChild(el); }); },
             c2NextStep: function() { if (this.c2Step < 4) { this.c2Step++; this.showC2Step(); } },
             c2PrevStep: function() { if (this.c2Step > 0) { this.c2Step--; this.showC2Step(); } },
-
-            // --- UTILS ---
-            toggleReveal: function(el) {
-                if (!el.classList.contains('revealed')) {
-                    el.textContent = el.dataset.fullText; el.classList.add('revealed');
-                } else {
-                    el.textContent = el.dataset.hiddenText; el.classList.remove('revealed');
-                }
-            },
-
-            // --- TIMER ---
+            toggleReveal: function(el) { if (!el.classList.contains('revealed')) { el.textContent = el.dataset.fullText; el.classList.add('revealed'); } else { el.textContent = el.dataset.hiddenText; el.classList.remove('revealed'); } },
             setTimer: function(seconds) { this.pauseTimer(); this.timer.target = seconds; this.resetTimer(); },
-            resetTimer: function() {
-                this.pauseTimer(); this.timer.remaining = this.timer.target; this.updateTimerDisplay();
-                document.getElementById('start-pause-button').textContent = "▶";
-                document.getElementById('timer-label').classList.remove('alert');
-            },
-            startTimer: function() {
-                if (this.timer.isRunning) return;
-                this.timer.isRunning = true;
-                document.getElementById('start-pause-button').textContent = "⏸";
-                this.timer.interval = setInterval(() => {
-                    if (this.timer.remaining > 0) { this.timer.remaining--; this.updateTimerDisplay(); }
-                    else { this.pauseTimer(); document.getElementById('timer-label').textContent = "00:00"; document.getElementById('timer-label').classList.add('alert'); }
-                }, 1000);
-            },
+            resetTimer: function() { this.pauseTimer(); this.timer.remaining = this.timer.target; this.updateTimerDisplay(); document.getElementById('start-pause-button').textContent = "▶"; document.getElementById('timer-label').classList.remove('alert'); },
+            startTimer: function() { if (this.timer.isRunning) return; this.timer.isRunning = true; document.getElementById('start-pause-button').textContent = "⏸"; this.timer.interval = setInterval(() => { if (this.timer.remaining > 0) { this.timer.remaining--; this.updateTimerDisplay(); } else { this.pauseTimer(); document.getElementById('timer-label').textContent = "00:00"; document.getElementById('timer-label').classList.add('alert'); } }, 1000); },
             pauseTimer: function() { clearInterval(this.timer.interval); this.timer.isRunning = false; document.getElementById('start-pause-button').textContent = "▶"; },
             toggleTimer: function() { if (this.timer.isRunning) this.pauseTimer(); else this.startTimer(); },
-            updateTimerDisplay: function() {
-                const m = Math.floor(this.timer.remaining / 60); const s = this.timer.remaining % 60;
-                document.getElementById('timer-label').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                const label = document.getElementById('timer-label');
-                label.classList.remove('alert');
-                if (this.timer.remaining <= 10 && this.timer.remaining > 0 && this.timer.remaining % 2 === 0 && this.timer.isRunning) label.classList.add('alert');
-            }
+            updateTimerDisplay: function() { const m = Math.floor(this.timer.remaining / 60); const s = this.timer.remaining % 60; document.getElementById('timer-label').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; const label = document.getElementById('timer-label'); label.classList.remove('alert'); if (this.timer.remaining <= 10 && this.timer.remaining > 0 && this.timer.remaining % 2 === 0 && this.timer.isRunning) label.classList.add('alert'); }
         };
 
-        // Listeners
         document.getElementById('start-pause-button').addEventListener('click', () => app.toggleTimer());
         document.getElementById('reset-button').addEventListener('click', () => app.resetTimer());
         document.getElementById('set-4min-button').addEventListener('click', () => app.setTimer(240));

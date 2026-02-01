@@ -10,7 +10,7 @@ body {
 .btn-back {
     display: inline-block;
     background: linear-gradient(135deg, #00BCD4, #4DD0E1);
-    color: white;
+    color: black;
     padding: 10px 20px;
     border-radius: 8px;
     text-decoration: none;

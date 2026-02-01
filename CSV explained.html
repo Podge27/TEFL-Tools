@@ -3,121 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Files Explained</title>
-    <!-- Load Tailwind CSS -->
-    <link href="./output.css" rel="stylesheet">
+    <title>CSV Files: The Fun Guide</title>
+    
+    <link rel="stylesheet" href="global.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
+            background-color: #f3f4f6;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
         }
+
         #app-container {
-            max-width: 800px;
+            width: 100%;
+            max-width: 900px;
             background-color: white;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             border: 1px solid #e5e7eb;
+            padding: 40px;
         }
-        /* Custom gradient style matching the index file (btn-blue-purple) */
-        .btn-blue-purple { 
-            background: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%); 
-            color: white;
+
+        /* Fun Section styling */
+        .tool-group {
+            @apply p-5 rounded-xl border border-slate-200 mb-6 transition hover:shadow-lg hover:border-blue-300 hover:-translate-y-1 transform duration-200;
         }
-        .btn-back {
-            @apply px-4 py-2 text-sm font-bold rounded-lg transition duration-200 transform hover:scale-[1.02] active:scale-95;
-            background-color: #6b7280; /* Gray */
-            color: white;
+        
+        .badge {
+            @apply inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide mb-2;
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 flex justify-center">
+<body>
 
-    <div id="app-container" class="w-full p-6 md:p-10">
+    <div id="app-container">
 
-        <!-- Header and Back Button -->
-        <div class="flex justify-between items-center mb-8 border-b pb-4">
-            <button id="back-to-menu-button" onclick="window.location.href = 'index.html'"
-                    class="btn-back">
+        <div class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+            <a href="index.html" class="btn-back">
                 ← Back to Menu
-            </button>
-            <h1 class="text-3xl font-extrabold text-gray-900">CSV Files: The Simple Way</h1>
-            <div></div> <!-- Spacer -->
+            </a>
+            <h1 class="text-3xl font-extrabold text-indigo-600 tracking-tight">CSVs Made Easy! 🚀</h1>
+            <div class="w-20"></div>
         </div>
 
         <div class="space-y-8">
-            <!-- Introduction -->
-            <section>
-                <h2 class="text-2xl font-bold mb-3 text-indigo-700">What is a CSV? (The Non-Tech Talk)</h2>
-                <p class="text-gray-700 leading-relaxed">
-                    A CSV (Comma Separated Values) file is just a super simple list. Think of it as a spreadsheet stripped down to the bare essentials: words and commas.
-                    Our tools use them because they are the cleanest way to feed information (like your vocabulary lists) directly into the app, one item at a time.
-                </p>
-            </section>
-
-            <!-- Prep Your List (General Guidance and Specific Tool Requirements) -->
-            <section class="bg-indigo-50 p-6 rounded-lg border-l-4 border-indigo-500">
-                <h2 class="text-2xl font-bold mb-3 text-indigo-700">Step 1: Prep Your List (The Golden Rule) 📝</h2>
-                <p class="text-gray-700 mb-4">
-                    **The Golden Rule:** Everything starts in **Column A**. What you put there is what the tool will use as the primary item.
-                </p>
-                <div class="space-y-4">
-                    <p class="font-bold text-lg text-gray-800">Tool Requirements Breakdown:</p>
-                    <ul class="list-none space-y-4">
-                        <li class="p-3 bg-white rounded-lg shadow-sm">
-                            <span class="font-extrabold text-blue-600">👤 Classroom Management:</span> Only needs **Column A** (Student Names). You can leave the rest blank!
-                        </li>
-                        <li class="p-3 bg-white rounded-lg shadow-sm">
-                            <span class="font-extrabold text-green-600">🎮 Hangman / Games:</span> Only needs **Column A** (The Word/Phrase to guess). Anything in Column B or C is ignored.
-                        </li>
-                    </ul>
-                </div>
-            </section>
             
-            <!-- Detailed Vocab Trainer Explanation (New Section) -->
-            <section class="p-6 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
-                <h2 class="text-2xl font-bold mb-3 text-yellow-800">Focus: The Vocab Trainer Breakdown 💡</h2>
-                <p class="text-gray-700 mb-4">
-                    The Vocab Trainer is the most powerful tool, using up to **three columns** for robust practice. The app randomly cycles between these three items:
+            <section class="text-center">
+                <h2 class="text-2xl font-bold mb-3 text-gray-800">What on earth is a CSV?! 😱</h2>
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    Don't panic! A CSV is just a <strong>super simple list</strong>. <br>
+                    It's the cleanest way to feed your words into our games! <br>
+                    So start in any Spreadsheet. Excel or Google Sheets will work fine.
                 </p>
-                <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4">
-                    <li>**Column A (Word):** The main vocabulary item.</li>
-                    <li>**Column B (Definition):** A short explanation of the word.</li>
-                    <li>**Column C (Example):** A full sentence showing the word in context.</li>
-                </ul>
-                <div class="mt-4 p-3 bg-yellow-100 rounded-md">
-                    <p class="font-semibold text-sm text-yellow-800">
-                        ✨ **Pro Tip: Use AI to save time!** You can quickly ask an AI (like Google's Gemini, ChatGPT, etc.) to convert your Column A words into a full 3-column CSV format instantly. This is the fastest way to build rich vocab lists!
-                    </p>
+            </section>
+
+            <section class="bg-yellow-50 border-l-8 border-yellow-400 p-6 rounded-r-lg">
+                <h2 class="text-2xl font-black mb-2 text-yellow-800 uppercase">🌟 The Golden Rule 🌟</h2>
+                <p class="text-xl font-bold text-gray-800">
+                    Everything starts in <span class="text-blue-600 underline decoration-4 underline-offset-4">Column A</span>.
+                </p>
+                <p class="text-gray-600 mt-2">
+                    Imagine Column A is the "Main Event". If you put your words anywhere else, the computer might not see them!
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">Which Game Are You Playing? 🎮</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div class="tool-group bg-blue-50 border-blue-200">
+                        <span class="badge bg-blue-500 text-white">Easiest One!</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">The "One Column" Club</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            These tools are simple creatures. They <strong>only</strong> look at Column A. You can leave everything else completely blank!
+                        </p>
+                        
+                        <ul class="space-y-2 text-sm font-bold text-slate-700">
+                            <li>👤 Classroom Manager (Names)</li>
+                            <li>🎮 Hangman (Words to guess)</li>
+                            <li>🎲 The Board Game</li>
+                            <li>🎡 The Spinner</li>
+                        </ul>
+                    </div>
+
+                    <div class="tool-group bg-green-50 border-green-200">
+                        <span class="badge bg-green-500 text-white">Buddy System</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Matching Games</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            These games need pairs! The computer links the word in <strong>Column A</strong> with its best buddy in <strong>Column B</strong> (right next to it).
+                        </p>
+                        
+                        <ul class="space-y-2 text-sm font-bold text-slate-700">
+                            <li>🧩 Match-Up</li>
+                            <li>🃏 Pelmanism (Memory Game)</li>
+                        </ul>
+                        <div class="mt-3 text-xs bg-white p-2 rounded border border-green-200 text-gray-500">
+                            <em>Example:</em> Cell A1 says "Dog", Cell B1 says "Perro". Best friends! 🐶
+                        </div>
+                    </div>
+
+                    <div class="tool-group bg-purple-50 border-purple-200 md:col-span-2">
+                        <span class="badge bg-purple-500 text-white">The Organizer</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">The Sorter Tool</h3>
+                        <p class="text-sm text-gray-600 mb-2">
+                            This one is special! The <strong>Top Row (Row 1)</strong> are your Categories (like Buckets).
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            Put any words you want underneath those buckets. You can have as many buckets (columns) as you want!
+                        </p>
+                        <div class="mt-3 overflow-x-auto">
+                            <table class="w-full text-xs text-left bg-white rounded border border-purple-100">
+                                <tr class="bg-purple-100 font-bold text-purple-900">
+                                    <td class="p-2 border-r border-purple-200">Fruit (Heading)</td>
+                                    <td class="p-2">Vegetables (Heading)</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border-r border-purple-100">Apple</td>
+                                    <td class="p-2">Carrot</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tool-group bg-orange-50 border-orange-200">
+                        <span class="badge bg-orange-500 text-white">The Snake 🐍</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Sentence Scramble</h3>
+                        <p class="text-sm text-gray-600 mb-2">
+                            Don't put the whole sentence in one box! Spread it out <strong>horizontally</strong> (left to right).
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            Every time you move to a new cell (A -> B -> C), the game creates a break block.
+                        </p>
+                        <div class="mt-2 text-xs bg-white p-2 rounded border border-orange-200 text-gray-500 font-mono overflow-x-auto">
+                            | The | cat | sat | on | the | mat |
+                        </div>
+                    </div>
+
+                    <div class="tool-group bg-pink-50 border-pink-200">
+                        <span class="badge bg-pink-500 text-white">The Big Brain 🧠</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Vocab Trainer</h3>
+                        <p class="text-sm text-gray-600 mb-2">
+                            This smart tool wants extra info to help your students learn!
+                        </p>
+                        <ul class="text-xs text-gray-700 space-y-1 mt-2 font-medium">
+                            <li>👉 <strong>Col A:</strong> The Word (Must have this!)</li>
+                            <li>👉 <strong>Col B:</strong> An Example Sentence (With gaps!)</li>
+                            <li>👉 <strong>Col C:</strong> The Definition</li>
+                        </ul>
+                    </div>
+
                 </div>
             </section>
 
-            <!-- The Export Step -->
-            <section>
-                <h2 class="text-2xl font-bold mb-3 text-green-700">Step 2: Save as a CSV! 💾</h2>
-                <p class="text-gray-700 mb-4">
-                    This is the magic part. Instead of saving it as a regular spreadsheet (`.xlsx` or `.gsheet`), you need to choose the "CSV" option when exporting.
+            <section class="bg-indigo-600 rounded-2xl p-6 md:p-8 text-white shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-4xl">🤖</span>
+                    <h2 class="text-2xl font-black uppercase tracking-wide">Too lazy to type?</h2>
+                </div>
+                
+                <p class="mb-4 font-medium text-indigo-100 text-lg">
+                    You can ask an AI (like ChatGPT or Gemini) to do the boring work for you!
                 </p>
-                <div class="bg-white p-4 rounded-lg border-2 border-green-300">
-                    <p class="text-lg font-semibold text-gray-800">In almost every program, follow these three clicks:</p>
-                    <ol class="list-decimal list-inside text-gray-700 space-y-2 ml-4 mt-2">
-                        <li>Click **File** in the top menu.</li>
-                        <li>Find **Download** or **Export**.</li>
-                        <li>Select **Comma Separated Values (.csv)**.</li>
+                <div class="bg-indigo-800/50 p-4 rounded-lg mb-6 border border-indigo-400">
+                    <p class="text-yellow-300 font-bold mb-1">⚡ Perfect for the Vocab Trainer!</p>
+                    <p class="text-sm text-indigo-100">This prompt creates the perfect 3-column list with "cloze" (fill-in-the-gap) sentences automatically.</p>
+                </div>
+
+                <div class="relative">
+                    <textarea id="ai-prompt" class="w-full h-64 p-4 rounded-xl bg-indigo-900 text-indigo-100 font-mono text-xs md:text-sm border-2 border-indigo-400 focus:outline-none focus:border-white resize-none" readonly>
+Role: You are an expert linguist and teacher assistant designed to generate vocabulary flashcard data.
+Task:
+The user will provide a Word (or list of words) and a Target Proficiency Level (e.g., A1, B2). For each word, you must generate three columns of data Always formatted in the output as a clean Markdown Table.
+
+Columns:
+Column A (Word): The original input word.
+Column B (Cloze Sentence): An example sentence containing the word, but the word is masked.
+Column C (Definition): A concise definition of the word.
+
+Critical Rules:
+Level Adaptation: The vocabulary and grammar used in Column B and C must match the requested proficiency level.
+Context: The sentence in Column B must provide enough context that a student at that level could reasonably guess the missing word.
+
+Masking Logic (Column B):
+Single Word: Replace the target word with its First Letter followed by underscores _ matching the remaining length. (Example: "Elephant" -> E_______).
+Phrases: If the input is a phrase, mask every word individually, preserving spaces. (Example: "Look up" -> L___ u_).
+Conjugation: If the word changes form in the sentence (e.g., Input "Go" -> Sentence uses "Went"), mask the actual word used in the sentence. (Example: "Yesterday I w___ to the store").
+                    </textarea>
+                    
+                    <button onclick="copyToClipboard()" id="copy-btn" class="absolute top-4 right-4 bg-white text-indigo-600 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-400 hover:text-white transition-all flex items-center gap-2">
+                        <span>📋</span> <span id="btn-text">Copy Text</span>
+                    </button>
+                </div>
+                
+                <p class="text-center text-sm text-indigo-300 mt-4">
+                    Paste this into the AI, then just type your list of words!
+                </p>
+            </section>
+
+            <section class="border-t-2 border-gray-100 pt-8 text-center">
+                <h2 class="text-2xl font-bold mb-3 text-green-600">Step 2: How to Save it (IMPORTANT!) 💾</h2>
+                <p class="text-gray-600 mb-6 text-lg">
+                    When you are done typing (or pasting from AI), <strong>don't just click Save!</strong> You need to Export it.
+                </p>
+                
+                <div class="inline-block bg-white p-6 rounded-2xl shadow-lg border-2 border-green-100 text-left mx-auto">
+                    <p class="font-bold text-gray-800 mb-4">Follow these 3 clicks:</p>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-600 font-medium">
+                        <li>Click <strong class="text-black">File</strong> in the top menu.</li>
+                        <li>Look for word <strong class="text-black">Download</strong> or <strong class="text-black">Export</strong>.</li>
+                        <li>Choose <strong class="bg-yellow-200 px-1 text-black">Comma Separated Values (.csv)</strong>.</li>
                     </ol>
                 </div>
-            </section>
-
-             <!-- The Result -->
-            <section>
-                <h2 class="text-2xl font-bold mb-3 text-red-600">You're Done! 🎉</h2>
-                <p class="text-gray-700 leading-relaxed">
-                    That new `.csv` file is now ready to be loaded directly into the Vocab Trainer, Hangman Game, or any other tool that needs a simple word list. Easy peasy!
+                
+                <p class="mt-8 text-gray-400 font-medium italic">
+                    That's it! You're a tech wizard now. 🧙‍♂️
                 </p>
             </section>
-        </div>
 
+        </div>
     </div>
+
+    <script>
+        function copyToClipboard() {
+            const promptText = document.getElementById('ai-prompt');
+            promptText.select();
+            promptText.setSelectionRange(0, 99999); // For mobile devices
+
+            navigator.clipboard.writeText(promptText.value).then(() => {
+                const btnText = document.getElementById('btn-text');
+                const btn = document.getElementById('copy-btn');
+                
+                // Visual Feedback
+                btnText.innerText = "Copied! ✅";
+                btn.classList.add('bg-green-500', 'text-white');
+                btn.classList.remove('bg-white', 'text-indigo-600');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    btnText.innerText = "Copy Text";
+                    btn.classList.remove('bg-green-500', 'text-white');
+                    btn.classList.add('bg-white', 'text-indigo-600');
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
