@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossword Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* --- 1. GLOBAL & LAYOUT --- */
+        body {
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 1100px;
+            background-color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 20px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        /* --- 2. SETUP SCREEN --- */
+        .step-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 160px;
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            cursor: pointer;
+            background-color: white;
+            transition: all 0.2s;
+            color: #64748b;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .file-upload-label:hover {
+            border-color: #00BCD4;
+            color: #00BCD4;
+            background-color: #ecfeff;
+            transform: translateY(-2px);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            color: white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+            border: none;
+            cursor: pointer;
+        }
+        .action-btn:active { transform: translateY(2px); box-shadow: none; }
+        
+        .btn-blue { background-color: #00BCD4; }
+        .btn-blue:hover { background-color: #00acc1; }
+
+        /* --- 3. GAME GRID --- */
+        #grid-container-scroll {
+            width: 100%;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #crossword-grid {
+            display: grid;
+            gap: 2px;
+            background-color: #374151;
+            padding: 4px;
+            border-radius: 4px;
+            aspect-ratio: 1 / 1;
+            max-height: 100%;
+            max-width: 100%;
+        }
+
+        .cw-cell {
+            background-color: white;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .cw-cell.empty {
+            background-color: transparent;
+            pointer-events: none;
+        }
+
+        .cw-cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: min(2.5vh, 1.5rem); 
+            background: transparent;
+            color: #374151;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .cw-number {
+            position: absolute;
+            top: 2%;
+            left: 5%;
+            font-size: min(1.2vh, 0.7rem);
+            color: #64748b;
+            pointer-events: none;
+            line-height: 1;
+            font-weight: bold;
+        }
+
+        /* Highlights & States */
+        .cw-cell.active-cell { background-color: #fff7ed !important; }
+        .cw-cell.highlight-word { background-color: #ffedd5; }
+        .cw-cell.hinted { background-color: #e0f2fe; }
+        .cw-cell.revealed { background-color: #fce7f3; }
+        
+        .cw-cell input.correct { color: #10b981 !important; }
+        .cw-cell input.error { color: #ef4444 !important; }
+        .cw-cell input.revealed-text { color: #db2777 !important; }
+
+        /* --- 4. CLUES COLUMN --- */
+        #clues-container {
+            height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        #clues-container::-webkit-scrollbar { width: 8px; }
+        #clues-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        #clues-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* --- 5. MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center; z-index: 50;
+        }
+
+        /* --- 6. PRINT STYLES --- */
+        @media print {
+            body { background: white; padding: 0; display: block; }
+            #game-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; width: 100%; }
+            .no-print { display: none !important; }
+            #crossword-wrapper { display: block; }
+
+            /* Grid */
+            #grid-container-scroll { height: auto; display: block; margin-bottom: 20px; }
+            #crossword-grid {
+                border: 2px solid #000;
+                background-color: #000 !important;
+                gap: 1px;
+                margin: 0 auto;
+                max-width: 600px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .cw-cell { background-color: white !important; border: 1px solid #000; }
+            .cw-cell.empty { background-color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            
+            /* Hide Answers */
+            .cw-cell input { color: transparent !important; text-shadow: none; }
+            .cw-number { color: black !important; font-size: 8pt; }
+            
+            /* Clues: DYNAMIC COLUMNS */
+            #clues-container { 
+                height: auto; 
+                overflow: visible; 
+                border: none; 
+                margin-top: 20px;
+                display: block;
+                /* This tells the printer: fit as many columns as you can, 
+                   assuming a column needs about 180px width */
+                column-width: 180px; 
+                column-gap: 20px;
+            }
+            li { break-inside: avoid; margin-bottom: 4px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+
+        <div class="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
+            <a href="index.html" class="btn-back no-print text-sm">← Back to Tools</a>
+            <h1 class="text-4xl font-black text-slate-800 uppercase tracking-tight">Crossword</h1>
+            <div class="w-20"></div>
+        </div>
+
+        <div id="setup-area" class="no-print">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div class="step-card">
+                    <h3 class="text-xl font-black text-slate-700 mb-2">1. Upload Words</h3>
+                    <p class="text-sm text-slate-400 mb-4">Upload a CSV file. Row 1 is data (Word, Clue).</p>
+                    <label class="file-upload-label">
+                        <span class="text-4xl mb-2">📂</span>
+                        <span id="file-label-text" class="text-lg">Click to Select CSV</span>
+                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                    </label>
+                </div>
+
+                <div class="step-card justify-between">
+                    <div>
+                        <h3 class="text-xl font-black text-slate-700 mb-2">2. Game Settings</h3>
+                        <p class="text-sm text-slate-400 mb-6">Adjust difficulty for your students.</p>
+                        <label class="flex justify-between font-bold text-slate-700 mb-3 text-lg">
+                            <span>Scaffolding (Hints):</span>
+                            <span id="hint-percent-display" class="text-cyan-600">0%</span>
+                        </label>
+                        <input type="range" id="hint-slider" min="0" max="80" value="0" step="10" 
+                               class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                    </div>
+                    <button id="generate-btn" class="action-btn btn-blue mt-8 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Create Crossword ➜
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-area" class="hidden h-full">
+            
+            <div class="flex flex-wrap justify-between items-center mb-6 no-print bg-slate-50 p-4 rounded-xl border border-slate-100 gap-4">
+                <button id="game-back-btn" class="text-slate-500 font-bold hover:text-slate-800">
+                    ← Change Settings
+                </button>
+                
+                <div class="flex gap-3 flex-wrap items-center">
+                    
+                    <button onclick="document.getElementById('help-modal').classList.remove('hidden')" 
+                            class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-black hover:bg-slate-300 transition" title="How to play">
+                        ?
+                    </button>
+
+                    <button id="reveal-btn" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-bold shadow-sm transition active:scale-95 text-sm">
+                        👁️ Reveal
+                    </button>
+                    <button id="hint-btn" class="bg-amber-400 hover:bg-amber-500 text-amber-900 px-4 py-2 rounded-lg font-bold shadow-sm transition active:scale-95 text-sm">
+                        💡 Hint
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition active:scale-95 text-sm">
+                        🖨️ Print
+                    </button>
+                </div>
+            </div>
+
+            <div id="crossword-wrapper" class="flex flex-col lg:flex-row gap-8 items-start">
+                <div id="grid-container-scroll" class="flex-1">
+                    <div id="crossword-grid"></div>
+                </div>
+
+                <div id="clues-container" class="w-full lg:w-1/3">
+                    <h3 class="text-2xl font-black text-slate-800 mb-4 border-b-4 border-cyan-100 pb-2 inline-block">Clues</h3>
+                    <div class="mb-6">
+                        <h4 class="font-bold text-cyan-600 uppercase text-sm mb-2 tracking-wider">Across</h4>
+                        <ul id="clues-across" class="text-sm space-y-3 text-slate-700 list-none pl-0 font-medium"></ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-cyan-600 uppercase text-sm mb-2 tracking-wider">Down</h4>
+                        <ul id="clues-down" class="text-sm space-y-3 text-slate-700 list-none pl-0 font-medium"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="help-modal" class="modal-overlay hidden">
+            <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm mx-4 relative">
+                <h2 class="text-2xl font-black text-slate-800 mb-4">How to Play</h2>
+                <ul class="space-y-3 text-slate-600 mb-6 font-medium">
+                    <li class="flex gap-3">
+                        <span class="text-2xl">👆</span>
+                        <span>Click a box <b>ONCE</b> to type Across.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-2xl">✌️</span>
+                        <span>Click <b>AGAIN</b> to switch to Down.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-2xl">⌨️</span>
+                        <span>Typing a letter moves you to the next box automatically.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-2xl">🔙</span>
+                        <span><b>Backspace</b> moves you backwards.</span>
+                    </li>
+                </ul>
+                <button onclick="document.getElementById('help-modal').classList.add('hidden')" 
+                        class="w-full bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-600 transition">
+                    Got it!
+                </button>
+            </div>
+        </div>
+
+        <div id="win-modal" class="modal-overlay hidden">
+            <div class="bg-white p-10 rounded-3xl shadow-2xl text-center max-w-sm mx-4 transform transition-all scale-100">
+                <div class="text-7xl mb-4 animate-bounce">🏆</div>
+                <h2 class="text-4xl font-black text-slate-800 mb-2">Great Job!</h2>
+                <p class="text-slate-500 mb-8 font-medium text-lg">You completed the crossword.</p>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="location.reload()" class="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-600 transition shadow-lg shadow-cyan-200">
+                        Play Again
+                    </button>
+                    <button onclick="document.getElementById('win-modal').classList.add('hidden')" class="text-slate-400 font-bold hover:text-slate-600">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- 1. STATE --- */
+        let wordList = []; 
+        let grid = [];
+        let gridSize = 30; 
+        let currentDirection = 'across';
+        let gameRevealed = false;
+        
+        // DOM
+        const fileInput = document.getElementById('csv-file-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const slider = document.getElementById('hint-slider');
+        const percentDisplay = document.getElementById('hint-percent-display');
+        const hintBtn = document.getElementById('hint-btn');
+        const revealBtn = document.getElementById('reveal-btn');
+        const gameBackBtn = document.getElementById('game-back-btn');
+        const winModal = document.getElementById('win-modal');
+
+        slider.addEventListener('input', (e) => percentDisplay.textContent = e.target.value + '%');
+        
+        gameBackBtn.addEventListener('click', () => {
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('setup-area').classList.remove('hidden');
+            document.getElementById('crossword-grid').innerHTML = '';
+            gameRevealed = false;
+        });
+
+        // CSV Reader
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('file-label-text').textContent = file.name;
+            document.getElementById('file-label-text').classList.add('text-cyan-600');
+
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const lines = evt.target.result.split(/\r?\n/);
+                wordList = [];
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return;
+                    const commaIdx = trimmed.indexOf(',');
+                    if (commaIdx > -1) {
+                        const w = trimmed.slice(0, commaIdx).trim().toUpperCase().replace(/[^A-Z]/g, '');
+                        const c = trimmed.slice(commaIdx + 1).trim();
+                        if (w.length > 1) wordList.push({ word: w, clue: c });
+                    }
+                });
+                if (wordList.length > 0) {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = `Create Crossword (${wordList.length} Words)`;
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        generateBtn.addEventListener('click', () => {
+            createCrossword();
+            document.getElementById('setup-area').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+        });
+
+        /* --- 2. GENERATION ALGORITHM --- */
+        function createCrossword() {
+            gameRevealed = false;
+            wordList.sort((a, b) => b.word.length - a.word.length); 
+            grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));
+            const placedWords = [];
+
+            function calculateCost(r, c, wLen, dir, currentBounds) {
+                let newMinR = Math.min(currentBounds.minR, r);
+                let newMinC = Math.min(currentBounds.minC, c);
+                let newMaxR = Math.max(currentBounds.maxR, dir === 1 ? r + wLen - 1 : r);
+                let newMaxC = Math.max(currentBounds.maxC, dir === 0 ? c + wLen - 1 : c);
+                return (newMaxR - newMinR + 1) * (newMaxC - newMinC + 1);
+            }
+
+            function canPlace(word, r, c, dir) {
+                if (dir === 0) { // Across
+                    if (c + word.length > gridSize) return false;
+                    if (c > 0 && grid[r][c-1] !== null) return false;
+                    if (c + word.length < gridSize && grid[r][c+word.length] !== null) return false;
+                    for (let i=0; i<word.length; i++) {
+                        const cell = grid[r][c+i];
+                        if (cell !== null && cell !== word[i]) return false;
+                        if (cell === null) {
+                            if (r > 0 && grid[r-1][c+i] !== null) return false;
+                            if (r < gridSize-1 && grid[r+1][c+i] !== null) return false;
+                        }
+                    }
+                } else { // Down
+                    if (r + word.length > gridSize) return false;
+                    if (r > 0 && grid[r-1][c] !== null) return false;
+                    if (r + word.length < gridSize && grid[r+word.length][c] !== null) return false;
+                    for (let i=0; i<word.length; i++) {
+                        const cell = grid[r+i][c];
+                        if (cell !== null && cell !== word[i]) return false;
+                        if (cell === null) {
+                            if (c > 0 && grid[r+i][c-1] !== null) return false;
+                            if (c < gridSize-1 && grid[r+i][c+1] !== null) return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            function place(wObj, r, c, dir) {
+                for(let i=0; i<wObj.word.length; i++) {
+                    if (dir === 0) grid[r][c+i] = wObj.word[i];
+                    else grid[r+i][c] = wObj.word[i];
+                }
+                wObj.row = r; wObj.col = c; wObj.dir = dir;
+                placedWords.push(wObj);
+            }
+
+            if(wordList.length > 0) {
+                const f = wordList[0];
+                place(f, Math.floor(gridSize/2), Math.floor((gridSize-f.word.length)/2), 0);
+            }
+
+            let bounds = {
+                minR: placedWords[0].row, maxR: placedWords[0].row,
+                minC: placedWords[0].col, maxC: placedWords[0].col + placedWords[0].word.length - 1
+            };
+
+            for(let i=1; i<wordList.length; i++) {
+                const cur = wordList[i];
+                let bestMove = null;
+                let minCost = Infinity;
+
+                for(let t of placedWords) {
+                    for(let j=0; j<cur.word.length; j++) { 
+                        for(let k=0; k<t.word.length; k++) { 
+                            if(t.word[k] === cur.word[j]) {
+                                let r, c, d;
+                                if(t.dir === 0) { r=t.row-j; c=t.col+k; d=1; }
+                                else { r=t.row+k; c=t.col-j; d=0; }
+
+                                if(r>=0 && c>=0 && canPlace(cur.word, r, c, d)) {
+                                    const cost = calculateCost(r, c, cur.word.length, d, bounds);
+                                    if(cost < minCost) { minCost = cost; bestMove = { r, c, d }; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(bestMove) {
+                    place(cur, bestMove.r, bestMove.c, bestMove.d);
+                    bounds.minR = Math.min(bounds.minR, bestMove.r);
+                    bounds.minC = Math.min(bounds.minC, bestMove.c);
+                    bounds.maxR = Math.max(bounds.maxR, bestMove.d === 1 ? bestMove.r + cur.word.length - 1 : bestMove.r);
+                    bounds.maxC = Math.max(bounds.maxC, bestMove.d === 0 ? bestMove.c + cur.word.length - 1 : bestMove.c);
+                }
+            }
+            renderGrid(placedWords);
+        }
+
+        /* --- 3. RENDER --- */
+        function renderGrid(placedWords) {
+            const gridEl = document.getElementById('crossword-grid');
+            const cAcross = document.getElementById('clues-across');
+            const cDown = document.getElementById('clues-down');
+            gridEl.innerHTML = ''; cAcross.innerHTML = ''; cDown.innerHTML = '';
+
+            let minR=gridSize, maxR=0, minC=gridSize, maxC=0;
+            placedWords.forEach(w => {
+                minR = Math.min(minR, w.row);
+                maxR = Math.max(maxR, w.dir===1 ? w.row+w.word.length-1 : w.row);
+                minC = Math.min(minC, w.col);
+                maxC = Math.max(maxC, w.dir===0 ? w.col+w.word.length-1 : w.col);
+            });
+
+            const cols = maxC - minC + 1;
+            const rows = maxR - minR + 1;
+            gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            gridEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+            placedWords.sort((a,b)=>(a.row-b.row)||(a.col-b.col));
+            let num = 1;
+            const cellNums = {};
+            placedWords.forEach(w => {
+                const key = `${w.row},${w.col}`;
+                if(!cellNums[key]) cellNums[key] = num++;
+                w.number = cellNums[key];
+            });
+
+            // Map cell capabilities
+            const cellMeta = Array(gridSize).fill(null).map(() => Array(gridSize).fill({hasH: false, hasV: false}));
+            placedWords.forEach(w => {
+                for(let i=0; i<w.word.length; i++) {
+                    let r = w.row, c = w.col;
+                    if(w.dir === 0) c += i; else r += i;
+                    
+                    // Copy existing meta to new object
+                    const existing = cellMeta[r][c] || {hasH: false, hasV: false};
+                    cellMeta[r][c] = {
+                        hasH: existing.hasH || w.dir === 0,
+                        hasV: existing.hasV || w.dir === 1
+                    };
+                }
+            });
+
+            const hintChance = parseInt(slider.value)/100;
+            
+            for(let r=minR; r<=maxR; r++) {
+                for(let c=minC; c<=maxC; c++) {
+                    const letter = grid[r][c];
+                    const div = document.createElement('div');
+                    
+                    if(letter) {
+                        div.className = 'cw-cell';
+                        if(cellNums[`${r},${c}`]) {
+                            div.innerHTML = `<span class="cw-number">${cellNums[`${r},${c}`]}</span>`;
+                        }
+
+                        const input = document.createElement('input');
+                        input.maxLength = 1;
+                        input.dataset.r = r;
+                        input.dataset.c = c;
+                        input.dataset.ans = letter;
+
+                        if(Math.random() < hintChance) {
+                            input.value = letter;
+                            input.readOnly = true;
+                            div.classList.add('hinted');
+                        }
+
+                        // --- SMART FOCUS LOGIC ---
+                        input.addEventListener('focus', () => {
+                            const meta = cellMeta[r][c];
+                            
+                            // 1. Force direction if only one exists
+                            if(meta.hasH && !meta.hasV) currentDirection = 'across';
+                            else if(!meta.hasH && meta.hasV) currentDirection = 'down';
+                            
+                            clearHighlights();
+                            div.classList.add('active-cell');
+                            highlightWord(r, c, currentDirection);
+                        });
+
+                        input.addEventListener('click', () => {
+                            if(document.activeElement === input) {
+                                const meta = cellMeta[r][c];
+                                // Only toggle if BOTH directions are possible
+                                if(meta.hasH && meta.hasV) {
+                                    currentDirection = currentDirection === 'across' ? 'down' : 'across';
+                                    highlightWord(r, c, currentDirection);
+                                }
+                            }
+                        });
+
+                        input.addEventListener('input', (e) => {
+                            input.value = input.value.toUpperCase();
+                            input.classList.remove('error'); 
+                            checkWinCondition();
+                            if(input.value) moveFocus(r, c, currentDirection);
+                        });
+
+                        input.addEventListener('keydown', (e) => {
+                            if(e.key === 'Backspace' && !input.value) {
+                                moveFocus(r, c, currentDirection, -1);
+                            }
+                        });
+
+                        div.appendChild(input);
+                    } else {
+                        div.className = 'cw-cell empty';
+                    }
+                    gridEl.appendChild(div);
+                }
+            }
+
+            placedWords.forEach(w => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="font-bold text-cyan-700">${w.number}.</span> ${w.clue}`;
+                if(w.dir===0) cAcross.appendChild(li); else cDown.appendChild(li);
+            });
+        }
+
+        /* --- 4. GAMEPLAY HELPERS --- */
+        function highlightWord(r, c, dir) {
+            document.querySelectorAll('.cw-cell input').forEach(inp => {
+                const ir = parseInt(inp.dataset.r);
+                const ic = parseInt(inp.dataset.c);
+                if (dir === 'across' && ir === r) inp.parentElement.classList.add('highlight-word');
+                else if (dir === 'down' && ic === c) inp.parentElement.classList.add('highlight-word');
+            });
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.cw-cell').forEach(el => {
+                el.classList.remove('active-cell');
+                el.classList.remove('highlight-word');
+            });
+        }
+
+        function moveFocus(r, c, dir, step = 1) {
+            let nextR = r, nextC = c;
+            if(dir === 'across') nextC += step; else nextR += step;
+            const nextInput = document.querySelector(`input[data-r="${nextR}"][data-c="${nextC}"]`);
+            if(nextInput) nextInput.focus();
+        }
+
+        function checkWinCondition() {
+            if(gameRevealed) return; 
+
+            const inputs = Array.from(document.querySelectorAll('.cw-cell input'));
+            let filled = 0, errors = 0;
+            inputs.forEach(inp => {
+                if(inp.value) {
+                    filled++;
+                    if(inp.value !== inp.dataset.ans) errors++;
+                    else inp.classList.remove('error');
+                }
+            });
+            if(filled === inputs.length) {
+                if(errors === 0) winModal.classList.remove('hidden');
+                else inputs.forEach(inp => { if(inp.value !== inp.dataset.ans) inp.classList.add('error'); });
+            }
+        }
+
+        hintBtn.addEventListener('click', () => {
+            const inputs = Array.from(document.querySelectorAll('.cw-cell input'));
+            const available = inputs.filter(i => !i.value || i.value !== i.dataset.ans);
+            if(available.length > 0) {
+                const randomInput = available[Math.floor(Math.random() * available.length)];
+                randomInput.value = randomInput.dataset.ans;
+                randomInput.classList.add('correct'); 
+                randomInput.readOnly = true;
+                randomInput.parentElement.classList.add('hinted');
+                checkWinCondition();
+            }
+        });
+
+        // Reveal All
+        revealBtn.addEventListener('click', () => {
+            if(!confirm("Are you sure? This will end the game.")) return;
+            gameRevealed = true;
+            const inputs = document.querySelectorAll('.cw-cell input');
+            inputs.forEach(inp => {
+                inp.value = inp.dataset.ans;
+                inp.readOnly = true;
+                inp.classList.add('revealed-text');
+                inp.parentElement.classList.add('revealed');
+                inp.classList.remove('error');
+            });
+        });
+
+    </script>
+</body>
+</html>
