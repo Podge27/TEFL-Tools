@@ -1,56 +1,116 @@
 [
   {
-    "level": "A1",
-    "topic": "Present Simple: To Be",
-    "slug": "a1-to-be",
-    "description": "Using am, is, and are to describe identity and states.",
+    "level": "English for Hospitality",
+    "topic": "Module 1: Presentations & Welcome",
+    "slug": "mod-1",
+    "description": "Greeting guests, reservations, and seating protocols.",
     "resources": {
-      "sentences": [
-        "I am from Italy.",
-        "He is a doctor.",
-        "We are very excited to meet you!"
-      ],
-      "gapfill": [
-        { "q": "They ___ (be) at the park today.", "a": "are" },
-        { "q": "It ___ (be) a beautiful morning.", "a": "is" }
-      ],
-      "visual": "https://via.placeholder.com/600x400?text=Cartoon+Example+of+To+Be",
-      "game": "https://www.wikipedia.org"
+      "Lesson 1: Greetings": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Master expressions to greet and introduce professionally.</p><h3>🔑 Key Points</h3><ul><li>Hello / Good morning / Good evening</li><li>'Welcome to…', 'My name is…', 'How may I help you?'</li><li>Polite register & brief small talk.</li></ul><h3>📝 Assessment</h3><p>Paired host/guest role‑play (teacher checklist: greeting sequence, politeness).</p><h3>📚 Source</h3><p>Unit 1 – Student’s Book: Page 4 (Greetings: Page 6).</p></div>",
+      "Lesson 2: Phone Reservations": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Manage and confirm reservations by phone and log them in a reservations diary.</p><h3>🔑 Key Points</h3><ul><li>Reservation diary entries (time, party size, contact, notes)</li><li>Telephone booking phrases</li><li>Handling special requests (wheelchair, anniversary)</li></ul><h3>📝 Assessment</h3><p>Phone booking role‑play + fill reservation diary entry.</p><h3>📚 Source</h3><p>Unit 2 – Student’s Book: Page 8; Exercises: Page 9.</p></div>",
+      "Lesson 3: Seating Guests": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Welcome and seat guests professionally.</p><h3>🔑 Key Points</h3><ul><li>Seating preferences (window, corner, outdoors)</li><li>Coat handling</li><li>Offering bar seating while waiting</li></ul><h3>📝 Assessment</h3><p>Host station simulation — seat several guest pairs.</p><h3>📚 Source</h3><p>Unit 3 – Student’s Book: Page 12; Vocabulary: Page 13.</p></div>"
     }
   },
-          {
-            "level": "B2",
-            "topic": "Past Modals: Speculation & Regret",
-            "slug": "b2-past-modals",
-            "description": "Talking about past mistakes, possibilities, and deductions.",
-            "resources": {
-              "reading_highlight": "<div style='font-size: 1.5rem; line-height: 2;'><h3>The 2022 World Cup Final</h3><p>It was one of the greatest games in history. Argentina <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>must have felt</span> confident leading 2-0. France <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>could have given up</span>, but Mbappé scored twice. Many fans thought Argentina <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>might have lost</span> their chance. In the end, Messi <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>must have been</span> relieved to finally lift the trophy. The French defenders <span class='highlight-word' onclick='this.classList.toggle(\"active\")'>shouldn't have let</span> Di Maria score that first goal!</p><p style='font-size:1rem; color:#666;'>(Click the past modals to highlight them)</p></div>",
-              
-              "video_task": "<div style='text-align:center'><video controls width='100%' style='border-radius:15px; max-height:500px;'><source src='assets/Coffee_Machine_Explosion_Video_Generated.mp4' type='video/mp4'>Your browser does not support the video tag.</video></div>",
-              
-              "video_gapfill": [
-                { "q": "He ___ the note. (advice)", "a": "should have read" },
-                { "q": "He ___ the button. (regret)", "a": "shouldn't have pressed" },
-                { "q": "The machine ___ working that day. (deduction)", "a": "must have stopped" },
-                { "q": "The cup ___ ! (surprise)", "a": "shouldn't have disappeared" }
-              ],
-
-              "structure": "<div style='text-align:center; font-size: 1.8rem;'><div style='background:white; padding:20px; border-radius:15px; border:2px solid #CBD5E0; display:inline-block;'><strong>MODAL VERB</strong> + <span style='color:#D69E2E'>HAVE</span> + <strong>PAST PARTICIPLE</strong></div><br><br><p><em>She <strong>must</strong> <span style='color:#D69E2E'>have</span> <strong>forgotten</strong> her keys.</em></p></div>",
-
-              "probability_scale": "<ul style='list-style:none; padding:0; font-size:1.4rem;'><li style='margin-bottom:20px; border-left: 5px solid #38A169; padding-left:15px;'><strong>90-100% (Certainty)</strong><br>Must have / Can't have</li><li style='margin-bottom:20px; border-left: 5px solid #D69E2E; padding-left:15px;'><strong>50% (Possibility)</strong><br>Could have / May have / Might have</li></ul>",
-
-              "alternatives": "<ul style='font-size:1.5rem;'><li><strong>Supposed to have</strong> (Plan failed)<br><em>'The train was supposed to have arrived.'</em></li><br><li><strong>Needed to have</strong> (Necessary)<br><em>'You needed to have submitted the form.'</em></li></ul>",
-
-              "practice_gaps": [
-                { "q": "The streets are wet. It ___ (rain).", "a": "must have rained" },
-                { "q": "She walked past me! She ___ (see) me.", "a": "can't have seen" }
-              ],
-
-              "speaking": "<ul style='font-size:1.6rem; line-height:1.6;'><li>Tell me about a time you made a mistake. What <strong>should you have done</strong> differently?</li><li>Think of a time you were late. What <strong>might have happened</strong> if you had arrived on time?</li></ul>",
-
-              "pronunciation": "<div style='text-align:center; font-size:1.5rem;'><h3>The Weak 'Have' (/əv/)</h3><p>When we speak quickly, 'have' is NOT stressed.</p><div style='font-size:2rem;'>Must have ➝ <strong>Must'av</strong></div><div style='font-size:2rem;'>Should have ➝ <strong>Should'av</strong></div></div>",
-
-              "cartoon_visual": "assets/pastmodalcartoon.png"
-            }
-          }
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 2: General Customer Service",
+    "slug": "mod-2",
+    "description": "Roles, ordering, service standards, and billing.",
+    "resources": {
+      "Lesson 4: Roles & Layout": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Identify parts of the restaurant and job roles.</p><h3>🔑 Key Points</h3><ul><li>Locations: Main dining room, private room, terrace, cloakroom</li><li>Roles: Maître d’, sommelier, bar, kitchen</li></ul><h3>📝 Assessment</h3><p>Label a floor plan and match job titles to duties.</p><h3>📚 Source</h3><p>Unit 3 – Student’s Book: Pages 12–13.</p></div>",
+      "Lesson 5: Food Orders": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Take food orders fluently and confirm accurately.</p><h3>🔑 Key Points</h3><ul><li>Starters, mains, desserts, side dishes</li><li>Confirmation language: 'So that’s…'</li><li>Order form filling</li></ul><h3>📝 Assessment</h3><p>Paired waiter/guest role‑play with written order form.</p><h3>📚 Source</h3><p>Unit 4 – Student’s Book: Page 14; Vocabulary: Page 15.</p></div>",
+      "Lesson 6: Drink Orders": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Take and process drink orders.</p><h3>🔑 Key Points</h3><ul><li>Vocabulary: Beer, wine, soft drinks, coffee</li><li>Modifiers: 'Neat / On the rocks / Double'</li><li>Happy hour offers</li></ul><h3>📝 Assessment</h3><p>Bar order task for a table of four; written order slip checked by partner.</p><h3>📚 Source</h3><p>Unit 6 – Student’s Book: Pages 24, 26, 27.</p></div>",
+      "Lesson 7: Clearing Tables": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Clear tables and maintain table presentation standards.</p><h3>🔑 Key Points</h3><ul><li>Clearing sequence</li><li>Tray vs trolley</li><li>Table layout and cutlery positions</li></ul><h3>📝 Assessment</h3><p>Practical table set/clear exercise using checklist.</p><h3>📚 Source</h3><p>Unit 14 – Student’s Book: Pages 56 & 58.</p></div>",
+      "Lesson 8: The Bill": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Handle the bill and payment professionally.</p><h3>🔑 Key Points</h3><ul><li>Bill components: VAT/tax, service charge</li><li>Split bills</li><li>Payment options (cash, card)</li></ul><h3>📝 Assessment</h3><p>Role‑play payment scenarios (cash, card, split).</p><h3>📚 Source</h3><p>Unit 18 – Student’s Book: Pages 72–73.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 3: Describing the Menu",
+    "slug": "mod-3",
+    "description": "Explaining dishes, ingredients, and cooking methods.",
+    "resources": {
+      "Lesson 9: Cooking Methods": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Describe dishes and cooking methods to guests.</p><h3>🔑 Key Points</h3><ul><li>Verbs: Grilled, roasted, sauté, simmer, steamed</li><li>Adjectives: Tender, crunchy, creamy, spicy</li></ul><h3>📝 Assessment</h3><p>Two‑dish oral description plus Q&A from classmates.</p><h3>📚 Source</h3><p>Unit 4 – Student’s Book: Pages 16–17.</p></div>",
+      "Lesson 10: Menu Q&A": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Answer guest questions about dishes, ingredients and preparation.</p><h3>🔑 Key Points</h3><ul><li>Question patterns: 'What is salmorejo?'</li><li>Pronunciation practice</li><li>Using real hotel menu items</li></ul><h3>📝 Assessment</h3><p>Q&A drill using menu items.</p><h3>📚 Source</h3><p>Unit 4 – Student’s Book: Pages 16–18.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 4: Drinks, Cocktails & Appetizers",
+    "slug": "mod-4",
+    "description": "Bar service, recommendations, and cocktail preparation.",
+    "resources": {
+      "Lesson 11: Recommending Drinks": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Offer and describe drinks politely and precisely.</p><h3>🔑 Key Points</h3><ul><li>Wine glass types, cocktail vocabulary</li><li>Phrases: 'Would you like…?', 'May I recommend…?'</li><li>Garnishes</li></ul><h3>📝 Assessment</h3><p>Paired role‑play recommending a drink and describing garnish/taste.</p><h3>📚 Source</h3><p>Unit 6 – Student’s Book: Pages 24 & 26.</p></div>",
+      "Lesson 12: Cocktail Orders": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Take cocktail orders and prepare clear instructions for the bar.</p><h3>🔑 Key Points</h3><ul><li>Cocktail recipes & garnishes</li><li>Measures (ml/oz)</li><li>Shaker vs blender instructions</li></ul><h3>📝 Assessment</h3><p>Write and verbalize three cocktail orders with measures.</p><h3>📚 Source</h3><p>Unit 7 – Student’s Book: Pages 28–29.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 5: Wine Recommendations",
+    "slug": "mod-5",
+    "description": "Wine varieties, descriptors, and food pairing.",
+    "resources": {
+      "Lesson 13: Wine Types": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Understand wine types and basic descriptors.</p><h3>🔑 Key Points</h3><ul><li>Grapes: Sauvignon Blanc, Chardonnay, Riesling, Pinot Noir, Cabernet</li><li>Descriptors: Dry, fruity, full‑bodied, crisp</li></ul><h3>📝 Assessment</h3><p>Matching wine types to descriptors and brief oral justification.</p><h3>📚 Source</h3><p>Unit 5 – Student’s Book: Pages 20–21.</p></div>",
+      "Lesson 14: Food Pairing": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Recommend wines and basic food pairings professionally.</p><h3>🔑 Key Points</h3><ul><li>Pairing rules: White/fish, Red/beef, Champagne/oysters</li><li>Balance concept and characteristics</li></ul><h3>📝 Assessment</h3><p>Sommelier role‑play recommending wine for two mains.</p><h3>📚 Source</h3><p>Unit 5 – Student’s Book: Pages 22–23.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 6: Complaints & Difficulties",
+    "slug": "mod-6",
+    "description": "Apologizing, resolving issues, and service recovery.",
+    "resources": {
+      "Lesson 15: Apologizing": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Learn expressions to apologise and resolve complaints.</p><h3>🔑 Key Points</h3><ul><li>'I’m sorry', 'I apologise'</li><li>Offer replacement/compensation</li><li>Escalate to manager</li></ul><h3>📝 Assessment</h3><p>Triad role‑play (guest/waiter/manager) using scripted complaints.</p><h3>📚 Source</h3><p>Unit 18 – Student’s Book: Pages 74–75.</p></div>",
+      "Lesson 16: Solving Problems": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Manage real‑world problematic situations (cold food, wrong dish, delay).</p><h3>🔑 Key Points</h3><ul><li>Immediate corrective actions</li><li>Communicating with kitchen</li><li>Offering appropriate compensation</li></ul><h3>📝 Assessment</h3><p>Rapid response group scenarios.</p><h3>📚 Source</h3><p>Unit 18 – Student’s Book: Pages 74–75.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 7: Farewell & Feedback",
+    "slug": "mod-7",
+    "description": "Closing the experience, upselling, and collecting feedback.",
+    "resources": {
+      "Lesson 17: Payment & Closing": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Request payment and close the guest experience professionally.</p><h3>🔑 Key Points</h3><ul><li>'Would you like a receipt?'</li><li>Split bill procedures</li><li>Asking satisfaction questions</li><li>Upsell closing phrases</li></ul><h3>📝 Assessment</h3><p>Payment & upsell role‑play, sample bill completion.</p><h3>📚 Source</h3><p>Unit 18 – Student’s Book: Pages 72–75.</p></div>",
+      "Lesson 18: Final Farewell": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Close with farewell and collect feedback; final reflection.</p><h3>🔑 Key Points</h3><ul><li>Farewell phrases</li><li>Invitation to return</li><li>Short feedback prompts</li></ul><h3>📝 Assessment</h3><p>Summative practical exam requiring polite farewell.</p><h3>📚 Source</h3><p>Unit 18 – Student’s Book: Pages 74–75 (plus Page 56).</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 8: Social & Cultural",
+    "slug": "mod-8",
+    "description": "Small talk, recommendations, and local directions.",
+    "resources": {
+      "Lesson 19: Small Talk": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Carry informal social conversation and make tourist recommendations.</p><h3>🔑 Key Points</h3><ul><li>Topics: Weather, local customs</li><li>Recommending local sights and services</li></ul><h3>📝 Assessment</h3><p>1‑minute tourist suggestion presentation and small‑talk simulation.</p><h3>📚 Source</h3><p>Unit 10 (Page 10) & Coffeehouses (Pages 32–33).</p></div>",
+      "Lesson 20: City Directions": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Talk about city monuments, give directions and explain maps (Córdoba focus).</p><h3>🔑 Key Points</h3><ul><li>Directional language</li><li>Landmarks & street names</li><li>Map reading phrases</li></ul><h3>📝 Assessment</h3><p>Map explanation role‑play guiding a tourist.</p><h3>📚 Source</h3><p>Unit 10 – Student’s Book: Pages 10–11.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Module 9: The City (Córdoba)",
+    "slug": "mod-9",
+    "description": "Specific focus on Córdoba monuments and tourism.",
+    "resources": {
+      "Lesson 21: Córdoba Monuments": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Speak about Córdoba monuments and explain how to get there using a map.</p><h3>🔑 Key Points</h3><ul><li>Monuments vocabulary</li><li>Step‑by‑step directions</li><li>Estimate travel times</li></ul><h3>📝 Assessment</h3><p>Tourist directions task and recommendation brief.</p><h3>📚 Source</h3><p>Unit 10 – Student’s Book: Pages 10–11 (adapted).</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Integrated & Consolidation",
+    "slug": "integrated",
+    "description": "Events, Inventory, and Health & Safety.",
+    "resources": {
+      "Lesson 22: Events & Catering": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Plan service for an event (sit‑down vs buffet), seating and bar arrangements.</p><h3>📝 Assessment</h3><p>Group event plan presentation (menu, staffing, logistics).</p><h3>📚 Source</h3><p>Unit 17 – Student’s Book: Pages 68–71.</p></div>",
+      "Lesson 23: Inventory": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Take inventory, compute par levels and prepare orders.</p><h3>📝 Assessment</h3><p>Inventory mini‑task + fill order form.</p><h3>📚 Source</h3><p>Unit 13 (Page 52) & Unit 14 (Pages 54–55).</p></div>",
+      "Lesson 24: Health & Safety": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Apply food safety principles and emergency procedures.</p><h3>📝 Assessment</h3><p>Short quiz + evacuation/emergency role‑play checklist.</p><h3>📚 Source</h3><p>Unit 16 – Student’s Book: Pages 64–67.</p></div>"
+    }
+  },
+  {
+    "level": "English for Hospitality",
+    "topic": "Final Simulations",
+    "slug": "final-sims",
+    "description": "Full shift simulation and final practical assessment.",
+    "resources": {
+      "Full Shift Simulation": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Integrate greeting, order taking, beverage service, complaint handling, payment and farewell.</p><h3>📝 Assessment</h3><p>Observed multi‑station simulation with instructor rubric.</p><h3>📚 Source</h3><p>Integrated use of multiple units/pages & pairwork scripts (Pages 84–96).</p></div>",
+      "Final Practical Assessment": "<div style='font-size:1.2rem; line-height:1.6;'><h3>🎯 Objective</h3><p>Demonstrate competency across front‑of‑house tasks and produce an action plan.</p><h3>📝 Assessment</h3><p>Summative practical exam (observed scenario) + written self‑reflection.</p><h3>📚 Source</h3><p>Writing Guide Pages 98–107; Vocabulary Builder Pages 108–128.</p></div>"
+    }
+  }
 ]
