@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Student App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; touch-action: manipulation; }
+        .big-input { @apply w-full p-4 text-2xl font-bold border-4 border-gray-200 rounded-xl text-center focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200 outline-none transition-all uppercase; }
+        .game-card { @apply bg-white p-6 rounded-2xl shadow-lg border-b-4 border-gray-200 mb-6; }
+        
+        /* Status States */
+        .status-waiting { @apply bg-gray-100 border-gray-300 text-gray-400; }
+        .status-correct { @apply bg-green-50 border-green-500 text-green-800; }
+        .status-partial { @apply bg-yellow-50 border-yellow-500 text-yellow-800; }
+        .status-wrong { @apply bg-red-50 border-red-500 text-red-800; }
+
+        .btn-main { @apply w-full py-4 rounded-xl font-black text-xl text-white shadow-lg active:scale-95 transition-transform; }
+        .btn-submit { @apply bg-indigo-600 hover:bg-indigo-700; }
+        .btn-disabled { @apply bg-gray-400 cursor-not-allowed opacity-50; }
+        
+        @keyframes pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .feedback-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 max-w-md mx-auto">
+
+    <div id="screen-login" class="flex-1 flex flex-col justify-center gap-6">
+        <div class="text-center mb-4">
+            <h1 class="text-4xl font-black text-indigo-600 tracking-tighter">PART 4<br>LIVE</h1>
+        </div>
+        
+        <div id="pin-container">
+            <label class="block font-bold text-gray-500 mb-2 ml-1">GAME PIN</label>
+            <input type="number" id="input-pin" class="big-input tracking-[0.5rem]" placeholder="0000">
+        </div>
+
+        <div>
+            <label class="block font-bold text-gray-500 mb-2 ml-1">YOUR NAME</label>
+            <input type="text" id="input-nick" class="big-input" placeholder="MARIA" maxlength="10">
+        </div>
+
+        <button onclick="student.joinGame()" id="btn-join" class="btn-main btn-submit mt-4">JOIN CLASS</button>
+        <p id="login-error" class="text-red-500 text-center font-bold hidden">Error joining game</p>
+    </div>
+
+    <div id="screen-waiting" class="hidden flex-1 flex flex-col justify-center items-center text-center">
+        <div class="animate-bounce text-6xl mb-4">⏳</div>
+        <h2 class="text-2xl font-bold text-gray-700">You're in!</h2>
+        <p class="text-gray-500 mt-2">Waiting for teacher to start...</p>
+        <div class="mt-8 p-4 bg-white rounded-lg shadow-sm">
+            <p class="text-sm font-bold text-gray-400">YOUR SCORE</p>
+            <p id="total-score-waiting" class="text-4xl font-black text-indigo-600">0</p>
+        </div>
+    </div>
+
+    <div id="screen-game" class="hidden flex-1 flex flex-col pt-4">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="font-bold text-gray-500 text-sm">LIVE</span>
+            </div>
+            <div class="font-black text-indigo-600 text-xl">SCORE: <span id="game-score">0</span></div>
+        </div>
+
+        <div class="game-card">
+            <p id="q-sentence1" class="text-lg font-semibold text-gray-600 mb-4 leading-relaxed">...</p>
+            <div class="bg-amber-100 border-2 border-amber-300 text-amber-800 font-black px-4 py-2 rounded-lg inline-block mb-4 text-xl" id="q-keyword">KEY</div>
+            <div class="space-y-3">
+                <p id="q-pre" class="text-xl font-bold text-gray-800">...</p>
+                <input type="text" id="answer-input" class="w-full p-3 text-xl font-bold border-b-4 border-indigo-300 bg-indigo-50 focus:bg-white outline-none rounded-t-lg uppercase text-center text-indigo-800" placeholder="TYPE HERE">
+                <p id="q-post" class="text-xl font-bold text-gray-800 text-right">...</p>
+            </div>
+        </div>
+
+        <div id="feedback-area" class="hidden feedback-pop p-6 rounded-xl text-center mb-4">
+            <p id="feedback-icon" class="text-5xl mb-2">🤔</p>
+            <p id="feedback-text" class="text-xl font-black">WAITING FOR TEACHER</p>
+        </div>
+
+        <div class="mt-auto pb-6">
+            <button id="btn-submit-answer" onclick="student.submitAnswer()" class="btn-main btn-submit">SUBMIT ANSWER</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        // ============================================================
+
+        const student = {
+            supabase: null,
+            sessionID: null,
+            playerID: null,
+            currentQID: null,
+            myScore: 0,
+
+            init: function() {
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+                // --- MAGIC LINK CHECKER ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const pin = urlParams.get('pin');
+                if (pin) {
+                    document.getElementById('input-pin').value = pin;
+                    document.getElementById('pin-container').classList.add('hidden'); // Hide the PIN box
+                    // Optional: Focus the Name input automatically
+                    setTimeout(() => document.getElementById('input-nick').focus(), 500);
+                }
+            },
+
+            joinGame: async function() {
+                const pin = document.getElementById('input-pin').value.trim();
+                const nick = document.getElementById('input-nick').value.trim().toUpperCase();
+                const btn = document.getElementById('btn-join');
+
+                if(!pin || !nick) return;
+                btn.innerText = "JOINING...";
+                btn.disabled = true;
+
+                const { data: sessions, error } = await this.supabase
+                    .from('game_sessions')
+                    .select('id, status')
+                    .eq('pin', pin)
+                    .single();
+
+                if(error || !sessions) {
+                    this.showError("Game not found!");
+                    btn.disabled = false;
+                    btn.innerText = "JOIN CLASS";
+                    return;
+                }
+
+                this.sessionID = sessions.id;
+                const { data: player, error: pError } = await this.supabase
+                    .from('players')
+                    .insert([{ session_id: this.sessionID, nickname: nick }])
+                    .select().single();
+
+                if(pError) {
+                    this.showError("Name taken! Choose another.");
+                    btn.disabled = false;
+                    btn.innerText = "JOIN CLASS";
+                    return;
+                }
+
+                this.playerID = player.id;
+                this.listenToSession();
+                this.listenToMyScore();
+                this.switchScreen('screen-waiting');
+            },
+
+            listenToSession: function() {
+                this.supabase.channel('game_flow')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${this.sessionID}` }, 
+                    async (payload) => {
+                        const status = payload.new.status;
+                        const newQIDs = payload.new.current_question_ids;
+                        if (status === 'ACTIVE' && newQIDs && newQIDs.length > 0) {
+                            await this.loadQuestion(newQIDs[0]);
+                            this.resetUIForNewRound();
+                            this.switchScreen('screen-game');
+                        } else if (status === 'LOCKED') {
+                            this.lockInterface();
+                        }
+                    })
+                    .subscribe();
+            },
+
+            listenToMyScore: function() {
+                this.supabase.channel('my_score')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `player_id=eq.${this.playerID}` }, 
+                    (payload) => {
+                        if (payload.new.points !== null) {
+                            this.showFeedback(payload.new.points);
+                            this.updateScore(payload.new.points);
+                        }
+                    })
+                    .subscribe();
+            },
+
+            loadQuestion: async function(qId) {
+                this.currentQID = qId;
+                const { data } = await this.supabase.from('exam_part4').select('*').eq('id', qId).single();
+                document.getElementById('q-sentence1').innerText = data.sentence1;
+                document.getElementById('q-keyword').innerText = data.key_word;
+                document.getElementById('q-pre').innerText = data.sentence2_pre;
+                document.getElementById('q-post').innerText = data.sentence2_post;
+            },
+
+            submitAnswer: async function() {
+                const input = document.getElementById('answer-input');
+                const val = input.value.trim();
+                const btn = document.getElementById('btn-submit-answer');
+                if(!val) return;
+                btn.innerText = "SENT! 📨";
+                btn.className = "btn-main bg-gray-300 text-gray-500 cursor-default";
+                input.disabled = true;
+                await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: this.currentQID, answer_text: val });
+            },
+
+            lockInterface: function() {
+                const input = document.getElementById('answer-input');
+                const btn = document.getElementById('btn-submit-answer');
+                if (!input.disabled && input.value.trim() !== "") this.submitAnswer();
+                input.disabled = true;
+                btn.innerText = "TIME'S UP 🔒";
+                btn.className = "btn-main btn-disabled";
+            },
+
+            showFeedback: function(points) {
+                const area = document.getElementById('feedback-area');
+                const icon = document.getElementById('feedback-icon');
+                const text = document.getElementById('feedback-text');
+                area.classList.remove('hidden', 'status-correct', 'status-partial', 'status-wrong');
+                if (points === 2) { area.classList.add('status-correct'); icon.innerText = "🤩"; text.innerText = "+2 POINTS!"; } 
+                else if (points === 1) { area.classList.add('status-partial'); icon.innerText = "😐"; text.innerText = "+1 POINT"; } 
+                else { area.classList.add('status-wrong'); icon.innerText = "🫠"; text.innerText = "0 POINTS"; }
+            },
+
+            updateScore: function(pts) { this.myScore += pts; document.getElementById('game-score').innerText = this.myScore; document.getElementById('total-score-waiting').innerText = this.myScore; },
+            resetUIForNewRound: function() {
+                const input = document.getElementById('answer-input');
+                const btn = document.getElementById('btn-submit-answer');
+                input.value = ""; input.disabled = false;
+                btn.innerText = "SUBMIT ANSWER"; btn.className = "btn-main btn-submit";
+                document.getElementById('feedback-area').classList.add('hidden');
+            },
+
+            switchScreen: (id) => { ['screen-login','screen-waiting','screen-game'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); },
+            showError: (msg) => { const el = document.getElementById('login-error'); el.innerText = msg; el.classList.remove('hidden'); }
+        };
+
+        student.init();
+    </script>
+</body>
+</html>

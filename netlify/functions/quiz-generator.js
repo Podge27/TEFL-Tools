@@ -1,5 +1,5 @@
 // functions/quiz-generator.js
-// USING MODEL: gemini-2.0-flash (Verified available on your account)
+// USING MODEL: gemini-flash-latest (The 'Safe Mode' Alias)
 
 exports.handler = async function(event, context) {
   const API_KEY = process.env.GEMINI_API_KEY;
@@ -35,8 +35,9 @@ exports.handler = async function(event, context) {
       }
     `;
 
-    // CHANGED MODEL TO 'gemini-2.0-flash' which we saw in your list
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+    // CHANGED MODEL TO 'gemini-flash-latest' 
+    // This automatically picks the best available Flash model for your key
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -56,7 +57,6 @@ exports.handler = async function(event, context) {
     }
 
     let rawText = data.candidates[0].content.parts[0].text;
-    // Clean up if Gemini adds ```json ... ``` wrappers
     rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
     
     return {
