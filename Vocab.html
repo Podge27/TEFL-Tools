@@ -19,21 +19,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Tiny padding just to frame it slightly */
-            padding: 10px; 
+            padding: 12px;
             overflow: hidden; 
         }
 
         #app-container {
-            /* FIXED: Use almost full width/height */
             width: 99%;
             height: 98%; 
-            max-width: none; /* REMOVED the narrow restriction */
-            
             background-color: white;
             border-radius: 16px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            padding: 16px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -41,7 +37,7 @@
 
         /* Hero Word Display */
         #word-display-container {
-            flex-grow: 1; /* Maximizes space */
+            flex-grow: 1; /* Takes all remaining space */
             background-color: #F8FAFC;
             border: 3px solid #E2E8F0;
             border-radius: 12px;
@@ -49,98 +45,94 @@
             align-items: center; 
             justify-content: center;
             text-align: center;
-            padding: 30px; /* Safe distance from border */
+            padding: 40px; 
             box-shadow: inset 0 4px 6px 0 rgba(0, 0, 0, 0.05);
-            overflow: hidden; /* Strict no scroll */
+            overflow: hidden; 
             position: relative;
         }
 
         #word-label {
             font-weight: 800;
             color: #1E293B;
-            line-height: 1.3; 
+            line-height: 1.4; /* Slightly more breathing room for lines */
             white-space: pre-wrap;
             width: 100%;
-            /* Flex center ensures vertical alignment */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            /* Start huge, JS will shrink it */
-            font-size: 8rem; 
+            font-size: 3rem; 
         }
 
-        /* Compact Controls */
+        /* --- COMPACT TOOLBAR CONTROLS --- */
         #control-pad {
-            background-color: #E2E8F0; 
-            border-radius: 12px;
-            padding: 12px;
+            background-color: #F1F5F9; 
+            border-radius: 10px;
+            padding: 8px 12px;
             border: 1px solid #CBD5E1;
             display: flex;
-            flex-direction: column;
-            gap: 10px; 
+            flex-direction: row; 
+            flex-wrap: wrap;     
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px; 
             flex-shrink: 0;
         }
 
-        select {
+        /* Standardized Inputs */
+        select, button, .file-btn {
+            height: 2.5rem; 
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            border: 2px solid #CBD5E1;
             background-color: white;
-            border: 2px solid #94a3b8;
-            color: #1e293b;
-            font-size: 1rem;
-            border-radius: 0.5rem;
-            padding: 0 0.5rem;
-            font-weight: 700;
+            color: #475569;
             cursor: pointer;
-            height: 3rem; 
-            width: 100%;
+            transition: all 0.1s;
         }
 
-        button, .file-btn {
+        /* Groups */
+        .control-group {
             display: flex;
+            gap: 6px;
             align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.1s;
-            border: none;
-            font-size: 1rem;
         }
-        button:active, .file-btn:active { transform: scale(0.95); }
 
+        /* Specific Button Styles */
         .file-btn {
-            background-color: #2563eb; color: white;
-            border: 2px solid #1d4ed8;
-            height: 3rem; width: 100%; gap: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background-color: #3b82f6; color: white; border-color: #2563eb;
+            padding: 0 16px;
         }
-        .file-btn:hover { background-color: #1d4ed8; }
+        .file-btn:hover { background-color: #2563eb; }
 
         #random-button {
-            background-color: #ff6600; color: white;
+            background-color: #f97316; color: white; border-color: #ea580c;
+            /* WIDER BUTTON STYLES */
+            padding: 0 50px; 
+            min-width: 200px;
+            font-size: 1.1rem; 
             text-transform: uppercase; letter-spacing: 0.05em;
-            font-size: 1.5rem; 
-            box-shadow: 0 4px 0 #cc5200;
-            height: 100%; width: 100%;
+            box-shadow: 0 3px 0 #c2410c;
         }
-        #random-button:hover:not(:disabled) { background-color: #ff751a; }
-        #random-button:disabled { background-color: #cbd5e1; color: #64748b; cursor: not-allowed; box-shadow: none; }
+        #random-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 0 #c2410c; }
+        #random-button:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+        #random-button:disabled { background-color: #cbd5e1; border-color: #94a3b8; color: #94a3b8; cursor: not-allowed; box-shadow: none; min-width: auto; }
 
         #cycle-button {
-            background-color: #7c3aed; color: white;
-            border-bottom: 4px solid #5b21b6;
-            font-size: 1.2rem; height: 100%; width: 100%;
+            background-color: #8b5cf6; color: white; border-color: #7c3aed;
+            padding: 0 16px;
         }
-        #cycle-button:hover { background-color: #6d28d9; }
-        #cycle-button:active { border-bottom-width: 0; transform: translateY(4px); }
+        #cycle-button:hover { background-color: #7c3aed; }
 
-        .btn-nav { background-color: #334155; color: white; height: 40px; }
-        .btn-nav:hover { background-color: #1e293b; }
+        .btn-nav { width: 40px; padding: 0; display: flex; justify-content: center; align-items: center; }
         .btn-nav:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .btn-timer { background-color: #1e293b; color: white; height: 3rem; padding: 0 20px; }
-        .btn-timer:hover { background-color: #0f172a; }
 
+        #start-timer-button {
+            background-color: #1e293b; color: white; border-color: #0f172a; width: 60px;
+        }
+        
         #toast-container {
             position: fixed; top: 20px; right: 20px; z-index: 50;
             display: flex; flex-direction: column; gap: 10px;
@@ -153,11 +145,6 @@
             animation: slideIn 0.3s ease-out forwards;
         }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
-        #deck-status {
-            text-align: center; font-size: 0.8rem; font-weight: 700; color: #64748b;
-            margin-top: 4px; text-transform: uppercase;
-        }
     </style>
 </head>
 <body>
@@ -165,10 +152,11 @@
     <div id="app-container">
         
         <div class="flex justify-between items-center px-1">
-            <a href="index.html" class="btn-back">
+            <a href="index.html" class="btn-back text-slate-400 hover:text-cyan-600 font-bold flex items-center gap-2 text-sm no-underline border-0">
                 <span>←</span> Back
             </a>
-            <h1 class="text-xl font-black text-slate-400 uppercase tracking-wide">Vocabulary Trainer</h1>
+            <h1 class="text-lg font-black text-slate-400 uppercase tracking-wide">Vocabulary Trainer</h1>
+            <div id="deck-status" class="text-xs font-bold text-slate-400 uppercase hidden">Deck: 0</div>
         </div>
 
         <div id="word-display-container">
@@ -177,65 +165,49 @@
 
         <div id="control-pad">
             
-            <div class="grid grid-cols-3 gap-3">
-                <label class="file-btn">
-                    <span id="file-label-text">📂 Upload</span>
+            <div class="control-group">
+                <label class="file-btn" title="Upload CSV">
+                    📂 <span class="hidden sm:inline ml-2">Load</span>
                     <input type="file" id="csv-file-input" accept=".csv" class="hidden">
                 </label>
 
-                <div class="flex items-center gap-1 bg-white rounded-lg border-2 border-slate-300 px-2 h-12 shadow-sm">
-                    <span class="text-xs font-bold text-slate-500 uppercase">Count:</span>
-                    <select id="word-count-combo" class="border-none shadow-none focus:ring-0 h-full p-0">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                </div>
+                <select id="word-count-combo" title="Number of words" class="w-16 text-center">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
 
-                <div class="flex items-center gap-1 bg-white rounded-lg border-2 border-slate-300 px-2 h-12 shadow-sm">
-                    <span class="text-xs font-bold text-slate-500 uppercase">Show:</span>
-                    <select id="display-column-combo" class="border-none shadow-none focus:ring-0 h-full p-0">
-                        <option value="word">Word</option>
-                        <option value="example">Example</option>
-                        <option value="definition">Definition</option>
-                    </select>
-                </div>
+                <select id="display-column-combo" title="Column to show" class="w-28">
+                    <option value="word">Word</option>
+                    <option value="example">Example</option>
+                    <option value="definition">Definition</option>
+                </select>
             </div>
 
-            <div class="flex gap-3 h-24">
-                <div class="flex-grow flex flex-col h-full">
-                    <button id="random-button" disabled>
-                        🎲 Random
-                    </button>
-                    <div id="deck-status" class="hidden">Deck: 0</div>
-                </div>
+            <div class="control-group flex-grow justify-center">
+                <button id="random-button" style="min-width: 400px;" disabled>
+                    🎲 Random
+                </button>
+                <button id="cycle-button" title="Switch between Word/Def/Ex">
+                    Switch
+                </button>
+            </div>
+
+            <div class="control-group">
+                <button id="prev-button" class="btn-nav" disabled>←</button>
+                <button id="next-button" class="btn-nav" disabled>→</button>
                 
-                <div class="w-1/4 h-full">
-                    <button id="cycle-button">
-                        Switch
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center pt-1 gap-2 border-t border-slate-300 mt-1">
-                <div class="flex gap-1 w-1/3">
-                    <button id="prev-button" class="btn-nav w-1/2" disabled>←</button>
-                    <button id="next-button" class="btn-nav w-1/2" disabled>→</button>
-                </div>
-
-                <div class="flex items-center gap-2 justify-end w-2/3">
-                    <span id="timer-label" class="font-black text-xl text-slate-700 min-w-[30px] text-right">0s</span>
-                    <select id="timer-combo" class="h-10 py-0 text-sm w-20 bg-white border-2 border-slate-300">
-                        <option value="5">5s</option>
-                        <option value="10">10s</option>
-                        <option value="15">15s</option>
-                        <option value="30">30s</option>
-                        <option value="60">60s</option>
-                    </select>
-                    <button id="start-timer-button" class="btn-timer rounded">Start</button>
-                </div>
+                <div class="h-8 w-px bg-slate-300 mx-1"></div> <span id="timer-label" class="font-black text-slate-600 w-8 text-right text-sm">0s</span>
+                <select id="timer-combo" class="w-16">
+                    <option value="5">5s</option>
+                    <option value="10">10s</option>
+                    <option value="15">15s</option>
+                    <option value="30">30s</option>
+                    <option value="60">60s</option>
+                </select>
+                <button id="start-timer-button">Go</button>
             </div>
 
         </div>
@@ -270,7 +242,6 @@
             const wordContainer = document.getElementById('word-display-container');
             const wordLabel = document.getElementById('word-label');
             const csvFileInput = document.getElementById('csv-file-input');
-            const fileLabelText = document.getElementById('file-label-text');
             const wordCountCombo = document.getElementById('word-count-combo');
             const displayColumnCombo = document.getElementById('display-column-combo');
             const randomButton = document.getElementById('random-button');
@@ -282,33 +253,35 @@
             const timerCombo = document.getElementById('timer-combo');
             const startTimerButton = document.getElementById('start-timer-button');
 
-            // --- AUTO FIT TEXT FUNCTION (The Magic Fix) ---
+            // --- AUTO FIT TEXT FUNCTION (With Max Cap) ---
             function fitTextToContainer() {
-                // Start BIG
-                let fontSize = 150; 
+                // FIXED: MAX FONT SIZE IS NOW MUCH SMALLER (60px)
+                const MAX_FONT_SIZE = 60; 
+                
+                // Start at the maximum allowed size
+                let fontSize = MAX_FONT_SIZE; 
                 wordLabel.style.fontSize = fontSize + 'px';
                 
-                // We need to account for the padding of the container
-                const maxHeight = wordContainer.clientHeight - 60; // 30px padding top/bottom
-                const maxWidth = wordContainer.clientWidth - 60;   // 30px padding left/right
+                // Account for padding
+                const maxHeight = wordContainer.clientHeight - 60; 
+                const maxWidth = wordContainer.clientWidth - 60;   
                 
-                // While content is bigger than container, shrink font
+                // Shrink until it fits
                 while (
                     (wordLabel.scrollHeight > maxHeight || wordLabel.scrollWidth > maxWidth) 
-                    && fontSize > 12 // Minimum size safety
+                    && fontSize > 12 
                 ) {
                     fontSize -= 2; 
                     wordLabel.style.fontSize = fontSize + 'px';
                 }
             }
 
-            // --- CSV PARSER (With newline sanitizer) ---
+            // --- CSV PARSER ---
             function parseCSVLine(line) {
                 const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
                 return line.split(regex).map(val => {
                     val = val.trim();
                     if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-                    // Sanitizer: Replace internal newlines with spaces
                     return val.replace(/""/g, '"').replace(/(\r\n|\n|\r)/gm, " ");
                 });
             }
@@ -364,7 +337,7 @@
             }
 
             function updateDeckStatus() {
-                deckStatus.textContent = `Words Left: ${deck.length}`;
+                deckStatus.textContent = `Cards Left: ${deck.length}`;
             }
 
             function updateDisplay() {
@@ -375,12 +348,8 @@
                 const textList = currentData.map(d => d[currentColumn]);
 
                 wordLabel.style.opacity = 0;
-                
-                // 1. Set text
                 wordLabel.textContent = textList.join('\n\n');
                 
-                // 2. Run Auto-Fit logic immediately
-                // Using requestAnimationFrame to ensure DOM updated
                 requestAnimationFrame(() => {
                      fitTextToContainer();
                      wordLabel.style.opacity = 1;
@@ -396,22 +365,19 @@
                 const file = event.target.files[0];
                 if (file) {
                     try {
-                        fileLabelText.textContent = file.name;
                         masterVocabulary = await loadVocabulary(file);
-                        
                         deck = shuffleDeck([...masterVocabulary]);
                         history = [];
                         historyIndex = -1;
                         
-                        // Reset Display
-                        wordLabel.style.fontSize = "3rem";
+                        wordLabel.style.fontSize = "30px";
                         wordLabel.textContent = "Ready! Press Random";
                         
                         randomButton.disabled = false;
                         deckStatus.classList.remove('hidden');
                         updateDeckStatus();
                         
-                        showToast(`${masterVocabulary.length} words loaded!`, 'success');
+                        showToast(`Loaded ${masterVocabulary.length} words!`, 'success');
                     } catch (error) {
                         showToast(`Error: ${error}`, 'error');
                     }
@@ -470,9 +436,8 @@
                 clearInterval(timerInterval);
                 timerInterval = null;
                 timerLabel.textContent = "0s";
-                startTimerButton.textContent = "Start";
-                startTimerButton.classList.remove('bg-red-500');
-                startTimerButton.classList.add('bg-slate-800');
+                startTimerButton.textContent = "Go";
+                startTimerButton.style.backgroundColor = "#1e293b";
             }
 
             startTimerButton.addEventListener('click', () => {
@@ -484,8 +449,7 @@
                 timeLeft = parseInt(timerCombo.value, 10);
                 timerLabel.textContent = `${timeLeft}s`;
                 startTimerButton.textContent = "Stop";
-                startTimerButton.classList.remove('bg-slate-800');
-                startTimerButton.classList.add('bg-red-500');
+                startTimerButton.style.backgroundColor = "#ef4444";
 
                 timerInterval = setInterval(() => {
                     timeLeft--;
@@ -498,7 +462,6 @@
                 }, 1000);
             });
             
-            // Recalculate font size on resize
             window.addEventListener('resize', () => {
                 if (historyIndex !== -1) fitTextToContainer();
             });

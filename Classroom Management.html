@@ -10,6 +10,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    
     <style>
         /* General Styles */
         body {
@@ -121,7 +123,7 @@
             100% { box-shadow: 0 0 35px rgba(253, 224, 71, 1); transform: scale(1); }
         }
 
-        /* --- MODAL SYSTEM (Fixed & Smoother) --- */
+        /* --- MODAL SYSTEM --- */
         .modal-backdrop {
             position: fixed;
             top: 0;
@@ -138,7 +140,6 @@
             transition: opacity 0.2s ease-in-out;
         }
         
-        /* State to show modal */
         .modal-backdrop.active {
             opacity: 1;
             pointer-events: auto;
@@ -159,14 +160,14 @@
             transform: scale(1);
         }
         
-        /* Teams Modal Specifics */
-        .modal-content.teams-result {
+        /* Teams & Timer Modal Specifics */
+        .modal-content.teams-result, .modal-content.timer-modal {
             max-width: 700px;
-            max-height: 85vh; /* Keep it within view */
+            max-height: 85vh; 
             display: flex;
             flex-direction: column;
-            padding: 0; /* Clear padding for header/footer layout */
-            overflow: hidden; /* Prevent double scrollbars */
+            padding: 0; 
+            overflow: hidden; 
         }
 
         .teams-header {
@@ -181,11 +182,9 @@
             background-color: white;
         }
         
-        /* The Scrolling Area */
         #text-modal-content {
             overflow-y: auto; 
             padding: 20px;
-            /* Scrollbar styling */
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 #f1f5f9;
         }
@@ -206,6 +205,28 @@
         body.modal-open {
             overflow: hidden;
         }
+        
+        /* Timer Big Text */
+        .timer-display-big {
+            font-family: monospace;
+            font-size: 5rem;
+            font-weight: 800;
+            color: #1e293b;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        /* Preset Buttons */
+        .preset-btn {
+            background-color: #e2e8f0;
+            color: #475569;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+        .preset-btn:hover { background-color: #cbd5e1; }
+        .preset-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="classroom-theme">
@@ -213,41 +234,54 @@
         
         <header class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-200 mb-4">
     
-    <a href="index.html" class="btn-back px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-150 no-underline mb-2 sm:mb-0">
-        ← Back
-    </a>
+            <a href="index.html" class="btn-back px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-150 no-underline mb-2 sm:mb-0">
+                ← Back
+            </a>
 
-    <h1 class="text-3xl font-extrabold text-gray-800 mb-2 sm:mb-0 text-center flex-grow">
-        Classroom Manager
-    </h1>
+            <div class="flex-grow text-center">
+                <h1 class="text-3xl font-extrabold text-gray-800 mb-2 sm:mb-0">
+                    Classroom Manager
+                </h1>
+                
+                <div id="saved-classes-container" class="hidden mt-2 flex justify-center items-center gap-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Resume:</span>
+                    <select id="saved-classes-select" onchange="window.loadSelectedClass()" class="text-sm border-2 border-indigo-100 rounded-lg px-2 py-1 text-indigo-600 font-bold focus:outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="">Select a class...</option>
+                    </select>
+                </div>
+            </div>
 
-    <div class="flex flex-wrap justify-center sm:justify-end space-x-2 sm:space-x-3">
-        <button id="load-button" onclick="document.getElementById('file-upload').click()"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-150">
-            Load Class
-        </button>
-        <input type="file" id="file-upload" accept=".csv, .txt" style="display: none;" onchange="window.handleFileUpload(event)">
+            <div class="flex flex-wrap justify-center sm:justify-end space-x-2 sm:space-x-3 items-center">
+                <button id="load-button" onclick="document.getElementById('file-upload').click()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-150">
+                    Load New
+                </button>
+                <input type="file" id="file-upload" accept=".csv, .txt" style="display: none;" onchange="window.handleFileUpload(event)">
 
-        <button id="save-button" onclick="window.saveClass()" disabled
-                class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:opacity-50">
-            Save Class
-        </button>
-    </div>
+                <button id="save-button" onclick="window.saveClass()" disabled
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:opacity-50">
+                    Save File
+                </button>
+                
+                <button onclick="window.wipeCurrentData()" class="px-3 py-2 text-red-400 hover:text-red-600 text-sm font-bold border border-transparent hover:border-red-100 rounded-lg" title="Delete this saved class from memory">
+                    ✕
+                </button>
+            </div>
 
-</header>
+        </header>
 
         <div id="main-content">
             <h2 id="class-name-label" class="text-xl font-bold text-gray-700 mb-4">No Class Loaded</h2>
             
             <div id="student-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
-                </div>
+            </div>
             
             <div class="flex flex-wrap justify-between items-center gap-4 p-4 bg-gray-100 rounded-xl shadow-inner border border-gray-200">
                 
                 <div class="flex flex-wrap items-center gap-3">
                     <button id="random-button" onclick="window.pickRandomStudent()" disabled
                             class="px-6 py-3 text-lg font-extrabold bg-purple-600 text-white rounded-xl shadow-lg hover:bg-purple-700 transition duration-150 disabled:opacity-50">
-                        &#127922; Random Pick
+                        &#127922; Pick
                     </button>
                     
                     <button id="plus-all-button" onclick="window.adjustAllPoints(1)" disabled
@@ -267,6 +301,10 @@
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
+                    <button id="timer-modal-btn" onclick="window.openTimerModal()" class="px-4 py-2 bg-indigo-500 text-white font-bold rounded-lg hover:bg-indigo-600 transition shadow-sm">
+                        ⏱ Timer
+                    </button>
+
                     <button id="teams-button" onclick="window.showGroupSizeOptions()" disabled
                             class="px-4 py-2 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition duration-150 disabled:opacity-50 shadow-sm">
                         &#128101; Teams!
@@ -300,11 +338,44 @@
             </div>
             
             <div id="text-modal-content">
-                </div>
+            </div>
 
             <div class="teams-footer">
                 <button onclick="closeModal('text-modal')"
                         class="w-full px-4 py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 shadow-lg transition transform active:scale-95">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="timer-modal" class="modal-backdrop">
+        <div class="modal-content timer-modal">
+            <div class="teams-header bg-indigo-50 border-indigo-100">
+                <h3 class="text-2xl font-extrabold text-indigo-800 text-center">Classroom Timer</h3>
+            </div>
+            
+            <div class="p-6 flex flex-col items-center justify-center flex-grow">
+                <div id="timer-display-big" class="timer-display-big">00:00</div>
+                
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="preset-btn" onclick="setTimer(10)">10s</button>
+                    <button class="preset-btn" onclick="setTimer(30)">30s</button>
+                    <button class="preset-btn" onclick="setTimer(60)">1m</button>
+                    <button class="preset-btn" onclick="setTimer(90)">1m30s</button>
+                    <button class="preset-btn" onclick="setTimer(120)">2m</button>
+                    <button class="preset-btn" onclick="setTimer(300)">5m</button>
+                </div>
+                
+                <div class="flex gap-4 w-full">
+                    <button id="timer-start-btn" onclick="startTimer()" class="flex-1 py-3 bg-green-500 text-white font-bold rounded-xl text-lg hover:bg-green-600 shadow-lg">Start</button>
+                    <button onclick="resetTimer()" class="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl text-lg hover:bg-gray-300">Reset</button>
+                </div>
+            </div>
+
+            <div class="teams-footer">
+                <button onclick="closeModal('timer-modal'); resetTimer();"
+                        class="w-full px-4 py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 shadow-lg transition">
                     Close
                 </button>
             </div>
@@ -325,14 +396,40 @@
     <div id="toast-container" class="fixed bottom-5 right-5 space-y-2"></div>
 
     <script>
-        // --- Global State ---
+        // --- GLOBAL VARIABLES ---
         let students = [];
         let cardWidgets = {};
         let pickedStudents = [];
-        let currentFilename = "class_roster.csv"; 
+        let currentFilename = ""; 
+        let toneReady = false; // Initialize Tone flag at the top scope
+        const STORAGE_PREFIX = "cls_mgr_"; 
         
+        // --- UI References (Defined early so they are available) ---
+        const ui = {
+            grid: document.getElementById('student-grid'),
+            classNameLabel: document.getElementById('class-name-label'),
+            currentPickLabel: document.getElementById('current-pick-label'),
+            toastContainer: document.getElementById('toast-container'),
+            saveButton: document.getElementById('save-button'),
+            randomButton: document.getElementById('random-button'),
+            teamsButton: document.getElementById('teams-button'),
+            plusAllButton: document.getElementById('plus-all-button'),
+            minusAllButton: document.getElementById('minus-all-button'),
+            clearButton: document.getElementById('clear-button'),
+            groupModal: document.getElementById('group-modal'),
+            groupButtons: document.getElementById('group-buttons'),
+            textModal: document.getElementById('text-modal'),
+            textModalTitle: document.getElementById('text-modal-title'),
+            textModalContent: document.getElementById('text-modal-content'),
+            confirmModal: document.getElementById('confirm-modal'),
+            confirmModalTitle: document.getElementById('confirm-modal-title'),
+            confirmModalContent: document.getElementById('confirm-modal-content'),
+            confirmOk: document.getElementById('confirm-ok'),
+            confirmCancel: document.getElementById('confirm-cancel')
+        };
+
         const AVATAR_COLORS = [
-            '#FF5733', '#33FF57', '#3357FF', '#F333FF', '#33FFF3', '#FF8C33', '#8C33FF', '#FF0077', '#00CCFF', '#CCFF00'
+            '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E'
         ];
         
         const MAX_AVATARS_AVAILABLE = 13; 
@@ -345,17 +442,79 @@
             return { initial, color };
         }
 
-        // --- Sound Effects ---
-        let toneLoaded = false;
-        try {
-            const script = document.createElement('script');
-            script.src = "https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js";
-            script.onload = () => { toneLoaded = true; };
-            document.head.appendChild(script);
-        } catch (e) { console.warn("Tone.js failed."); }
+        // --- Auto-Save Functions ---
+        function autoSave() {
+            if (!currentFilename) return;
+            const data = {
+                students: students,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(STORAGE_PREFIX + currentFilename, JSON.stringify(data));
+            updateSavedClassesList();
+        }
+
+        function updateSavedClassesList() {
+            const select = document.getElementById('saved-classes-select');
+            const container = document.getElementById('saved-classes-container');
+            select.innerHTML = '<option value="">Select a class...</option>';
+            
+            let hasSaves = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(STORAGE_PREFIX)) {
+                    const filename = key.replace(STORAGE_PREFIX, '');
+                    const option = document.createElement('option');
+                    option.value = filename;
+                    option.textContent = filename;
+                    select.appendChild(option);
+                    hasSaves = true;
+                }
+            }
+            container.classList.toggle('hidden', !hasSaves);
+            if (currentFilename) select.value = currentFilename;
+        }
+
+        window.loadSelectedClass = function() {
+            const select = document.getElementById('saved-classes-select');
+            const filename = select.value;
+            if (!filename) return;
+            
+            const savedData = localStorage.getItem(STORAGE_PREFIX + filename);
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    students = parsed.students;
+                    currentFilename = filename;
+                    ui.classNameLabel.textContent = `${currentFilename}`;
+                    pickedStudents = [];
+                    drawStudents();
+                    showToast(`Resumed ${filename}!`, "success");
+                } catch (e) {
+                    console.error("Save corrupted", e);
+                }
+            }
+        };
+
+        window.wipeCurrentData = function() {
+            if (!currentFilename) return;
+            if(confirm(`Delete saved data for "${currentFilename}"?`)) {
+                localStorage.removeItem(STORAGE_PREFIX + currentFilename);
+                location.reload(); 
+            }
+        };
+
+        // --- Sound Effects Setup ---
+        // Global listener to start audio context on first click
+        document.addEventListener('click', async () => {
+            if (!toneReady && window.Tone) {
+                await Tone.start();
+                toneReady = true;
+                console.log("Audio Context Started");
+            }
+        }, { once: true });
 
         const POSITIVE_SOUND = () => {
-            if (!toneLoaded) return;
+            if (!toneReady) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
                 const synth = new Tone.MembraneSynth().toDestination();
@@ -365,12 +524,29 @@
         };
 
         const NEGATIVE_SOUND = () => {
-            if (!toneLoaded) return;
+            if (!toneReady) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
                 const synth = new Tone.MembraneSynth().toDestination();
                 synth.triggerAttackRelease("C3", "8n", Tone.now(), 0.8);
             } catch (e) {}
+        };
+        
+        // BELL SOUND for Timer
+        const BELL_SOUND = () => {
+            if (!toneReady) return;
+            try {
+                if (Tone.context.state !== 'running') Tone.context.resume();
+                // Simple bell-like synth
+                const bell = new Tone.MetalSynth({
+                    harmonicity: 12,
+                    resonance: 800,
+                    modulationIndex: 20,
+                    envelope: { decay: 0.4 },
+                    volume: -5
+                }).toDestination();
+                bell.triggerAttackRelease(200, 0.1); 
+            } catch(e) {}
         };
 
         function playSound(amount) {
@@ -378,48 +554,93 @@
             else if (amount < 0) NEGATIVE_SOUND();
         }
         
-        // --- UI References ---
-        const ui = {
-            grid: document.getElementById('student-grid'),
-            classNameLabel: document.getElementById('class-name-label'),
-            currentPickLabel: document.getElementById('current-pick-label'),
-            saveButton: document.getElementById('save-button'),
-            randomButton: document.getElementById('random-button'),
-            teamsButton: document.getElementById('teams-button'),
-            plusAllButton: document.getElementById('plus-all-button'),
-            minusAllButton: document.getElementById('minus-all-button'),
-            clearButton: document.getElementById('clear-button'),
-            groupModal: document.getElementById('group-modal'),
-            groupButtons: document.getElementById('group-buttons'),
-            toastContainer: document.getElementById('toast-container'),
-            textModal: document.getElementById('text-modal'),
-            textModalTitle: document.getElementById('text-modal-title'),
-            textModalContent: document.getElementById('text-modal-content'),
-            confirmModal: document.getElementById('confirm-modal'),
-            confirmModalTitle: document.getElementById('confirm-modal-title'),
-            confirmModalContent: document.getElementById('confirm-modal-content'),
-            confirmOk: document.getElementById('confirm-ok'),
-            confirmCancel: document.getElementById('confirm-cancel')
+        // --- TIMER LOGIC ---
+        let timerInterval = null;
+        let timerSeconds = 0;
+        
+        window.openTimerModal = function() {
+            openModal('timer-modal');
+            // Default reset view
+            if (!timerInterval && timerSeconds === 0) resetTimer();
         };
+        
+        window.setTimer = function(seconds) {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = seconds;
+            updateTimerDisplay(timerSeconds);
+            document.getElementById('timer-start-btn').textContent = "Start";
+            document.getElementById('timer-start-btn').classList.remove('bg-red-500', 'hover:bg-red-600');
+            document.getElementById('timer-start-btn').classList.add('bg-green-500', 'hover:bg-green-600');
+        };
+        
+        window.startTimer = function() {
+            const btn = document.getElementById('timer-start-btn');
+            
+            if (timerInterval) {
+                // Pause
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.textContent = "Resume";
+                btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                // Start
+                if(timerSeconds <= 0) return;
+                
+                btn.textContent = "Pause";
+                btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                btn.classList.add('bg-red-500', 'hover:bg-red-600');
+                
+                timerInterval = setInterval(() => {
+                    timerSeconds--;
+                    updateTimerDisplay(timerSeconds);
+                    if (timerSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        BELL_SOUND(); // Play sound
+                        btn.textContent = "Start";
+                        btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                        btn.classList.add('bg-green-500', 'hover:bg-green-600');
+                        showToast("Time's Up!", "warning");
+                    }
+                }, 1000);
+            }
+        };
+        
+        window.resetTimer = function() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = 0;
+            updateTimerDisplay(0);
+            const btn = document.getElementById('timer-start-btn');
+            btn.textContent = "Start";
+            btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+        };
+        
+        function updateTimerDisplay(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display-big').textContent = `${m}:${s}`;
+        }
 
         // --- Improved Modal Functions ---
         
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.add('active');
-            // Lock body scroll to prevent background jumping
             document.body.classList.add('modal-open');
         }
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('active');
-            // Unlock body scroll
             document.body.classList.remove('modal-open');
         }
 
         function showToast(message, type = 'info') {
-            const colors = { info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500' };
+            const colors = { info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-orange-500' };
             const color = colors[type] || colors.info;
             const toast = document.createElement('div');
             toast.className = `p-3 text-white rounded-lg shadow-xl ${color} transition-opacity duration-300`;
@@ -442,23 +663,12 @@
             ui.confirmModalContent.textContent = text;
             openModal('confirm-modal');
 
-            const handleConfirm = () => {
-                closeModal('confirm-modal');
-                cleanup();
-                callback(true);
-            };
-
-            const handleCancel = () => {
-                closeModal('confirm-modal');
-                cleanup();
-                callback(false);
-            };
-            
+            const handleConfirm = () => { closeModal('confirm-modal'); cleanup(); callback(true); };
+            const handleCancel = () => { closeModal('confirm-modal'); cleanup(); callback(false); };
             const cleanup = () => {
                 ui.confirmOk.removeEventListener('click', handleConfirm);
                 ui.confirmCancel.removeEventListener('click', handleCancel);
             };
-
             ui.confirmOk.addEventListener('click', handleConfirm);
             ui.confirmCancel.addEventListener('click', handleCancel);
         }
@@ -530,6 +740,7 @@
             toggleActionButtons(true);
         }
 
+        // --- LOADING LOGIC (Modified for Resume) ---
         function loadClassFromContent(filename, content) {
             students = [];
             const lines = content.split('\n').filter(line => line.trim().length > 0);
@@ -554,10 +765,11 @@
 
             if (students.length > 0) {
                 currentFilename = filename;
-                ui.classNameLabel.textContent = `Class: ${filename}`;
+                ui.classNameLabel.textContent = `${filename}`;
                 pickedStudents = [];
                 drawStudents();
                 showToast(`Loaded ${students.length} students.`, 'success');
+                autoSave(); // Save this as a new slot immediately
             } else {
                 ui.classNameLabel.textContent = "No Class Loaded";
                 showToast("No valid students found.", 'error');
@@ -567,6 +779,26 @@
         window.handleFileUpload = function(event) {
             const file = event.target.files[0];
             if (!file) return;
+            
+            const filename = file.name;
+            // Check if we have a save file for this specific filename
+            const savedData = localStorage.getItem(STORAGE_PREFIX + filename);
+            
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    students = parsed.students;
+                    currentFilename = filename;
+                    ui.classNameLabel.textContent = `${currentFilename} (Resumed)`;
+                    pickedStudents = [];
+                    drawStudents();
+                    updateSavedClassesList(); // Refresh dropdown
+                    showToast("Resumed previous session!", 'success');
+                    return; // Stop here, don't parse the file
+                } catch(e) { }
+            }
+
+            // Parse fresh if no save exists
             const reader = new FileReader();
             reader.onload = (e) => loadClassFromContent(file.name, e.target.result);
             reader.readAsText(file);
@@ -586,6 +818,7 @@
             document.body.removeChild(link);
         };
 
+        // --- Actions with AutoSave ---
         window.adjustAllPoints = function(amount) {
             let updated = false;
             students.forEach(student => {
@@ -597,6 +830,7 @@
             });
             if (updated) playSound(amount);
             showToast(`${amount > 0 ? '+' : ''}${amount} point(s) to everyone!`, 'info');
+            autoSave();
         };
 
         window.clearAllPoints = function() {
@@ -604,6 +838,7 @@
                 if (confirmed) {
                     students.forEach(s => { s.points = 0; updateStudentCardUI(s.name); });
                     showToast("All points cleared!", 'info');
+                    autoSave();
                 }
             });
         };
@@ -613,6 +848,7 @@
             if (student) {
                 student.absent = !student.absent;
                 updateStudentCardUI(name);
+                autoSave();
             }
         };
 
@@ -622,6 +858,7 @@
                 student.points += amount;
                 updateStudentCardUI(name);
                 playSound(amount);
+                autoSave();
             }
         };
 
@@ -685,7 +922,10 @@
             showTextModal("Team Assignments", groupHtml);
         };
 
-        window.onload = function() { drawStudents(); };
+        window.onload = function() { 
+            drawStudents();
+            updateSavedClassesList(); // Init Dropdown
+        };
     </script>
 </body>
 </html>
