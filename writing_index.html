@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writing Architect | TEFL Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* --- Button Styling (Same as your Reading Page) --- */
+        .tool-button {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem; 
+            text-align: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.5rem;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(0, 0, 0, 0.2);
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            min-height: 180px; /* Taller for descriptions */
+            cursor: pointer;
+        }
+
+        /* Reflective Shine */
+        .tool-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 150%;
+            height: 150%;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.15) 35%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0.15) 65%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: translate(-100%, -100%) rotate(45deg);
+            transition: transform 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .tool-button:hover::after {
+            transform: translate(0%, 0%) rotate(45deg);
+        }
+
+        .tool-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15), 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- WRITING SPECIFIC COLORS --- */
+        
+        /* B2 Green Gradient */
+        .btn-b2-essay { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); } 
+        
+        /* C1 Purple/Red Gradient */
+        .btn-c1-essay { background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); } 
+        
+        /* Database/Saved: Dark Blue */
+        .btn-saved { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); } 
+
+        /* Coming Soon: Orange/Grey */
+        .btn-soon { 
+            background: linear-gradient(135deg, #F2994A 0%, #F2C94C 100%); 
+            opacity: 0.7; 
+            filter: grayscale(40%);
+        }
+
+        /* --- Toggle Switch Styling --- */
+        .toggle-btn {
+            cursor: pointer;
+            padding: 0.75rem 2rem; 
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .toggle-active {
+            background-color: #4F46E5; /* Indigo */
+            color: white;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.4);
+        }
+
+        .toggle-inactive {
+            background-color: #E5E7EB; /* Gray */
+            color: #4B5563;
+        }
+        
+        body { font-family: 'Inter', sans-serif; background-color: #FFF8DC; min-height: 100vh; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <a href="index.html" class="absolute top-6 left-6 flex items-center gap-2 text-gray-500 hover:text-indigo-700 font-bold transition z-50 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Tools</span>
+    </a>
+
+    <div class="max-w-5xl mx-auto py-10 mt-8">
+
+        <header class="text-center mb-8">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tighter">
+                The Writing <span class="text-indigo-600">Architect</span>
+            </h1>
+            <p class="mt-4 text-xl text-gray-500 font-medium">
+                Generate WAGOLLs, correct errors, and analyze structure.
+            </p>
+            
+            <div class="mt-8 inline-flex bg-gray-200 rounded-full p-1 gap-1 flex-wrap justify-center">
+                <button id="btn-b2" onclick="showLevel('b2')" class="toggle-btn toggle-active">
+                    B2 First
+                </button>
+                <button id="btn-c1" onclick="showLevel('c1')" class="toggle-btn toggle-inactive">
+                    C1 Advanced
+                </button>
+            </div>
+        </header>
+
+        <div id="content-b2" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+            
+            <a href="writing-generator.html?level=B2" class="tool-button btn-b2-essay flex flex-col gap-1">
+                <span>B2 Essay</span>
+                <span class="text-lg font-normal opacity-90">Generator & Analyser</span>
+                <span class="text-sm font-light opacity-80 mt-2">Notes + Own Idea</span>
+            </a>
+
+            <a href="#" class="tool-button btn-saved flex flex-col gap-1">
+                <span>Saved B2 Models</span>
+                <span class="text-lg font-normal opacity-90">Browse Database</span>
+            </a>
+
+            <div class="tool-button btn-soon flex flex-col gap-1 cursor-not-allowed">
+                <span>Reviews</span>
+                <span class="text-lg font-normal opacity-90">Coming Soon</span>
+            </div>
+            
+            <div class="tool-button btn-soon flex flex-col gap-1 cursor-not-allowed">
+                <span>Articles</span>
+                <span class="text-lg font-normal opacity-90">Coming Soon</span>
+            </div>
+        </div>
+
+        <div id="content-c1" class="hidden grid-cols-1 md:grid-cols-2 gap-6 p-4">
+            
+            <a href="writing-generator.html?level=C1" class="tool-button btn-c1-essay flex flex-col gap-1">
+                <span>C1 Essay</span>
+                <span class="text-lg font-normal opacity-90">Generator & Analyser</span>
+                <span class="text-sm font-light opacity-80 mt-2">Complex Selection + Paraphrase</span>
+            </a>
+
+            <a href="#" class="tool-button btn-saved flex flex-col gap-1">
+                <span>Saved C1 Models</span>
+                <span class="text-lg font-normal opacity-90">Browse Database</span>
+            </a>
+
+             <div class="tool-button btn-soon flex flex-col gap-1 cursor-not-allowed">
+                <span>Reports</span>
+                <span class="text-lg font-normal opacity-90">Coming Soon</span>
+            </div>
+
+            <div class="tool-button btn-soon flex flex-col gap-1 cursor-not-allowed">
+                <span>Proposals</span>
+                <span class="text-lg font-normal opacity-90">Coming Soon</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showLevel(level) {
+            const b2Content = document.getElementById('content-b2');
+            const c1Content = document.getElementById('content-c1');
+            
+            const b2Btn = document.getElementById('btn-b2');
+            const c1Btn = document.getElementById('btn-c1');
+
+            // Reset All
+            [b2Content, c1Content].forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('grid');
+            });
+            [b2Btn, c1Btn].forEach(btn => {
+                btn.classList.remove('toggle-active');
+                btn.classList.add('toggle-inactive');
+            });
+
+            // Activate Selected
+            if (level === 'b2') {
+                b2Content.classList.remove('hidden');
+                b2Content.classList.add('grid');
+                b2Btn.classList.add('toggle-active');
+                b2Btn.classList.remove('toggle-inactive');
+            } else if (level === 'c1') {
+                c1Content.classList.remove('hidden');
+                c1Content.classList.add('grid');
+                c1Btn.classList.add('toggle-active');
+                c1Btn.classList.remove('toggle-inactive');
+            }
+        }
+    </script>
+</body>
+</html>

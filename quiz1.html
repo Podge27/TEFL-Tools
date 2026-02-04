@@ -346,7 +346,7 @@
                 document.getElementById('q-counter').innerText = `Question ${this.state.qIdx + 1} of ${total}`;
                 document.getElementById('q-text').innerText = q.text;
                 document.getElementById('feedback').classList.add('hidden');
-                document.getElementById('next-btn').classList.add('hidden');
+                // document.getElementById('next-btn').classList.add('hidden');
                 document.getElementById('progress-bar').style.width = `${(this.state.qIdx / total) * 100}%`;
                 
                 const opts = document.getElementById('q-options');

@@ -24,7 +24,6 @@
         /* --- BUTTON STYLES --- */
         .level-select-btn { font-size: 3rem; padding: 2rem; width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform border-4 opacity-70 grayscale cursor-pointer shadow-lg; }
         .level-select-btn.active { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); z-index: 10; @apply ring-4 ring-offset-4 ring-indigo-500; }
-        .level-select-btn:hover { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); }
         
         .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
         .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
@@ -36,25 +35,13 @@
 
         /* --- EXAM CARD STYLE --- */
         .p4-card { @apply p-8 border border-gray-200 rounded-xl mb-6 bg-gray-50 h-full flex flex-col justify-center; }
-        
-        /* FIX: Added 'w-fit' to make the box wrap the text tightly */
-        .key-word-small { 
-            @apply bg-amber-200 px-3 py-1 rounded font-bold text-gray-800 text-sm uppercase border border-amber-300 inline-block mb-4 w-fit; 
-        }
-        
+        .key-word-small { @apply bg-amber-200 px-3 py-1 rounded font-bold text-gray-800 text-sm uppercase border border-amber-300 inline-block mb-4 w-fit; }
         .gap-input-fake { @apply inline-block border-b-4 border-indigo-200 px-2 mx-1 font-bold text-indigo-900 text-center uppercase min-w-[150px] bg-white h-10 align-middle cursor-pointer hover:bg-indigo-50 transition; }
         .gap-input-fake.revealed { @apply bg-green-100 border-green-500 text-green-800; }
 
         /* --- LIVE GAME STYLES --- */
-        .question-text-large { font-size: 2.5rem; line-height: 1.4; font-weight: 800; color: #1f2937; text-align: left; }
-        
-        /* FIX: Added 'w-fit' here too just in case */
-        .key-word-large { 
-            background-color: #facc15; padding: 8px 30px; border-radius: 12px; font-weight: 900; font-size: 2.5rem; 
-            color: #1f2937; text-transform: uppercase; border: 3px solid #eab308; display: inline-block; 
-            margin-bottom: 2rem; width: fit-content; 
-        }
-        
+        .question-text-large { font-family: 'Inter', sans-serif; font-size: 2.5rem; line-height: 1.4; font-weight: 700; color: #1f2937; text-align: left; }
+        .key-word-large { background-color: #facc15; padding: 8px 30px; border-radius: 12px; font-weight: 900; font-size: 2.5rem; color: #1f2937; text-transform: uppercase; border: 3px solid #eab308; display: inline-block; margin-bottom: 2rem; width: fit-content; }
         .gap-line-large { border-bottom: 5px solid #6366f1; min-width: 300px; display: inline-block; height: 60px; margin: 0 15px; cursor: pointer; transition: 0.2s; vertical-align: bottom; }
         .gap-line-large.revealed { color: #166534; font-weight: 900; font-size: 2.5rem; border-bottom-color: #22c55e; text-align: center; }
 
@@ -290,7 +277,7 @@
                         <div class="p4-card w-full xl:w-1/2 flex-none">
                             <div class="mb-3 text-gray-500 font-bold text-sm uppercase">Question ${idx+1}</div>
                             <p class="mb-4 text-2xl font-bold text-gray-800 text-left">${q.sentence1}</p>
-                            <span class="key-word-small">${q.key_word}</span>
+                            <span class="key-word-small text-lg w-fit">${q.key_word}</span>
                             <div class="flex flex-wrap items-center gap-2 mt-4 text-2xl text-gray-700 font-bold">
                                 <span>${q.sentence2_pre}</span>
                                 <span class="gap-input-fake" onclick="teacher.toggleCorrectAnswer(this)" data-answer="${q.answer}"></span>
@@ -401,14 +388,36 @@
                 return card;
             },
 
+            // --- FIXED LEADERBOARD CALCULATION ---
             toggleLeaderboard: async function() {
-                const { data } = await this.supabase.from('submissions').select('player_id, points');
+                // Fetch ALL submissions from the DB to ensure we get a full history
+                // (Note: In a huge app we would filter by session_id in the submissions table, 
+                // but since we are just doing a classroom session, getting recent submissions or filtering by playerID is fine)
+                
+                const playerIds = Object.keys(this.players);
+                if (playerIds.length === 0) {
+                    alert("No players yet!");
+                    return;
+                }
+
+                const { data } = await this.supabase
+                    .from('submissions')
+                    .select('player_id, points')
+                    .in('player_id', playerIds);
+
                 const scores = {};
-                Object.keys(this.players).forEach(pid => scores[pid] = 0);
-                if(data) data.forEach(s => { if(s.points) scores[s.player_id] = (scores[s.player_id] || 0) + s.points });
+                playerIds.forEach(pid => scores[pid] = 0); // Init 0
+
+                if(data) {
+                    data.forEach(s => {
+                        if(s.points) scores[s.player_id] += s.points;
+                    });
+                }
+
                 const sortedPIDs = Object.keys(scores).sort((a,b) => scores[b] - scores[a]);
                 const list = document.getElementById('leaderboard-list');
                 list.innerHTML = '';
+                
                 sortedPIDs.forEach((pid, index) => {
                     const p = this.players[pid];
                     const medals = ['🥇','🥈','🥉'];

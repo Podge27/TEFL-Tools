@@ -1,5 +1,5 @@
 // functions/quiz-generator.js
-// USING MODEL: gemini-flash-latest (The 'Safe Mode' Alias)
+// UPDATED: Strictly follows CEFR Levels for ESL Learners
 
 exports.handler = async function(event, context) {
   const API_KEY = process.env.GEMINI_API_KEY;
@@ -10,11 +10,41 @@ exports.handler = async function(event, context) {
     }
     const { topic, level, type } = JSON.parse(event.body);
 
+    // 1. DEFINE CEFR-SPECIFIC TONE RULES
+    let toneInstruction = "";
+
+    switch (level) {
+        case 'kids':
+            toneInstruction = "TARGET: Young ESL Learners (A1 Level). Use extremely basic vocabulary (animals, colors, numbers, simple verbs). Use short, simple sentences. Use emojis (🐶, 🍦) to make it fun. AVOID complex grammar.";
+            break;
+        case 'A1':
+            toneInstruction = "TARGET: Adult/Teen Beginners (CEFR A1). Use basic phrases, high-frequency vocabulary, and simple sentence structures. No idioms.";
+            break;
+        case 'A2':
+            toneInstruction = "TARGET: Elementary Learners (CEFR A2). Use simple everyday language. Sentences should be direct.";
+            break;
+        case 'B1':
+            toneInstruction = "TARGET: Intermediate Learners (CEFR B1). Use standard English with some variation in sentence structure. Topics can be descriptive.";
+            break;
+        case 'B2':
+            toneInstruction = "TARGET: Upper Intermediate (CEFR B2). Use a wider range of vocabulary and some abstract ideas.";
+            break;
+        case 'C1':
+        case 'C2':
+            toneInstruction = "TARGET: Advanced/Proficiency (CEFR C1/C2). Use sophisticated vocabulary, idioms, nuances, and complex grammatical structures.";
+            break;
+        default:
+            toneInstruction = "TARGET: Intermediate English Learners.";
+    }
+
+    // 2. THE SYSTEM PROMPT
     const systemPrompt = `
-      You are a strict JSON generator for a Cambridge English quiz app.
+      You are an expert ESL/EFL Teacher creating a quiz for Spanish students.
       Create a ${type} quiz for level ${level} about: "${topic}".
       
-      RULES:
+      INSTRUCTIONS: ${toneInstruction}
+      
+      JSON RULES:
       1. Output ONLY valid JSON. No Markdown, no backticks.
       2. "answer" must be the NUMBER index of the correct option (0, 1, 2, or 3).
       3. "questions" must have exactly 5 items.
@@ -29,14 +59,13 @@ exports.handler = async function(event, context) {
             "text": "Question text?",
             "options": ["A", "B", "C", "D"],
             "answer": 0,
-            "explanation": "Why this is correct."
+            "explanation": "Simple explanation of why."
           }
         ]
       }
     `;
 
-    // CHANGED MODEL TO 'gemini-flash-latest' 
-    // This automatically picks the best available Flash model for your key
+    // USING MODEL: gemini-flash-latest
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

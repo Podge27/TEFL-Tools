@@ -13,7 +13,7 @@
         .big-input { @apply w-full p-4 text-2xl font-bold border-4 border-gray-200 rounded-xl text-center focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200 outline-none transition-all uppercase; }
         .game-card { @apply bg-white p-6 rounded-2xl shadow-lg border-b-4 border-gray-200 mb-6; }
         .btn-main { @apply w-full py-4 rounded-xl font-black text-xl text-white shadow-lg active:scale-95 transition-transform bg-indigo-600 hover:bg-indigo-700; }
-        .btn-disabled { @apply bg-gray-400 cursor-not-allowed opacity-50; }
+        .btn-disabled { @apply bg-gray-400 cursor-not-allowed opacity-50 transform-none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 max-w-md mx-auto">
@@ -67,7 +67,7 @@
 
         const student = {
             supabase: null, sessionID: null, playerID: null,
-            currentQID: null, examQuestions: [],
+            currentQID: null,
 
             init: function() {
                 if (typeof supabase !== 'undefined') {
@@ -121,7 +121,11 @@
                         const status = payload.new.status;
                         const newQIDs = payload.new.current_question_ids;
 
-                        if (status === 'ACTIVE' && newQIDs && newQIDs.length > 0) {
+                        if (status === 'REVEAL') {
+                            // LOCK EVERYTHING
+                            this.lockAllInputs();
+                        }
+                        else if (status === 'ACTIVE' && newQIDs && newQIDs.length > 0) {
                             if (newQIDs.length === 1) {
                                 // LIVE MODE
                                 await this.loadLiveQuestion(newQIDs[0]);
@@ -193,10 +197,22 @@
                 
                 btn.innerText = "Saved ✓";
                 btn.className = "mt-3 w-full bg-green-500 text-white py-2 rounded-lg font-bold";
-                // Don't disable in case they want to change it? Or disable to lock?
-                // Let's keep it enabled but visually confirmed.
                 
                 await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: qId, answer_text: val });
+            },
+
+            lockAllInputs: function() {
+                // Disable all text inputs
+                document.querySelectorAll('input').forEach(i => i.disabled = true);
+                
+                // Disable all buttons and style them
+                document.querySelectorAll('button').forEach(b => {
+                    b.disabled = true;
+                    if(b.innerText === "Send" || b.innerText === "SUBMIT ANSWER") {
+                        b.innerText = "LOCKED 🔒";
+                        b.className = "mt-3 w-full bg-gray-400 text-white py-2 rounded-lg font-bold cursor-not-allowed";
+                    }
+                });
             },
 
             switchScreen: (id) => { ['screen-login','screen-waiting','screen-game','screen-exam'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
