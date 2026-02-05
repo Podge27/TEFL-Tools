@@ -1,19 +1,24 @@
-// REMOVED: const fetch = require('node-fetch'); 
-// We are using the native Node.js 18 fetch now.
+const https = require('https');
 
 exports.handler = async function(event, context) {
     
     // 1. PARSE INPUTS
-    const data = JSON.parse(event.body);
+    // We wrap this in try/catch in case the JSON is malformed
+    let data;
+    try {
+        data = JSON.parse(event.body);
+    } catch (e) {
+        return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON input" }) };
+    }
     
-    const LEVEL = data.level;          // "B2" or "C1"
-    const QUALITY = data.quality;      // "fail", "pass", "distinction"
-    const TOPIC = data.topic;
-    const POINTS = data.points_data;   // Array of {topic, argument}
-    const GRAMMAR = data.grammar;      // Array of strings
-    const LINKERS = data.linkers;      // Array of strings
+    const LEVEL = data.level || "B2";
+    const QUALITY = data.quality || "distinction";
+    const TOPIC = data.topic || "Topic";
+    const POINTS = data.points_data || [];
+    const GRAMMAR = data.grammar || [];
+    const LINKERS = data.linkers || [];
 
-    // --- 2. DEFINE THE "SECRET SAUCE" (Marking Schemes & Recipes) ---
+    // --- 2. DEFINE THE INSTRUCTIONS ---
 
     const paragraphRecipe = `
     PARAGRAPH RECIPE (You MUST follow this internal structure):
@@ -35,129 +40,122 @@ exports.handler = async function(event, context) {
     const rubricB2 = `
     MARKING CRITERIA (B2 FIRST):
     1. CONTENT: All points covered. Target reader is fully informed.
-    2. COMMUNICATIVE ACHIEVEMENT: Hold the reader’s attention. Tone must be ACADEMIC AND NEUTRAL (Standard English, avoiding slang or overly archaic words).
-    3. ORGANIZATION: Text must be well-organized and coherent. Use a variety of linking words and cohesive devices.
-    4. LANGUAGE: Use a range of vocabulary and simple/complex grammatical forms with a good degree of control.
+    2. COMMUNICATIVE ACHIEVEMENT: Hold the reader’s attention. Tone must be ACADEMIC AND NEUTRAL.
+    3. ORGANIZATION: Text must be well-organized and coherent. Use a variety of linking words.
+    4. LANGUAGE: Use a range of vocabulary and simple/complex grammatical forms.
     `;
 
     const rubricC1 = `
     MARKING CRITERIA (C1 ADVANCED):
     1. CONTENT: All selected points must be developed with flexibility and depth.
-    2. COMMUNICATIVE ACHIEVEMENT: Hold the target reader's attention with ease, fulfilling all communicative purposes.
-    3. ORGANIZATION: Text must be a coherent whole. Use ORGANIZATIONAL PATTERNS (ellipsis, reference, substitution, mirroring, parallelism) and cohesive devices with flexibility.
-    4. LANGUAGE: Use a wide range of vocabulary (including less common lexis) and complex grammatical forms with control and flexibility.
+    2. COMMUNICATIVE ACHIEVEMENT: Hold the target reader's attention with ease.
+    3. ORGANIZATION: Text must be a coherent whole. Use ORGANIZATIONAL PATTERNS (ellipsis, reference, substitution, mirroring).
+    4. LANGUAGE: Use a wide range of vocabulary and complex grammatical forms with control.
     `;
 
-    // --- 3. BUILD THE SYSTEM PROMPT ---
-    
     let roleDescription = `You are a strict Cambridge English Examiner for the ${LEVEL} exam. `;
     
     if (LEVEL === 'B2') {
-        roleDescription += rubricB2;
-        roleDescription += paragraphRecipe;
-        roleDescription += `
-        STRUCTURAL CONSTRAINT (B2): 
-        You MUST write exactly 5 paragraphs:
-        1. Introduction
-        2. Body Paragraph on Point 1
-        3. Body Paragraph on Point 2
-        4. Body Paragraph on Point 3 (Student's Own Idea)
-        5. Conclusion
-        `;
+        roleDescription += rubricB2 + paragraphRecipe;
+        roleDescription += `\nSTRUCTURAL CONSTRAINT (B2): Write exactly 5 paragraphs (Intro, Point 1, Point 2, Point 3, Conclusion).`;
     } else {
-        // C1 Logic
-        roleDescription += rubricC1;
-        roleDescription += paragraphRecipe;
-        roleDescription += `
-        STRUCTURAL CONSTRAINT (C1): 
-        You MUST write exactly 4 paragraphs:
-        1. Introduction (State the issue and the two points chosen)
-        2. Body Paragraph on First Selected Point
-        3. Body Paragraph on Second Selected Point
-        4. Conclusion (Weigh up the arguments and state which is more important)
-        `;
+        roleDescription += rubricC1 + paragraphRecipe;
+        roleDescription += `\nSTRUCTURAL CONSTRAINT (C1): Write exactly 4 paragraphs (Intro, Point 1, Point 2, Conclusion).`;
     }
 
     if (QUALITY === 'fail') {
-        roleDescription += `\nTARGET SCORE: BAND 1-2 (FAIL). Ignore the paragraph recipe. Make frequent errors typical of Spanish speakers. Use repetitive vocabulary. Fail to answer the question.`;
+        roleDescription += `\nTARGET SCORE: BAND 1-2 (FAIL). Ignore structure. Make frequent errors.`;
     } else if (QUALITY === 'pass') {
-        roleDescription += `\nTARGET SCORE: BAND 3 (PASS). A solid, safe answer. Follow the recipe loosely. Meets all requirements but lacks ambition.`;
+        roleDescription += `\nTARGET SCORE: BAND 3 (PASS). Safe answer. Follow structure loosely.`;
     } else {
-        roleDescription += `\nTARGET SCORE: BAND 5 (DISTINCTION). A perfect model answer. Follow the recipe PERFECTLY. Demonstrates full control and sophistication.`;
+        roleDescription += `\nTARGET SCORE: BAND 5 (DISTINCTION). Perfect model answer. Follow structure PERFECTLY.`;
     }
 
-    // --- 4. BUILD THE TASK PROMPT ---
-    
-    let taskDescription = `Topic: "${TOPIC}".\n`;
-    taskDescription += `Arguments to discuss:\n`;
-    POINTS.forEach((p, i) => {
-        taskDescription += `- ${p.topic}: ${p.argument}\n`;
-    });
+    let taskDescription = `Topic: "${TOPIC}".\nArguments:\n`;
+    POINTS.forEach(p => taskDescription += `- ${p.topic}: ${p.argument}\n`);
 
     if (QUALITY !== 'fail') {
-        taskDescription += `\nSUGGESTED INGREDIENTS:\n`;
-        taskDescription += `Try to incorporate the following structures naturally to demonstrate range. \n`;
-        taskDescription += `CRITICAL RULE: Do not force them if they damage the flow or tone. Prioritize natural English over checking every box.\n`;
-        
-        if (GRAMMAR.length > 0) taskDescription += `- Target Grammar: ${GRAMMAR.join(', ')}\n`;
-        if (LINKERS.length > 0) taskDescription += `- Target Linkers: ${LINKERS.join(', ')}\n`;
+        taskDescription += `\nSUGGESTED INGREDIENTS (Use naturally if possible):\n`;
+        if (GRAMMAR.length > 0) taskDescription += `- Grammar: ${GRAMMAR.join(', ')}\n`;
+        if (LINKERS.length > 0) taskDescription += `- Linkers: ${LINKERS.join(', ')}\n`;
     }
 
-    // --- 5. JSON OUTPUT INSTRUCTION ---
     const jsonInstruction = `
-    OUTPUT FORMAT:
-    Return ONLY valid JSON. Do not include markdown formatting like \`\`\`json.
+    OUTPUT FORMAT: Return ONLY valid JSON.
     {
-        "essay_text": "The full text of the essay...",
+        "essay_text": "Full essay text...",
         "analysis": [
-            {
-                "phrase": "exact text from essay",
-                "type": "grammar", 
-                "label": "Passive Voice",
-                "explanation": "Brief reason for use"
-            },
-            {
-                "phrase": "exact text from essay",
-                "type": "linker",
-                "label": "However",
-                "explanation": "Brief reason for use"
-            }
+            {"phrase": "text from essay", "type": "grammar", "label": "Passive", "explanation": "reason"},
+            {"phrase": "text from essay", "type": "linker", "label": "However", "explanation": "reason"}
         ]
     }`;
 
-    // --- 6. CALL THE AI ---
-    try {
-        // Using global 'fetch' (Node 18+)
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "gpt-4o", 
-                messages: [
-                    { role: "system", content: roleDescription },
-                    { role: "user", content: taskDescription + "\n" + jsonInstruction }
-                ],
-                temperature: 0.7 
-            })
+    // --- 3. CALL OPENAI (Using Native HTTPS) ---
+    
+    const requestBody = JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+            { role: "system", content: roleDescription },
+            { role: "user", content: taskDescription + "\n" + jsonInstruction }
+        ],
+        temperature: 0.7
+    });
+
+    const options = {
+        hostname: 'api.openai.com',
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Length': Buffer.byteLength(requestBody)
+        }
+    };
+
+    return new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+            let responseBody = '';
+
+            res.on('data', (chunk) => {
+                responseBody += chunk;
+            });
+
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    try {
+                        const parsed = JSON.parse(responseBody);
+                        let content = parsed.choices[0].message.content;
+                        // Clean markdown blocks if AI adds them
+                        content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+                        
+                        resolve({
+                            statusCode: 200,
+                            body: content
+                        });
+                    } catch (err) {
+                        resolve({
+                            statusCode: 500,
+                            body: JSON.stringify({ error: "Failed to parse OpenAI response", raw: responseBody })
+                        });
+                    }
+                } else {
+                    resolve({
+                        statusCode: res.statusCode,
+                        body: JSON.stringify({ error: "OpenAI API Error", details: responseBody })
+                    });
+                }
+            });
         });
 
-        const apiData = await response.json();
-        
-        let rawContent = apiData.choices[0].message.content;
-        rawContent = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-        
-        return {
-            statusCode: 200,
-            body: rawContent
-        };
+        req.on('error', (e) => {
+            resolve({
+                statusCode: 500,
+                body: JSON.stringify({ error: "Network Error", details: e.message })
+            });
+        });
 
-    } catch (error) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "Failed to generate essay", details: error.message })
-        };
-    }
+        // Write data to request body
+        req.write(requestBody);
+        req.end();
+    });
 };

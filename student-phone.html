@@ -33,9 +33,7 @@
     </div>
 
     <div id="screen-game" class="hidden flex-1 flex flex-col pt-4">
-        <div id="instruction-banner" class="bg-blue-100 text-blue-800 text-center font-bold py-2 px-4 rounded-lg mb-4 text-sm border border-blue-200">
-            Wait for instructions...
-        </div>
+        <div id="instruction-banner" class="bg-blue-100 text-blue-800 text-center font-bold py-2 px-4 rounded-lg mb-4 text-sm border border-blue-200"></div>
         <div class="game-card">
             <p id="q-sentence1" class="text-lg font-semibold text-gray-600 mb-4 leading-relaxed">...</p>
             <div class="bg-amber-100 border-2 border-amber-300 text-amber-800 font-black px-4 py-2 rounded-lg inline-block mb-4 text-xl" id="q-keyword">KEY</div>
@@ -57,35 +55,26 @@
     </div>
 
     <script>
-        // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        // ============================================================
 
         const student = {
-            supabase: null, sessionID: null, playerID: null,
-            currentQID: null,
+            supabase: null, sessionID: null, playerID: null, currentQID: null,
 
             init: function() {
                 if (typeof supabase !== 'undefined') {
                     this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
-                
-                // 1. Check URL PIN
                 const urlParams = new URLSearchParams(window.location.search);
                 const pin = urlParams.get('pin');
                 if (pin) {
                     document.getElementById('input-pin').value = pin;
                     document.getElementById('pin-container').classList.add('hidden');
                 }
-
-                // 2. CHECK LOCAL STORAGE FOR RE-JOIN
                 const saved = localStorage.getItem('p4_session');
                 if (saved) {
                     const data = JSON.parse(saved);
-                    // Verify if session is still valid (optional, but good)
-                    // For now, assume validity and attempt re-join
                     this.sessionID = data.sId;
                     this.playerID = data.pId;
                     this.listenToSession();
@@ -122,24 +111,17 @@
                 }
 
                 this.playerID = player.id;
-                
-                // SAVE SESSION TO BROWSER
                 localStorage.setItem('p4_session', JSON.stringify({ sId: this.sessionID, pId: this.playerID }));
-
                 this.listenToSession();
                 this.switchScreen('screen-waiting');
             },
 
             listenToSession: function() {
-                // Fetch level first for instructions
-                this.supabase.from('game_sessions').select('level').eq('id', this.sessionID).single()
-                    .then(({data}) => { this.setInstructions(data.level); });
-
                 this.supabase.channel('game_flow')
                     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${this.sessionID}` }, 
                     async (payload) => {
                         const status = payload.new.status;
-                        const newQIDs = payload.new.current_question_ids; // THIS IS THE ORDERED LIST
+                        const newQIDs = payload.new.current_question_ids;
 
                         if (status === 'REVEAL') {
                             this.lockAllInputs();
@@ -149,7 +131,6 @@
                                 await this.loadLiveQuestion(newQIDs[0]);
                                 this.switchScreen('screen-game');
                             } else {
-                                // PASS THE ORDERED LIST DIRECTLY
                                 await this.loadExamBatch(newQIDs);
                                 this.switchScreen('screen-exam');
                             }
@@ -169,18 +150,21 @@
             loadLiveQuestion: async function(qId) {
                 this.currentQID = qId;
                 const { data } = await this.supabase.from('exam_part4').select('*').eq('id', qId).single();
+                
+                // Read level from the question data
+                if (data.level) this.setInstructions(data.level);
+
                 document.getElementById('q-sentence1').innerText = data.sentence1;
                 document.getElementById('q-keyword').innerText = data.key_word;
                 document.getElementById('q-pre').innerText = data.sentence2_pre;
                 document.getElementById('q-post').innerText = data.sentence2_post;
                 
-                // UNLOCK UI
                 const input = document.getElementById('answer-input');
                 const btn = document.getElementById('btn-submit-answer');
                 input.value = ""; input.disabled = false;
                 btn.innerText = "SUBMIT ANSWER"; btn.className = "btn-main";
+                btn.disabled = false;
                 
-                // FETCH EXISTING ANSWER (If re-joining)
                 this.fetchExistingAnswer(qId, input);
             },
 
@@ -197,7 +181,6 @@
                 
                 btn.innerText = "UPDATED! ✓";
                 btn.className = "btn-main bg-green-500 hover:bg-green-600";
-                // WE DO NOT DISABLE INPUT HERE ANYMORE
                 
                 await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: this.currentQID, answer_text: val });
             },
@@ -205,9 +188,10 @@
             loadExamBatch: async function(qIds) {
                 const { data } = await this.supabase.from('exam_part4').select('*').in('id', qIds);
                 
-                // SORT DATA TO MATCH TEACHER'S ORDER
-                const sortedData = qIds.map(id => data.find(q => q.id === id));
+                // Read level from the first question
+                if (data.length > 0 && data[0].level) this.setInstructions(data[0].level);
 
+                const sortedData = qIds.map(id => data.find(q => q.id === id));
                 const container = document.getElementById('exam-list');
                 container.innerHTML = '';
                 
@@ -223,8 +207,6 @@
                         <button onclick="student.submitExamAnswer('${q.id}', this)" class="mt-3 w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">Save</button>
                     `;
                     container.appendChild(card);
-                    
-                    // Pre-fill if exists
                     this.fetchExistingAnswer(q.id, card.querySelector('input'));
                 });
             },
@@ -232,15 +214,12 @@
             submitExamAnswer: async function(qId, btn) {
                 const input = document.getElementById(`exam-input-${qId}`);
                 const val = input.value.trim();
-                
                 btn.innerText = "Saved ✓";
                 btn.className = "mt-3 w-full bg-green-500 text-white py-2 rounded-lg font-bold";
-                
                 await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: qId, answer_text: val });
             },
 
             lockAllInputs: function() {
-                // Disable ALL inputs and buttons globally
                 document.querySelectorAll('input').forEach(i => i.disabled = true);
                 document.querySelectorAll('button').forEach(b => {
                     b.disabled = true;

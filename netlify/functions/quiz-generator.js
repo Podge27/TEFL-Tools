@@ -1,21 +1,26 @@
-// functions/quiz-generator.js
-// UPDATED: Strictly follows CEFR Levels for ESL Learners
+const https = require('https');
 
 exports.handler = async function(event, context) {
-  const API_KEY = process.env.GEMINI_API_KEY;
-
-  try {
-    if (!event.body) {
-        return { statusCode: 400, body: "Missing body" };
+    // 1. Basic Validation
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
     }
-    const { topic, level, type } = JSON.parse(event.body);
 
-    // 1. DEFINE CEFR-SPECIFIC TONE RULES
+    let data;
+    try {
+        data = JSON.parse(event.body);
+    } catch (e) {
+        return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }) };
+    }
+
+    const { topic, level, type } = data;
+    const API_KEY = process.env.GEMINI_API_KEY;
+
+    // --- 2. YOUR CEFR NUANCE LOGIC (Preserved) ---
     let toneInstruction = "";
-
     switch (level) {
         case 'kids':
-            toneInstruction = "TARGET: Young ESL Learners (A1 Level). Use extremely basic vocabulary (animals, colors, numbers, simple verbs). Use short, simple sentences. Use emojis (🐶, 🍦) to make it fun. AVOID complex grammar.";
+            toneInstruction = "TARGET: Young ESL Learners (A1 Level). Use extremely basic vocabulary (animals, colors, numbers). Use short, simple sentences. Use emojis (🐶) to make it fun but only at the end of sentences. AVOID complex grammar.";
             break;
         case 'A1':
             toneInstruction = "TARGET: Adult/Teen Beginners (CEFR A1). Use basic phrases, high-frequency vocabulary, and simple sentence structures. No idioms.";
@@ -37,63 +42,95 @@ exports.handler = async function(event, context) {
             toneInstruction = "TARGET: Intermediate English Learners.";
     }
 
-    // 2. THE SYSTEM PROMPT
+    // --- 3. SYSTEM PROMPT (Hybrid: Nuance + Strict Rules) ---
     const systemPrompt = `
-      You are an expert ESL/EFL Teacher creating a quiz for Spanish students.
-      Create a ${type} quiz for level ${level} about: "${topic}".
-      
-      INSTRUCTIONS: ${toneInstruction}
-      
-      JSON RULES:
-      1. Output ONLY valid JSON. No Markdown, no backticks.
-      2. "answer" must be the NUMBER index of the correct option (0, 1, 2, or 3).
-      3. "questions" must have exactly 5 items.
-      4. Follow this exact structure:
-      {
-        "title": "Creative Title Here",
-        "category": "${type}",
-        "level": "${level}",
-        "topic": "${topic}",
-        "questions": [
-          {
-            "text": "Question text?",
-            "options": ["A", "B", "C", "D"],
-            "answer": 0,
-            "explanation": "Simple explanation of why."
-          }
-        ]
-      }
+    You are an expert ESL/EFL Teacher creating a quiz for Spanish students.
+    Create a ${type} quiz for level ${level} about: "${topic}".
+    
+    TONE INSTRUCTIONS: ${toneInstruction}
+    
+    CRITICAL RULES:
+    1. Output ONLY valid JSON. No Markdown, no backticks.
+    2. "answer" must be the NUMBER index (0-3).
+    3. "questions" must have exactly 6 items.
+    4. **TITLE RULE:** The "title" must be DESCRIPTIVE and ACADEMIC (e.g., "Present Perfect Usage", "Space Vocabulary"). Do NOT use puns, jokes, or "fun" titles like "Space Odyssey Fun".
+    
+    OUTPUT STRUCTURE:
+    {
+      "title": "Descriptive Title Here",
+      "category": "${type}",
+      "level": "${level}",
+      "topic": "${topic}",
+      "questions": [
+        {
+          "text": "Question text?",
+          "options": ["A", "B", "C", "D"],
+          "answer": 0,
+          "explanation": "Simple explanation."
+        }
+      ]
+    }
     `;
 
-    // USING MODEL: gemini-flash-latest
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    // --- 4. CALL GEMINI (Using Native HTTPS - Crash Proof) ---
+    const requestBody = JSON.stringify({
         contents: [{ parts: [{ text: systemPrompt }] }]
-      })
     });
 
-    const data = await response.json();
-    
-    // ERROR LOGGING
-    if (data.error) {
-        return { statusCode: 500, body: JSON.stringify({ error: "Google Error: " + data.error.message }) };
-    }
-
-    if (!data.candidates || data.candidates.length === 0) {
-        return { statusCode: 500, body: JSON.stringify({ error: "Gemini replied but gave no text.", details: data }) };
-    }
-
-    let rawText = data.candidates[0].content.parts[0].text;
-    rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-    
-    return {
-      statusCode: 200,
-      body: rawText
+    const options = {
+        hostname: 'generativelanguage.googleapis.com',
+        path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, // Using Flash for speed
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(requestBody)
+        }
     };
 
-  } catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ error: "Server Error: " + error.message }) };
-  }
+    return new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+            let responseBody = '';
+            res.on('data', (chunk) => responseBody += chunk);
+            
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    try {
+                        const parsed = JSON.parse(responseBody);
+                        
+                        // Gemini Response Parsing
+                        if (!parsed.candidates || parsed.candidates.length === 0) {
+                            throw new Error("Gemini returned no candidates.");
+                        }
+
+                        let rawText = parsed.candidates[0].content.parts[0].text;
+                        // Clean Markdown
+                        rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+                        
+                        resolve({
+                            statusCode: 200,
+                            body: rawText
+                        });
+
+                    } catch (error) {
+                        resolve({
+                            statusCode: 500,
+                            body: JSON.stringify({ error: "Failed to parse Gemini response", details: error.message })
+                        });
+                    }
+                } else {
+                    resolve({
+                        statusCode: res.statusCode,
+                        body: JSON.stringify({ error: "Gemini API Error", details: responseBody })
+                    });
+                }
+            });
+        });
+
+        req.on('error', (e) => {
+            resolve({ statusCode: 500, body: JSON.stringify({ error: "Network Error", details: e.message }) });
+        });
+
+        req.write(requestBody);
+        req.end();
+    });
 };
