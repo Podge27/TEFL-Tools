@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+// REMOVED: const fetch = require('node-fetch'); 
+// We are using the native Node.js 18 fetch now.
 
 exports.handler = async function(event, context) {
     
@@ -14,7 +15,6 @@ exports.handler = async function(event, context) {
 
     // --- 2. DEFINE THE "SECRET SAUCE" (Marking Schemes & Recipes) ---
 
-    // The Universal Paragraph Structure (Your Classroom Recipe)
     const paragraphRecipe = `
     PARAGRAPH RECIPE (You MUST follow this internal structure):
     - INTRODUCTION: 
@@ -32,10 +32,9 @@ exports.handler = async function(event, context) {
       4. Clear final statement (No room for misinterpretation).
     `;
 
-    // The Condensed Cambridge Rubrics
     const rubricB2 = `
     MARKING CRITERIA (B2 FIRST):
-    1. CONTENT: All points must be covered. The target reader must be fully informed.
+    1. CONTENT: All points covered. Target reader is fully informed.
     2. COMMUNICATIVE ACHIEVEMENT: Hold the reader’s attention. Tone must be ACADEMIC AND NEUTRAL (Standard English, avoiding slang or overly archaic words).
     3. ORGANIZATION: Text must be well-organized and coherent. Use a variety of linking words and cohesive devices.
     4. LANGUAGE: Use a range of vocabulary and simple/complex grammatical forms with a good degree of control.
@@ -79,7 +78,6 @@ exports.handler = async function(event, context) {
         `;
     }
 
-    // Adjust for Quality (The Band Score)
     if (QUALITY === 'fail') {
         roleDescription += `\nTARGET SCORE: BAND 1-2 (FAIL). Ignore the paragraph recipe. Make frequent errors typical of Spanish speakers. Use repetitive vocabulary. Fail to answer the question.`;
     } else if (QUALITY === 'pass') {
@@ -96,7 +94,6 @@ exports.handler = async function(event, context) {
         taskDescription += `- ${p.topic}: ${p.argument}\n`;
     });
 
-    // Add Ingredients (Suggested vs Mandatory)
     if (QUALITY !== 'fail') {
         taskDescription += `\nSUGGESTED INGREDIENTS:\n`;
         taskDescription += `Try to incorporate the following structures naturally to demonstrate range. \n`;
@@ -130,6 +127,7 @@ exports.handler = async function(event, context) {
 
     // --- 6. CALL THE AI ---
     try {
+        // Using global 'fetch' (Node 18+)
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -137,7 +135,7 @@ exports.handler = async function(event, context) {
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: "gpt-4o", // Use gpt-4o for best reasoning on rubrics
+                model: "gpt-4o", 
                 messages: [
                     { role: "system", content: roleDescription },
                     { role: "user", content: taskDescription + "\n" + jsonInstruction }
@@ -148,7 +146,6 @@ exports.handler = async function(event, context) {
 
         const apiData = await response.json();
         
-        // Clean markdown if present
         let rawContent = apiData.choices[0].message.content;
         rawContent = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
         
