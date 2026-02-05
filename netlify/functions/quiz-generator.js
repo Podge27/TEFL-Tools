@@ -1,22 +1,21 @@
 const https = require('https');
 
 exports.handler = async function(event, context) {
-    // 1. Basic Validation
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    let data;
+    let inputData;
     try {
-        data = JSON.parse(event.body);
+        inputData = JSON.parse(event.body);
     } catch (e) {
         return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }) };
     }
 
-    const { topic, level, type } = data;
+    const { topic, level, type } = inputData;
     const API_KEY = process.env.GEMINI_API_KEY;
 
-    // --- 2. YOUR CEFR NUANCE LOGIC (Preserved) ---
+    // --- CEFR NUANCE ---
     let toneInstruction = "";
     switch (level) {
         case 'kids':
@@ -42,22 +41,22 @@ exports.handler = async function(event, context) {
             toneInstruction = "TARGET: Intermediate English Learners.";
     }
 
-    // --- 3. SYSTEM PROMPT (Hybrid: Nuance + Strict Rules) ---
+    // --- SYSTEM PROMPT ---
     const systemPrompt = `
     You are an expert ESL/EFL Teacher creating a quiz for Spanish students.
     Create a ${type} quiz for level ${level} about: "${topic}".
     
-    TONE INSTRUCTIONS: ${toneInstruction}
+    INSTRUCTIONS: ${toneInstruction}
     
-    CRITICAL RULES:
+    JSON RULES:
     1. Output ONLY valid JSON. No Markdown, no backticks.
-    2. "answer" must be the NUMBER index (0-3).
-    3. "questions" must have exactly 6 items.
-    4. **TITLE RULE:** The "title" must be DESCRIPTIVE and ACADEMIC (e.g., "Present Perfect Usage", "Space Vocabulary"). Do NOT use puns, jokes, or "fun" titles like "Space Odyssey Fun".
+    2. "answer" must be the NUMBER index of the correct option (0, 1, 2, or 3).
+    3. "questions" must have exactly 5 items.
+    4. "title" must be DESCRIPTIVE and ACADEMIC (e.g. "Present Perfect vs Past Simple"). Do NOT use puns or "fun" titles.
     
     OUTPUT STRUCTURE:
     {
-      "title": "Descriptive Title Here",
+      "title": "Descriptive Academic Title",
       "category": "${type}",
       "level": "${level}",
       "topic": "${topic}",
@@ -66,20 +65,21 @@ exports.handler = async function(event, context) {
           "text": "Question text?",
           "options": ["A", "B", "C", "D"],
           "answer": 0,
-          "explanation": "Simple explanation."
+          "explanation": "Simple explanation of why."
         }
       ]
     }
     `;
 
-    // --- 4. CALL GEMINI (Using Native HTTPS - Crash Proof) ---
+    // --- CALL GEMINI (gemini-flash-latest) ---
     const requestBody = JSON.stringify({
         contents: [{ parts: [{ text: systemPrompt }] }]
     });
 
     const options = {
         hostname: 'generativelanguage.googleapis.com',
-        path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, // Using Flash for speed
+        // REVERTED TO YOUR SPECIFIC MODEL STRING
+        path: `/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -95,15 +95,13 @@ exports.handler = async function(event, context) {
             res.on('end', () => {
                 if (res.statusCode >= 200 && res.statusCode < 300) {
                     try {
-                        const parsed = JSON.parse(responseBody);
+                        const apiResponse = JSON.parse(responseBody);
                         
-                        // Gemini Response Parsing
-                        if (!parsed.candidates || parsed.candidates.length === 0) {
-                            throw new Error("Gemini returned no candidates.");
+                        if (!apiResponse.candidates || apiResponse.candidates.length === 0) {
+                            return resolve({ statusCode: 500, body: JSON.stringify({ error: "Gemini replied but gave no text." }) });
                         }
 
-                        let rawText = parsed.candidates[0].content.parts[0].text;
-                        // Clean Markdown
+                        let rawText = apiResponse.candidates[0].content.parts[0].text;
                         rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
                         
                         resolve({

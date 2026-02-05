@@ -1,24 +1,27 @@
 const https = require('https');
 
 exports.handler = async function(event, context) {
-    
-    // 1. PARSE INPUTS
-    // We wrap this in try/catch in case the JSON is malformed
-    let data;
+    const API_KEY = process.env.GEMINI_API_KEY;
+
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+
+    let inputData;
     try {
-        data = JSON.parse(event.body);
+        inputData = JSON.parse(event.body);
     } catch (e) {
         return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON input" }) };
     }
     
-    const LEVEL = data.level || "B2";
-    const QUALITY = data.quality || "distinction";
-    const TOPIC = data.topic || "Topic";
-    const POINTS = data.points_data || [];
-    const GRAMMAR = data.grammar || [];
-    const LINKERS = data.linkers || [];
+    const LEVEL = inputData.level || "B2";
+    const QUALITY = inputData.quality || "distinction";
+    const TOPIC = inputData.topic || "Topic";
+    const POINTS = inputData.points_data || [];
+    const GRAMMAR = inputData.grammar || [];
+    const LINKERS = inputData.linkers || [];
 
-    // --- 2. DEFINE THE INSTRUCTIONS ---
+    // --- PROMPTS ---
 
     const paragraphRecipe = `
     PARAGRAPH RECIPE (You MUST follow this internal structure):
@@ -43,6 +46,7 @@ exports.handler = async function(event, context) {
     2. COMMUNICATIVE ACHIEVEMENT: Hold the reader’s attention. Tone must be ACADEMIC AND NEUTRAL.
     3. ORGANIZATION: Text must be well-organized and coherent. Use a variety of linking words.
     4. LANGUAGE: Use a range of vocabulary and simple/complex grammatical forms.
+    STRUCTURAL CONSTRAINT: Write exactly 5 paragraphs (Intro, Point 1, Point 2, Point 3, Conclusion).
     `;
 
     const rubricC1 = `
@@ -51,37 +55,38 @@ exports.handler = async function(event, context) {
     2. COMMUNICATIVE ACHIEVEMENT: Hold the target reader's attention with ease.
     3. ORGANIZATION: Text must be a coherent whole. Use ORGANIZATIONAL PATTERNS (ellipsis, reference, substitution, mirroring).
     4. LANGUAGE: Use a wide range of vocabulary and complex grammatical forms with control.
+    STRUCTURAL CONSTRAINT: Write exactly 4 paragraphs (Intro, Point 1, Point 2, Conclusion).
     `;
 
-    let roleDescription = `You are a strict Cambridge English Examiner for the ${LEVEL} exam. `;
+    let fullPrompt = `You are a strict Cambridge English Examiner for the ${LEVEL} exam.\n\n`;
     
     if (LEVEL === 'B2') {
-        roleDescription += rubricB2 + paragraphRecipe;
-        roleDescription += `\nSTRUCTURAL CONSTRAINT (B2): Write exactly 5 paragraphs (Intro, Point 1, Point 2, Point 3, Conclusion).`;
+        fullPrompt += rubricB2 + "\n" + paragraphRecipe;
     } else {
-        roleDescription += rubricC1 + paragraphRecipe;
-        roleDescription += `\nSTRUCTURAL CONSTRAINT (C1): Write exactly 4 paragraphs (Intro, Point 1, Point 2, Conclusion).`;
+        fullPrompt += rubricC1 + "\n" + paragraphRecipe;
     }
 
     if (QUALITY === 'fail') {
-        roleDescription += `\nTARGET SCORE: BAND 1-2 (FAIL). Ignore structure. Make frequent errors.`;
+        fullPrompt += `\nTARGET SCORE: BAND 1-2 (FAIL). Ignore structure. Make frequent errors.`;
     } else if (QUALITY === 'pass') {
-        roleDescription += `\nTARGET SCORE: BAND 3 (PASS). Safe answer. Follow structure loosely.`;
+        fullPrompt += `\nTARGET SCORE: BAND 3 (PASS). Safe answer. Follow structure loosely.`;
     } else {
-        roleDescription += `\nTARGET SCORE: BAND 5 (DISTINCTION). Perfect model answer. Follow structure PERFECTLY.`;
+        fullPrompt += `\nTARGET SCORE: BAND 5 (DISTINCTION). Perfect model answer. Follow structure PERFECTLY.`;
     }
 
-    let taskDescription = `Topic: "${TOPIC}".\nArguments:\n`;
-    POINTS.forEach(p => taskDescription += `- ${p.topic}: ${p.argument}\n`);
+    fullPrompt += `\n\nTASK:\nTopic: "${TOPIC}"\nArguments:\n`;
+    POINTS.forEach(p => fullPrompt += `- ${p.topic}: ${p.argument}\n`);
 
-    if (QUALITY !== 'fail') {
-        taskDescription += `\nSUGGESTED INGREDIENTS (Use naturally if possible):\n`;
-        if (GRAMMAR.length > 0) taskDescription += `- Grammar: ${GRAMMAR.join(', ')}\n`;
-        if (LINKERS.length > 0) taskDescription += `- Linkers: ${LINKERS.join(', ')}\n`;
+    if (QUALITY !== 'fail' && (GRAMMAR.length > 0 || LINKERS.length > 0)) {
+        fullPrompt += `\nSUGGESTED INGREDIENTS (Use naturally):\n`;
+        if (GRAMMAR.length > 0) fullPrompt += `- Grammar: ${GRAMMAR.join(', ')}\n`;
+        if (LINKERS.length > 0) fullPrompt += `- Linkers: ${LINKERS.join(', ')}\n`;
     }
 
-    const jsonInstruction = `
-    OUTPUT FORMAT: Return ONLY valid JSON.
+    fullPrompt += `
+    \nJSON OUTPUT RULES:
+    Output ONLY valid JSON. No Markdown.
+    Format:
     {
         "essay_text": "Full essay text...",
         "analysis": [
@@ -90,24 +95,18 @@ exports.handler = async function(event, context) {
         ]
     }`;
 
-    // --- 3. CALL OPENAI (Using Native HTTPS) ---
-    
+    // --- CALL GEMINI (gemini-flash-latest) ---
     const requestBody = JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-            { role: "system", content: roleDescription },
-            { role: "user", content: taskDescription + "\n" + jsonInstruction }
-        ],
-        temperature: 0.7
+        contents: [{ parts: [{ text: fullPrompt }] }]
     });
 
     const options = {
-        hostname: 'api.openai.com',
-        path: '/v1/chat/completions',
+        hostname: 'generativelanguage.googleapis.com',
+        // REVERTED TO YOUR SPECIFIC MODEL STRING
+        path: `/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
             'Content-Length': Buffer.byteLength(requestBody)
         }
     };
@@ -115,46 +114,38 @@ exports.handler = async function(event, context) {
     return new Promise((resolve, reject) => {
         const req = https.request(options, (res) => {
             let responseBody = '';
-
-            res.on('data', (chunk) => {
-                responseBody += chunk;
-            });
+            res.on('data', (chunk) => responseBody += chunk);
 
             res.on('end', () => {
                 if (res.statusCode >= 200 && res.statusCode < 300) {
                     try {
-                        const parsed = JSON.parse(responseBody);
-                        let content = parsed.choices[0].message.content;
-                        // Clean markdown blocks if AI adds them
-                        content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-                        
+                        const apiResponse = JSON.parse(responseBody);
+
+                        if (!apiResponse.candidates || apiResponse.candidates.length === 0) {
+                            return resolve({ statusCode: 500, body: JSON.stringify({ error: "Gemini replied but gave no text." }) });
+                        }
+
+                        let rawText = apiResponse.candidates[0].content.parts[0].text;
+                        rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+
                         resolve({
                             statusCode: 200,
-                            body: content
+                            body: rawText
                         });
-                    } catch (err) {
-                        resolve({
-                            statusCode: 500,
-                            body: JSON.stringify({ error: "Failed to parse OpenAI response", raw: responseBody })
-                        });
+
+                    } catch (error) {
+                        resolve({ statusCode: 500, body: JSON.stringify({ error: "Server Error", details: error.message }) });
                     }
                 } else {
-                    resolve({
-                        statusCode: res.statusCode,
-                        body: JSON.stringify({ error: "OpenAI API Error", details: responseBody })
-                    });
+                    resolve({ statusCode: res.statusCode, body: JSON.stringify({ error: "API Error", details: responseBody }) });
                 }
             });
         });
 
         req.on('error', (e) => {
-            resolve({
-                statusCode: 500,
-                body: JSON.stringify({ error: "Network Error", details: e.message })
-            });
+            resolve({ statusCode: 500, body: JSON.stringify({ error: "Network Error", details: e.message }) });
         });
 
-        // Write data to request body
         req.write(requestBody);
         req.end();
     });
