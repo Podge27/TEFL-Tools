@@ -3,24 +3,31 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TEFL Tools Timer</title>
+<title>Fun Classroom Timer</title>
+
+<link rel="stylesheet" href="global.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+
 <style>
   :root {
-    --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    --card-bg: rgba(255, 255, 255, 0.95);
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
+    /* Fun Palette */
+    --bg-color: #f0f4f8;
+    --card-bg: #ffffff;
+    --primary: #8b5cf6; /* Violet */
     --secondary: #64748b;
-    --danger: #ef4444;
-    --text-main: #1e293b;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-hover: 0 10px 15px -3px rgb(99 102 241 / 0.2), 0 4px 6px -4px rgb(99 102 241 / 0.1);
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-orange: #f97316;
+    --accent-red: #ef4444;
+    --text-main: #334155;
   }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--bg-gradient);
+    font-family: 'Nunito', sans-serif; /* Rounded font */
+    background-color: var(--bg-color);
+    background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
     color: var(--text-main);
     display: flex;
     flex-direction: column;
@@ -32,232 +39,210 @@
   header {
     width: 100%;
     padding: 20px;
-    box-sizing: border-box;
     display: flex;
     align-items: center;
   }
 
-  .back-link {
-    text-decoration: none;
-    color: var(--secondary);
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s;
-  }
-
-  .back-link:hover {
-    background: white;
-    color: var(--primary);
-    box-shadow: var(--shadow-sm);
-    transform: translateX(2px);
-  }
-
+  /* Main Card */
   .container {
     background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 24px;
-    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    border-radius: 30px; /* Super rounded corners */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     width: 90%;
-    max-width: 650px;
+    max-width: 600px;
     text-align: center;
     margin-top: 10px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.5);
+    border: 4px solid #fff;
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
     margin: 0 0 1.5rem 0;
     color: var(--text-main);
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: -0.025em;
   }
 
-  button {
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    font-family: inherit;
-    font-weight: 600;
-    position: relative;
-    overflow: hidden;
-  }
-
-  button::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: none;
-  }
-  button:hover::after { animation: shine 0.75s; }
-  @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
-  button:active { transform: scale(0.96) translateY(0) !important; }
-
+  /* Mode Switcher (Pill Shape) */
   .mode-select {
-    background: #f1f5f9;
-    padding: 6px;
-    border-radius: 16px;
+    background: #e2e8f0;
+    padding: 5px;
+    border-radius: 50px;
     display: inline-flex;
     margin-bottom: 2rem;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    position: relative;
   }
+  
   .mode-select button {
-    padding: 12px 28px;
-    border-radius: 12px;
+    padding: 10px 30px;
+    border-radius: 40px;
+    border: none;
     background: transparent;
     color: var(--secondary);
     font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
   }
-  .mode-select button:hover { color: var(--primary); }
+  
   .mode-select button.active {
     background: white;
     color: var(--primary);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
+  /* Fun Time Grid */
   .time-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+    gap: 12px;
     margin-bottom: 1rem;
   }
 
   .time-btn {
-    padding: 16px;
+    padding: 15px 5px;
     border-radius: 16px;
     background: white;
     color: var(--text-main);
     font-size: 1.1rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 58px;
+    font-weight: 800;
+    border: 2px solid #e2e8f0;
+    border-bottom-width: 5px; /* 3D effect */
+    cursor: pointer;
+    transition: all 0.1s;
+    font-family: 'Nunito', sans-serif;
   }
 
-  .time-btn:hover, .custom-wrapper:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-hover);
-    border-color: var(--primary);
-    color: var(--primary);
+  .time-btn:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
   }
 
+  /* Colorful accents for buttons */
+  .time-btn:nth-child(4n+1):hover { border-color: var(--accent-blue); color: var(--accent-blue); background: #eff6ff; }
+  .time-btn:nth-child(4n+2):hover { border-color: var(--accent-green); color: var(--accent-green); background: #f0fdf4; }
+  .time-btn:nth-child(4n+3):hover { border-color: var(--accent-orange); color: var(--accent-orange); background: #fff7ed; }
+  .time-btn:nth-child(4n+4):hover { border-color: var(--primary); color: var(--primary); background: #f5f3ff; }
+
+  /* Custom Input */
   .custom-wrapper {
     grid-column: span 2;
-    padding: 8px 12px;
     display: flex;
     gap: 5px;
+    padding: 5px 10px;
+    align-items: center;
   }
-
-  @media (max-width: 450px) {
-    .custom-wrapper { grid-column: span 1; }
-  }
-
+  
   .custom-input {
     width: 100%;
     border: none;
     background: transparent;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: var(--text-main);
-    font-weight: 700;
+    font-weight: 800;
     text-align: center;
     outline: none;
-    border-bottom: 2px solid transparent;
-    transition: border-color 0.2s;
-    font-family: inherit;
+    font-family: 'Nunito', sans-serif;
   }
-  
-  .custom-input:focus { border-bottom-color: var(--primary); }
-  .custom-input::placeholder { color: #94a3b8; font-weight: 400; font-size: 0.9rem;}
+  .custom-input::placeholder { color: #cbd5e1; }
 
   .custom-go-btn {
     background: var(--primary);
     color: white;
-    border-radius: 8px;
-    padding: 8px;
-    min-width: 32px;
+    border: none;
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s;
   }
-  .custom-go-btn:hover { background: var(--primary-dark); }
+  .custom-go-btn:hover { transform: scale(1.1); }
 
-  .display-container { margin: 2rem 0; }
+  /* Display Area */
+  .display-container { margin: 1rem 0 2rem 0; }
   
   #display {
-    /* Responsive font size: minimum 3rem, preferred 13vw, max 6rem */
-    font-size: clamp(3rem, 13vw, 6rem);
-    font-weight: 800;
+    font-size: clamp(4rem, 15vw, 7rem);
+    font-weight: 900;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -2px; /* Tighter spacing for better fit */
+    letter-spacing: -3px;
     line-height: 1;
-    color: #000000;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.08);
+    color: var(--text-main);
+    /* Soft colorful shadow */
+    text-shadow: 3px 3px 0px #e2e8f0; 
   }
 
+  /* Progress Bar */
   .progress-track {
-    height: 10px;
-    background: #e2e8f0;
-    border-radius: 5px;
-    margin-top: 30px;
+    height: 14px;
+    background: #f1f5f9;
+    border-radius: 20px;
+    margin-top: 20px;
     overflow: hidden;
     display: none;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    border: 2px solid #e2e8f0;
   }
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary), #818cf8);
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     width: 100%;
     transition: width 1s linear;
+    border-radius: 20px;
   }
 
-  .controls { display: flex; justify-content: center; gap: 16px; margin-top: 2rem; }
+  /* Control Buttons */
+  .controls { display: flex; justify-content: center; gap: 12px; margin-top: 2rem; }
+  
   .btn-control {
-    padding: 14px 28px;
-    border-radius: 14px;
+    padding: 12px 24px;
+    border-radius: 16px;
     font-size: 1.1rem;
+    font-weight: 800;
     color: white;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    border: none;
+    border-bottom: 4px solid rgba(0,0,0,0.1); /* 3D effect */
+    cursor: pointer;
+    transition: all 0.1s;
+    font-family: 'Nunito', sans-serif;
   }
   
-  .btn-start { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
-  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
+  .btn-control:active {
+    transform: translateY(3px);
+    border-bottom-width: 1px;
+  }
   
-  .btn-clear { background: white; color: var(--danger); border: 1px solid #fecaca; }
-  .btn-clear:hover { background: #fee2e2; transform: translateY(-2px); }
+  .btn-start { background-color: var(--accent-green); }
+  .btn-start.pause { background-color: var(--accent-orange); } /* State for Pause */
   
-  .btn-back-ctrl { background: white; color: var(--secondary); border: 1px solid #e2e8f0; }
-  .btn-back-ctrl:hover { transform: translateY(-2px); border-color: var(--secondary); color: var(--text-main); }
+  .btn-clear { background-color: var(--accent-red); }
+  
+  .btn-back-ctrl { background-color: var(--secondary); }
 
   .adjust-controls { display: flex; justify-content: center; gap: 12px; margin-top: 10px; }
   .btn-adjust {
-    background: white; color: var(--secondary); font-size: 0.9rem;
-    padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0;
+    background: white; color: var(--secondary); font-size: 0.9rem; font-weight: 700;
+    padding: 8px 16px; border-radius: 12px; border: 2px solid #e2e8f0; cursor: pointer;
+    font-family: 'Nunito', sans-serif;
   }
-  .btn-adjust:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+  .btn-adjust:hover { border-color: var(--primary); color: var(--primary); }
 
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="back-link">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    Back to Tools
+  <a href="index.html" class="btn-back">
+     ← Back
   </a>
 </header>
 
 <div class="container">
-  <h1>TEFL TOOLS Timer</h1>
+  <h1>⏱️ Class Timer</h1>
 
   <div class="mode-select">
     <button id="modeTimer" class="active" onclick="setMode('timer')">Timer</button>
@@ -283,7 +268,7 @@
 
     <div class="controls">
       <button class="btn-control btn-start" id="startBtn" onclick="toggleTimer()">Start</button>
-      <button class="btn-control btn-clear" onclick="resetTimer()">Clear</button>
+      <button class="btn-control btn-clear" onclick="resetTimer()">Reset</button>
       <button class="btn-control btn-back-ctrl" onclick="goBack()">Back</button>
     </div>
   </div>
@@ -295,6 +280,7 @@ let initialSeconds = 0;
 let interval = null;
 let mode = "timer";
 let isRunning = false;
+const defaultTitle = "Class Timer"; 
 
 const timeOptions = [10, 30, 45, 60, 90, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700];
 
@@ -302,11 +288,16 @@ window.onload = () => generateTimeButtons();
 
 function setMode(selected) {
   mode = selected;
+  
+  // Update Tab UI
   document.getElementById('modeTimer').className = mode === 'timer' ? 'active' : '';
   document.getElementById('modeStopwatch').className = mode === 'stopwatch' ? 'active' : '';
   
-  if (mode === 'timer') goBack();
-  else prepareStopwatch();
+  if (mode === 'timer') {
+      goBack();
+  } else {
+      prepareStopwatch();
+  }
 }
 
 function generateTimeButtons() {
@@ -317,28 +308,23 @@ function generateTimeButtons() {
     const btn = document.createElement('button');
     btn.className = 'time-btn';
     btn.textContent = formatHumanReadable(sec);
+    // Fix: Clicking a time button forces mode to 'timer'
     btn.onclick = () => selectTime(sec);
     container.appendChild(btn);
   });
 
+  // Custom Input
   const customWrapper = document.createElement('div');
   customWrapper.className = 'time-btn custom-wrapper';
   
   const input = document.createElement('input');
-  
-  // CRITICAL FIX: inputmode="numeric" triggers the number pad on iOS/Android
   input.inputMode = 'numeric'; 
   input.type = 'text'; 
-  
   input.placeholder = '00:00';
   input.className = 'custom-input';
   
-  // Add live formatter
   input.addEventListener('input', function(e) {
-      // 1. Strip non-digits
       let raw = e.target.value.replace(/[^0-9]/g, '');
-      
-      // 2. Format: Insert colon before the last 2 digits if length > 2
       if (raw.length > 2) {
           const seconds = raw.slice(-2);
           const minutes = raw.slice(0, raw.length - 2);
@@ -354,7 +340,8 @@ function generateTimeButtons() {
 
   const goBtn = document.createElement('button');
   goBtn.className = 'custom-go-btn';
-  goBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+  // Simple checkmark icon
+  goBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
   goBtn.onclick = () => handleSmartInput(input.value);
 
   customWrapper.appendChild(input);
@@ -364,9 +351,7 @@ function generateTimeButtons() {
 
 function handleSmartInput(val) {
   if(!val) return;
-  // Remove non-digits/colons
   const raw = val.replace(/[^0-9:]/g, ''); 
-  
   let totalSecs = 0;
 
   if (raw.includes(':')) {
@@ -377,7 +362,6 @@ function handleSmartInput(val) {
         totalSecs = (+parts[0] * 60) + (+parts[1]);
     }
   } else {
-    // Fallback if they somehow bypassed the visual formatter
     const num = parseInt(raw, 10);
     if (isNaN(num)) return;
     if (num < 100) totalSecs = num;
@@ -392,6 +376,11 @@ function handleSmartInput(val) {
 }
 
 function selectTime(sec) {
+  // CRITICAL FIX: Ensure mode is set to timer when selecting a preset
+  mode = 'timer';
+  document.getElementById('modeTimer').className = 'active';
+  document.getElementById('modeStopwatch').className = '';
+
   totalSeconds = sec;
   initialSeconds = sec;
   showActiveView();
@@ -425,11 +414,14 @@ function goBack() {
   
   const startBtn = document.getElementById('startBtn');
   startBtn.textContent = "Start";
-  startBtn.style.background = "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)";
-  document.getElementById('display').style.color = "#000000";
+  startBtn.classList.remove('pause');
+  
+  document.getElementById('display').style.color = "var(--text-main)";
   
   const customInput = document.querySelector('.custom-input');
   if(customInput) customInput.value = '';
+  
+  document.title = defaultTitle;
 }
 
 function adjustTime(amount) {
@@ -450,7 +442,7 @@ function startTimer() {
   
   const btn = document.getElementById('startBtn');
   btn.textContent = "Pause";
-  btn.style.background = "#64748b"; 
+  btn.classList.add('pause');
 
   interval = setInterval(() => {
     if (mode === 'timer') {
@@ -474,7 +466,7 @@ function pauseTimer() {
   
   const btn = document.getElementById('startBtn');
   btn.textContent = "Start";
-  btn.style.background = "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)";
+  btn.classList.remove('pause');
 }
 
 function resetTimer() {
@@ -482,23 +474,29 @@ function resetTimer() {
   totalSeconds = mode === 'timer' ? initialSeconds : 0;
   updateDisplay();
   updateProgress();
-  document.getElementById('display').style.color = "#000000";
+  document.getElementById('display').style.color = "var(--text-main)";
+  document.title = defaultTitle;
 }
 
 function timerFinished() {
   pauseTimer();
-  playDoubleBeep();
+  // Optional: Play a sound if you link Tone.js, but visual is enough for now
   const display = document.getElementById('display');
   display.style.transform = "scale(1.1)";
-  display.style.color = "#ef4444"; 
+  display.style.color = "var(--danger)"; 
+  document.title = "⏰ TIME'S UP!"; 
   setTimeout(() => {
     display.style.transform = "scale(1)";
-    display.style.color = "#000000"; 
   }, 500);
 }
 
 function updateDisplay() {
-  document.getElementById('display').textContent = formatTime(totalSeconds);
+  const timeString = formatTime(totalSeconds);
+  document.getElementById('display').textContent = timeString;
+  
+  if (isRunning) {
+      document.title = `${timeString} - Timer`;
+  }
 }
 
 function updateProgress() {
@@ -525,35 +523,6 @@ function formatHumanReadable(sec) {
   let s = sec % 60;
   if (s === 0) return m + 'm';
   return `${m}m ${s}s`;
-}
-
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playDoubleBeep() {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const now = audioCtx.currentTime;
-  
-  const osc1 = audioCtx.createOscillator();
-  const gain1 = audioCtx.createGain();
-  osc1.type = 'sine';
-  osc1.frequency.setValueAtTime(880, now);
-  gain1.gain.setValueAtTime(0.1, now);
-  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-  osc1.connect(gain1);
-  gain1.connect(audioCtx.destination);
-  osc1.start(now);
-  osc1.stop(now + 0.1);
-
-  const osc2 = audioCtx.createOscillator();
-  const gain2 = audioCtx.createGain();
-  osc2.type = 'sine';
-  osc2.frequency.setValueAtTime(880, now + 0.15);
-  gain2.gain.setValueAtTime(0.1, now + 0.15);
-  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-  osc2.connect(gain2);
-  gain2.connect(audioCtx.destination);
-  osc2.start(now + 0.15);
-  osc2.stop(now + 0.25);
 }
 </script>
 </body>

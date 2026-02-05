@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashy Random Number Generator</title>
+    <title>Random Number Generator</title>
+    <link rel="icon" type="image/png" href="gameicon.png">
+    <link rel="stylesheet" href="global.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
+        /* Dark Theme Variables */
         :root {
             --primary-color: #3b82f6;
             --secondary-color: #f97316;
@@ -14,27 +19,43 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             transition: background-color 0.3s ease;
+            /* Font handled by global.css or fallback here */
+            font-family: 'Inter', sans-serif;
         }
 
-        .app-button {
-            @apply px-4 py-2 font-bold rounded-xl shadow-md transition duration-300 transform hover:scale-[1.02] active:scale-95;
-        }
-
+        /* Custom Component Styles using Standard CSS */
         .input-field {
-            @apply w-full p-3 rounded-xl border-2 border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-primary-color focus:border-primary-color transition duration-300;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 2px solid #334155; /* slate-700 */
+            background-color: #1e293b; /* slate-800 */
+            color: white;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
 
         .control-label {
-            @apply block text-sm font-medium text-slate-300 mb-1;
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: white; /* Explicitly White */
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.025em;
         }
 
         .big-number-display {
             background-image: linear-gradient(45deg, #f97316, #facc15, #84cc16);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            /* Fallback for browsers that don't support text fill */
+            color: #facc15; 
             text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
             transition: transform 0.1s ease-out, opacity 0.3s ease-in-out;
             min-height: 200px;
@@ -54,12 +75,15 @@
             background-color: #dc2626;
             color: white;
             min-width: 100px; 
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            border-radius: 0.75rem;
+            transition: background-color 0.2s;
         }
         #reset-pool-button:hover {
             background-color: #b91c1c;
         }
 
-        /* Disabled state for the generate button */
         button:disabled {
             opacity: 0.7;
             cursor: not-allowed;
@@ -67,9 +91,13 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 relative">
 
-    <div class="w-full max-w-4xl bg-slate-900 p-6 md:p-10 rounded-2xl shadow-2xl border border-slate-700">
+    <div class="absolute top-4 left-4">
+        <a href="index.html" class="btn-back">← Back</a>
+    </div>
+
+    <div class="w-full max-w-4xl bg-slate-900 p-6 md:p-10 rounded-2xl shadow-2xl border border-slate-700 mt-12 md:mt-0">
         
         <h1 class="text-3xl font-extrabold text-center mb-6 text-white tracking-wider">
             🎲 The Flashy Number Factory
@@ -102,9 +130,9 @@
         
         <button id="generate-button"
                 class="w-full py-4 text-xl font-bold rounded-xl shadow-lg 
-                       bg-gradient-to-r from-primary-color to-secondary-color 
-                       text-white uppercase tracking-widest hover:shadow-primary-color/50 
-                       hover:from-secondary-color hover:to-primary-color transition duration-300 transform hover:scale-[1.01] active:scale-95">
+                       bg-gradient-to-r from-blue-400 to-orange-400 
+                       text-white uppercase tracking-widest hover:shadow-blue-400/50 
+                       hover:from-orange-400 hover:to-blue-400 transition duration-300 transform hover:scale-[1.01] active:scale-95">
             GENERATE NUMBERS
         </button>
         
@@ -112,7 +140,7 @@
             <span id="unique-info" class="text-sm font-medium text-slate-300">
                 Pool Size: 0
             </span>
-            <button id="reset-pool-button" class="app-button" onclick="forceReset()">
+            <button id="reset-pool-button" onclick="forceReset()">
                 Reset
             </button>
         </div>

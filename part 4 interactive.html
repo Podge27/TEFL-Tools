@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Board</title>
-    
     <link rel="stylesheet" href="global.css">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -16,40 +14,39 @@
         body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
         #app-container { @apply w-full max-w-[95%] mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[850px] flex flex-col relative; }
 
-        /* --- THE BACK BUTTON --- */
+        /* Navigation */
         .btn-back-wrapper { @apply w-full max-w-[95%] mx-auto mb-6 flex justify-start; }
         .btn-back { display: inline-block; background: linear-gradient(135deg, #00BCD4, #4DD0E1); color: black; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 800; border: 2px solid white; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-back:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
 
-        /* --- BUTTON STYLES --- */
+        /* Level Buttons */
         .level-select-btn { font-size: 3rem; padding: 2rem; width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform border-4 opacity-70 grayscale cursor-pointer shadow-lg; }
         .level-select-btn.active { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); z-index: 10; @apply ring-4 ring-offset-4 ring-indigo-500; }
-        
         .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
         .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
         .btn-c2-style { background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); color: #333; border-color: #DCEDC8; }
 
+        /* UI Components */
         .app-btn { @apply px-8 py-4 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95 cursor-pointer text-lg; }
         .mode-select-btn { @apply flex flex-col items-center justify-center p-8 rounded-[1.5rem] border-4 border-gray-200 bg-white text-gray-500 transition-all duration-200 cursor-pointer shadow-md hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-xl hover:text-indigo-600; min-height: 180px; }
         .mode-select-btn.active { @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xl ring-4 ring-offset-4 ring-indigo-500; transform: translateY(-5px); }
 
-        /* --- EXAM CARD STYLE --- */
+        /* Questions */
         .p4-card { @apply p-8 border border-gray-200 rounded-xl mb-6 bg-gray-50 h-full flex flex-col justify-center; }
         .key-word-small { @apply bg-amber-200 px-3 py-1 rounded font-bold text-gray-800 text-sm uppercase border border-amber-300 inline-block mb-4 w-fit; }
         .gap-input-fake { @apply inline-block border-b-4 border-indigo-200 px-2 mx-1 font-bold text-indigo-900 text-center uppercase min-w-[150px] bg-white h-10 align-middle cursor-pointer hover:bg-indigo-50 transition; }
         .gap-input-fake.revealed { @apply bg-green-100 border-green-500 text-green-800; }
 
-        /* --- LIVE GAME STYLES --- */
+        /* Typography */
         .question-text-large { font-family: 'Inter', sans-serif; font-size: 2.5rem; line-height: 1.4; font-weight: 700; color: #1f2937; text-align: left; }
         .key-word-large { background-color: #facc15; padding: 8px 30px; border-radius: 12px; font-weight: 900; font-size: 2.5rem; color: #1f2937; text-transform: uppercase; border: 3px solid #eab308; display: inline-block; margin-bottom: 2rem; width: fit-content; }
         .gap-line-large { border-bottom: 5px solid #6366f1; min-width: 300px; display: inline-block; height: 60px; margin: 0 15px; cursor: pointer; transition: 0.2s; vertical-align: bottom; }
         .gap-line-large.revealed { color: #166534; font-weight: 900; font-size: 2.5rem; border-bottom-color: #22c55e; text-align: center; }
 
-        /* --- PLAYER CARDS --- */
+        /* Grading */
         .player-card { @apply p-2 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[110px] bg-white relative shadow-sm; }
         .card-submitted { @apply bg-indigo-50 border-indigo-500 text-indigo-700 shadow-md; }
         .card-grading { @apply bg-white border-gray-400 shadow-lg z-10; }
-
         .grade-btn { @apply w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center border hover:scale-110 active:scale-95 transition; }
         .grade-0 { @apply border-red-200 text-red-300 hover:bg-red-500 hover:text-white; }
         .grade-1 { @apply border-yellow-200 text-yellow-300 hover:bg-yellow-400 hover:text-white; }
@@ -69,9 +66,12 @@
         
         <div class="flex justify-between items-center p-8 border-b bg-white">
             <h1 class="text-4xl font-extrabold text-gray-900">Use of English <span class="text-indigo-600">Trainer Board</span></h1>
-            <div id="session-info" class="hidden flex items-center gap-4 bg-gray-50 px-6 py-2 rounded-xl border border-gray-200">
-                <span class="text-gray-400 font-bold text-sm tracking-widest uppercase">Room Code</span>
-                <span id="pin-display" class="text-4xl font-black text-indigo-600 tracking-widest font-mono">----</span>
+            <div class="flex gap-4">
+                <div id="timer-display" class="hidden text-3xl font-mono font-black text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">06:00</div>
+                <div id="session-info" class="hidden flex items-center gap-4 bg-gray-50 px-6 py-2 rounded-xl border border-gray-200">
+                    <span class="text-gray-400 font-bold text-sm tracking-widest uppercase">Room</span>
+                    <span id="pin-display" class="text-4xl font-black text-indigo-600 tracking-widest font-mono">----</span>
+                </div>
             </div>
         </div>
 
@@ -97,8 +97,15 @@
 
         <div id="screen-lobby" class="hidden flex-1 flex flex-col items-center p-12">
             <div class="flex flex-col md:flex-row gap-20 items-center justify-center w-full mb-12">
-                <div class="flex flex-col items-center bg-white p-8 rounded-3xl shadow-xl border-2 border-indigo-50"><div id="qrcode-container"></div><p class="text-indigo-500 font-bold mt-6 tracking-widest uppercase">Scan to Join</p></div>
-                <div class="text-center"><p class="text-gray-400 font-bold mb-4 uppercase tracking-wider text-xl">Or Enter Code</p><div class="p-10 bg-gray-100 rounded-3xl border-4 border-white shadow-inner"><span id="lobby-pin" class="text-9xl font-black text-gray-800 tracking-widest font-mono">----</span></div></div>
+                <div class="flex flex-col items-center bg-white p-8 rounded-3xl shadow-xl border-2 border-indigo-50">
+                    <div id="qrcode-container"></div>
+                    <p class="text-indigo-500 font-bold mt-6 tracking-widest uppercase mb-2">Scan to Join</p>
+                    <p id="lobby-url" class="text-xs text-gray-400 font-mono bg-gray-50 p-2 rounded break-all max-w-[200px] text-center">...</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-400 font-bold mb-4 uppercase tracking-wider text-xl">Or Enter Code</p>
+                    <div class="p-10 bg-gray-100 rounded-3xl border-4 border-white shadow-inner"><span id="lobby-pin" class="text-9xl font-black text-gray-800 tracking-widest font-mono">----</span></div>
+                </div>
             </div>
             <div class="w-full max-w-6xl bg-indigo-50 rounded-3xl p-10 flex-1 border-2 border-indigo-100"><div class="flex justify-between items-center mb-8"><h3 class="text-2xl font-bold text-indigo-900 uppercase tracking-wider">Class Roster</h3><span class="bg-indigo-200 text-indigo-800 px-5 py-2 rounded-full font-bold text-lg" id="player-count">0 Players</span></div><div id="lobby-player-list" class="flex flex-wrap gap-4"></div></div>
             <button onclick="teacher.startGame()" class="mt-10 app-btn bg-indigo-600 text-white text-3xl px-20 py-6 hover:bg-indigo-700 shadow-xl">Start Game →</button>
@@ -138,25 +145,22 @@
         <div id="screen-leaderboard" class="hidden flex-1 flex flex-col p-12 bg-indigo-900 text-white items-center justify-center">
             <h2 class="text-6xl font-black text-center mb-12">🏆 Final Rankings</h2>
             <div id="leaderboard-list" class="w-full max-w-4xl flex-1 overflow-y-auto pr-4 space-y-6"></div>
-            <div class="text-center mt-10">
-                <button onclick="teacher.closeLeaderboard()" class="px-12 py-5 rounded-2xl border-4 border-white/20 hover:bg-white/10 font-bold text-2xl transition">Close Leaderboard</button>
-            </div>
+            <div class="text-center mt-10"><button onclick="teacher.closeLeaderboard()" class="px-12 py-5 rounded-2xl border-4 border-white/20 hover:bg-white/10 font-bold text-2xl transition">Close Leaderboard</button></div>
         </div>
     </div>
 
     <script>
-        // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        const STUDENT_FILE_NAME = "student-phone.html"; 
-        // ============================================================
+        const STUDENT_FILE_NAME = "student.html"; 
 
         const teacher = {
             supabase: null, sessionID: null,
             config: { level: null, mode: 'LIVE' },
             questions: [], examBatch: [], currentQIndex: -1,
             players: {}, submissions: {}, isRevealed: false,
+            timer: null, timeLeft: 360,
 
             init: function() {
                 if (typeof supabase !== 'undefined') {
@@ -190,11 +194,21 @@
                 document.getElementById('btn-create').innerText = "Generating...";
                 const { data: qData, error } = await this.supabase.from('exam_part4').select('*').eq('level', this.config.level);
                 if(error || !qData.length) { alert("Error: No questions found."); return; }
+                
                 this.questions = qData.sort(() => Math.random() - 0.5);
                 this.batch = this.config.mode === 'EXAM' ? this.questions.slice(0, 6) : [];
+                // Save the exact Order IDs
                 const qIds = this.config.mode === 'EXAM' ? this.batch.map(q => q.id) : this.questions.map(q => q.id);
+
                 const pin = Math.floor(1000 + Math.random() * 9000).toString();
-                const { data: sData } = await this.supabase.from('game_sessions').insert([{ pin: pin, status: 'LOBBY', mode: this.config.mode, question_queue: qIds }]).select().single();
+                const { data: sData } = await this.supabase.from('game_sessions').insert([{ 
+                    pin: pin, 
+                    status: 'LOBBY', 
+                    mode: this.config.mode, 
+                    level: this.config.level, // Saving level so student phone knows instructions
+                    question_queue: qIds 
+                }]).select().single();
+                
                 this.sessionID = sData.id;
                 document.getElementById('pin-display').innerText = pin;
                 document.getElementById('lobby-pin').innerText = pin;
@@ -204,9 +218,18 @@
             },
 
             generateQR: function(pin) {
-                const joinUrl = `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/${STUDENT_FILE_NAME}?pin=${pin}`;
+                const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                const joinUrl = `${currentPath}/${STUDENT_FILE_NAME}`;
+                
+                // Show URL text for manual joining
+                document.getElementById('lobby-url').innerText = joinUrl.replace('https://','');
+                
+                // QR encodes full URL with PIN for easy access
                 document.getElementById("qrcode-container").innerHTML = "";
-                new QRCode(document.getElementById("qrcode-container"), { text: joinUrl, width: 200, height: 200, colorDark : "#4f46e5", colorLight : "#ffffff" });
+                new QRCode(document.getElementById("qrcode-container"), { 
+                    text: `${joinUrl}?pin=${pin}`, 
+                    width: 200, height: 200, colorDark : "#4f46e5", colorLight : "#ffffff" 
+                });
             },
 
             subscribeToPlayers: function() {
@@ -230,7 +253,24 @@
                     this.renderExamMode();
                     this.switchScreen('screen-exam');
                     this.subscribeToBatchSubmissions();
+                    this.startTimer();
                 }
+            },
+
+            // --- TIMER ---
+            startTimer: function() {
+                document.getElementById('timer-display').classList.remove('hidden');
+                this.timeLeft = 360; // 6 mins
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    const m = Math.floor(this.timeLeft / 60);
+                    const s = this.timeLeft % 60;
+                    const display = document.getElementById('timer-display');
+                    display.innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                    
+                    if(this.timeLeft <= 60) display.classList.add('text-red-500');
+                    if(this.timeLeft <= 0) { clearInterval(this.timer); display.innerText = "00:00"; }
+                }, 1000);
             },
 
             nextAction: function() {
@@ -277,7 +317,7 @@
                         <div class="p4-card w-full xl:w-1/2 flex-none">
                             <div class="mb-3 text-gray-500 font-bold text-sm uppercase">Question ${idx+1}</div>
                             <p class="mb-4 text-2xl font-bold text-gray-800 text-left">${q.sentence1}</p>
-                            <span class="key-word-small text-lg w-fit">${q.key_word}</span>
+                            <span class="key-word-small">${q.key_word}</span>
                             <div class="flex flex-wrap items-center gap-2 mt-4 text-2xl text-gray-700 font-bold">
                                 <span>${q.sentence2_pre}</span>
                                 <span class="gap-input-fake" onclick="teacher.toggleCorrectAnswer(this)" data-answer="${q.answer}"></span>
@@ -327,6 +367,8 @@
                      btn.className = "app-btn bg-gray-400 text-white cursor-not-allowed text-xl";
                      btn.disabled = true;
                 }
+                
+                // IMPORTANT: This signal locks the students' phones
                 await this.supabase.from('game_sessions').update({ status: 'REVEAL' }).eq('id', this.sessionID);
             },
 
@@ -388,17 +430,10 @@
                 return card;
             },
 
-            // --- FIXED LEADERBOARD CALCULATION ---
             toggleLeaderboard: async function() {
-                // Fetch ALL submissions from the DB to ensure we get a full history
-                // (Note: In a huge app we would filter by session_id in the submissions table, 
-                // but since we are just doing a classroom session, getting recent submissions or filtering by playerID is fine)
-                
+                // FIXED: Now fetches Submissions directly, ignoring Players table score
                 const playerIds = Object.keys(this.players);
-                if (playerIds.length === 0) {
-                    alert("No players yet!");
-                    return;
-                }
+                if (playerIds.length === 0) return;
 
                 const { data } = await this.supabase
                     .from('submissions')
@@ -406,7 +441,7 @@
                     .in('player_id', playerIds);
 
                 const scores = {};
-                playerIds.forEach(pid => scores[pid] = 0); // Init 0
+                playerIds.forEach(pid => scores[pid] = 0);
 
                 if(data) {
                     data.forEach(s => {

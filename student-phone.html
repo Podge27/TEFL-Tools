@@ -20,14 +20,8 @@
 
     <div id="screen-login" class="flex-1 flex flex-col justify-center gap-6">
         <h1 class="text-4xl font-black text-indigo-600 text-center tracking-tighter">PART 4<br>LIVE</h1>
-        <div id="pin-container">
-            <label class="block font-bold text-gray-500 mb-2 ml-1">GAME PIN</label>
-            <input type="number" id="input-pin" class="big-input tracking-[0.5rem]" placeholder="0000">
-        </div>
-        <div>
-            <label class="block font-bold text-gray-500 mb-2 ml-1">YOUR NAME</label>
-            <input type="text" id="input-nick" class="big-input" placeholder="MARIA" maxlength="10">
-        </div>
+        <div id="pin-container"><label class="block font-bold text-gray-500 mb-2 ml-1">GAME PIN</label><input type="number" id="input-pin" class="big-input tracking-[0.5rem]" placeholder="0000"></div>
+        <div><label class="block font-bold text-gray-500 mb-2 ml-1">YOUR NAME</label><input type="text" id="input-nick" class="big-input" placeholder="MARIA" maxlength="10"></div>
         <button onclick="student.joinGame()" id="btn-join" class="btn-main">JOIN CLASS</button>
         <p id="login-error" class="text-red-500 text-center font-bold hidden">Error joining game</p>
     </div>
@@ -39,6 +33,9 @@
     </div>
 
     <div id="screen-game" class="hidden flex-1 flex flex-col pt-4">
+        <div id="instruction-banner" class="bg-blue-100 text-blue-800 text-center font-bold py-2 px-4 rounded-lg mb-4 text-sm border border-blue-200">
+            Wait for instructions...
+        </div>
         <div class="game-card">
             <p id="q-sentence1" class="text-lg font-semibold text-gray-600 mb-4 leading-relaxed">...</p>
             <div class="bg-amber-100 border-2 border-amber-300 text-amber-800 font-black px-4 py-2 rounded-lg inline-block mb-4 text-xl" id="q-keyword">KEY</div>
@@ -55,6 +52,7 @@
 
     <div id="screen-exam" class="hidden flex-1 flex flex-col pt-4">
         <h2 class="text-2xl font-black text-gray-800 mb-4 text-center">Exam Mode</h2>
+        <div id="exam-instruction-banner" class="bg-blue-100 text-blue-800 text-center font-bold py-2 px-4 rounded-lg mb-4 text-sm border border-blue-200"></div>
         <div id="exam-list" class="flex-1 overflow-y-auto space-y-6 pb-20"></div>
     </div>
 
@@ -73,11 +71,25 @@
                 if (typeof supabase !== 'undefined') {
                     this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
+                
+                // 1. Check URL PIN
                 const urlParams = new URLSearchParams(window.location.search);
                 const pin = urlParams.get('pin');
                 if (pin) {
                     document.getElementById('input-pin').value = pin;
                     document.getElementById('pin-container').classList.add('hidden');
+                }
+
+                // 2. CHECK LOCAL STORAGE FOR RE-JOIN
+                const saved = localStorage.getItem('p4_session');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    // Verify if session is still valid (optional, but good)
+                    // For now, assume validity and attempt re-join
+                    this.sessionID = data.sId;
+                    this.playerID = data.pId;
+                    this.listenToSession();
+                    this.switchScreen('screen-waiting');
                 }
             },
 
@@ -110,34 +122,48 @@
                 }
 
                 this.playerID = player.id;
+                
+                // SAVE SESSION TO BROWSER
+                localStorage.setItem('p4_session', JSON.stringify({ sId: this.sessionID, pId: this.playerID }));
+
                 this.listenToSession();
                 this.switchScreen('screen-waiting');
             },
 
             listenToSession: function() {
+                // Fetch level first for instructions
+                this.supabase.from('game_sessions').select('level').eq('id', this.sessionID).single()
+                    .then(({data}) => { this.setInstructions(data.level); });
+
                 this.supabase.channel('game_flow')
                     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${this.sessionID}` }, 
                     async (payload) => {
                         const status = payload.new.status;
-                        const newQIDs = payload.new.current_question_ids;
+                        const newQIDs = payload.new.current_question_ids; // THIS IS THE ORDERED LIST
 
                         if (status === 'REVEAL') {
-                            // LOCK EVERYTHING
                             this.lockAllInputs();
                         }
                         else if (status === 'ACTIVE' && newQIDs && newQIDs.length > 0) {
                             if (newQIDs.length === 1) {
-                                // LIVE MODE
                                 await this.loadLiveQuestion(newQIDs[0]);
                                 this.switchScreen('screen-game');
                             } else {
-                                // EXAM MODE (Batch)
+                                // PASS THE ORDERED LIST DIRECTLY
                                 await this.loadExamBatch(newQIDs);
                                 this.switchScreen('screen-exam');
                             }
                         }
                     })
                     .subscribe();
+            },
+
+            setInstructions: function(level) {
+                let text = "Use 2-5 words";
+                if(level === 'C1') text = "Use 3-6 words";
+                if(level === 'C2') text = "Use 3-8 words";
+                document.getElementById('instruction-banner').innerText = `⚠️ ${level} Rule: ${text}`;
+                document.getElementById('exam-instruction-banner').innerText = `⚠️ ${level} Rule: ${text}`;
             },
 
             loadLiveQuestion: async function(qId) {
@@ -148,12 +174,19 @@
                 document.getElementById('q-pre').innerText = data.sentence2_pre;
                 document.getElementById('q-post').innerText = data.sentence2_post;
                 
-                // Reset UI
+                // UNLOCK UI
                 const input = document.getElementById('answer-input');
                 const btn = document.getElementById('btn-submit-answer');
                 input.value = ""; input.disabled = false;
                 btn.innerText = "SUBMIT ANSWER"; btn.className = "btn-main";
-                btn.disabled = false;
+                
+                // FETCH EXISTING ANSWER (If re-joining)
+                this.fetchExistingAnswer(qId, input);
+            },
+
+            fetchExistingAnswer: async function(qId, inputEl) {
+                const { data } = await this.supabase.from('submissions').select('answer_text').match({player_id: this.playerID, question_id: qId}).single();
+                if(data) inputEl.value = data.answer_text;
             },
 
             submitLiveAnswer: async function() {
@@ -162,20 +195,23 @@
                 const btn = document.getElementById('btn-submit-answer');
                 if(!val) return;
                 
-                btn.innerText = "SENT! 📨";
-                btn.className = "btn-main bg-gray-300 text-gray-500 cursor-default";
-                input.disabled = true;
-                btn.disabled = true;
+                btn.innerText = "UPDATED! ✓";
+                btn.className = "btn-main bg-green-500 hover:bg-green-600";
+                // WE DO NOT DISABLE INPUT HERE ANYMORE
                 
                 await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: this.currentQID, answer_text: val });
             },
 
             loadExamBatch: async function(qIds) {
                 const { data } = await this.supabase.from('exam_part4').select('*').in('id', qIds);
+                
+                // SORT DATA TO MATCH TEACHER'S ORDER
+                const sortedData = qIds.map(id => data.find(q => q.id === id));
+
                 const container = document.getElementById('exam-list');
                 container.innerHTML = '';
                 
-                data.forEach((q, idx) => {
+                sortedData.forEach((q, idx) => {
                     const card = document.createElement('div');
                     card.className = "game-card";
                     card.innerHTML = `
@@ -184,16 +220,18 @@
                         <div class="flex justify-center my-2"><span class="bg-yellow-100 text-yellow-800 px-2 rounded text-sm font-bold border border-yellow-300">${q.key_word}</span></div>
                         <div class="text-center font-bold text-indigo-900 mb-2">${q.sentence2_pre} ... ${q.sentence2_post}</div>
                         <input type="text" id="exam-input-${q.id}" class="w-full p-3 border-2 border-indigo-200 rounded-lg uppercase font-bold text-center" placeholder="Answer here">
-                        <button onclick="student.submitExamAnswer('${q.id}', this)" class="mt-3 w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">Send</button>
+                        <button onclick="student.submitExamAnswer('${q.id}', this)" class="mt-3 w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">Save</button>
                     `;
                     container.appendChild(card);
+                    
+                    // Pre-fill if exists
+                    this.fetchExistingAnswer(q.id, card.querySelector('input'));
                 });
             },
 
             submitExamAnswer: async function(qId, btn) {
                 const input = document.getElementById(`exam-input-${qId}`);
                 const val = input.value.trim();
-                if(!val) return;
                 
                 btn.innerText = "Saved ✓";
                 btn.className = "mt-3 w-full bg-green-500 text-white py-2 rounded-lg font-bold";
@@ -202,16 +240,12 @@
             },
 
             lockAllInputs: function() {
-                // Disable all text inputs
+                // Disable ALL inputs and buttons globally
                 document.querySelectorAll('input').forEach(i => i.disabled = true);
-                
-                // Disable all buttons and style them
                 document.querySelectorAll('button').forEach(b => {
                     b.disabled = true;
-                    if(b.innerText === "Send" || b.innerText === "SUBMIT ANSWER") {
-                        b.innerText = "LOCKED 🔒";
-                        b.className = "mt-3 w-full bg-gray-400 text-white py-2 rounded-lg font-bold cursor-not-allowed";
-                    }
+                    b.innerText = "LOCKED 🔒";
+                    b.className = "mt-3 w-full bg-gray-400 text-white py-2 rounded-lg font-bold cursor-not-allowed";
                 });
             },
 

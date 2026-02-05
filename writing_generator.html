@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Writing Generator</title>
+    <title>Writing Architect | Builder Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -12,527 +12,539 @@
     <style>
         body { background-color: #F8FAFC; font-family: 'Inter', sans-serif; }
         
-        /* The "Real Exam Paper" Look - Softened */
+        /* Hide Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 0px; background: transparent; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Chunky Blocks */
+        .builder-block {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        }
+        .builder-block:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15); }
+        .builder-block:active { transform: scale(0.98); }
+
+        /* Colors */
+        .block-idea { background-color: #FFF7ED; border-left: 6px solid #F97316; color: #9A3412; }
+        .block-grammar { background-color: #F0FDF4; border-left: 6px solid #22C55E; color: #166534; }
+        .block-linker { background-color: #EFF6FF; border-left: 6px solid #3B82F6; color: #1E40AF; }
+        .used-item { opacity: 0.4; pointer-events: none; filter: grayscale(100%); }
+
+        /* Paper Styling */
         .exam-paper {
             background: white;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-radius: 16px; /* Rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
             font-family: 'Merriweather', serif;
-            color: #1F2937;
             position: relative;
             overflow: hidden;
+            border: 1px solid #E2E8F0;
         }
-
-        /* Paper decorative top border */
         .exam-paper::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, #4F46E5, #818CF8);
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+            background: linear-gradient(90deg, #F97316, #3B82F6);
         }
 
-        /* Sidebar Styling */
-        .sidebar-container {
-            backdrop-filter: blur(12px);
-            background-color: rgba(255, 255, 255, 0.95);
-        }
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
 
-        /* Smooth Accordion */
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* PRINT STYLES (For PDF Export) */
+        @media print {
+            body * { visibility: hidden; }
+            #result-view, #result-view * { visibility: visible; }
+            #result-view { 
+                position: absolute; 
+                left: 0; top: 0; width: 100%; height: 100%; 
+                background: white; z-index: 9999; 
+                padding: 0; margin: 0; overflow: visible;
+            }
+            /* Hide Buttons in Print Mode */
+            .no-print { display: none !important; }
+            /* Make text legible */
+            .prose { font-size: 12pt; line-height: 1.6; color: black; }
         }
-        .accordion-open {
-            max-height: 800px;
-        }
-
-        /* Custom Checkbox Design */
-        .custom-checkbox:checked + div {
-            background-color: #EEF2FF; /* Indigo-50 */
-            border-color: #6366F1;
-            color: #4338CA;
-            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
-        }
-        
-        /* Scrollbar polish */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+<body class="h-screen flex flex-col overflow-hidden text-gray-800 bg-slate-50">
 
-    <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 h-18 flex items-center px-8 justify-between flex-shrink-0 z-20 shadow-sm">
-        <div class="flex items-center gap-6">
-            <a href="writing-index.html" class="text-gray-400 hover:text-indigo-600 font-bold flex items-center gap-2 text-sm transition-colors group">
-                <div class="p-2 bg-gray-100 rounded-lg group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                </div>
-                <span>Back</span>
+    <header class="bg-white border-b border-gray-200 h-16 flex items-center px-6 justify-between flex-shrink-0 z-40 relative shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="writing-index.html" class="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold transition">
+                <div class="p-2 bg-gray-100 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg></div>
+                <span class="hidden sm:inline">Back</span>
             </a>
             
-            <div>
-                <h1 class="text-xl font-extrabold text-gray-900 tracking-tight">Writing Architect</h1>
-                <div class="flex items-center gap-2 mt-0.5">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Level:</span>
-                    <span id="level-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500 animate-pulse">LOADING...</span>
+            <div id="mode-toggle-container" class="hidden absolute left-1/2 transform -translate-x-1/2 flex bg-gray-100 p-1 rounded-lg">
+                <button onclick="switchMode('question')" id="btn-mode-question" class="px-6 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-indigo-600 transition-all">
+                    📖 Read Question
+                </button>
+                <button onclick="switchMode('builder')" id="btn-mode-builder" class="px-6 py-2 rounded-md text-sm font-bold text-gray-500 hover:text-indigo-600 transition-all">
+                    🏗️ Build Essay
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div id="level-badge" class="px-4 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500">LOADING...</div>
+                <a href="#" id="level-switch-link" class="text-[10px] font-bold text-gray-400 hover:text-indigo-600 underline">Switch Level</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <div id="view-question" class="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center p-8 transition-opacity duration-300">
+            
+            <div id="initial-select-container" class="w-full max-w-md mb-10 transition-all duration-500">
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block text-center">Start here:</label>
+                <div class="relative group">
+                    <select id="topic-select-main" onchange="loadQuestion(this.value)" class="w-full p-4 pr-10 bg-white border-2 border-indigo-100 rounded-2xl font-bold text-xl text-gray-700 shadow-lg focus:ring-4 focus:ring-indigo-100 outline-none appearance-none cursor-pointer text-center">
+                        <option value="" disabled selected>Select a Task...</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-indigo-400">
+                        <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div id="big-paper-container" class="hidden w-full max-w-5xl animate-fade">
+                <div class="exam-paper p-12 md:p-16 transform transition hover:scale-[1.01] duration-500">
+                    <div class="flex justify-between items-start mb-10 border-b border-gray-100 pb-6">
+                        <div>
+                            <h2 class="text-sm font-sans font-bold text-gray-400 uppercase tracking-widest">Part 1</h2>
+                            <h1 class="text-5xl font-bold text-gray-900 mt-2 tracking-tight">Essay Task</h1>
+                        </div>
+                        <div class="text-right">
+                            <div class="inline-block px-4 py-2 rounded bg-gray-100 text-sm font-sans font-bold text-gray-500">45 minutes</div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-2xl leading-relaxed text-gray-600 mb-10 font-serif" id="big-scenario">Scenario...</p>
+                    
+                    <div class="bg-slate-50 border-l-8 border-indigo-500 p-8 rounded-r-xl">
+                        <p class="font-bold text-3xl text-gray-800 mb-8 font-sans" id="big-prompt">Prompt...</p>
+                        
+                        <div class="flex flex-col md:flex-row gap-8 items-start">
+                            <div class="bg-white border border-gray-200 shadow-sm p-6 inline-block min-w-[45%] -rotate-1 flex-1">
+                                <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">Notes</p>
+                                <ul class="list-disc pl-6 space-y-3 font-medium text-xl text-gray-700" id="big-notes"></ul>
+                            </div>
+                            <div id="big-opinions-wrapper" class="hidden flex-1 w-full">
+                                <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider">Opinions expressed in the discussion:</p>
+                                <div id="big-opinions-list" class="space-y-4"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 flex justify-center">
+                        <button onclick="switchMode('builder')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex items-center gap-3">
+                            <span>Start Building This Essay</span>
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <button onclick="generateEssay()" id="btn-generate" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white pl-5 pr-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
-            <span>Generate WAGOLL</span>
-        </button>
-    </header>
 
-    <div class="flex flex-1 overflow-hidden">
-
-        <aside class="w-1/3 min-w-[380px] max-w-[480px] sidebar-container border-r border-gray-200 overflow-y-auto p-8 flex flex-col gap-10 z-10 custom-scrollbar">
-
-            <div class="space-y-3">
-                <label class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px]">1</span>
-                    Select Task
-                </label>
-                <div class="relative">
-                    <select id="topic-select" onchange="loadQuestion()" class="w-full p-4 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none transition-shadow hover:border-indigo-300">
-                        <option value="" disabled selected>Loading topics from database...</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                    </div>
-                </div>
-            </div>
-
-            <div id="ingredients-section" class="hidden opacity-0 transition-all duration-500 transform translate-y-4">
-                <label class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                    <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px]">2</span>
-                    Essay Content
-                </label>
-                
-                <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
-                    <p class="text-sm text-indigo-900 font-bold mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                        <span id="instruction-text">Discussion Points</span>
-                    </p>
-                    
-                    <div id="points-container" class="space-y-3">
-                        </div>
-
-                    <div id="own-idea-container" class="mt-4 hidden animate-fade-in">
-                        <input type="text" id="own-idea-input" placeholder="Type the student's idea here..." class="w-full p-3 text-sm bg-white border border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none shadow-sm transition-all">
-                    </div>
-                </div>
-            </div>
-
-            <div id="tools-section" class="hidden space-y-4">
-                <label class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px]">3</span>
-                    Ingredients
-                </label>
-
-                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <button onclick="toggleAccordion('acc-grammar')" class="w-full flex justify-between items-center p-4 bg-white hover:bg-gray-50 transition-colors font-bold text-gray-700 text-sm">
-                        <div class="flex items-center gap-2">
-                            <span class="text-lg">🧬</span>
-                            <span>Required Grammar</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform text-gray-400" id="icon-acc-grammar" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div id="acc-grammar" class="accordion-content bg-gray-50/50">
-                        <div class="p-4 grid grid-cols-1 gap-2" id="grammar-list">
-                            </div>
-                    </div>
-                </div>
-
-                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <button onclick="toggleAccordion('acc-linkers')" class="w-full flex justify-between items-center p-4 bg-white hover:bg-gray-50 transition-colors font-bold text-gray-700 text-sm">
-                         <div class="flex items-center gap-2">
-                            <span class="text-lg">🔗</span>
-                            <span>Required Linkers</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform text-gray-400" id="icon-acc-linkers" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div id="acc-linkers" class="accordion-content bg-gray-50/50">
-                        <div class="p-4 space-y-2" id="linkers-list">
-                            </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="quality-section" class="hidden pb-8">
-                 <label class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                    <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px]">4</span>
-                    Target Band Score
-                </label>
-                 <div class="flex bg-gray-100 p-1.5 rounded-xl shadow-inner">
-                     <button onclick="setQuality('fail')" class="quality-btn flex-1 py-2.5 text-xs font-bold rounded-lg text-gray-500 hover:text-gray-700 transition-all">Band 1-2 (Fail)</button>
-                     <button onclick="setQuality('pass')" class="quality-btn flex-1 py-2.5 text-xs font-bold rounded-lg text-gray-500 hover:text-gray-700 transition-all">Band 3 (Pass)</button>
-                     <button onclick="setQuality('distinction')" class="quality-btn flex-1 py-2.5 text-xs font-bold rounded-lg bg-white shadow-sm text-indigo-600 ring-1 ring-black/5">Band 5 (Top)</button>
-                 </div>
-            </div>
-
-        </aside>
-
-        <main class="flex-1 bg-slate-50 overflow-y-auto p-10 flex justify-center custom-scrollbar">
+        <div id="view-builder" class="absolute inset-0 z-20 flex hidden opacity-0 transition-opacity duration-300">
             
-            <div class="w-full max-w-4xl space-y-8">
-
-                <div id="paper-view" class="exam-paper p-10 hidden opacity-0 transform translate-y-4 transition-all duration-700">
-                    <div class="flex justify-between items-start mb-8 border-b border-gray-100 pb-6">
-                        <div>
-                            <h2 class="text-sm font-sans font-bold text-gray-400 uppercase tracking-widest">Part 1</h2>
-                            <h1 class="text-4xl font-bold text-gray-900 mt-2 tracking-tight">Essay</h1>
-                        </div>
-                        <div class="text-right">
-                            <span class="inline-block px-3 py-1 rounded bg-gray-100 text-xs font-sans font-bold text-gray-500">45 minutes</span>
-                        </div>
-                    </div>
-
-                    <p class="text-xl leading-relaxed text-gray-600 mb-8" id="question-scenario">
-                        </p>
-
-                    <div class="bg-gray-50 rounded-xl border border-gray-200 p-8 mb-8 relative">
-                         <div class="absolute -top-3 left-8 w-12 h-4 bg-gray-200 rounded-full opacity-50"></div>
-
-                        <p class="font-bold text-2xl text-gray-800 mb-6 font-sans" id="essay-prompt">
-                            </p>
+            <aside class="w-[380px] bg-white border-r border-gray-200 flex flex-col z-20 shadow-xl">
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                    
+                    <div>
+                        <label class="flex items-center gap-2 text-xs font-bold text-orange-600 uppercase tracking-wider mb-3">
+                            <span class="p-1 bg-orange-100 rounded">1</span> Build Ideas
+                        </label>
                         
-                        <div class="bg-white border border-gray-300 shadow-[2px_2px_0px_rgba(0,0,0,0.05)] p-6 inline-block min-w-[60%] rotate-1 transform transition hover:rotate-0">
-                            <p class="text-xs font-sans font-bold text-gray-400 mb-3 uppercase tracking-wider border-b border-gray-100 pb-2">Notes</p>
-                            <ul class="list-disc pl-5 space-y-2 font-medium text-lg text-gray-700" id="paper-notes">
-                                </ul>
+                        <div id="c1-point-selector" class="hidden mb-4 bg-orange-50 p-3 rounded-xl border border-orange-100">
+                            <p class="text-xs font-bold text-orange-800 mb-2">Select 2 points to discuss:</p>
+                            <div id="c1-checkboxes" class="space-y-2"></div>
                         </div>
+
+                        <div id="idea-inputs-container" class="space-y-4"></div>
                     </div>
 
-                    <div id="paper-opinions" class="hidden mt-8 pt-8 border-t border-gray-100">
-                        <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider">Opinions expressed in the discussion:</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="opinions-grid">
-                            </div>
-                    </div>
-                </div>
-
-                <div id="result-view" class="hidden animate-fade-in-up">
-                    <div class="bg-white rounded-2xl shadow-xl border border-indigo-100 overflow-hidden ring-1 ring-black/5">
-                        <div class="bg-gradient-to-r from-indigo-50 to-white px-8 py-5 border-b border-indigo-50 flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-green-100 text-green-700 p-2 rounded-lg">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </div>
-                                <h3 class="font-bold text-gray-900 text-lg">Model Answer</h3>
-                            </div>
-                            <div class="flex gap-2">
-                                <button class="text-xs font-bold text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-indigo-100">Copy Text</button>
-                            </div>
+                    <div>
+                        <label class="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">
+                            <span class="p-1 bg-blue-100 rounded">2</span> Add Ingredients
+                        </label>
+                        <div class="mb-6">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase mb-2">Linking Words</h3>
+                            <div id="warehouse-linkers" class="flex flex-wrap gap-2"></div>
+                            <button onclick="toggleExtra('linker')" id="btn-show-c1-linkers" class="hidden text-xs font-bold text-blue-600 mt-2 hover:underline">+ Show C1 Linkers</button>
+                            <div id="warehouse-linkers-extra" class="hidden flex-wrap gap-2 mt-2 border-t border-dashed border-blue-200 pt-2"></div>
                         </div>
-                        <div class="p-10 prose prose-lg prose-indigo max-w-none font-serif text-gray-700 leading-loose" id="ai-output-text">
-                            <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-4">
-                                <svg class="w-10 h-10 animate-spin text-indigo-200" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                <span class="font-sans text-sm font-medium">Writing your essay...</span>
-                            </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-400 uppercase mb-2">Grammar</h3>
+                            <div id="warehouse-grammar" class="flex flex-wrap gap-2"></div>
+                            <button onclick="toggleExtra('grammar')" id="btn-show-c1-grammar" class="hidden text-xs font-bold text-green-600 mt-2 hover:underline">+ Show C1 Grammar</button>
+                            <div id="warehouse-grammar-extra" class="hidden flex-wrap gap-2 mt-2 border-t border-dashed border-green-200 pt-2"></div>
                         </div>
                     </div>
                 </div>
 
+                <div class="p-6 border-t border-gray-200 bg-slate-50">
+                    <div class="flex bg-white p-1 rounded-lg mb-4 shadow-sm border border-gray-200">
+                        <button onclick="setQuality('fail')" class="quality-btn flex-1 py-2 text-xs font-bold rounded text-gray-500 hover:bg-gray-50">Fail</button>
+                        <button onclick="setQuality('pass')" class="quality-btn flex-1 py-2 text-xs font-bold rounded text-gray-500 hover:bg-gray-50">Pass</button>
+                        <button onclick="setQuality('distinction')" class="quality-btn flex-1 py-2 text-xs font-bold rounded bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100">Distinction</button>
+                    </div>
+                    <button onclick="generateEssay()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-lg font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3">
+                        <span>Construct Essay</span>
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </button>
+                </div>
+            </aside>
+
+            <main class="flex-1 bg-slate-100 overflow-y-auto custom-scrollbar p-8 relative">
+                <div class="max-w-4xl mx-auto pb-32">
+                    
+                    <div class="exam-paper p-6 mb-8 opacity-90 hover:opacity-100 transition-opacity">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-xs font-sans font-bold text-gray-400 uppercase tracking-widest">Reference Task</h2>
+                            <button onclick="switchMode('question')" class="text-xs font-bold text-indigo-500 hover:text-indigo-700">View Big</button>
+                        </div>
+                        <p class="font-bold text-lg text-gray-800 mb-2" id="small-prompt">...</p>
+                        <div class="flex flex-col gap-4 mt-3 pt-3 border-t border-gray-100">
+                             <div>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Notes:</span>
+                                <ul class="list-disc pl-5 text-sm text-gray-700 font-medium" id="small-notes"></ul>
+                             </div>
+                             <div id="small-opinions-wrapper" class="hidden">
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Opinions:</span>
+                                <div id="small-opinions-list" class="flex flex-wrap gap-2 mt-1"></div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-extrabold text-slate-700">Construction Site</h2>
+                        <span class="text-xs font-bold text-gray-400 bg-white px-3 py-1 rounded-full shadow-sm">Tap blocks to remove</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="p-5 bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-sm">Introduction</div>
+                        <div id="essay-slots" class="space-y-4"></div>
+                        <div class="p-5 bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-sm">Conclusion</div>
+                    </div>
+
+                    <div class="mt-8">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Added Ingredients</h3>
+                        <div id="construction-ingredients" class="min-h-[100px] bg-slate-200/50 rounded-2xl border-2 border-slate-300 border-dashed p-4 flex flex-wrap gap-3 content-start transition-all">
+                            <span id="empty-ingredients-msg" class="w-full text-center text-gray-400 font-medium py-4 text-sm">Tap ingredients on the left to add them here.</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div id="result-view" class="absolute inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-8">
+            <div class="bg-white w-full max-w-5xl max-h-full rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                <div class="bg-indigo-900 text-white px-8 py-5 flex justify-between items-center flex-shrink-0 no-print">
+                    <h3 class="font-bold text-2xl">Essay Complete</h3>
+                    <div class="flex gap-2">
+                        <button onclick="saveEssayToDB()" id="btn-save" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                            <span>💾 Save</span>
+                        </button>
+                        <button onclick="window.print()" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                            <span>🖨️ PDF</span>
+                        </button>
+                        <button onclick="document.getElementById('result-view').classList.add('hidden')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg font-bold text-sm">
+                            Close
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-8 py-3 border-b border-indigo-100 flex gap-4 flex-shrink-0 items-center no-print">
+                    <span class="text-xs font-bold text-indigo-400 uppercase">Analysis:</span>
+                    <button onclick="toggleHighlights('grammar')" class="px-3 py-1 text-xs font-bold rounded bg-white text-green-700 border border-green-200 shadow-sm hover:bg-green-50">Grammar</button>
+                    <button onclick="toggleHighlights('linker')" class="px-3 py-1 text-xs font-bold rounded bg-white text-blue-700 border border-blue-200 shadow-sm hover:bg-blue-50">Linkers</button>
+                </div>
+                <div class="p-10 overflow-y-auto prose prose-lg prose-slate max-w-none font-serif leading-loose custom-scrollbar" id="ai-output-text"></div>
             </div>
-        </main>
+        </div>
     </div>
 
-<script>
-        // --- 1. CONFIGURATION ---
+    <script>
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        
-        // FIX: We use 'db' instead of 'supabase' to avoid the name collision
-        // We also access 'createClient' via the global 'supabase' object provided by the CDN
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const urlParams = new URLSearchParams(window.location.search);
         const LEVEL = urlParams.get('level') || 'B2';
         let currentQuality = 'distinction';
-        let allQuestions = []; 
+        let allQuestions = [];
         let currentQuestion = null;
+        let activeIngredients = [];
+        let activePoints = {};
+        let c1SelectedPoints = [];
+        let lastGeneratedData = null; // Store for saving
 
-        // --- 2. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
-            setupLevelBadge();
+            document.getElementById('level-badge').innerText = LEVEL;
+            if (LEVEL === 'C1') {
+                document.getElementById('level-badge').classList.add('bg-purple-100', 'text-purple-700');
+                document.getElementById('level-switch-link').href = "?level=B2";
+                document.getElementById('level-switch-link').innerText = "Switch to B2";
+            } else {
+                document.getElementById('level-switch-link').href = "?level=C1";
+                document.getElementById('level-switch-link').innerText = "Switch to C1";
+            }
             await fetchTopics();
             await fetchResources();
         });
 
-        function setupLevelBadge() {
-            const badge = document.getElementById('level-badge');
-            badge.innerText = LEVEL;
-            badge.classList.remove('animate-pulse');
-            
-            if (LEVEL === 'C1') {
-                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200";
-                document.getElementById('instruction-text').innerText = "Select EXACTLY 2 Points";
+        function switchMode(mode) {
+            const qView = document.getElementById('view-question');
+            const bView = document.getElementById('view-builder');
+            const qBtn = document.getElementById('btn-mode-question');
+            const bBtn = document.getElementById('btn-mode-builder');
+            if (mode === 'question') {
+                qView.classList.remove('hidden'); bView.classList.add('hidden'); setTimeout(() => bView.classList.remove('opacity-100'), 0); 
+                qBtn.className = "px-6 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-indigo-600 transition-all";
+                bBtn.className = "px-6 py-2 rounded-md text-sm font-bold text-gray-500 hover:text-indigo-600 transition-all";
             } else {
-                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200";
-                document.getElementById('instruction-text').innerText = "Confirm Discussion Points";
+                qView.classList.add('hidden'); bView.classList.remove('hidden'); setTimeout(() => bView.classList.add('opacity-100'), 10);
+                bBtn.className = "px-6 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-indigo-600 transition-all";
+                qBtn.className = "px-6 py-2 rounded-md text-sm font-bold text-gray-500 hover:text-indigo-600 transition-all";
             }
         }
 
-        // --- 3. DATA FETCHING ---
         async function fetchTopics() {
-            const select = document.getElementById('topic-select');
-            
-            // UPDATED: Use 'db' instead of 'supabase'
-            const { data, error } = await db
-                .from('writing_exam_questions')
-                .select('*')
-                .eq('level', LEVEL);
-
-            if (error) {
-                console.error('Error fetching topics:', error);
-                select.innerHTML = '<option disabled>Error loading topics</option>';
-                return;
-            }
-
-            allQuestions = data;
-            
-            select.innerHTML = '<option value="" disabled selected>Select a task...</option>';
-            data.forEach(q => {
-                const opt = document.createElement('option');
-                opt.value = q.id;
-                opt.innerText = q.title; 
-                select.appendChild(opt);
-            });
-        }
-
-async function fetchResources() {
-            // UPDATED: Use 'db' instead of 'supabase'
-            const { data, error } = await db
-                .from('writing_resources')
-                .select('*')
-                .eq('level', LEVEL)
-                .order('category', { ascending: true }); // Sort by category A-Z
-
+            const select = document.getElementById('topic-select-main');
+            const { data, error } = await db.from('writing_exam_questions').select('*').eq('level', LEVEL);
             if (error) return console.error(error);
+            allQuestions = data;
+            select.innerHTML = '<option value="" disabled selected>Select a Task...</option>';
+            data.forEach(q => select.innerHTML += `<option value="${q.id}">${q.title}</option>`);
+        }
 
-            // 1. POPULATE GRAMMAR (Simple List)
-            const gList = document.getElementById('grammar-list');
-            const grammarItems = data.filter(r => r.type === 'grammar');
-            
-            gList.innerHTML = ''; // Clear existing
-            grammarItems.forEach(g => {
-                gList.innerHTML += `
-                    <label class="flex items-start gap-3 p-3 rounded-lg border border-transparent hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer group">
-                        <input type="checkbox" value="${g.content}" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                        <div>
-                            <span class="block text-sm font-medium text-gray-700 group-hover:text-indigo-700">${g.content}</span>
-                            ${g.explanation ? `<span class="block text-[10px] text-gray-400 leading-tight mt-0.5">${g.explanation}</span>` : ''}
-                        </div>
-                    </label>
-                `;
-            });
+        async function fetchResources() {
+            const { data, error } = await db.from('writing_resources').select('*').order('category', { ascending: true });
+            if (error) return console.error(error);
+            renderWarehouseItems(data);
+        }
 
-            // 2. POPULATE LINKERS (Grouped by Category)
-            const lList = document.getElementById('linkers-list');
-            const linkerItems = data.filter(r => r.type === 'linker');
-            
-            // Helper: Group array by 'category'
-            const groupedLinkers = linkerItems.reduce((acc, item) => {
-                const cat = item.category || 'General';
-                if (!acc[cat]) acc[cat] = [];
-                acc[cat].push(item);
-                return acc;
-            }, {});
+        function renderWarehouseItems(data) {
+            const createChip = (item, color) => `<div onclick="addIngredient('${item.id}', '${item.content.replace(/'/g, "\\'")}', '${item.type}')" id="chip-${item.id}" class="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm bg-white ${color}">${item.content}</div>`;
+            const gContainer = document.getElementById('warehouse-grammar');
+            const lContainer = document.getElementById('warehouse-linkers');
+            const gExtra = document.getElementById('warehouse-grammar-extra');
+            const lExtra = document.getElementById('warehouse-linkers-extra');
 
-            lList.innerHTML = ''; // Clear existing
+            if(LEVEL === 'B2') { document.getElementById('btn-show-c1-linkers').classList.remove('hidden'); document.getElementById('btn-show-c1-grammar').classList.remove('hidden'); }
 
-            // Iterate through categories
-            Object.keys(groupedLinkers).sort().forEach(category => {
-                // A. Add Category Header
-                lList.innerHTML += `
-                    <div class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mt-4 mb-2 pl-1 border-b border-gray-100 pb-1">
-                        ${category}
-                    </div>
-                `;
-
-                // B. Add Items in that category
-                groupedLinkers[category].forEach(l => {
-                    lList.innerHTML += `
-                        <label class="flex items-center justify-between p-2 rounded hover:bg-indigo-50 cursor-pointer transition-colors ml-1">
-                            <span class="text-sm text-gray-600 font-medium">${l.content}</span>
-                            <input type="checkbox" value="${l.content}" class="rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                        </label>
-                    `;
-                });
+            data.forEach(item => {
+                const isC1 = item.level === 'C1';
+                const target = item.type === 'grammar' ? (isC1 && LEVEL === 'B2' ? gExtra : gContainer) : (isC1 && LEVEL === 'B2' ? lExtra : lContainer);
+                const color = item.type === 'grammar' ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50';
+                target.innerHTML += createChip(item, color);
             });
         }
-        // --- 4. UI INTERACTION ---
-        function loadQuestion() {
-            const id = document.getElementById('topic-select').value;
+
+        function loadQuestion(id) {
             currentQuestion = allQuestions.find(q => q.id === id);
             if (!currentQuestion) return;
 
-            const uiElements = ['ingredients-section', 'tools-section', 'quality-section'];
-            uiElements.forEach((el, index) => {
-                const domEl = document.getElementById(el);
-                domEl.classList.remove('hidden');
-                setTimeout(() => {
-                    domEl.classList.remove('opacity-0', 'translate-y-4');
-                }, index * 100); 
-            });
+            // Big View
+            document.getElementById('initial-select-container').classList.add('hidden');
+            document.getElementById('big-paper-container').classList.remove('hidden');
+            document.getElementById('mode-toggle-container').classList.remove('hidden');
+            document.getElementById('big-scenario').innerText = currentQuestion.question_text;
+            document.getElementById('big-prompt').innerText = currentQuestion.essay_prompt;
+            document.getElementById('big-notes').innerHTML = '';
+            (currentQuestion.structure_data.points || []).forEach(p => document.getElementById('big-notes').innerHTML += `<li>${p}</li>`);
 
-            const paper = document.getElementById('paper-view');
-            paper.classList.remove('hidden');
-            setTimeout(() => { paper.classList.remove('opacity-0', 'translate-y-4'); }, 100);
-
-            document.getElementById('question-scenario').innerText = currentQuestion.question_text;
-            document.getElementById('essay-prompt').innerText = currentQuestion.essay_prompt;
-
-            const notesList = document.getElementById('paper-notes');
-            notesList.innerHTML = '';
-            const points = currentQuestion.structure_data.points || [];
-            points.forEach(p => {
-                notesList.innerHTML += `<li>${p}</li>`;
-            });
-
-            const opDiv = document.getElementById('paper-opinions');
-            const opGrid = document.getElementById('opinions-grid');
-            const opinions = currentQuestion.structure_data.opinions;
-
-            if (LEVEL === 'C1' && opinions) {
-                opDiv.classList.remove('hidden');
-                opGrid.innerHTML = '';
-                opinions.forEach(op => {
-                    opGrid.innerHTML += `<div class="bg-white border border-gray-200 p-4 rounded-lg text-xs italic text-gray-500 shadow-sm leading-relaxed">"${op.replace(/"/g, '')}"</div>`;
-                });
+            // Opinions
+            if (currentQuestion.structure_data.opinions && currentQuestion.structure_data.opinions.length > 0) {
+                document.getElementById('big-opinions-wrapper').classList.remove('hidden');
+                document.getElementById('big-opinions-list').innerHTML = currentQuestion.structure_data.opinions.map(op => `<div class="bg-white border-l-4 border-gray-300 p-3 text-sm italic text-gray-600 shadow-sm">"${op.replace(/"/g, '')}"</div>`).join('');
+                document.getElementById('small-opinions-wrapper').classList.remove('hidden');
+                document.getElementById('small-opinions-list').innerHTML = currentQuestion.structure_data.opinions.map(op => `<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded border border-gray-200 italic">"${op.replace(/"/g, '')}"</span>`).join('');
             } else {
-                opDiv.classList.add('hidden');
+                document.getElementById('big-opinions-wrapper').classList.add('hidden');
+                document.getElementById('small-opinions-wrapper').classList.add('hidden');
             }
 
-            generateIngredientCheckboxes(points);
+            // Small View
+            document.getElementById('small-prompt').innerText = currentQuestion.essay_prompt;
+            document.getElementById('small-notes').innerHTML = '';
+            (currentQuestion.structure_data.points || []).forEach(p => document.getElementById('small-notes').innerHTML += `<li>${p}</li>`);
+
+            setupIdeaSystem(currentQuestion.structure_data.points || []);
+            activeIngredients = [];
+            updateIngredientDisplay();
         }
 
-        function generateIngredientCheckboxes(points) {
-            const container = document.getElementById('points-container');
-            container.innerHTML = '';
-            const ownIdeaInput = document.getElementById('own-idea-container');
+        function setupIdeaSystem(points) {
+            const inputContainer = document.getElementById('idea-inputs-container');
+            const slotContainer = document.getElementById('essay-slots');
+            const c1Selector = document.getElementById('c1-point-selector');
+            const c1Checkboxes = document.getElementById('c1-checkboxes');
+            inputContainer.innerHTML = ''; slotContainer.innerHTML = ''; activePoints = {}; c1SelectedPoints = [];
 
             if (LEVEL === 'B2') {
-                points.forEach((p, idx) => {
-                    const isOwnIdea = idx === (points.length - 1); 
-                    
-                    container.innerHTML += `
-                        <label class="flex items-center p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed opacity-80">
-                            <input type="checkbox" checked disabled class="w-5 h-5 text-gray-400 rounded border-gray-300">
-                            <span class="ml-3 text-sm font-bold text-gray-500">${p}</span>
-                        </label>
-                    `;
-                    
-                    if (isOwnIdea) {
-                        ownIdeaInput.classList.remove('hidden');
-                        document.getElementById('own-idea-input').placeholder = `Type your idea for '${p}'...`;
-                    }
-                });
+                c1Selector.classList.add('hidden');
+                points.forEach((pointName, index) => createInputAndSlot(pointName, index));
             } else {
-                ownIdeaInput.classList.add('hidden');
-                points.forEach(p => {
-                    container.innerHTML += `
-                        <label class="flex items-center cursor-pointer group">
-                            <input type="checkbox" name="c1_point" value="${p}" onclick="limitChecks(this)" class="custom-checkbox sr-only">
-                            <div class="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 group-hover:border-indigo-300 transition-all">
-                                ${p}
-                            </div>
-                        </label>
-                    `;
+                c1Selector.classList.remove('hidden');
+                c1Checkboxes.innerHTML = '';
+                points.forEach((pointName, index) => {
+                    c1Checkboxes.innerHTML += `<label class="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-orange-100 transition"><input type="checkbox" value="${pointName}" onchange="handleC1Selection(this, ${index})" class="c1-checkbox w-5 h-5 text-orange-500 rounded focus:ring-orange-400"><div class="text-sm font-bold text-gray-600">${pointName}</div></label>`;
                 });
             }
         }
 
-        // --- 5. HELPERS ---
-        function toggleAccordion(id) {
-            const content = document.getElementById(id);
-            const icon = document.getElementById('icon-' + id);
-            if (content.classList.contains('accordion-open')) {
-                content.classList.remove('accordion-open');
-                icon.classList.remove('rotate-180');
+        function createInputAndSlot(pointName, index) {
+            const inputContainer = document.getElementById('idea-inputs-container');
+            const slotContainer = document.getElementById('essay-slots');
+            inputContainer.innerHTML += `<div id="wrapper-input-${index}" class="bg-orange-50 p-3 rounded-xl border border-orange-100 transition-all animate-fade"><div class="text-[10px] font-bold text-orange-400 uppercase mb-1">${pointName}</div><div class="flex gap-2"><input type="text" id="input-${index}" placeholder="Type idea..." class="flex-1 bg-white border border-orange-200 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-orange-400 outline-none"><button onclick="commitIdea(${index}, '${pointName}')" class="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-3 font-bold">✔</button></div></div>`;
+            slotContainer.innerHTML += `<div id="slot-${index}" class="min-h-[80px] bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center p-4 transition-all animate-fade"><span class="text-gray-400 font-bold text-xs uppercase tracking-wide">Slot: ${pointName}</span></div>`;
+        }
+
+        function handleC1Selection(checkbox, index) {
+            const pointName = checkbox.value;
+            if (checkbox.checked) {
+                if (c1SelectedPoints.length >= 2) { checkbox.checked = false; return alert("You can only select 2 points for C1."); }
+                c1SelectedPoints.push(pointName);
+                createInputAndSlot(pointName, index);
             } else {
-                content.classList.add('accordion-open');
-                icon.classList.add('rotate-180');
+                c1SelectedPoints = c1SelectedPoints.filter(p => p !== pointName);
+                const wrapper = document.getElementById(`wrapper-input-${index}`);
+                const slot = document.getElementById(`slot-${index}`);
+                if(wrapper) wrapper.remove();
+                if(slot) slot.remove();
+                delete activePoints[pointName];
             }
         }
 
-        function limitChecks(checkbox) {
-            const checked = document.querySelectorAll('input[name="c1_point"]:checked');
-            if (checked.length > 2) {
-                checkbox.checked = false;
-                alert("For C1, you must select exactly TWO points.");
-            }
+        function commitIdea(index, pointName) {
+            const text = document.getElementById(`input-${index}`).value.trim();
+            if (!text) return;
+            activePoints[pointName] = text;
+            document.getElementById(`wrapper-input-${index}`).classList.add('hidden');
+            const slot = document.getElementById(`slot-${index}`);
+            slot.className = "builder-block block-idea p-4 rounded-xl animate-fade relative group";
+            slot.innerHTML = `<div class="text-[10px] font-bold opacity-75 uppercase mb-1">${pointName}</div><div class="font-bold text-lg leading-tight">"${text}"</div><div onclick="editIdea(${index}, '${pointName}')" class="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold text-orange-600">TAP TO EDIT</div>`;
         }
 
-        function setQuality(level) {
-            currentQuality = level;
-            const buttons = document.querySelectorAll('.quality-btn');
-            buttons.forEach(btn => {
-                btn.className = "quality-btn flex-1 py-2.5 text-xs font-bold rounded-lg text-gray-500 hover:text-gray-700 transition-all";
+        function editIdea(index, pointName) {
+            delete activePoints[pointName];
+            document.getElementById(`wrapper-input-${index}`).classList.remove('hidden');
+            const slot = document.getElementById(`slot-${index}`);
+            slot.className = "min-h-[80px] bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center p-4 transition-all";
+            slot.innerHTML = `<span class="text-gray-400 font-bold text-xs uppercase tracking-wide">Slot: ${pointName}</span>`;
+            document.getElementById(`input-${index}`).focus();
+        }
+
+        function addIngredient(id, content, type) {
+            if (activeIngredients.find(i => i.id === id)) return;
+            activeIngredients.push({ id, content, type });
+            updateIngredientDisplay();
+        }
+
+        function removeIngredient(id) {
+            activeIngredients = activeIngredients.filter(i => i.id !== id);
+            updateIngredientDisplay();
+        }
+
+        function updateIngredientDisplay() {
+            const container = document.getElementById('construction-ingredients');
+            const emptyMsg = document.getElementById('empty-ingredients-msg');
+            document.querySelectorAll('[id^="chip-"]').forEach(el => el.classList.remove('used-item'));
+            activeIngredients.forEach(i => document.getElementById(`chip-${i.id}`)?.classList.add('used-item'));
+            if (activeIngredients.length === 0) { container.innerHTML = ''; container.appendChild(emptyMsg); emptyMsg.style.display = 'block'; return; }
+            emptyMsg.style.display = 'none';
+            container.innerHTML = ''; 
+            activeIngredients.forEach(item => {
+                const cssClass = item.type === 'grammar' ? 'block-grammar' : 'block-linker';
+                container.innerHTML += `<div onclick="removeIngredient('${item.id}')" class="builder-block ${cssClass} px-3 py-2 rounded-lg font-bold text-xs animate-fade flex items-center gap-2"><span>${item.content}</span><span class="opacity-50">✕</span></div>`;
             });
-            event.target.className = "quality-btn flex-1 py-2.5 text-xs font-bold rounded-lg bg-white shadow-sm text-indigo-600 ring-1 ring-black/5 transition-all transform scale-105";
         }
 
-        // --- 6. GENERATION LOGIC ---
-        function generateEssay() {
-            if (!currentQuestion) return alert("Please select a task first.");
+        function toggleExtra(type) {
+            const id = type === 'grammar' ? 'warehouse-grammar-extra' : 'warehouse-linkers-extra';
+            document.getElementById(id).classList.toggle('hidden'); document.getElementById(id).classList.toggle('flex');
+        }
 
-            const grammar = Array.from(document.querySelectorAll('#grammar-list input:checked')).map(cb => cb.value);
-            const linkers = Array.from(document.querySelectorAll('#linkers-list input:checked')).map(cb => cb.value);
+        function setQuality(q) {
+            currentQuality = q;
+            document.querySelectorAll('.quality-btn').forEach(b => {
+                b.classList.remove('bg-indigo-50', 'text-indigo-600', 'shadow-sm', 'border-indigo-100');
+                b.classList.add('text-gray-500');
+            });
+            event.target.classList.remove('text-gray-500');
+            event.target.classList.add('bg-indigo-50', 'text-indigo-600', 'shadow-sm', 'border-indigo-100');
+        }
+
+        async function generateEssay() {
+            if (!currentQuestion) return alert("Please select a task.");
+            const pointsData = Object.keys(activePoints).map(key => ({ topic: key, argument: activePoints[key] }));
+            if (LEVEL === 'C1' && pointsData.length !== 2) return alert("For C1, you must build exactly 2 idea blocks.");
             
-            let selectedPoints = [];
-            let ownIdea = "";
-
-            if (LEVEL === 'B2') {
-                selectedPoints = currentQuestion.structure_data.points; 
-                ownIdea = document.getElementById('own-idea-input').value;
-                if (!ownIdea) return alert("Please type an idea for the 'Own Idea' point.");
-            } else {
-                selectedPoints = Array.from(document.querySelectorAll('input[name="c1_point"]:checked')).map(cb => cb.value);
-                if (selectedPoints.length !== 2) return alert("Please select exactly 2 points to discuss.");
-            }
+            const grammarList = activeIngredients.filter(i => i.type === 'grammar').map(i => i.content);
+            const linkerList = activeIngredients.filter(i => i.type === 'linker').map(i => i.content);
 
             document.getElementById('result-view').classList.remove('hidden');
             const outputDiv = document.getElementById('ai-output-text');
-            
-            outputDiv.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-4">
-                    <svg class="w-10 h-10 animate-spin text-indigo-200" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span class="font-sans text-sm font-medium animate-pulse">Consulting Cambridge Examiners...</span>
-                </div>
-            `;
-            document.getElementById('result-view').scrollIntoView({ behavior: 'smooth' });
+            outputDiv.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-gray-400 gap-4"><svg class="w-16 h-16 animate-spin text-indigo-300" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="font-sans font-bold text-2xl animate-pulse text-indigo-900">Constructing Essay...</span></div>`;
 
-            console.log("SENDING TO AI:", {
-                level: LEVEL,
-                quality: currentQuality,
-                topic: currentQuestion.topic,
-                points: selectedPoints,
-                ownIdea: ownIdea,
-                grammar: grammar,
-                linkers: linkers
-            });
-            
-            // Temporary Fake Result for Testing
-            setTimeout(() => {
-                outputDiv.innerHTML = `
-                    <p class="font-bold text-indigo-700">Database Connection Successful!</p>
-                    <p>This is a placeholder result to prove we can read the question and user inputs.</p>
-                    <ul class="list-disc pl-5 mt-4 space-y-2">
-                        <li><strong>Level:</strong> ${LEVEL}</li>
-                        <li><strong>Topic:</strong> ${currentQuestion.title}</li>
-                        <li><strong>Discussing:</strong> ${selectedPoints.join(', ')}</li>
-                        <li><strong>Own Idea:</strong> ${ownIdea || 'N/A'}</li>
-                    </ul>
-                `;
-            }, 1500);
+            try {
+                const response = await fetch('/.netlify/functions/generate_essay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level: LEVEL, quality: currentQuality, topic: currentQuestion.topic, points_data: pointsData, grammar: grammarList, linkers: linkerList })
+                });
+                if (!response.ok) throw new Error("Network error");
+                const aiData = await response.json(); 
+                
+                lastGeneratedData = {
+                    level: LEVEL,
+                    topic_title: currentQuestion.title,
+                    essay_text: aiData.essay_text,
+                    analysis_json: aiData.analysis
+                };
+
+                let formattedText = aiData.essay_text.replace(/\n/g, '<br>');
+                aiData.analysis.forEach(item => {
+                    const regex = new RegExp(`(${item.phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+                    const className = item.type === 'grammar' ? 'highlight-grammar' : 'highlight-linker';
+                    formattedText = formattedText.replace(regex, `<span class="${className}" style="background-color: transparent; border-bottom: none;" title="${item.label}: ${item.explanation}">$1</span>`);
+                });
+                outputDiv.innerHTML = formattedText;
+            } catch (error) {
+                outputDiv.innerHTML = `<div class="p-6 bg-red-50 text-red-600 rounded-xl font-bold">Error: ${error.message}</div>`;
+            }
         }
+
+        async function saveEssayToDB() {
+            if (!lastGeneratedData) return;
+            const btn = document.getElementById('btn-save');
+            btn.innerHTML = `<span class="animate-spin">⏳</span> Saving...`;
+            
+            const { error } = await db.from('saved_essays').insert([lastGeneratedData]);
+            
+            if (error) {
+                alert("Error saving: " + error.message);
+                btn.innerHTML = `<span>💾 Save</span>`;
+            } else {
+                btn.innerHTML = `<span>✅ Saved</span>`;
+                btn.classList.add('bg-green-600', 'hover:bg-green-600');
+                setTimeout(() => btn.innerHTML = `<span>💾 Save</span>`, 3000);
+            }
+        }
+
+        window.toggleHighlights = function(type) {
+            const selector = type === 'grammar' ? '.highlight-grammar' : '.highlight-linker';
+            const color = type === 'grammar' ? '#d1fae5' : '#dbeafe';
+            const border = type === 'grammar' ? '2px solid #059669' : '2px solid #2563eb';
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.backgroundColor = el.style.backgroundColor === 'transparent' ? color : 'transparent';
+                el.style.borderBottom = el.style.borderBottom === 'none' ? border : 'none';
+            });
+        };
     </script>
 </body>
 </html>
