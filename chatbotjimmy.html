@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Jimmy</title>
+    
+    <link rel="stylesheet" href="global.css">
+    
+    <style>
+        /* The wrapper holds the chat box + the images sticking out */
+        .jimmy-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 60px; 
+        }
+
+        .chat-container {
+            background: white;
+            border: 3px solid #00BCD4; /* Brand Cyan */
+            border-radius: 20px;
+            box-shadow: 5px 10px 0px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* HEADER */
+        .chat-header {
+            background: #00BCD4;
+            padding: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            background: white;
+            object-fit: contain;
+        }
+
+        .header-text h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .status {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        /* CHAT AREA */
+        .chat-area {
+            flex: 1;
+            background: #F9FAFB;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* BUBBLES */
+        .message {
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            position: relative;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .jimmy-msg {
+            background: #E0F7FA;
+            color: #006064;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .user-msg {
+            background: #333;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* INPUT AREA */
+        .input-area {
+            padding: 15px;
+            background: white;
+            border-top: 2px solid #eee;
+            display: flex;
+            gap: 10px;
+            position: relative;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #00BCD4;
+        }
+
+        .btn-send {
+            background: #00BCD4;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-send:hover {
+            background: #008ba3;
+        }
+
+        /* IMAGES */
+        .jimmy-lean-img {
+            position: absolute;
+            top: -55px; 
+            left: 20px;
+            width: 70px; 
+            z-index: 3;
+            pointer-events: none; 
+        }
+
+        .jimmy-overlay {
+            position: absolute;
+            top: -60px; 
+            right: 40px;
+            width: 80px;
+            transition: transform 0.3s ease;
+            z-index: 1; 
+        }
+
+        .hidden {
+            transform: translateY(100px); /* Hides him behind the box */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-center">
+        <div class="jimmy-wrapper">
+            
+            <img src="images/jimmy_thinking.png" id="jimmy-thinking-img" class="jimmy-overlay hidden" alt="Jimmy thinking">
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <img src="images/jimmy_avatar.png" alt="Jimmy Face" class="avatar-circle">
+                    <div class="header-text">
+                        <h2>Jimmy</h2>
+                        <span class="status">Online & Hungry</span>
+                    </div>
+                    
+                    <a href="/" class="btn-back" style="margin-left: auto; padding: 8px 15px; font-size: 0.9rem;">Exit</a>
+                </div>
+
+                <div id="chat-history" class="chat-area">
+                    <div class="message jimmy-msg">
+                        <p>Hello! I'm Jimmy. I can help you learn English. What do you want to chat about?</p>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <img src="images/jimmy_waiting.png" class="jimmy-lean-img" alt="Jimmy waiting">
+                    
+                    <input type="text" id="user-input" placeholder="Type here..." autocomplete="off">
+                    <button id="send-btn" class="btn-send">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatHistoryDiv = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const thinkingImg = document.getElementById('jimmy-thinking-img');
+
+        let conversationHistory = [];
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.classList.add('message');
+            div.classList.add(sender === 'user' ? 'user-msg' : 'jimmy-msg');
+            div.textContent = text;
+            chatHistoryDiv.appendChild(div);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; 
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            userInput.value = '';
+
+            thinkingImg.classList.remove('hidden');
+
+            try {
+                // Ensure this path matches your Netlify setup
+                const response = await fetch('/.netlify/functions/talk-to-jimmy', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        history: conversationHistory, 
+                        newMessage: text 
+                    })
+                });
+
+                const data = await response.json();
+                thinkingImg.classList.add('hidden');
+
+                if (data.reply) {
+                    addMessage(data.reply, 'jimmy');
+                    
+                    // Add to memory
+                    conversationHistory.push({ role: "user", parts: [{ text: text }] });
+                    conversationHistory.push({ role: "model", parts: [{ text: data.reply }] });
+                    
+                    // Keep memory short
+                    if (conversationHistory.length > 20) conversationHistory.shift();
+                }
+
+            } catch (error) {
+                console.error(error);
+                thinkingImg.classList.add('hidden');
+                addMessage("Oops! My brain fell out. (Error connecting)", 'jimmy');
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+
+</body>
+</html>

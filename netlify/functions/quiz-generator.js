@@ -51,7 +51,7 @@ exports.handler = async function(event, context) {
     JSON RULES:
     1. Output ONLY valid JSON. No Markdown, no backticks.
     2. "answer" must be the NUMBER index of the correct option (0, 1, 2, or 3).
-    3. "questions" must have exactly 5 items.
+    3. "questions" must have exactly 6 items.
     4. "title" must be DESCRIPTIVE and ACADEMIC (e.g. "Present Perfect vs Past Simple"). Do NOT use puns or "fun" titles.
     
     OUTPUT STRUCTURE:

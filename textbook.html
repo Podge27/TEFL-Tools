@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESL Unit Builder</title>
+    
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* Specific Tool Layout */
+        .builder-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Dashboard Controls */
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 2rem;
+        }
+
+        /* Inputs specific to this page */
+        .input-group { display: flex; flex-direction: column; gap: 0.2rem; }
+        .input-group label { font-size: 0.8rem; color: #666; font-weight: 600; }
+        
+        input, select {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        /* TEXTBOOK PREVIEW STYLES (The "Paper" Look) */
+        #textbook-preview {
+            display: none; 
+            background: white;
+            padding: 3rem; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            margin-bottom: 2rem;
+        }
+
+        .unit-header {
+            border-bottom: 2px solid #00BCD4; /* Matches your brand blue */
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        
+        .reading-section { margin-bottom: 3rem; }
+        .reading-columns { column-count: 2; column-gap: 2rem; text-align: justify; line-height: 1.6; }
+        
+        .vocab-box {
+            background-color: #fffbeb;
+            border-left: 5px solid #f59e0b;
+            padding: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .quiz-section {
+            background-color: #f8fafc;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Teacher Mode Logic */
+        .answer-key {
+            display: none;
+            color: #059669;
+            font-weight: bold;
+            background: #dcfce7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .show-answers .answer-key { display: inline-block; }
+
+        /* Save Button Area */
+        #save-area {
+            display: none; /* Hidden until generated */
+            text-align: right;
+            margin-top: 1rem;
+            padding-bottom: 4rem;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div style="padding: 1rem;">
+        <a href="/" class="btn-back">← Back to Home</a>
+    </div>
+
+    <div class="builder-container">
+        <h1>Unit Architect</h1>
+        <p style="color: #666; margin-bottom: 1.5rem;">Generate and Save B2/C1 Units</p>
+
+        <div class="controls">
+            <div class="input-group">
+                <label>Unit ID</label>
+                <input type="text" id="unit-id" placeholder="B2-01" value="B2-01" style="width: 80px;">
+            </div>
+            
+            <div class="input-group" style="flex-grow: 1;">
+                <label>Topic</label>
+                <input type="text" id="topic" placeholder="e.g. Digital Nomads" value="Digital Nomads">
+            </div>
+
+            <div class="input-group">
+                <label>Level</label>
+                <select id="level">
+                    <option value="B1">B1</option>
+                    <option value="B2" selected>B2</option>
+                    <option value="C1">C1</option>
+                </select>
+            </div>
+
+            <button id="genBtn" class="btn-back" style="border:none; margin-top: 1.2rem;" onclick="generateUnit()">
+                Generate Unit
+            </button>
+        </div>
+
+        <div id="textbook-preview">
+            <div class="unit-header">
+                <h1 id="display-title">Unit Title</h1>
+                <span id="display-id" style="font-family: monospace; color: #666;">ID</span>
+            </div>
+
+            <div class="reading-section">
+                <h2 id="reading-headline">Headline</h2>
+                <div class="reading-columns" id="reading-text"></div>
+            </div>
+
+            <div class="vocab-box">
+                <h3>Key Vocabulary</h3>
+                <div id="vocab-list"></div>
+            </div>
+
+            <div class="quiz-section">
+                <h3>Comprehension Check</h3>
+                <div id="quiz-list"></div>
+                <button onclick="toggleTeacherMode()" style="margin-top:1rem; cursor:pointer; background:none; border:1px solid #ccc; padding:5px 10px; border-radius:4px;">
+                    👁️ Toggle Answers
+                </button>
+            </div>
+        </div>
+
+        <div id="save-area">
+            <button id="saveBtn" class="btn-back" onclick="saveToSupabase()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                💾 Save to Database
+            </button>
+            <p id="save-status" style="margin-top: 5px; font-size: 0.9rem; color: #666;"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Replace these with your actual Supabase keys
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Global variable to hold the data before saving
+        let currentUnitData = null;
+
+        // 1. GENERATE (Calls Netlify)
+        async function generateUnit() {
+            const btn = document.getElementById('genBtn');
+            const unitId = document.getElementById('unit-id').value;
+            const topic = document.getElementById('topic').value;
+            const level = document.getElementById('level').value;
+
+            if(!unitId || !topic) { alert("Please enter ID and Topic"); return; }
+
+            btn.disabled = true;
+            btn.innerText = "Generating...";
+            
+            try {
+                const response = await fetch('/.netlify/functions/generate-unit', {
+                    method: 'POST',
+                    body: JSON.stringify({ topic, level })
+                });
+
+                if (!response.ok) throw new Error("Netlify Function failed");
+                
+                const data = await response.json();
+                
+                // Store data globally so we can save it later
+                currentUnitData = data;
+                
+                renderUnit(data, unitId);
+                
+                // Show the Save Button
+                document.getElementById('save-area').style.display = 'block';
+
+            } catch (error) {
+                alert("Error: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Generate Unit";
+            }
+        }
+
+        // 2. RENDER (Shows it on screen)
+        function renderUnit(data, id) {
+            document.getElementById('textbook-preview').style.display = 'block';
+            document.getElementById('display-title').innerText = data.title;
+            document.getElementById('display-id').innerText = id;
+            document.getElementById('reading-headline').innerText = data.reading.headline;
+            document.getElementById('reading-text').innerText = data.reading.text;
+
+            const vocabList = document.getElementById('vocab-list');
+            vocabList.innerHTML = data.vocabulary.map(v => 
+                `<div><strong>${v.word}</strong>: ${v.definition}</div>`
+            ).join('');
+
+            const quizList = document.getElementById('quiz-list');
+            quizList.innerHTML = data.quiz.map((q, i) => `
+                <div style="margin-bottom:1rem;">
+                    <div><strong>${i+1}. ${q.question}</strong></div>
+                    <ul style="margin:5px 0 5px 20px; color:#555;">
+                        ${q.options.map(opt => `<li>${opt}</li>`).join('')}
+                    </ul>
+                    <span class="answer-key">Answer: ${q.answer}</span>
+                </div>
+            `).join('');
+        }
+
+        // 3. SAVE (Calls Supabase)
+async function saveToSupabase() {
+    const unitId = document.getElementById('unit-id').value;
+    // ... (rest of variables)
+
+    const statusMsg = document.getElementById('save-status');
+    statusMsg.innerText = "Saving...";
+    statusMsg.style.color = "blue";
+
+    // SAFETY CHANGE: Use 'insert' instead of 'upsert'
+    const { data, error } = await supabase
+        .from('units')
+        .insert([  // <--- Changed from upsert to insert
+            { 
+                id: unitId,
+                topic: topic,
+                level: level,
+                content: currentUnitData
+            }
+        ]);
+
+    if (error) {
+        // Check if the error is "Duplicate Key" (Error code 23505)
+        if (error.code === '23505') {
+            statusMsg.innerText = "⛔ Error: Unit ID '" + unitId + "' already exists! Change the ID.";
+            statusMsg.style.color = "red";
+            alert("STOP! That ID is taken. Change it to something else (e.g. " + unitId + "-v2) before saving.");
+        } else {
+            console.error(error);
+            statusMsg.innerText = "Error saving: " + error.message;
+            statusMsg.style.color = "red";
+        }
+    } else {
+        statusMsg.innerText = "✅ Unit saved successfully!";
+        statusMsg.style.color = "green";
+    }
+}
+
+        function toggleTeacherMode() {
+            document.getElementById('textbook-preview').classList.toggle('show-answers');
+        }
+    </script>
+</body>
+</html>

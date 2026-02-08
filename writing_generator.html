@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
     <link rel="stylesheet" href="global.css">
 
     <style>
@@ -33,6 +32,61 @@
         .block-linker { background-color: #EFF6FF; border-left: 6px solid #3B82F6; color: #1E40AF; }
         .used-item { opacity: 0.4; pointer-events: none; filter: grayscale(100%); }
 
+        /* SCAFFOLDING STYLES */
+        .scaffold-box {
+            background: white;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .scaffold-header {
+            background: #F1F5F9;
+            padding: 12px 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748B;
+            font-size: 0.75rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .scaffold-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            display: flex; flex-direction: column;
+        }
+        
+        /* FIXED: CSS Error resolved here */
+        .scaffold-row { display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; }
+        
+        .scaffold-item:last-child { border-bottom: none; }
+        
+        /* Guidance Arrow Button */
+        .guidance-btn {
+            color: #94A3B8;
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .guidance-btn:hover { background: #E0E7FF; color: #4338CA; }
+        .guidance-btn svg { width: 16px; height: 16px; stroke-width: 3; }
+        
+        /* Rotation Animation */
+        .guidance-btn.rotated { transform: rotate(180deg); color: #4338CA; }
+
+        .guidance-content {
+            display: none; 
+            margin-top: 8px;
+            background: #F8FAFC;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            font-size: 0.85rem;
+        }
+        .guidance-content.open { display: block; animation: slideDown 0.2s ease-out; }
+        
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
         /* Paper Styling */
         .exam-paper {
             background: white;
@@ -48,20 +102,13 @@
             background: linear-gradient(90deg, #F97316, #3B82F6);
         }
 
-        /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
 
-        /* PRINT STYLES (For PDF Export) */
         @media print {
             body * { visibility: hidden; }
             #result-view, #result-view * { visibility: visible; }
-            #result-view { 
-                position: absolute; 
-                left: 0; top: 0; width: 100%; height: 100%; 
-                background: white; z-index: 9999; 
-                padding: 0; margin: 0; overflow: visible;
-            }
+            #result-view { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white; z-index: 9999; padding: 0; margin: 0; overflow: visible; }
             .no-print { display: none !important; }
             .prose { font-size: 12pt; line-height: 1.6; color: black; }
         }
@@ -75,16 +122,10 @@
                 <div class="p-2 bg-gray-100 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg></div>
                 <span class="hidden sm:inline">Back</span>
             </a>
-            
             <div id="mode-toggle-container" class="hidden absolute left-1/2 transform -translate-x-1/2 flex bg-gray-100 p-1 rounded-lg">
-                <button onclick="switchMode('question')" id="btn-mode-question" class="px-6 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-indigo-600 transition-all">
-                    📖 Read Question
-                </button>
-                <button onclick="switchMode('builder')" id="btn-mode-builder" class="px-6 py-2 rounded-md text-sm font-bold text-gray-500 hover:text-indigo-600 transition-all">
-                    🏗️ Build Essay
-                </button>
+                <button onclick="switchMode('question')" id="btn-mode-question" class="px-6 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-indigo-600 transition-all">📖 Read Question</button>
+                <button onclick="switchMode('builder')" id="btn-mode-builder" class="px-6 py-2 rounded-md text-sm font-bold text-gray-500 hover:text-indigo-600 transition-all">🏗️ Build Essay</button>
             </div>
-
             <div class="flex items-center gap-2">
                 <div id="level-badge" class="px-4 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500">LOADING...</div>
                 <a href="#" id="level-switch-link" class="text-[10px] font-bold text-gray-400 hover:text-indigo-600 underline">Switch Level</a>
@@ -95,47 +136,25 @@
     <div class="flex flex-1 overflow-hidden relative">
 
         <div id="view-question" class="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center p-8 transition-opacity duration-300">
-            
             <div id="initial-select-container" class="w-full max-w-md mb-10 transition-all duration-500">
                 <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block text-center">Start here:</label>
                 <div class="relative group">
                     <select id="topic-select-main" onchange="loadQuestion(this.value)" class="w-full p-4 pr-10 bg-white border-2 border-indigo-100 rounded-2xl font-bold text-xl text-gray-700 shadow-lg focus:ring-4 focus:ring-indigo-100 outline-none appearance-none cursor-pointer text-center">
                         <option value="" disabled selected>Select a Task...</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-indigo-400">
-                        <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-                    </div>
+                    <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-indigo-400"><svg class="h-6 w-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></div>
                 </div>
             </div>
-
+            
             <div id="big-paper-container" class="hidden w-full max-w-5xl animate-fade">
                 <div class="exam-paper p-12 md:p-16 transform transition hover:scale-[1.01] duration-500">
                     <div class="flex justify-between items-start mb-10 border-b border-gray-100 pb-6">
-                        <div>
-                            <h2 class="text-sm font-sans font-bold text-gray-400 uppercase tracking-widest">Part 1</h2>
-                            <h1 class="text-5xl font-bold text-gray-900 mt-2 tracking-tight">Essay Task</h1>
-                        </div>
-                        <div class="text-right">
-                            <div class="inline-block px-4 py-2 rounded bg-gray-100 text-sm font-sans font-bold text-gray-500">45 minutes</div>
-                        </div>
+                        <div><h2 class="text-sm font-sans font-bold text-gray-400 uppercase tracking-widest">Part 1</h2><h1 class="text-5xl font-bold text-gray-900 mt-2 tracking-tight">Essay Task</h1></div>
+                        <div class="text-right"><div class="inline-block px-4 py-2 rounded bg-gray-100 text-sm font-sans font-bold text-gray-500">45 minutes</div></div>
                     </div>
                     
-                    <p class="text-2xl leading-relaxed text-gray-600 mb-10 font-serif" id="big-scenario">Scenario...</p>
-                    
-                    <div class="bg-slate-50 border-l-8 border-indigo-500 p-8 rounded-r-xl">
-                        <p class="font-bold text-3xl text-gray-800 mb-8 font-sans" id="big-prompt">Prompt...</p>
-                        
-                        <div class="flex flex-col md:flex-row gap-8 items-start">
-                            <div class="bg-white border border-gray-200 shadow-sm p-6 inline-block min-w-[45%] -rotate-1 flex-1">
-                                <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">Notes</p>
-                                <ul class="list-disc pl-6 space-y-3 font-medium text-xl text-gray-700" id="big-notes"></ul>
-                            </div>
-                            <div id="big-opinions-wrapper" class="hidden flex-1 w-full">
-                                <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider">Opinions expressed in the discussion:</p>
-                                <div id="big-opinions-list" class="space-y-4"></div>
-                            </div>
+                    <div id="big-content-area">
                         </div>
-                    </div>
 
                     <div class="mt-12 flex justify-center">
                         <button onclick="switchMode('builder')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex items-center gap-3">
@@ -148,23 +167,18 @@
         </div>
 
         <div id="view-builder" class="absolute inset-0 z-20 flex hidden opacity-0 transition-opacity duration-300">
-            
             <aside class="w-[380px] bg-white border-r border-gray-200 flex flex-col z-20 shadow-xl">
                 <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                    
                     <div>
                         <label class="flex items-center gap-2 text-xs font-bold text-orange-600 uppercase tracking-wider mb-3">
                             <span class="p-1 bg-orange-100 rounded">1</span> Build Ideas
                         </label>
-                        
                         <div id="c1-point-selector" class="hidden mb-4 bg-orange-50 p-3 rounded-xl border border-orange-100">
                             <p class="text-xs font-bold text-orange-800 mb-2">Select 2 points to discuss:</p>
                             <div id="c1-checkboxes" class="space-y-2"></div>
                         </div>
-
                         <div id="idea-inputs-container" class="space-y-4"></div>
                     </div>
-
                     <div>
                         <label class="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">
                             <span class="p-1 bg-blue-100 rounded">2</span> Add Ingredients
@@ -183,7 +197,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="p-6 border-t border-gray-200 bg-slate-50">
                     <div class="flex bg-white p-1 rounded-lg mb-4 shadow-sm border border-gray-200">
                         <button onclick="setQuality('fail')" class="quality-btn flex-1 py-2 text-xs font-bold rounded text-gray-500 hover:bg-gray-50">Fail</button>
@@ -199,7 +212,6 @@
 
             <main class="flex-1 bg-slate-100 overflow-y-auto custom-scrollbar p-8 relative">
                 <div class="max-w-4xl mx-auto pb-32">
-                    
                     <div class="exam-paper p-6 mb-8 opacity-90 hover:opacity-100 transition-opacity">
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-xs font-sans font-bold text-gray-400 uppercase tracking-widest">Reference Task</h2>
@@ -224,15 +236,14 @@
                     </div>
 
                     <div class="space-y-4">
-                        <div class="p-5 bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-sm">Introduction</div>
+                        <div id="scaffold-intro" class="scaffold-box animate-fade"></div>
                         <div id="essay-slots" class="space-y-4"></div>
-                        <div class="p-5 bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-sm">Conclusion</div>
+                        <div id="scaffold-conclusion" class="scaffold-box animate-fade"></div>
                     </div>
 
                     <div class="mt-8">
                         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Added Ingredients</h3>
-                        <div id="construction-ingredients" class="min-h-[100px] bg-slate-200/50 rounded-2xl border-2 border-slate-300 border-dashed p-4 flex flex-wrap gap-3 content-start transition-all">
-                            </div>
+                        <div id="construction-ingredients" class="min-h-[100px] bg-slate-200/50 rounded-2xl border-2 border-slate-300 border-dashed p-4 flex flex-wrap gap-3 content-start transition-all"></div>
                     </div>
                 </div>
             </main>
@@ -243,15 +254,9 @@
                 <div class="bg-indigo-900 text-white px-8 py-5 flex justify-between items-center flex-shrink-0 no-print">
                     <h3 class="font-bold text-2xl">Essay Complete</h3>
                     <div class="flex gap-2">
-                        <button onclick="saveEssayToDB()" id="btn-save" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                            <span>💾 Save</span>
-                        </button>
-                        <button onclick="window.print()" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                            <span>🖨️ PDF</span>
-                        </button>
-                        <button onclick="document.getElementById('result-view').classList.add('hidden')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg font-bold text-sm">
-                            Close
-                        </button>
+                        <button onclick="saveEssayToDB()" id="btn-save" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"><span>💾 Save</span></button>
+                        <button onclick="window.print()" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"><span>🖨️ PDF</span></button>
+                        <button onclick="document.getElementById('result-view').classList.add('hidden')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg font-bold text-sm">Close</button>
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-8 py-3 border-b border-indigo-100 flex gap-4 flex-shrink-0 items-center no-print">
@@ -278,7 +283,26 @@
         let activeIngredients = [];
         let activePoints = {};
         let c1SelectedPoints = [];
-        let lastGeneratedData = null; // Store for saving
+        let lastGeneratedData = null;
+
+        // --- SCAFFOLDING DATA ---
+        const scaffoldingData = {
+            intro: [
+                { title: "The Hook", desc: "Start broad. Don't state your opinion yet.", vocab: "Nowadays, In recent years, It is often argued that..." },
+                { title: "The Pivot", desc: "Connect the two sides of the argument.", vocab: "However, Whereas, While, On the one hand..." },
+                { title: "The Rhetorical Question", desc: "Rewrite the prompt as a question to tell the reader what you will answer.", vocab: "But is it truly better to...? Which option is superior?" }
+            ],
+            conclusionB2: [
+                { title: "The Verdict", desc: "Answer the question directly (Yes/No/Choice).", vocab: "In conclusion, To sum up, On balance..." },
+                { title: "The Evidence", desc: "Remind us why (refer to your body paragraphs).", vocab: "As discussed regarding [Point 1] and [Point 2]..." },
+                { title: "Final Wish", desc: "A closing thought or recommendation.", vocab: "I strongly recommend that..., It is clear that..." }
+            ],
+            conclusionC1: [
+                { title: "The Weighing", desc: "Acknowledge that both sides have merits.", vocab: "All things considered, Taking everything into account..." },
+                { title: "The Decision", desc: "Explain why one argument is slightly stronger.", vocab: "The argument for X is more compelling because..." },
+                { title: "The Implication", desc: "Future consequence if we ignore this.", vocab: "Unless we address this, the issue will worsen." }
+            ]
+        };
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('level-badge').innerText = LEVEL;
@@ -290,9 +314,50 @@
                 document.getElementById('level-switch-link').href = "?level=C1";
                 document.getElementById('level-switch-link').innerText = "Switch to C1";
             }
+            
+            renderScaffolding();
             await fetchTopics();
             await fetchResources();
         });
+
+        // --- RENDER SCAFFOLDING ---
+        function renderScaffolding() {
+            const renderBox = (containerId, items, label) => {
+                const container = document.getElementById(containerId);
+                let html = `<div class="scaffold-header"><span>${label} CHECKLIST</span></div>`;
+                items.forEach((item, idx) => {
+                    const uniqueId = `${containerId}-${idx}`;
+                    html += `
+                        <div class="scaffold-item">
+                            <div class="scaffold-row" onclick="toggleGuidance('${uniqueId}', this)">
+                                <span class="font-bold text-sm text-gray-700">${item.title}</span>
+                                <div class="guidance-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div id="${uniqueId}" class="guidance-content">
+                                <p class="mb-2 text-gray-600 italic">${item.desc}</p>
+                                <p class="text-indigo-600 font-bold text-xs">TRY: ${item.vocab}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            };
+
+            renderBox('scaffold-intro', scaffoldingData.intro, "Introduction");
+            const concData = LEVEL === 'B2' ? scaffoldingData.conclusionB2 : scaffoldingData.conclusionC1;
+            renderBox('scaffold-conclusion', concData, "Conclusion");
+        }
+
+        window.toggleGuidance = function(id, row) {
+            const content = document.getElementById(id);
+            const btn = row.querySelector('.guidance-btn');
+            if(content) content.classList.toggle('open');
+            if(btn) btn.classList.toggle('rotated');
+        }
 
         function switchMode(mode) {
             const qView = document.getElementById('view-question');
@@ -342,40 +407,93 @@
             });
         }
 
+        // --- KEY LAYOUT LOGIC (FIXED) ---
         function loadQuestion(id) {
             currentQuestion = allQuestions.find(q => q.id === id);
             if (!currentQuestion) return;
 
-            // Big View
             document.getElementById('initial-select-container').classList.add('hidden');
             document.getElementById('big-paper-container').classList.remove('hidden');
             document.getElementById('mode-toggle-container').classList.remove('hidden');
-            document.getElementById('big-scenario').innerText = currentQuestion.question_text;
-            document.getElementById('big-prompt').innerText = currentQuestion.essay_prompt;
-            document.getElementById('big-notes').innerHTML = '';
-            (currentQuestion.structure_data.points || []).forEach(p => document.getElementById('big-notes').innerHTML += `<li>${p}</li>`);
 
-            // Opinions
-            if (currentQuestion.structure_data.opinions && currentQuestion.structure_data.opinions.length > 0) {
-                document.getElementById('big-opinions-wrapper').classList.remove('hidden');
-                document.getElementById('big-opinions-list').innerHTML = currentQuestion.structure_data.opinions.map(op => `<div class="bg-white border-l-4 border-gray-300 p-3 text-sm italic text-gray-600 shadow-sm">"${op.replace(/"/g, '')}"</div>`).join('');
-                document.getElementById('small-opinions-wrapper').classList.remove('hidden');
-                document.getElementById('small-opinions-list').innerHTML = currentQuestion.structure_data.opinions.map(op => `<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded border border-gray-200 italic">"${op.replace(/"/g, '')}"</span>`).join('');
+            const contentArea = document.getElementById('big-content-area');
+            const scenarioText = currentQuestion.question_text;
+            const promptText = currentQuestion.essay_prompt || "Write your essay.";
+            const points = currentQuestion.structure_data.points || [];
+            const opinions = currentQuestion.structure_data.opinions || [];
+
+            let html = `
+                <p class="text-2xl leading-relaxed text-gray-600 mb-10 font-serif">${scenarioText}</p>
+                <div class="bg-slate-50 border-l-8 border-indigo-500 p-8 rounded-r-xl">
+            `;
+
+            if (LEVEL === 'C1') {
+                // C1 Layout: Side-by-Side (Notes | Opinions)
+                html += `
+                    <div class="flex flex-col md:flex-row gap-8 items-start mb-8">
+                        <div class="bg-white border border-gray-200 shadow-sm p-6 inline-block min-w-[45%] -rotate-1 flex-1">
+                            <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">Notes</p>
+                            <ul class="list-disc pl-6 space-y-3 font-medium text-xl text-gray-700">
+                                ${points.map(p => `<li>${p}</li>`).join('')}
+                            </ul>
+                        </div>
+                `;
+                
+                if (opinions.length > 0) {
+                    html += `
+                        <div class="flex-1 w-full">
+                            <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider">Opinions expressed in the discussion:</p>
+                            <div class="space-y-4">
+                                ${opinions.map(op => `<div class="bg-white border-l-4 border-gray-300 p-3 text-sm italic text-gray-600 shadow-sm">"${op.replace(/"/g, '')}"</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`; // Close Flex
+
+                // Bottom Instruction (From Database)
+                html += `
+                    <div class="font-bold text-xl text-gray-800 mt-6 font-sans border-t border-indigo-100 pt-6">
+                        ${promptText}
+                    </div>
+                `;
+
             } else {
-                document.getElementById('big-opinions-wrapper').classList.add('hidden');
+                // B2 Layout: Simple Prompt -> Notes Only (No Opinions)
+                html += `
+                    <p class="font-bold text-3xl text-gray-800 mb-8 font-sans">${promptText}</p>
+                    <div class="bg-white border border-gray-200 shadow-sm p-6 inline-block min-w-[50%] -rotate-1">
+                        <p class="text-xs font-sans font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">Notes</p>
+                        <ul class="list-disc pl-6 space-y-3 font-medium text-xl text-gray-700">
+                            ${points.map(p => `<li>${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            html += `</div>`; // Close blue box
+            contentArea.innerHTML = html;
+
+            document.getElementById('small-prompt').innerText = promptText;
+            document.getElementById('small-notes').innerHTML = points.map(p => `<li>${p}</li>`).join('');
+            
+            // Only show small opinions if Level is C1 (Hide for B2)
+            if (LEVEL === 'C1' && opinions.length > 0) {
+                document.getElementById('small-opinions-wrapper').classList.remove('hidden');
+                document.getElementById('small-opinions-list').innerHTML = opinions.map(op => `<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded border border-gray-200 italic">"${op.replace(/"/g, '')}"</span>`).join('');
+            } else {
                 document.getElementById('small-opinions-wrapper').classList.add('hidden');
             }
 
-            // Small View
-            document.getElementById('small-prompt').innerText = currentQuestion.essay_prompt;
-            document.getElementById('small-notes').innerHTML = '';
-            (currentQuestion.structure_data.points || []).forEach(p => document.getElementById('small-notes').innerHTML += `<li>${p}</li>`);
-
-            setupIdeaSystem(currentQuestion.structure_data.points || []);
+            setupIdeaSystem(points);
             activeIngredients = [];
             updateIngredientDisplay();
         }
 
+        // ... [Rest of the functions: setupIdeaSystem, createInputAndSlot, handleC1Selection, commitIdea, editIdea, addIngredient, removeIngredient, updateIngredientDisplay, toggleExtra, setQuality, generateEssay, saveEssayToDB, toggleHighlights] ...
+        // (These remain exactly the same as previous version)
+        
         function setupIdeaSystem(points) {
             const inputContainer = document.getElementById('idea-inputs-container');
             const slotContainer = document.getElementById('essay-slots');
@@ -448,33 +566,18 @@
             updateIngredientDisplay();
         }
 
-        // --- FIXED FUNCTION ---
         function updateIngredientDisplay() {
             const container = document.getElementById('construction-ingredients');
-            
-            // 1. Sidebar State (Gray out used items)
             document.querySelectorAll('[id^="chip-"]').forEach(el => el.classList.remove('used-item'));
-            activeIngredients.forEach(i => {
-                const chip = document.getElementById(`chip-${i.id}`);
-                if(chip) chip.classList.add('used-item');
-            });
-
-            // 2. Construction Site
+            activeIngredients.forEach(i => { const chip = document.getElementById(`chip-${i.id}`); if(chip) chip.classList.add('used-item'); });
             container.innerHTML = '';
-            
             if (activeIngredients.length === 0) {
                 container.innerHTML = `<div class="w-full text-center text-gray-400 font-medium py-4 text-sm" id="empty-msg">Tap ingredients on the left to add them here.</div>`;
                 return;
             }
-            
             activeIngredients.forEach(item => {
                 const cssClass = item.type === 'grammar' ? 'block-grammar' : 'block-linker';
-                container.innerHTML += `
-                    <div onclick="removeIngredient('${item.id}')" class="builder-block ${cssClass} px-3 py-2 rounded-lg font-bold text-xs animate-fade flex items-center gap-2 mb-2 mr-2">
-                        <span>${item.content}</span>
-                        <span class="opacity-50 hover:opacity-100">✕</span>
-                    </div>
-                `;
+                container.innerHTML += `<div onclick="removeIngredient('${item.id}')" class="builder-block ${cssClass} px-3 py-2 rounded-lg font-bold text-xs animate-fade flex items-center gap-2 mb-2 mr-2"><span>${item.content}</span><span class="opacity-50 hover:opacity-100">✕</span></div>`;
             });
         }
 
