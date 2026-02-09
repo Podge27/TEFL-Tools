@@ -11,12 +11,9 @@
 
     <style>
         body { background-color: #F8FAFC; font-family: 'Inter', sans-serif; }
-        
-        /* Hide Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 0px; background: transparent; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Chunky Blocks */
         .builder-block {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
@@ -26,81 +23,35 @@
         .builder-block:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15); }
         .builder-block:active { transform: scale(0.98); }
 
-        /* Colors */
-        .block-idea { background-color: #FFF7ED; border-left: 6px solid #F97316; color: #9A3412; }
-        .block-grammar { background-color: #F0FDF4; border-left: 6px solid #22C55E; color: #166534; }
-        .block-linker { background-color: #EFF6FF; border-left: 6px solid #3B82F6; color: #1E40AF; }
+        /* --- COLORS --- */
+        .block-idea { background-color: #FFF7ED; border-left: 6px solid #F97316; color: #9A3412; } /* Orange (Ideas) */
+        .block-grammar { background-color: #F0FDF4; border-left: 6px solid #22C55E; color: #166534; } /* Green (Grammar) */
+        .block-linker { background-color: #EFF6FF; border-left: 6px solid #3B82F6; color: #1E40AF; } /* Blue (Linkers) */
+        
+        /* NEW: MAGENTA/FUCHSIA FOR VOCABULARY (Colorblind Safe) */
+        .block-vocab { background-color: #FDF4FF; border-left: 6px solid #C026D3; color: #86198F; } 
+
         .used-item { opacity: 0.4; pointer-events: none; filter: grayscale(100%); }
 
         /* SCAFFOLDING STYLES */
-        .scaffold-box {
-            background: white;
-            border: 2px solid #E2E8F0;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .scaffold-header {
-            background: #F1F5F9;
-            padding: 12px 16px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748B;
-            font-size: 0.75rem;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .scaffold-item {
-            padding: 10px 16px;
-            border-bottom: 1px solid #F1F5F9;
-            display: flex; flex-direction: column;
-        }
-        
-        /* FIXED: CSS Error resolved here */
+        .scaffold-box { background: white; border: 2px solid #E2E8F0; border-radius: 12px; overflow: hidden; transition: all 0.3s ease; }
+        .scaffold-header { background: #F1F5F9; padding: 12px 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        .scaffold-item { padding: 10px 16px; border-bottom: 1px solid #F1F5F9; display: flex; flex-direction: column; }
         .scaffold-row { display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; }
-        
         .scaffold-item:last-child { border-bottom: none; }
         
-        /* Guidance Arrow Button */
-        .guidance-btn {
-            color: #94A3B8;
-            width: 24px; height: 24px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-        }
+        .guidance-btn { color: #94A3B8; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
         .guidance-btn:hover { background: #E0E7FF; color: #4338CA; }
         .guidance-btn svg { width: 16px; height: 16px; stroke-width: 3; }
-        
-        /* Rotation Animation */
         .guidance-btn.rotated { transform: rotate(180deg); color: #4338CA; }
 
-        .guidance-content {
-            display: none; 
-            margin-top: 8px;
-            background: #F8FAFC;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #E2E8F0;
-            font-size: 0.85rem;
-        }
+        .guidance-content { display: none; margin-top: 8px; background: #F8FAFC; padding: 10px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 0.85rem; }
         .guidance-content.open { display: block; animation: slideDown 0.2s ease-out; }
         
         @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Paper Styling */
-        .exam-paper {
-            background: white;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            border-radius: 2px;
-            font-family: 'Merriweather', serif;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #E2E8F0;
-        }
-        .exam-paper::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-            background: linear-gradient(90deg, #F97316, #3B82F6);
-        }
+        .exam-paper { background: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-radius: 2px; font-family: 'Merriweather', serif; position: relative; overflow: hidden; border: 1px solid #E2E8F0; }
+        .exam-paper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, #F97316, #3B82F6); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
@@ -153,8 +104,7 @@
                         <div class="text-right"><div class="inline-block px-4 py-2 rounded bg-gray-100 text-sm font-sans font-bold text-gray-500">45 minutes</div></div>
                     </div>
                     
-                    <div id="big-content-area">
-                        </div>
+                    <div id="big-content-area"></div>
 
                     <div class="mt-12 flex justify-center">
                         <button onclick="switchMode('builder')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex items-center gap-3">
@@ -179,6 +129,7 @@
                         </div>
                         <div id="idea-inputs-container" class="space-y-4"></div>
                     </div>
+                    
                     <div>
                         <label class="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">
                             <span class="p-1 bg-blue-100 rounded">2</span> Add Ingredients
@@ -196,6 +147,19 @@
                             <div id="warehouse-grammar-extra" class="hidden flex-wrap gap-2 mt-2 border-t border-dashed border-green-200 pt-2"></div>
                         </div>
                     </div>
+
+                    <div>
+                        <label class="flex items-center gap-2 text-xs font-bold text-fuchsia-600 uppercase tracking-wider mb-3">
+                            <span class="p-1 bg-fuchsia-100 rounded">3</span> Useful Vocabulary
+                        </label>
+                        <div id="warehouse-vocab" class="flex flex-wrap gap-2 mb-3"></div>
+                        
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-vocab-input" placeholder="Add your own word..." class="flex-1 text-xs border border-fuchsia-200 rounded px-2 py-1 focus:ring-2 focus:ring-fuchsia-200 outline-none">
+                            <button onclick="addCustomVocab()" class="bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 font-bold px-3 py-1 rounded text-xs transition">+</button>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="p-6 border-t border-gray-200 bg-slate-50">
                     <div class="flex bg-white p-1 rounded-lg mb-4 shadow-sm border border-gray-200">
@@ -263,6 +227,7 @@
                     <span class="text-xs font-bold text-indigo-400 uppercase">Analysis:</span>
                     <button onclick="toggleHighlights('grammar')" class="px-3 py-1 text-xs font-bold rounded bg-white text-green-700 border border-green-200 shadow-sm hover:bg-green-50">Grammar</button>
                     <button onclick="toggleHighlights('linker')" class="px-3 py-1 text-xs font-bold rounded bg-white text-blue-700 border border-blue-200 shadow-sm hover:bg-blue-50">Linkers</button>
+                    <button onclick="toggleHighlights('vocab')" class="px-3 py-1 text-xs font-bold rounded bg-white text-fuchsia-700 border border-fuchsia-200 shadow-sm hover:bg-fuchsia-50">Vocab</button>
                 </div>
                 <div class="p-10 overflow-y-auto prose prose-lg prose-slate max-w-none font-serif leading-loose custom-scrollbar" id="ai-output-text"></div>
             </div>
@@ -285,11 +250,10 @@
         let c1SelectedPoints = [];
         let lastGeneratedData = null;
 
-        // --- SCAFFOLDING DATA ---
         const scaffoldingData = {
             intro: [
                 { title: "The Hook", desc: "Start broad. Don't state your opinion yet.", vocab: "Nowadays, In recent years, It is often argued that..." },
-                { title: "The Pivot", desc: "Connect the two sides of the argument.", vocab: "However, Whereas, While, On the one hand..." },
+                { title: "The Comparison", desc: "Connect the two sides of the argument.", vocab: "However, Whereas, While, On the one hand..." },
                 { title: "The Rhetorical Question", desc: "Rewrite the prompt as a question to tell the reader what you will answer.", vocab: "But is it truly better to...? Which option is superior?" }
             ],
             conclusionB2: [
@@ -314,13 +278,12 @@
                 document.getElementById('level-switch-link').href = "?level=C1";
                 document.getElementById('level-switch-link').innerText = "Switch to C1";
             }
-            
             renderScaffolding();
             await fetchTopics();
             await fetchResources();
         });
 
-        // --- RENDER SCAFFOLDING ---
+        // --- RENDERERS ---
         function renderScaffolding() {
             const renderBox = (containerId, items, label) => {
                 const container = document.getElementById(containerId);
@@ -346,7 +309,6 @@
                 });
                 container.innerHTML = html;
             };
-
             renderBox('scaffold-intro', scaffoldingData.intro, "Introduction");
             const concData = LEVEL === 'B2' ? scaffoldingData.conclusionB2 : scaffoldingData.conclusionC1;
             renderBox('scaffold-conclusion', concData, "Conclusion");
@@ -391,9 +353,11 @@
         }
 
         function renderWarehouseItems(data) {
-            const createChip = (item, color) => `<div onclick="addIngredient('${item.id}', '${item.content.replace(/'/g, "\\'")}', '${item.type}')" id="chip-${item.id}" class="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm bg-white ${color}">${item.content}</div>`;
+            const createChip = (item, color, type) => `<div onclick="addIngredient('${item.id}', '${item.content.replace(/'/g, "\\'")}', '${type}')" id="chip-${item.id}" class="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm bg-white ${color}">${item.content}</div>`;
+            
             const gContainer = document.getElementById('warehouse-grammar');
             const lContainer = document.getElementById('warehouse-linkers');
+            const vContainer = document.getElementById('warehouse-vocab');
             const gExtra = document.getElementById('warehouse-grammar-extra');
             const lExtra = document.getElementById('warehouse-linkers-extra');
 
@@ -401,13 +365,32 @@
 
             data.forEach(item => {
                 const isC1 = item.level === 'C1';
-                const target = item.type === 'grammar' ? (isC1 && LEVEL === 'B2' ? gExtra : gContainer) : (isC1 && LEVEL === 'B2' ? lExtra : lContainer);
-                const color = item.type === 'grammar' ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50';
-                target.innerHTML += createChip(item, color);
+                
+                if (item.type === 'vocabulary') {
+                    if (item.level === LEVEL) {
+                        // MAGENTA TEXT
+                        vContainer.innerHTML += createChip(item, 'text-fuchsia-700 hover:bg-fuchsia-50', 'vocab');
+                    }
+                } else if (item.type === 'grammar') {
+                    const target = (isC1 && LEVEL === 'B2') ? gExtra : gContainer;
+                    target.innerHTML += createChip(item, 'text-green-700 hover:bg-green-50', 'grammar');
+                } else if (item.type === 'linker') {
+                    const target = (isC1 && LEVEL === 'B2') ? lExtra : lContainer;
+                    target.innerHTML += createChip(item, 'text-blue-700 hover:bg-blue-50', 'linker');
+                }
             });
         }
 
-        // --- KEY LAYOUT LOGIC (FIXED) ---
+        // --- NEW: ADD CUSTOM VOCAB ---
+        function addCustomVocab() {
+            const input = document.getElementById('custom-vocab-input');
+            const word = input.value.trim();
+            if (!word) return;
+            const customId = 'custom-vocab-' + Date.now();
+            addIngredient(customId, word, 'vocab');
+            input.value = '';
+        }
+
         function loadQuestion(id) {
             currentQuestion = allQuestions.find(q => q.id === id);
             if (!currentQuestion) return;
@@ -428,7 +411,6 @@
             `;
 
             if (LEVEL === 'C1') {
-                // C1 Layout: Side-by-Side (Notes | Opinions)
                 html += `
                     <div class="flex flex-col md:flex-row gap-8 items-start mb-8">
                         <div class="bg-white border border-gray-200 shadow-sm p-6 inline-block min-w-[45%] -rotate-1 flex-1">
@@ -438,7 +420,6 @@
                             </ul>
                         </div>
                 `;
-                
                 if (opinions.length > 0) {
                     html += `
                         <div class="flex-1 w-full">
@@ -449,18 +430,12 @@
                         </div>
                     `;
                 }
-                
-                html += `</div>`; // Close Flex
-
-                // Bottom Instruction (From Database)
-                html += `
+                html += `</div>
                     <div class="font-bold text-xl text-gray-800 mt-6 font-sans border-t border-indigo-100 pt-6">
                         ${promptText}
                     </div>
                 `;
-
             } else {
-                // B2 Layout: Simple Prompt -> Notes Only (No Opinions)
                 html += `
                     <p class="font-bold text-3xl text-gray-800 mb-8 font-sans">${promptText}</p>
                     <div class="bg-white border border-gray-200 shadow-sm p-6 inline-block min-w-[50%] -rotate-1">
@@ -472,13 +447,13 @@
                 `;
             }
 
-            html += `</div>`; // Close blue box
+            html += `</div>`;
             contentArea.innerHTML = html;
 
-            document.getElementById('small-prompt').innerText = promptText;
+            // FIXED: Use innerHTML here
+            document.getElementById('small-prompt').innerHTML = promptText;
             document.getElementById('small-notes').innerHTML = points.map(p => `<li>${p}</li>`).join('');
             
-            // Only show small opinions if Level is C1 (Hide for B2)
             if (LEVEL === 'C1' && opinions.length > 0) {
                 document.getElementById('small-opinions-wrapper').classList.remove('hidden');
                 document.getElementById('small-opinions-list').innerHTML = opinions.map(op => `<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded border border-gray-200 italic">"${op.replace(/"/g, '')}"</span>`).join('');
@@ -491,9 +466,7 @@
             updateIngredientDisplay();
         }
 
-        // ... [Rest of the functions: setupIdeaSystem, createInputAndSlot, handleC1Selection, commitIdea, editIdea, addIngredient, removeIngredient, updateIngredientDisplay, toggleExtra, setQuality, generateEssay, saveEssayToDB, toggleHighlights] ...
-        // (These remain exactly the same as previous version)
-        
+        // --- IDEA & BLOCK LOGIC ---
         function setupIdeaSystem(points) {
             const inputContainer = document.getElementById('idea-inputs-container');
             const slotContainer = document.getElementById('essay-slots');
@@ -542,8 +515,24 @@
             activePoints[pointName] = text;
             document.getElementById(`wrapper-input-${index}`).classList.add('hidden');
             const slot = document.getElementById(`slot-${index}`);
-            slot.className = "builder-block block-idea p-4 rounded-xl animate-fade relative group";
-            slot.innerHTML = `<div class="text-[10px] font-bold opacity-75 uppercase mb-1">${pointName}</div><div class="font-bold text-lg leading-tight">"${text}"</div><div onclick="editIdea(${index}, '${pointName}')" class="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold text-orange-600">TAP TO EDIT</div>`;
+            slot.className = "builder-block block-idea p-4 rounded-xl animate-fade relative group cursor-default";
+            slot.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-[10px] font-bold opacity-75 uppercase">${pointName}</div>
+                    <button onclick="editIdea(${index}, '${pointName}')" class="text-[10px] font-bold uppercase underline opacity-50 hover:opacity-100">Edit</button>
+                </div>
+                <div class="font-bold text-lg leading-tight mb-4 border-b border-orange-200/50 pb-2">"${text}"</div>
+                <div class="space-y-2 opacity-80">
+                    <div class="flex gap-2 items-center text-xs font-bold text-orange-800/60 bg-white/40 p-2 rounded">
+                        <span class="w-4 h-4 flex items-center justify-center bg-orange-200 rounded-full text-[9px]">2</span>
+                        <span>EXPLANATION: <span class="font-normal italic">Why is this true?</span></span>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-bold text-orange-800/60 bg-white/40 p-2 rounded">
+                        <span class="w-4 h-4 flex items-center justify-center bg-orange-200 rounded-full text-[9px]">3</span>
+                        <span>EVIDENCE: <span class="font-normal italic">Give an example.</span></span>
+                    </div>
+                </div>
+            `;
         }
 
         function editIdea(index, pointName) {
@@ -576,7 +565,9 @@
                 return;
             }
             activeIngredients.forEach(item => {
-                const cssClass = item.type === 'grammar' ? 'block-grammar' : 'block-linker';
+                let cssClass = 'block-linker';
+                if(item.type === 'grammar') cssClass = 'block-grammar';
+                if(item.type === 'vocab') cssClass = 'block-vocab'; // MAGENTA CLASS
                 container.innerHTML += `<div onclick="removeIngredient('${item.id}')" class="builder-block ${cssClass} px-3 py-2 rounded-lg font-bold text-xs animate-fade flex items-center gap-2 mb-2 mr-2"><span>${item.content}</span><span class="opacity-50 hover:opacity-100">✕</span></div>`;
             });
         }
@@ -603,6 +594,7 @@
             
             const grammarList = activeIngredients.filter(i => i.type === 'grammar').map(i => i.content);
             const linkerList = activeIngredients.filter(i => i.type === 'linker').map(i => i.content);
+            const vocabList = activeIngredients.filter(i => i.type === 'vocab').map(i => i.content);
 
             document.getElementById('result-view').classList.remove('hidden');
             const outputDiv = document.getElementById('ai-output-text');
@@ -612,7 +604,15 @@
                 const response = await fetch('/.netlify/functions/generate_essay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ level: LEVEL, quality: currentQuality, topic: currentQuestion.topic, points_data: pointsData, grammar: grammarList, linkers: linkerList })
+                    body: JSON.stringify({ 
+                        level: LEVEL, 
+                        quality: currentQuality, 
+                        topic: currentQuestion.topic, 
+                        points_data: pointsData, 
+                        grammar: grammarList, 
+                        vocabulary: vocabList, 
+                        linkers: linkerList 
+                    })
                 });
                 
                 if (!response.ok) {
@@ -630,9 +630,14 @@
                 };
 
                 let formattedText = aiData.essay_text.replace(/\n/g, '<br>');
+                
+                // Highlight Logic (Updated Colors)
                 aiData.analysis.forEach(item => {
                     const regex = new RegExp(`(${item.phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
-                    const className = item.type === 'grammar' ? 'highlight-grammar' : 'highlight-linker';
+                    let className = 'highlight-linker';
+                    if (item.type === 'grammar') className = 'highlight-grammar';
+                    if (item.type === 'vocab' || item.type === 'vocabulary') className = 'highlight-vocab';
+                    
                     formattedText = formattedText.replace(regex, `<span class="${className}" style="background-color: transparent; border-bottom: none;" title="${item.label}: ${item.explanation}">$1</span>`);
                 });
                 outputDiv.innerHTML = formattedText;
@@ -645,9 +650,7 @@
             if (!lastGeneratedData) return;
             const btn = document.getElementById('btn-save');
             btn.innerHTML = `<span class="animate-spin">⏳</span> Saving...`;
-            
             const { error } = await db.from('saved_essays').insert([lastGeneratedData]);
-            
             if (error) {
                 alert("Error saving: " + error.message);
                 btn.innerHTML = `<span>💾 Save</span>`;
@@ -658,10 +661,18 @@
             }
         }
 
+        // --- HIGHLIGHT TOGGLES (MAGENTA UPDATE) ---
         window.toggleHighlights = function(type) {
-            const selector = type === 'grammar' ? '.highlight-grammar' : '.highlight-linker';
-            const color = type === 'grammar' ? '#d1fae5' : '#dbeafe';
-            const border = type === 'grammar' ? '2px solid #059669' : '2px solid #2563eb';
+            const selector = type === 'grammar' ? '.highlight-grammar' : (type === 'vocab' ? '.highlight-vocab' : '.highlight-linker');
+            
+            // COLORS:
+            // Grammar: Green-50 / Green-600
+            // Linker: Blue-50 / Blue-600
+            // Vocab: Fuchsia-50 / Fuchsia-700
+            
+            const color = type === 'grammar' ? '#d1fae5' : (type === 'vocab' ? '#FDF4FF' : '#dbeafe');
+            const border = type === 'grammar' ? '2px solid #059669' : (type === 'vocab' ? '2px solid #C026D3' : '2px solid #2563eb');
+            
             document.querySelectorAll(selector).forEach(el => {
                 el.style.backgroundColor = el.style.backgroundColor === 'transparent' ? color : 'transparent';
                 el.style.borderBottom = el.style.borderBottom === 'none' ? border : 'none';

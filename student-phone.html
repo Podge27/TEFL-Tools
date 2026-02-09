@@ -30,6 +30,10 @@
         <div class="animate-bounce text-6xl mb-4">⏳</div>
         <h2 class="text-2xl font-bold text-gray-700">You're in!</h2>
         <p class="text-gray-500 mt-2">Waiting for teacher...</p>
+        
+        <button onclick="student.leaveGame()" class="mt-8 text-sm text-red-400 font-bold underline hover:text-red-600">
+            Wrong game? Leave here.
+        </button>
     </div>
 
     <div id="screen-game" class="hidden flex-1 flex flex-col pt-4">
@@ -55,31 +59,69 @@
     </div>
 
     <script>
+        // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
+        // ============================================================
 
         const student = {
             supabase: null, sessionID: null, playerID: null, currentQID: null,
 
-            init: function() {
+            init: async function() {
                 if (typeof supabase !== 'undefined') {
                     this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
+                
                 const urlParams = new URLSearchParams(window.location.search);
-                const pin = urlParams.get('pin');
-                if (pin) {
-                    document.getElementById('input-pin').value = pin;
+                const urlPin = urlParams.get('pin');
+                if (urlPin) {
+                    document.getElementById('input-pin').value = urlPin;
                     document.getElementById('pin-container').classList.add('hidden');
                 }
+
+                // CHECK SAVED SESSION
                 const saved = localStorage.getItem('p4_session');
+                
                 if (saved) {
                     const data = JSON.parse(saved);
-                    this.sessionID = data.sId;
-                    this.playerID = data.pId;
-                    this.listenToSession();
-                    this.switchScreen('screen-waiting');
+                    // CRITICAL FIX: Validate if the saved session is the SAME as the new PIN
+                    const isValid = await this.validateSession(data.sId, urlPin);
+                    
+                    if (isValid) {
+                        this.sessionID = data.sId;
+                        this.playerID = data.pId;
+                        this.listenToSession();
+                        this.switchScreen('screen-waiting');
+                    } else {
+                        // If not valid (different PIN or closed), clear it
+                        this.leaveGame(); 
+                    }
                 }
+            },
+
+            // New Validator Function
+            validateSession: async function(sessionId, currentUrlPin) {
+                // 1. If we scanned a QR code, checks if the saved session matches that PIN
+                // 2. Checks if the session still exists/is active in DB
+                
+                const { data, error } = await this.supabase
+                    .from('game_sessions')
+                    .select('pin, status')
+                    .eq('id', sessionId)
+                    .single();
+
+                if (error || !data) return false; // Session deleted
+                
+                // If the user scanned a QR code (urlPin exists) AND it doesn't match the saved session
+                if (currentUrlPin && String(data.pin) !== String(currentUrlPin)) {
+                    return false; 
+                }
+
+                // If session is marked as FINISHED (optional check)
+                if (data.status === 'FINISHED') return false;
+
+                return true;
             },
 
             joinGame: async function() {
@@ -97,6 +139,7 @@
                     document.getElementById('login-error').innerText = "Game not found!";
                     document.getElementById('login-error').classList.remove('hidden');
                     btn.disabled = false;
+                    btn.innerText = "JOIN CLASS";
                     return;
                 }
 
@@ -107,6 +150,7 @@
                     document.getElementById('login-error').innerText = "Name taken!";
                     document.getElementById('login-error').classList.remove('hidden');
                     btn.disabled = false;
+                    btn.innerText = "JOIN CLASS";
                     return;
                 }
 
@@ -117,6 +161,15 @@
             },
 
             listenToSession: function() {
+                // Fetch Instructions Logic
+                this.supabase.from('game_sessions').select('question_queue').eq('id', this.sessionID).single()
+                .then(async ({data}) => {
+                    if(data && data.question_queue && data.question_queue.length > 0) {
+                        const { data: qData } = await this.supabase.from('exam_part4').select('level').eq('id', data.question_queue[0]).single();
+                        if(qData) this.setInstructions(qData.level);
+                    }
+                });
+
                 this.supabase.channel('game_flow')
                     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${this.sessionID}` }, 
                     async (payload) => {
@@ -151,7 +204,6 @@
                 this.currentQID = qId;
                 const { data } = await this.supabase.from('exam_part4').select('*').eq('id', qId).single();
                 
-                // Read level from the question data
                 if (data.level) this.setInstructions(data.level);
 
                 document.getElementById('q-sentence1').innerText = data.sentence1;
@@ -187,8 +239,6 @@
 
             loadExamBatch: async function(qIds) {
                 const { data } = await this.supabase.from('exam_part4').select('*').in('id', qIds);
-                
-                // Read level from the first question
                 if (data.length > 0 && data[0].level) this.setInstructions(data[0].level);
 
                 const sortedData = qIds.map(id => data.find(q => q.id === id));
@@ -226,6 +276,13 @@
                     b.innerText = "LOCKED 🔒";
                     b.className = "mt-3 w-full bg-gray-400 text-white py-2 rounded-lg font-bold cursor-not-allowed";
                 });
+            },
+
+            leaveGame: function() {
+                localStorage.removeItem('p4_session');
+                this.switchScreen('screen-login');
+                // Optional: Reload page to ensure clean state
+                window.location.reload();
             },
 
             switchScreen: (id) => { ['screen-login','screen-waiting','screen-game','screen-exam'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }

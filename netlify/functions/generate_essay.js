@@ -19,6 +19,7 @@ exports.handler = async function(event, context) {
     const TOPIC = inputData.topic || "Topic";
     const POINTS = inputData.points_data || []; 
     const GRAMMAR = inputData.grammar || [];
+    const VOCABULARY = inputData.vocabulary || []; // NEW: Separate Vocab list
     const LINKERS = inputData.linkers || [];
 
     // --- PROMPTS ---
@@ -80,9 +81,10 @@ exports.handler = async function(event, context) {
     fullPrompt += `\n\nTASK:\nTopic: "${TOPIC}"\nArguments provided in the prompt notes:\n`;
     POINTS.forEach(p => fullPrompt += `- ${p.topic}: ${p.argument}\n`);
 
-    if (QUALITY !== 'fail' && (GRAMMAR.length > 0 || LINKERS.length > 0)) {
+    if (QUALITY !== 'fail' && (GRAMMAR.length > 0 || LINKERS.length > 0 || VOCABULARY.length > 0)) {
         fullPrompt += `\nSUGGESTED INGREDIENTS (Use naturally):\n`;
         if (GRAMMAR.length > 0) fullPrompt += `- Grammar: ${GRAMMAR.join(', ')}\n`;
+        if (VOCABULARY.length > 0) fullPrompt += `- Vocabulary: ${VOCABULARY.join(', ')}\n`;
         if (LINKERS.length > 0) fullPrompt += `- Linkers: ${LINKERS.join(', ')}\n`;
     }
 
@@ -94,7 +96,8 @@ exports.handler = async function(event, context) {
         "essay_text": "Full essay text...",
         "analysis": [
             {"phrase": "text from essay", "type": "grammar", "label": "Passive", "explanation": "reason"},
-            {"phrase": "text from essay", "type": "linker", "label": "However", "explanation": "reason"}
+            {"phrase": "text from essay", "type": "linker", "label": "However", "explanation": "reason"},
+            {"phrase": "text from essay", "type": "vocabulary", "label": "Implement", "explanation": "reason"}
         ]
     }`;
 

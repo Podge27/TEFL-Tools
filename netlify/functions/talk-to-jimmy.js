@@ -1,17 +1,28 @@
 exports.handler = async (event) => {
-    // 1. Only allow "POST" messages
-    if (event.httpMethod !== "POST") {
-        return { statusCode: 405, body: "Method Not Allowed" };
+    // 1. SETUP: Headers to allow browser communication
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json'
+    };
+
+    // 2. PREFLIGHT CHECK
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    if (event.httpMethod !== "POST") {
+        return { statusCode: 405, headers, body: "Method Not Allowed" };
+    }
 
-    // 2. Unpack the message from the website
-    // We wrap this in a try/catch in case the JSON is broken
     try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) throw new Error("API Key is missing.");
+
+        // 3. PARSE DATA
         const { history, newMessage } = JSON.parse(event.body);
 
-        // 3. Define the Jimmy Rules (System Instruction)
+        // 4. THE DETAILED JIMMY BRAIN (Restored)
         const systemInstruction = {
             parts: [{
                 text: `
@@ -25,7 +36,7 @@ exports.handler = async (event) => {
                 - Best friend: Katy (curly hair, clever).
                 - Siblings: Denny (older), Belinda (younger).
                 - Abilities: You can go to space, talk to animals.
-                - Stories: You fall doen a lot but only use the "I fell down" joke if telling a story about "yesterday" or the past.
+                - Stories: You fall down a lot but only use the "I fell down" joke if telling a story about "yesterday" or the past.
 
                 CRITICAL SAFETY RULES:
                 - NEVER ask for a student's name, school, city, or address.
@@ -42,24 +53,20 @@ exports.handler = async (event) => {
             }]
         };
 
-        // 4. Format the conversation for the API
-        // We map your history to the format Gemini expects
+        // 5. FORMAT HISTORY
         const contents = history.map(msg => ({
             role: msg.role,
             parts: msg.parts
         }));
 
-        // Add the current message
         contents.push({
             role: "user",
             parts: [{ text: newMessage }]
         });
 
-        // 5. THE URL YOU REQUESTED
-        // We are using 'gemini-flash-latest' as verified by you
+        // 6. CALL GOOGLE (Using gemini-flash-latest)
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
-        // 6. Send to Google
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -67,7 +74,7 @@ exports.handler = async (event) => {
                 contents: contents,
                 systemInstruction: systemInstruction,
                 generationConfig: {
-                    maxOutputTokens: 150,
+                    maxOutputTokens: 350, // INCREASED to prevent cut-off sentences
                     temperature: 0.7
                 }
             })
@@ -75,20 +82,21 @@ exports.handler = async (event) => {
 
         const data = await response.json();
 
-        // 7. Error Handling
+        // 7. ERROR HANDLING
         if (!response.ok) {
             console.error("Gemini API Error:", JSON.stringify(data));
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Jimmy is having a nap (API Error)." })
+                headers,
+                body: JSON.stringify({ error: data.error?.message || "Google refused." })
             };
         }
 
-        // 8. Extract the answer
-        // Safety check: sometimes the API returns an empty candidate if safety filters trigger
+        // 8. SAFETY FALLBACK
         if (!data.candidates || data.candidates.length === 0) {
             return {
                 statusCode: 200, 
+                headers,
                 body: JSON.stringify({ reply: "I don't know what to say to that! Do you like pizza?" }) 
             };
         }
@@ -97,14 +105,16 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 200,
+            headers,
             body: JSON.stringify({ reply: replyText })
         };
 
     } catch (error) {
-        console.error("Function Error:", error);
+        console.error("Server Crash:", error.message);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: "Server Error" })
+            headers,
+            body: JSON.stringify({ error: error.message })
         };
     }
 };
