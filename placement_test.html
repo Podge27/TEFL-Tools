@@ -239,20 +239,26 @@
 
     // 3. FETCH QUESTION
     async function fetchNextQuestion() {
-        document.getElementById('question-text').innerText = "Generating next question...";
-        document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
+         try {
+        const response = await fetch('/.netlify/functions/examiner', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ history: testHistory, currentLevel: userLevel })
+        });
 
-        try {
-            const response = await fetch('/.netlify/functions/examiner', {
-                method: 'POST',
-                body: JSON.stringify({ history, currentLevel })
-            });
-            const data = await response.json();
-            renderQuestion(data);
-        } catch (error) {
-            console.error(error);
-            document.getElementById('question-text').innerText = "Connection Error. Please try again.";
-        }
+        // We get text first to prevent the "Unexpected Token" crash
+        const rawText = await response.text();
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        
+        if (!jsonMatch) throw new Error("Invalid response format from server");
+        
+        const data = JSON.parse(jsonMatch[0]);
+        renderQuestion(data);
+
+    } catch (error) {
+        console.error("Error fetching question:", error);
+        alert("Right then, we've had a minor hiccup. Please refresh the page.");
+    }
     }
 
     // 4. RENDER QUESTION

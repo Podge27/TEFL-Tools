@@ -4,8 +4,6 @@ exports.handler = async function(event, context) {
   try {
     const { history, currentLevel } = JSON.parse(event.body);
     const apiKey = process.env.GEMINI_API_KEY;
-    
-    // The exact 2.5 Flash URL that works in your other program
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const prompt = `
@@ -37,36 +35,26 @@ exports.handler = async function(event, context) {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
 
     const data = await response.json();
+    if (!data.candidates) throw new Error("AI Error: " + JSON.stringify(data));
     
-    if (!data.candidates || !data.candidates[0].content) {
-      throw new Error("AI response was empty. Check your API key in Netlify.");
-    }
+    const aiText = data.candidates[0].content.parts[0].text;
 
-    let aiText = data.candidates[0].content.parts[0].text;
-    
-    // This scrubs off the ```json markers so the browser doesn't crash
-    const cleanJson = aiText.replace(/```json|```/g, "").trim();
+    // THE CLEANER: Extracts only the JSON, ignoring "Right then..."
+    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No valid JSON found in AI response");
 
     return {
       statusCode: 200,
-      headers: { 
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*" 
-      },
-      body: cleanJson
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      body: jsonMatch[0] 
     };
 
   } catch (error) {
     console.error("Examiner Error:", error);
-    return { 
-      statusCode: 500, 
-      body: JSON.stringify({ error: "Brain failure", message: error.message }) 
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 };
