@@ -175,6 +175,7 @@
     color: var(--text-main);
     /* Soft colorful shadow */
     text-shadow: 3px 3px 0px #e2e8f0; 
+    transition: transform 0.2s ease;
   }
 
   /* Progress Bar */
@@ -237,7 +238,7 @@
 
 <header>
   <a href="index.html" class="btn-back">
-     ← Back
+      &larr; Back
   </a>
 </header>
 
@@ -284,15 +285,31 @@ const defaultTitle = "Class Timer";
 
 const timeOptions = [10, 30, 45, 60, 90, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700];
 
+// --- GENTLE CHIME LOGIC ---
+function playChime() {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const playNote = (frequency, startTime) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency, startTime);
+    gain.gain.setValueAtTime(0.2, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + 1);
+  };
+  playNote(660, audioCtx.currentTime);      
+  playNote(523, audioCtx.currentTime + 0.3); 
+}
+
 window.onload = () => generateTimeButtons();
 
 function setMode(selected) {
   mode = selected;
-  
-  // Update Tab UI
   document.getElementById('modeTimer').className = mode === 'timer' ? 'active' : '';
   document.getElementById('modeStopwatch').className = mode === 'stopwatch' ? 'active' : '';
-  
   if (mode === 'timer') {
       goBack();
   } else {
@@ -303,26 +320,21 @@ function setMode(selected) {
 function generateTimeButtons() {
   const container = document.getElementById('timeGrid');
   container.innerHTML = '';
-  
   timeOptions.forEach(sec => {
     const btn = document.createElement('button');
     btn.className = 'time-btn';
     btn.textContent = formatHumanReadable(sec);
-    // Fix: Clicking a time button forces mode to 'timer'
     btn.onclick = () => selectTime(sec);
     container.appendChild(btn);
   });
 
-  // Custom Input
   const customWrapper = document.createElement('div');
   customWrapper.className = 'time-btn custom-wrapper';
-  
   const input = document.createElement('input');
   input.inputMode = 'numeric'; 
   input.type = 'text'; 
   input.placeholder = '00:00';
   input.className = 'custom-input';
-  
   input.addEventListener('input', function(e) {
       let raw = e.target.value.replace(/[^0-9]/g, '');
       if (raw.length > 2) {
@@ -333,17 +345,13 @@ function generateTimeButtons() {
           e.target.value = raw;
       }
   });
-
   input.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') handleSmartInput(input.value);
   });
-
   const goBtn = document.createElement('button');
   goBtn.className = 'custom-go-btn';
-  // Simple checkmark icon
   goBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
   goBtn.onclick = () => handleSmartInput(input.value);
-
   customWrapper.appendChild(input);
   customWrapper.appendChild(goBtn);
   container.appendChild(customWrapper);
@@ -353,14 +361,9 @@ function handleSmartInput(val) {
   if(!val) return;
   const raw = val.replace(/[^0-9:]/g, ''); 
   let totalSecs = 0;
-
   if (raw.includes(':')) {
     const parts = raw.split(':');
-    if (parts.length === 3) {
-        totalSecs = (+parts[0] * 3600) + (+parts[1] * 60) + (+parts[2]);
-    } else {
-        totalSecs = (+parts[0] * 60) + (+parts[1]);
-    }
+    totalSecs = parts.length === 3 ? (+parts[0] * 3600) + (+parts[1] * 60) + (+parts[2]) : (+parts[0] * 60) + (+parts[1]);
   } else {
     const num = parseInt(raw, 10);
     if (isNaN(num)) return;
@@ -371,16 +374,13 @@ function handleSmartInput(val) {
         totalSecs = (m * 60) + s;
     }
   }
-
   if (totalSecs > 0) selectTime(totalSecs);
 }
 
 function selectTime(sec) {
-  // CRITICAL FIX: Ensure mode is set to timer when selecting a preset
   mode = 'timer';
   document.getElementById('modeTimer').className = 'active';
   document.getElementById('modeStopwatch').className = '';
-
   totalSeconds = sec;
   initialSeconds = sec;
   showActiveView();
@@ -411,16 +411,12 @@ function goBack() {
   document.getElementById('activeView').style.display = 'none';
   document.querySelector('.mode-select').style.display = 'inline-flex';
   document.getElementById('progressBar').style.display = 'none';
-  
   const startBtn = document.getElementById('startBtn');
   startBtn.textContent = "Start";
   startBtn.classList.remove('pause');
-  
   document.getElementById('display').style.color = "var(--text-main)";
-  
   const customInput = document.querySelector('.custom-input');
   if(customInput) customInput.value = '';
-  
   document.title = defaultTitle;
 }
 
@@ -439,11 +435,9 @@ function toggleTimer() {
 function startTimer() {
   if (interval) return;
   isRunning = true;
-  
   const btn = document.getElementById('startBtn');
   btn.textContent = "Pause";
   btn.classList.add('pause');
-
   interval = setInterval(() => {
     if (mode === 'timer') {
       totalSeconds--;
@@ -463,7 +457,6 @@ function pauseTimer() {
   clearInterval(interval);
   interval = null;
   isRunning = false;
-  
   const btn = document.getElementById('startBtn');
   btn.textContent = "Start";
   btn.classList.remove('pause');
@@ -480,10 +473,10 @@ function resetTimer() {
 
 function timerFinished() {
   pauseTimer();
-  // Optional: Play a sound if you link Tone.js, but visual is enough for now
+  playChime(); // Play the sound
   const display = document.getElementById('display');
   display.style.transform = "scale(1.1)";
-  display.style.color = "var(--danger)"; 
+  display.style.color = "var(--accent-red)"; 
   document.title = "⏰ TIME'S UP!"; 
   setTimeout(() => {
     display.style.transform = "scale(1)";
@@ -493,7 +486,6 @@ function timerFinished() {
 function updateDisplay() {
   const timeString = formatTime(totalSeconds);
   document.getElementById('display').textContent = timeString;
-  
   if (isRunning) {
       document.title = `${timeString} - Timer`;
   }
@@ -509,12 +501,7 @@ function formatTime(sec) {
   let h = Math.floor(sec / 3600);
   let m = Math.floor((sec % 3600) / 60);
   let s = sec % 60;
-
-  if (h > 0) {
-    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  } else {
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  }
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 function formatHumanReadable(sec) {

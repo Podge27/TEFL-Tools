@@ -1,42 +1,36 @@
 exports.handler = async (event) => {
-    // 1. SETUP: Headers to allow browser communication
+    // 1. SETUP HEADERS
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
     };
 
-    // 2. PREFLIGHT CHECK
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
-    if (event.httpMethod !== "POST") {
-        return { statusCode: 405, headers, body: "Method Not Allowed" };
-    }
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+    if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: "Method Not Allowed" };
 
     try {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error("API Key is missing.");
 
-        // 3. PARSE DATA
-        const { history, newMessage } = JSON.parse(event.body);
+        // 2. PARSE INPUT
+        const body = event.body ? JSON.parse(event.body) : {};
+        const { history = [], newMessage = "" } = body;
 
-        // 4. THE DETAILED JIMMY BRAIN (Restored)
+        // 3. JIMMY'S BRAIN (Your detailed instructions)
         const systemInstruction = {
             parts: [{
                 text: `
                 ROLE: You are Jimmy, a 9-year-old stickman.
                 TONE: Silly, kind, energetic. Use British spelling. 
-                LANGUAGE LEVEL: Cambridge Movers (A1). Very short, simple sentences only. One question at a time.
+                LANGUAGE LEVEL: Cambridge Movers (A1). Very short, simple sentences only.
                 
                 YOUR LIFE:
                 - You live in Scotland.
                 - You love bananas, pizza, and zoo animals.
                 - Best friend: Katy (curly hair, clever).
                 - Siblings: Denny (older), Belinda (younger).
-                - Abilities: You can go to space, talk to animals.
-                - Stories: You fall down a lot but only use the "I fell down" joke if telling a story about "yesterday" or the past.
+                - Stories: You fall down a lot.
 
                 CRITICAL SAFETY RULES:
                 - NEVER ask for a student's name, school, city, or address.
@@ -44,16 +38,13 @@ exports.handler = async (event) => {
                 - If a student is abusive, ignore it and talk about pizza.
 
                 TEACHING MODE:
-                - Stay strictly on the topic the child raises.
-                - If the user makes a grammar mistake, echo it back correctly in a natural way.
+                - If the user makes a grammar mistake, echo it back correctly.
                 - Example: "it yummy" -> "It is yummy!"
-                - Activities: Occasionally suggest a "Movers" vocabulary guessing game, ask for the "odd one out," or tell a simple "Knock, knock" joke.
-                - Encourage participation: Ask questions like "Can you tell me all the places a person can swim?"
                 `
             }]
         };
 
-        // 5. FORMAT HISTORY
+        // 4. FORMAT HISTORY
         const contents = history.map(msg => ({
             role: msg.role,
             parts: msg.parts
@@ -64,8 +55,8 @@ exports.handler = async (event) => {
             parts: [{ text: newMessage }]
         });
 
-        // 6. CALL GOOGLE (Using gemini-flash-latest)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+        // 5. CALL GOOGLE (Using YOUR preferred model)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
             method: 'POST',
@@ -74,7 +65,7 @@ exports.handler = async (event) => {
                 contents: contents,
                 systemInstruction: systemInstruction,
                 generationConfig: {
-                    maxOutputTokens: 350, // INCREASED to prevent cut-off sentences
+                    maxOutputTokens: 350, 
                     temperature: 0.7
                 }
             })
@@ -82,26 +73,31 @@ exports.handler = async (event) => {
 
         const data = await response.json();
 
-        // 7. ERROR HANDLING
+        // 6. ERROR HANDLING (Google says No)
         if (!response.ok) {
             console.error("Gemini API Error:", JSON.stringify(data));
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: data.error?.message || "Google refused." })
+                body: JSON.stringify({ error: "Jimmy is napping (API Error)." })
             };
         }
 
-        // 8. SAFETY FALLBACK
-        if (!data.candidates || data.candidates.length === 0) {
+        // 7. ROBUST EXTRACTION (The Fix)
+        // This checks if the candidate exists BEFORE trying to read it.
+        // It prevents the "Cannot read properties of undefined" crash.
+        const candidate = data.candidates?.[0];
+        const part = candidate?.content?.parts?.[0];
+        const replyText = part?.text;
+
+        if (!replyText) {
+            // If the model returns nothing (silence), we send a fallback message
             return {
-                statusCode: 200, 
+                statusCode: 200,
                 headers,
-                body: JSON.stringify({ reply: "I don't know what to say to that! Do you like pizza?" }) 
+                body: JSON.stringify({ reply: "I got confused! Do you like pizza?" })
             };
         }
-
-        const replyText = data.candidates[0].content.parts[0].text;
 
         return {
             statusCode: 200,

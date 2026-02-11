@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Architect: Pro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4F46E5; --sidebar-bg: #1e293b; --canvas-bg: #f8fafc; }
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; color: #333; }
+        #toolbox { width: 320px; background: var(--sidebar-bg); color: #94a3b8; display: flex; flex-direction: column; border-right: 1px solid #334155; flex-shrink: 0; overflow-y: auto; user-select: none; }
+        .toolbox-header { padding: 1.5rem; border-bottom: 1px solid #334155; color: white; font-weight: 700; background: #0f172a; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .category-title { padding: 1.2rem 1.5rem 0.5rem 1.5rem; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px; border-top: 1px solid #334155; margin-top: 5px; }
+        .tool-item { padding: 10px 1.5rem; cursor: grab; display: flex; align-items: center; gap: 12px; transition: all 0.2s; border-left: 3px solid transparent; font-size: 0.95rem; }
+        .tool-item:hover { background: #334155; color: white; border-left-color: var(--primary); transform: translateX(4px); }
+        .icon { width: 24px; text-align: center; font-size: 1.1rem; }
+        #workspace { flex-grow: 1; background: var(--canvas-bg); display: flex; flex-direction: column; position: relative; }
+        .top-bar { height: 70px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1rem; padding: 0 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); z-index: 20; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .top-input, .top-select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; outline: none; }
+        #generate-btn { margin-left: auto; background: linear-gradient(135deg, #4F46E5, #4338ca); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4); transition: transform 0.1s; display: flex; align-items: center; gap: 8px; }
+        #generate-btn:hover { transform: translateY(-2px); }
+        #canvas-area { flex-grow: 1; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        #drop-target { width: 100%; max-width: 850px; min-height: 80vh; background: white; border-radius: 12px; border: 2px dashed #cbd5e1; padding: 3rem; display: flex; flex-direction: column; gap: 1.5rem; position: relative; }
+        .empty-state { text-align: center; color: #94a3b8; margin-top: 120px; pointer-events: none; }
+        .canvas-block { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); animation: popIn 0.2s ease-out; cursor: grab; position: relative; transition: box-shadow 0.2s; }
+        .block-header { display: flex; align-items: center; justify-content: space-between; }
+        .block-title { font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 10px; }
+        .cat-core { border-left: 5px solid #3b82f6; } .cat-exam { border-left: 5px solid #ef4444; } .cat-activity { border-left: 5px solid #10b981; } .cat-game { border-left: 5px solid #f59e0b; }
+        .smart-options { background: #f8fafc; padding: 10px; border-radius: 6px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #f1f5f9; }
+        .smart-select { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; background: white; color: #334155; }
+        .delete-btn { color: #cbd5e1; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+        .delete-btn:hover { color: #ef4444; }
+        @keyframes popIn { from { transform: scale(0.98); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .dragging-over { border-color: #4F46E5 !important; background: #eff6ff !important; }
+    </style>
+</head>
+<body>
+    <aside id="toolbox">
+        <div class="toolbox-header">Unit Components</div>
+        <div class="category-title">Core Content</div>
+        <div class="tool-item" draggable="true" data-type="reading" data-cat="core"><span class="icon">📄</span> Reading Text</div>
+        <div class="tool-item" draggable="true" data-type="listening" data-cat="core"><span class="icon">🎧</span> Listening Track</div>
+        <div class="tool-item" draggable="true" data-type="video" data-cat="core"><span class="icon">📺</span> Video Clip</div>
+        <div class="tool-item" draggable="true" data-type="cartoon" data-cat="core"><span class="icon">🎨</span> Cartoon / Visual</div>
+        <div class="category-title">Cambridge Exams</div>
+        <div class="tool-item" draggable="true" data-type="uoe" data-cat="exam"><span class="icon">📝</span> Use of English</div>
+        <div class="tool-item" draggable="true" data-type="reading_exam" data-cat="exam"><span class="icon">📖</span> Reading Exam</div>
+        <div class="tool-item" draggable="true" data-type="speaking_exam" data-cat="exam"><span class="icon">🗣️</span> Speaking Exam</div>
+        <div class="category-title">Classroom Activities</div>
+        <div class="tool-item" draggable="true" data-type="vocab" data-cat="activity"><span class="icon">🔤</span> Vocab Studio</div>
+        <div class="tool-item" draggable="true" data-type="tip" data-cat="activity"><span class="icon">💡</span> Exam Strategy Tip</div>
+        <div class="category-title">Games & Interactive</div>
+        <div class="tool-item" draggable="true" data-type="match" data-cat="game"><span class="icon">🧩</span> Match / Pelmanism</div>
+        <div class="tool-item" draggable="true" data-type="quiz" data-cat="game"><span class="icon">❓</span> Quiz Generator</div>
+        <div class="tool-item" draggable="true" data-type="whiteboard" data-cat="game"><span class="icon">✏️</span> Whiteboard</div>
+    </aside>
+
+    <main id="workspace">
+        <div class="top-bar">
+            <div class="input-group"><label>Unit Topic</label><input type="text" id="topic-input" class="top-input" placeholder="e.g. The Environment" style="width: 250px;"></div>
+            <div class="input-group"><label>Target Level</label><select id="level-select" class="top-select"><option>Pre-A1 Starters</option><option>A1 Movers</option><option>A2 Flyers</option><option disabled>──────────</option><option>A2 Key (KET)</option><option>B1 Preliminary (PET)</option><option selected>B2 First (FCE)</option><option>C1 Advanced (CAE)</option><option>C2 Proficiency (CPE)</option></select></div>
+            <button id="generate-btn" onclick="generate()"><span>✨ Generate Unit</span></button>
+        </div>
+        <div id="canvas-area"><div id="drop-target"><div class="empty-state"><h3>Start Building</h3><p>Drag content blocks here to define your unit structure.</p></div></div></div>
+    </main>
+
+    <script>
+        const BLOCK_CONFIG = {
+            'uoe': { label: 'Part Selector', options: ['Part 1 (Multiple Choice Cloze)', 'Part 2 (Open Cloze)', 'Part 3 (Word Formation)'] },
+            'reading_exam': { label: 'Task Type', options: ['Part 5 (Multiple Choice)', 'Part 6 (Gapped Text)'] },
+            'vocab': { label: 'Exercise Type', options: ['Gap Fill', 'Definition Match', 'Odd One Out'] },
+            'reading': { label: 'Feature', options: ['Standard Text', 'Speed Reader Mode', 'Jigsaw Reading'] },
+            'match': { label: 'Data Source', options: ['Auto-Generate from Text', 'Manual Entry', 'Upload CSV'] }
+        };
+        const draggables = document.querySelectorAll('.tool-item');
+        const dropZone = document.getElementById('drop-target');
+        const emptyState = document.querySelector('.empty-state');
+        draggables.forEach(item => { item.addEventListener('dragstart', () => item.classList.add('dragging')); item.addEventListener('dragend', () => item.classList.remove('dragging')); });
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging-over'));
+        dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragging-over'); const item = document.querySelector('.dragging'); if(item) { emptyState.style.display = 'none'; createBlock(item); } });
+        function createBlock(item) {
+            const type = item.dataset.type; const cat = item.dataset.cat; const title = item.innerText; const icon = item.querySelector('.icon').innerText;
+            const block = document.createElement('div'); block.className = `canvas-block cat-${cat}`;
+            let html = `<div class="block-header"><div class="block-title"><span style="font-size:1.2rem;">${icon}</span> ${title}</div><button class="delete-btn" onclick="this.closest('.canvas-block').remove()">×</button></div>`;
+            if(BLOCK_CONFIG[type]) { const config = BLOCK_CONFIG[type]; html += `<div class="smart-options"><label>${config.label}:</label><select class="smart-select">${config.options.map(opt => `<option>${opt}</option>`).join('')}</select></div>`; }
+            block.innerHTML = html; dropZone.appendChild(block);
+        }
+
+        function generate() {
+            const topicInput = document.getElementById('topic-input').value;
+            const topic = topicInput || "Future Cities";
+            const level = document.getElementById('level-select').value;
+            const btn = document.getElementById('generate-btn');
+            btn.innerHTML = `<span>⏳ AI Writing '${topic}'...</span>`; btn.style.background = "#475569"; btn.style.cursor = "wait";
+
+            // WE USE PICSUM.PHOTOS - THE MOST STABLE IMAGE PLACEHOLDER SERVICE
+            const fakeUnit = [
+                { section: 'Lead-in', type: 'header', title: topic.toUpperCase(), level: level, subtitle: 'Generated by Coursebook AI' },
+                
+                // 1. FULL WIDTH IMAGE
+                { section: 'Lead-in', type: 'image', 
+                  url: `https://picsum.photos/seed/${Math.floor(Math.random()*1000)}/1200/500`, 
+                  caption: `Figure 1: Visual Overview of ${topic}` 
+                },
+
+                // 2. TEXT WRAP (SIDE BY SIDE)
+                { section: 'Lead-in', type: 'text_with_image', 
+                  url: `https://picsum.photos/seed/${Math.floor(Math.random()*1000)}/400/500`, 
+                  headline: 'The Big Question',
+                  text: `Is <strong>${topic}</strong> the most important issue of our time? As technology accelerates, we are forced to confront new realities. This unit explores the implications for society, culture, and our daily lives. The image to the right illustrates the modern interpretation of this phenomenon.` 
+                },
+
+                { section: 'Reading', type: 'text', headline: `The Reality of ${topic}`, columns: true, content: `Experts agree that <strong>${topic}</strong> is rapidly changing the way we interact with the world. In the span of a single generation, we have seen a seismic shift. Yet, sociologists argue that this change has not tightened our social bonds but rather frayed them. The "always-on" culture demands our attention so rapaciously that we have little left for anything else. (This is a demo text generated for the topic: ${topic}).` },
+                
+                { section: 'Reading', type: 'exam_tip', content: '<strong>Reading Part 6:</strong> Look for linking words like "However" or "Therefore" to understand the flow of the argument.' },
+                
+                { section: 'Reading', type: 'multiple_choice', title: 'Comprehension Check', questions: [
+                    { q: 'What is the main argument?', options: ['Social bonds are weakening', 'Technology is too slow', 'People are too happy'], a: 'Social bonds are weakening' },
+                    { q: 'What does "rapaciously" mean?', options: ['Quietly', 'Hungrily/Greedily', 'Slowly'], a: 'Hungrily/Greedily' }
+                ]},
+
+                { section: 'Vocabulary', type: 'matching', instruction: 'Match the key terms from the text.', pairs: [{ left: 'Seismic shift', right: 'A very large change' }, { left: 'Frayed', right: 'Start to come apart' }, { left: 'Rapaciously', right: 'Greedily or hungrily' }] },
+                
+                { section: 'Games', type: 'arcade', title: 'Vocabulary Arcade', games: ['Hangman', 'Wordsearch', 'Crossword', 'Anagram'] },
+
+                { section: 'Use of English', type: 'ue_part2', text: `The problem with ${topic} is not the technology {{itself}}, but rather the way we use it. We seem incapable {{of}} switching off. Whenever there is a pause, we instinctively reach {{for}} a solution.` },
+                
+                { section: 'Listening', type: 'audio', title: 'Interview Part 1', instructions: 'Listen to the interview.', 
+                  url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                  script: "Interviewer: Welcome back. Today we are discussing the future.\nGuest: Thanks for having me.\nInterviewer: Can you give us an example?\nGuest: Certainly..." 
+                },
+
+                { section: 'Speaking', type: 'speaking', title: 'Discussion', content: 'Discuss the following questions in pairs:', points: [`How does ${topic} affect your daily life?`, 'What are the main advantages and disadvantages?', 'Do you think this trend will continue in the future?'] }
+            ];
+
+            setTimeout(() => {
+                // SAVING TO v4 TO FORCE BROWSER REFRESH
+                localStorage.setItem('demo_unit_data_v4', JSON.stringify(fakeUnit));
+                window.location.href = 'textbookreader.html?source=demo'; 
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

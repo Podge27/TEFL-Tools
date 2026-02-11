@@ -13,6 +13,7 @@
         .big-input { @apply w-full p-4 text-2xl font-bold border-4 border-gray-200 rounded-xl text-center focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200 outline-none transition-all uppercase; }
         .game-card { @apply bg-white p-6 rounded-2xl shadow-lg border-b-4 border-gray-200 mb-6; }
         .btn-main { @apply w-full py-4 rounded-xl font-black text-xl text-white shadow-lg active:scale-95 transition-transform bg-indigo-600 hover:bg-indigo-700; }
+        .btn-success { @apply w-full py-4 rounded-xl font-black text-xl text-white shadow-lg bg-green-500 hover:bg-green-600 transition-colors; }
         .btn-disabled { @apply bg-gray-400 cursor-not-allowed opacity-50 transform-none; }
     </style>
 </head>
@@ -30,10 +31,7 @@
         <div class="animate-bounce text-6xl mb-4">⏳</div>
         <h2 class="text-2xl font-bold text-gray-700">You're in!</h2>
         <p class="text-gray-500 mt-2">Waiting for teacher...</p>
-        
-        <button onclick="student.leaveGame()" class="mt-8 text-sm text-red-400 font-bold underline hover:text-red-600">
-            Wrong game? Leave here.
-        </button>
+        <button onclick="student.leaveGame()" class="mt-8 text-sm text-red-400 font-bold underline hover:text-red-600">Wrong game? Leave.</button>
     </div>
 
     <div id="screen-game" class="hidden flex-1 flex flex-col pt-4">
@@ -59,11 +57,9 @@
     </div>
 
     <script>
-        // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        // ============================================================
 
         const student = {
             supabase: null, sessionID: null, playerID: null, currentQID: null,
@@ -72,55 +68,31 @@
                 if (typeof supabase !== 'undefined') {
                     this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
-                
                 const urlParams = new URLSearchParams(window.location.search);
                 const urlPin = urlParams.get('pin');
                 if (urlPin) {
                     document.getElementById('input-pin').value = urlPin;
                     document.getElementById('pin-container').classList.add('hidden');
                 }
-
-                // CHECK SAVED SESSION
                 const saved = localStorage.getItem('p4_session');
-                
                 if (saved) {
                     const data = JSON.parse(saved);
-                    // CRITICAL FIX: Validate if the saved session is the SAME as the new PIN
                     const isValid = await this.validateSession(data.sId, urlPin);
-                    
                     if (isValid) {
                         this.sessionID = data.sId;
                         this.playerID = data.pId;
                         this.listenToSession();
                         this.switchScreen('screen-waiting');
                     } else {
-                        // If not valid (different PIN or closed), clear it
                         this.leaveGame(); 
                     }
                 }
             },
 
-            // New Validator Function
             validateSession: async function(sessionId, currentUrlPin) {
-                // 1. If we scanned a QR code, checks if the saved session matches that PIN
-                // 2. Checks if the session still exists/is active in DB
-                
-                const { data, error } = await this.supabase
-                    .from('game_sessions')
-                    .select('pin, status')
-                    .eq('id', sessionId)
-                    .single();
-
-                if (error || !data) return false; // Session deleted
-                
-                // If the user scanned a QR code (urlPin exists) AND it doesn't match the saved session
-                if (currentUrlPin && String(data.pin) !== String(currentUrlPin)) {
-                    return false; 
-                }
-
-                // If session is marked as FINISHED (optional check)
-                if (data.status === 'FINISHED') return false;
-
+                const { data, error } = await this.supabase.from('game_sessions').select('pin, status').eq('id', sessionId).single();
+                if (error || !data) return false;
+                if (currentUrlPin && String(data.pin) !== String(currentUrlPin)) return false;
                 return true;
             },
 
@@ -138,8 +110,7 @@
                 if(error || !sessions) {
                     document.getElementById('login-error').innerText = "Game not found!";
                     document.getElementById('login-error').classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "JOIN CLASS";
+                    btn.disabled = false; btn.innerText = "JOIN CLASS";
                     return;
                 }
 
@@ -149,8 +120,7 @@
                 if(pError) {
                     document.getElementById('login-error').innerText = "Name taken!";
                     document.getElementById('login-error').classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "JOIN CLASS";
+                    btn.disabled = false; btn.innerText = "JOIN CLASS";
                     return;
                 }
 
@@ -161,7 +131,7 @@
             },
 
             listenToSession: function() {
-                // Fetch Instructions Logic
+                // Initial check
                 this.supabase.from('game_sessions').select('question_queue').eq('id', this.sessionID).single()
                 .then(async ({data}) => {
                     if(data && data.question_queue && data.question_queue.length > 0) {
@@ -211,18 +181,32 @@
                 document.getElementById('q-pre').innerText = data.sentence2_pre;
                 document.getElementById('q-post').innerText = data.sentence2_post;
                 
+                // --- RESET UI STATE ---
                 const input = document.getElementById('answer-input');
                 const btn = document.getElementById('btn-submit-answer');
-                input.value = ""; input.disabled = false;
-                btn.innerText = "SUBMIT ANSWER"; btn.className = "btn-main";
-                btn.disabled = false;
                 
-                this.fetchExistingAnswer(qId, input);
-            },
-
-            fetchExistingAnswer: async function(qId, inputEl) {
-                const { data } = await this.supabase.from('submissions').select('answer_text').match({player_id: this.playerID, question_id: qId}).single();
-                if(data) inputEl.value = data.answer_text;
+                input.value = ""; 
+                input.disabled = false;
+                
+                btn.innerText = "SUBMIT ANSWER"; 
+                btn.className = "btn-main"; // Reset color
+                btn.disabled = false; // Important unlock
+                
+                // Fetch previous answer (if any) safely
+                try {
+                    const { data: sub } = await this.supabase
+                        .from('submissions')
+                        .select('answer_text')
+                        .eq('player_id', this.playerID)
+                        .eq('question_id', qId)
+                        .single();
+                        
+                    if(sub) {
+                        input.value = sub.answer_text;
+                        btn.innerText = "UPDATED! ✓";
+                        btn.className = "btn-success";
+                    }
+                } catch(e) { console.log("New question, no previous answer."); }
             },
 
             submitLiveAnswer: async function() {
@@ -231,10 +215,19 @@
                 const btn = document.getElementById('btn-submit-answer');
                 if(!val) return;
                 
-                btn.innerText = "UPDATED! ✓";
-                btn.className = "btn-main bg-green-500 hover:bg-green-600";
+                btn.innerText = "SAVING...";
+                btn.disabled = true; // Temporary disable while sending
                 
-                await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: this.currentQID, answer_text: val });
+                try {
+                    await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: this.currentQID, answer_text: val });
+                    btn.innerText = "UPDATED! ✓";
+                    btn.className = "btn-success"; // Green
+                    btn.disabled = false; // Re-enable so they can edit
+                } catch (e) {
+                    btn.innerText = "ERROR - TRY AGAIN";
+                    btn.className = "btn-main bg-red-500";
+                    btn.disabled = false;
+                }
             },
 
             loadExamBatch: async function(qIds) {
@@ -245,7 +238,8 @@
                 const container = document.getElementById('exam-list');
                 container.innerHTML = '';
                 
-                sortedData.forEach((q, idx) => {
+                // We use a simple loop to handle async fetching properly if needed
+                for (const [idx, q] of sortedData.entries()) {
                     const card = document.createElement('div');
                     card.className = "game-card";
                     card.innerHTML = `
@@ -257,16 +251,29 @@
                         <button onclick="student.submitExamAnswer('${q.id}', this)" class="mt-3 w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">Save</button>
                     `;
                     container.appendChild(card);
-                    this.fetchExistingAnswer(q.id, card.querySelector('input'));
-                });
+                    
+                    // Pre-fill
+                    const { data: sub } = await this.supabase.from('submissions').select('answer_text').eq('player_id', this.playerID).eq('question_id', q.id).single();
+                    if(sub) {
+                        card.querySelector('input').value = sub.answer_text;
+                        const b = card.querySelector('button');
+                        b.innerText = "Saved ✓";
+                        b.className = "mt-3 w-full bg-green-500 text-white py-2 rounded-lg font-bold";
+                    }
+                }
             },
 
             submitExamAnswer: async function(qId, btn) {
                 const input = document.getElementById(`exam-input-${qId}`);
                 const val = input.value.trim();
+                const originalText = btn.innerText;
+                
+                btn.innerText = "...";
+                
+                await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: qId, answer_text: val });
+                
                 btn.innerText = "Saved ✓";
                 btn.className = "mt-3 w-full bg-green-500 text-white py-2 rounded-lg font-bold";
-                await this.supabase.from('submissions').upsert({ player_id: this.playerID, question_id: qId, answer_text: val });
             },
 
             lockAllInputs: function() {
@@ -281,7 +288,6 @@
             leaveGame: function() {
                 localStorage.removeItem('p4_session');
                 this.switchScreen('screen-login');
-                // Optional: Reload page to ensure clean state
                 window.location.reload();
             },
 

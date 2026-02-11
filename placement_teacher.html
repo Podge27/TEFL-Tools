@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Portal - Placement Results</title>
+    <style>
+        /* =========================================
+           THE BRANDING (Blue & Yellow)
+           ========================================= */
+        :root {
+            --ih-blue: #003366;
+            --ih-yellow: #FFCC00;
+            --text-dark: #333;
+            --bg-grey: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-grey);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* 1. LOGIN SCREEN */
+        #login-screen {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input {
+            padding: 12px;
+            width: 80%;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--ih-blue);
+        }
+
+        button {
+            background-color: var(--ih-blue);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #002244;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 2. DASHBOARD (Hidden initially) */
+        #dashboard {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Area */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--ih-yellow);
+        }
+
+        h1 {
+            color: var(--ih-blue);
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        /* The Table */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: var(--ih-blue);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Status Badges */
+        .badge {
+            background-color: var(--ih-yellow);
+            color: var(--ih-blue);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        .date {
+            color: #888;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .notes {
+            font-style: italic;
+            color: #555;
+            line-height: 1.5;
+            max-width: 500px;
+        }
+
+        /* Buttons */
+        .excel-btn {
+            background-color: #217346; /* Excel Green */
+            margin-left: 10px;
+        }
+        .excel-btn:hover { background-color: #1a5c38; }
+
+        .refresh-btn {
+            background-color: #666;
+        }
+        .refresh-btn:hover { background-color: #444; }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <img src="images/logo.png" alt="School Logo" style="height: 60px; margin-bottom: 20px;">
+        <h2 style="color: var(--ih-blue); margin-top: 0;">Staff Login</h2>
+        <input type="password" id="password-input" placeholder="Enter Access Code">
+        <br>
+        <button onclick="loadData()">Unlock Dashboard</button>
+        <p id="error-msg" style="color: #cc0000; display: none; margin-top: 15px; font-size: 0.9rem;">
+            Incorrect Password
+        </p>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="images/logo.png" alt="Logo" style="height: 40px;">
+                <h1>Student Results</h1>
+            </div>
+            <div>
+                <button class="refresh-btn" onclick="location.reload()">Refresh Data</button>
+                <button class="excel-btn" onclick="downloadCSV()">Export to Excel</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Date</th>
+                        <th style="width: 180px;">Student</th>
+                        <th style="width: 80px;">Level</th>
+                        <th>Director of Studies Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8rem;">
+            Confidential: For internal use only.
+        </div>
+    </div>
+
+    <script>
+        // A. LOAD DATA FUNCTION
+        async function loadData() {
+            const password = document.getElementById('password-input').value;
+            const btn = document.querySelector('#login-screen button');
+            const originalText = btn.innerText;
+            
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                // Call the Gatekeeper Function
+                const response = await fetch('/.netlify/functions/get_results', {
+                    method: 'POST',
+                    body: JSON.stringify({ password: password })
+                });
+
+                if (response.status === 401) {
+                    // Wrong Password
+                    document.getElementById('error-msg').style.display = 'block';
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                if (!response.ok) throw new Error("Server error");
+
+                const data = await response.json();
+                renderTable(data);
+
+            } catch (error) {
+                console.error(error);
+                alert("Could not connect to the database. Please check your internet.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // B. RENDER TABLE FUNCTION
+        function renderTable(data) {
+            // Switch Screens
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = ''; 
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#888;">No results found yet.</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                // Format Date (e.g., "11 Feb 14:30")
+                const date = new Date(row.created_at).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="date">${date}</td>
+                    <td>
+                        <strong>${row.student_name || 'Guest'}</strong>
+                    </td>
+                    <td><span class="badge">${row.final_level || 'N/A'}</span></td>
+                    <td class="notes">${row.teacher_notes || 'No analysis available.'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // C. DOWNLOAD CSV FUNCTION
+        function downloadCSV() {
+            const rows = document.querySelectorAll('#table-body tr');
+            if (rows.length === 0 || rows[0].innerText.includes("No results")) {
+                alert("No data to export!");
+                return;
+            }
+
+            // Create CSV Headers
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Student Name,Level,Teacher Notes\n";
+
+            // Loop through rows
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                if (cols.length < 4) return;
+
+                const date = cols[0].innerText;
+                const name = cols[1].innerText.replace(/\n/g, " "); // Clean newlines
+                const level = cols[2].innerText;
+                
+                // Escape double quotes for Excel csv format
+                let notes = cols[3].innerText;
+                notes = notes.replace(/"/g, '""'); 
+                
+                // Wrap strings in quotes to handle commas inside text
+                csvContent += `"${date}","${name}","${level}","${notes}"\n`;
+            });
+
+            // Trigger Download
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "placement_results.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

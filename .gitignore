@@ -1,5 +1,4 @@
-lexis_tool/config.js
 node_modules/
 .DS_Store
-gemini api.txt
-gemini api.txt
+.env
+*.txt9

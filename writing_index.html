@@ -56,6 +56,7 @@
         /* --- WRITING SPECIFIC COLORS --- */
         .btn-b2-essay { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); } 
         .btn-c1-essay { background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); } 
+        .btn-c2-essay { background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%); } /* Pink for C2 */
         .btn-saved { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); } 
         
         .btn-soon { 
@@ -65,8 +66,8 @@
 
         /* --- Toggle Switch Styling --- */
         .toggle-btn {
-            cursor: pointer; padding: 0.75rem 2rem; border-radius: 9999px;
-            font-weight: 700; transition: all 0.3s ease; font-size: 1rem;
+            cursor: pointer; padding: 0.75rem 1.5rem; border-radius: 9999px;
+            font-weight: 700; transition: all 0.3s ease; font-size: 0.9rem;
         }
         .toggle-active { background-color: #4F46E5; color: white; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.4); }
         .toggle-inactive { background-color: #E5E7EB; color: #4B5563; }
@@ -100,26 +101,25 @@
                 <button id="btn-c1" onclick="showLevel('c1')" class="toggle-btn toggle-inactive">
                     C1 Advanced
                 </button>
+                <button id="btn-c2" onclick="showLevel('c2')" class="toggle-btn toggle-inactive">
+                    C2 Proficiency
+                </button>
             </div>
         </header>
 
         <div id="content-b2" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
-            
             <a href="writing_generator.html?level=B2" class="tool-button btn-b2-essay flex flex-col gap-1">
                 <span>B2 Essay</span>
                 <span class="text-lg font-normal opacity-90">Generator & Analyser</span>
             </a>
-
             <a href="saved-essays.html?level=B2" class="tool-button btn-saved flex flex-col gap-1">
                 <span>Saved B2 Models</span>
                 <span class="text-lg font-normal opacity-90">Browse Database</span>
             </a>
-
             <div class="tool-button btn-soon flex flex-col gap-1">
                 <span>Reviews</span>
                 <span class="text-lg font-normal opacity-90">Coming Soon</span>
             </div>
-            
             <div class="tool-button btn-soon flex flex-col gap-1">
                 <span>Articles</span>
                 <span class="text-lg font-normal opacity-90">Coming Soon</span>
@@ -127,22 +127,37 @@
         </div>
 
         <div id="content-c1" class="hidden grid-cols-1 md:grid-cols-2 gap-6 p-4">
-            
             <a href="writing_generator.html?level=C1" class="tool-button btn-c1-essay flex flex-col gap-1">
                 <span>C1 Essay</span>
                 <span class="text-lg font-normal opacity-90">Generator & Analyser</span>
             </a>
-
             <a href="saved-essays.html?level=C1" class="tool-button btn-saved flex flex-col gap-1">
                 <span>Saved C1 Models</span>
                 <span class="text-lg font-normal opacity-90">Browse Database</span>
             </a>
-
              <div class="tool-button btn-soon flex flex-col gap-1">
                 <span>Reports</span>
                 <span class="text-lg font-normal opacity-90">Coming Soon</span>
             </div>
+            <div class="tool-button btn-soon flex flex-col gap-1">
+                <span>Proposals</span>
+                <span class="text-lg font-normal opacity-90">Coming Soon</span>
+            </div>
+        </div>
 
+        <div id="content-c2" class="hidden grid-cols-1 md:grid-cols-2 gap-6 p-4">
+            <a href="writing-generator-c2.html" class="tool-button btn-c2-essay flex flex-col gap-1">
+                <span>C2 Essay</span>
+                <span class="text-lg font-normal opacity-90">Generator & Analyser</span>
+            </a>
+            <a href="saved-essays.html?level=C2" class="tool-button btn-saved flex flex-col gap-1">
+                <span>Saved C2 Models</span>
+                <span class="text-lg font-normal opacity-90">Browse Database</span>
+            </a>
+             <div class="tool-button btn-soon flex flex-col gap-1">
+                <span>Reports</span>
+                <span class="text-lg font-normal opacity-90">Coming Soon</span>
+            </div>
             <div class="tool-button btn-soon flex flex-col gap-1">
                 <span>Proposals</span>
                 <span class="text-lg font-normal opacity-90">Coming Soon</span>
@@ -153,18 +168,24 @@
 
     <script>
         function showLevel(level) {
+            // Get Content Divs
             const b2Content = document.getElementById('content-b2');
             const c1Content = document.getElementById('content-c1');
+            const c2Content = document.getElementById('content-c2');
             
+            // Get Buttons
             const b2Btn = document.getElementById('btn-b2');
             const c1Btn = document.getElementById('btn-c1');
+            const c2Btn = document.getElementById('btn-c2');
 
-            // Reset All
-            [b2Content, c1Content].forEach(el => {
+            // Reset All Content
+            [b2Content, c1Content, c2Content].forEach(el => {
                 el.classList.add('hidden');
                 el.classList.remove('grid');
             });
-            [b2Btn, c1Btn].forEach(btn => {
+
+            // Reset All Buttons
+            [b2Btn, c1Btn, c2Btn].forEach(btn => {
                 btn.classList.remove('toggle-active');
                 btn.classList.add('toggle-inactive');
             });
@@ -180,6 +201,11 @@
                 c1Content.classList.add('grid');
                 c1Btn.classList.add('toggle-active');
                 c1Btn.classList.remove('toggle-inactive');
+            } else if (level === 'c2') {
+                c2Content.classList.remove('hidden');
+                c2Content.classList.add('grid');
+                c2Btn.classList.add('toggle-active');
+                c2Btn.classList.remove('toggle-inactive');
             }
         }
     </script>

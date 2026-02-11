@@ -3,151 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coursebook Flagship</title>
+    <title>Coursebook Pro: Grid Layout</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Patrick+Hand&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
     <style>
-        /* --- 1. CORE LAYOUT --- */
-        :root {
-            --primary: #2563EB;
-            --accent: #F59E0B; /* Exam Tip Yellow */
-            --bg: #f3f4f6;
-            --sidebar-width: 280px;
-        }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; --sidebar-width: 260px; --text-main: #1F2937; }
+        body { background-color: var(--bg); color: var(--text-main); margin: 0; padding: 0; font-family: 'Poppins', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        body { 
-            background-color: var(--bg); color: #1f2937;
-            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
-            display: flex; height: 100vh; overflow: hidden;
-        }
-
-        /* --- 2. SIDEBAR --- */
-        #sidebar {
-            width: var(--sidebar-width); background: #111827; color: #e5e7eb;
-            display: flex; flex-direction: column; flex-shrink: 0; z-index: 2000;
-            transition: margin-left 0.3s ease;
-        }
+        /* SIDEBAR */
+        #sidebar { width: var(--sidebar-width); background: #111827; color: #9CA3AF; display: flex; flex-direction: column; flex-shrink: 0; z-index: 2000; transition: margin-left 0.3s ease; border-right: 1px solid #1f2937; }
         #sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
-        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #374151; font-weight: 700; letter-spacing: 1px; color: white; }
-        
-        .tools-panel { padding: 1rem; background: rgba(255,255,255,0.05); border-bottom: 1px solid #374151; }
-        .sidebar-btn {
-            display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; margin-bottom: 5px;
-            background: #374151; border: 1px solid #4b5563; color: white; border-radius: 6px; cursor: pointer;
-        }
-        .sidebar-btn:hover { background: #4b5563; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #374151; font-weight: 800; letter-spacing: 1px; color: white; font-size: 1.1rem; display:flex; gap:10px; align-items:center; }
+        .tools-panel { padding: 1rem; background: #1f2937; border-bottom: 1px solid #374151; }
+        .sidebar-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; margin-bottom: 5px; background: rgba(255,255,255,0.05); border: 1px solid transparent; color: white; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; font-weight: 500; }
+        .sidebar-btn:hover { background: rgba(255,255,255,0.1); }
         .sidebar-btn.active { background: var(--primary); border-color: var(--primary); }
-
-        .nav-list { flex-grow: 1; overflow-y: auto; padding: 1rem; }
-        .nav-section-title { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 700; }
-        .nav-item { padding: 8px; cursor: pointer; color: #d1d5db; border-radius: 4px; font-size: 0.9rem; }
-        .nav-item:hover { background: #374151; color: white; }
-
-        /* --- 3. MAIN STAGE --- */
-        #main-stage { flex-grow: 1; position: relative; overflow-y: auto; background: #e5e7eb; display: flex; flex-direction: column; align-items: center; }
-        .stage-header { position: sticky; top: 0; width: 100%; height: 50px; z-index: 1500; padding: 10px; pointer-events: none; }
-        #toggle-btn { pointer-events: auto; background: white; border: 1px solid #d1d5db; width: 40px; height: 40px; border-radius: 6px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
-
-        #paper-page {
-            width: 100%; max-width: 950px; background: white; min-height: 100vh;
-            padding: 4rem 5rem; margin-top: -40px; margin-bottom: 100px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); position: relative;
-        }
-
-        /* --- 4. CONTENT COMPONENTS --- */
-        .block { margin-bottom: 3.5rem; scroll-margin-top: 60px; }
-        h1 { font-size: 3rem; letter-spacing: -1px; margin-bottom: 0.5rem; color: #111; }
-        h2 { font-size: 1.8rem; border-bottom: 3px solid #e5e7eb; padding-bottom: 0.5rem; margin-bottom: 1.5rem; color: #1f2937; }
-        h3 { font-size: 1.2rem; color: #4b5563; margin-bottom: 1rem; font-weight: 600; }
+        .pdf-btn { background: #DC2626 !important; border-color: #DC2626 !important; font-weight: 700; margin-top: 10px; }
         
-        /* Reading Text */
-        .reading-text { font-family: 'Merriweather', serif; font-size: 1.1rem; line-height: 1.8; color: #374151; text-align: justify; }
-        .reading-columns { column-count: 2; column-gap: 3rem; }
+        .nav-list { flex-grow: 1; overflow-y: auto; padding: 1.5rem; }
+        .nav-section-title { font-size: 0.75rem; text-transform: uppercase; color: #6B7280; font-weight: 800; letter-spacing: 1px; margin-bottom: 0.5rem; margin-top: 1.5rem; cursor: pointer; }
+        .nav-section-title:hover { color: white; }
+        .nav-item { padding: 6px 10px; cursor: pointer; color: #D1D5DB; border-radius: 4px; font-size: 0.9rem; margin-bottom: 2px; border-left: 3px solid transparent; transition: all 0.2s; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; border-left-color: var(--primary); }
 
-        /* Exam Tip Box */
-        .exam-tip {
-            background: #fffbeb; border-left: 5px solid #f59e0b; padding: 1.5rem;
-            margin: 2rem 0; border-radius: 0 8px 8px 0; position: relative;
-            font-family: 'Patrick Hand', cursive; font-size: 1.1rem; color: #78350f;
+        /* MAIN STAGE */
+        #main-stage { flex-grow: 1; position: relative; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; align-items: center; }
+        .stage-header { position: sticky; top: 0; width: 100%; height: 60px; z-index: 1500; padding: 10px 20px; pointer-events: none; display: flex; align-items: center; }
+        #toggle-btn { pointer-events: auto; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* PAPER PAGE */
+        #paper-page { 
+            width: 100%; max-width: 1300px; 
+            background: white; min-height: 100vh; 
+            padding: 5rem 6rem; 
+            margin-top: -50px; margin-bottom: 100px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05); 
+            border-radius: 20px; 
+            position: relative; 
         }
-        .exam-tip::before { content: '💡 EXAM TIP'; position: absolute; top: -12px; left: 10px; background: #f59e0b; color: white; padding: 2px 8px; font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: bold; border-radius: 4px; }
 
-        /* Speaking Box */
-        .speaking-box {
-            background: #eff6ff; border: 1px solid #bfdbfe; padding: 2rem; border-radius: 12px;
-            display: flex; gap: 20px; align-items: start;
+        /* GRID SYSTEM */
+        #unit-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two Columns */
+            gap: 3rem; /* Space between items */
+            align-items: start;
         }
-        .speaking-icon { font-size: 2.5rem; }
 
-        /* Writing Box */
-        .writing-box { background: #fdf2f8; border: 2px dashed #fbcfe8; padding: 2rem; border-radius: 12px; }
-        .useful-lang { background: white; padding: 1rem; margin-top: 1rem; border: 1px solid #e5e7eb; border-radius: 6px; }
-
-        /* Magic Gaps & Inputs */
-        .magic-gap {
-            display: inline-block; min-width: 60px; padding: 0 8px; border-bottom: 2px solid #9ca3af;
-            background: #f3f4f6; color: transparent; cursor: pointer; text-align: center; font-weight: bold;
-            transition: all 0.2s; user-select: none; font-family: 'Inter', sans-serif;
-        }
-        .magic-gap.revealed { background: #dcfce7; border-color: #16a34a; color: #166534; }
+        /* --- THE BAR UPDATE --- */
+        .col-span-2 { grid-column: span 2; }
         
-        /* Matching (Click Style) */
-        .match-container { display: flex; gap: 2rem; }
+        .block { position: relative; z-index: 10; scroll-margin-top: 100px; margin-bottom: 1rem; }
+        
+        h1 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 3.5rem; line-height: 1.1; color: #111; margin: 0; letter-spacing: -1px; }
+        h2 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.8rem; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; border-bottom: 0; }
+        h2::before { content: ''; display: block; width: 6px; height: 24px; background: var(--primary); border-radius: 3px; }
+
+        .header-card { background: linear-gradient(135deg, #EFF6FF, #DBEAFE); padding: 4rem; border-radius: 24px; text-align: center; border: 1px solid #BFDBFE; margin-bottom: 2rem; }
+        .level-tag { background: var(--primary); color: white; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; display: inline-block; margin-bottom: 1rem; }
+        
+        /* WRAPPED TEXT */
+        .wrapped-text-container { overflow: hidden; background: white; }
+        .wrapped-image { float: right; width: 45%; margin: 0 0 20px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); object-fit: cover; height: 300px; }
+        .wrapped-content h3 { font-size: 2.2rem; margin-top: 0; color: #111; line-height: 1.2; margin-bottom: 1rem; }
+        .wrapped-content p { font-size: 1.15rem; line-height: 1.9; color: #4B5563; font-family: 'Merriweather', serif; }
+        @media(max-width: 900px) { .wrapped-image { float: none; width: 100%; margin: 0 0 20px 0; height: auto; } }
+
+        /* EXAM TIP BAR (UPDATED) */
+        .exam-tip { 
+            grid-column: span 2; /* Force Full Width */
+            background: #FEF3C7; 
+            color: #92400E; 
+            padding: 1rem 2rem; /* Slimmer padding */
+            border-left: 6px solid #F59E0B; 
+            border-radius: 8px; /* Simpler radius */
+            font-family: 'Poppins', sans-serif; 
+            font-size: 1rem; 
+            font-weight: 500;
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin: 1rem 0; /* Clear separation */
+        }
+        
+        .quiz-container { background: #F9FAFB; padding: 2rem; border-radius: 12px; border: 1px solid #E5E7EB; height: 100%; }
+        .mc-question { margin-bottom: 1.5rem; }
+        .mc-option { padding: 10px; border: 2px solid #E5E7EB; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: all 0.2s; background: white; font-size: 0.9rem; }
+        .mc-option:hover { border-color: #9CA3AF; }
+        .mc-option.correct { background: #DCFCE7; border-color: #16A34A; color: #166534; }
+        .mc-option.wrong { background: #FEE2E2; border-color: #EF4444; opacity: 0.6; }
+
+        .reading-text { font-family: 'Merriweather', serif; font-size: 1.15rem; line-height: 2; color: #374151; text-align: justify; }
+        .reading-columns { column-count: 2; column-gap: 4rem; }
+        
+        .speaking-box { background: #F0FDFA; border: 1px solid #CCFBF1; padding: 2rem; border-radius: 20px; display: flex; gap: 20px; align-items: flex-start; }
+        .chat-bubble { background: white; padding: 1.5rem; border-radius: 0 20px 20px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #E5E7EB; flex-grow: 1; }
+        
+        .audio-card { background: #1F2937; color: white; padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); flex-wrap: wrap; }
+        .script-box { width: 100%; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-top: 10px; display: none; font-family: monospace; line-height: 1.5; white-space: pre-wrap; color: #E5E7EB; }
+        .script-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: auto; }
+
+        .match-container { display: flex; gap: 2rem; margin-top: 1rem; }
         .match-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-        .match-item {
-            padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer;
-            transition: all 0.2s; font-size: 0.95rem;
-        }
-        .match-item.selected { background: #eff6ff; border-color: var(--primary); color: var(--primary); font-weight: bold; }
-        .match-item.matched { background: #dcfce7; border-color: #16a34a; color: #166534; opacity: 0.8; pointer-events: none; }
+        .match-item { padding: 12px 15px; background: white; border: 2px solid #E5E7EB; border-radius: 10px; cursor: pointer; font-weight: 600; color: #374151; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; font-size: 0.95rem; }
+        .match-item:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .match-item.selected { background: #EEF2FF; border-color: var(--primary); color: var(--primary); transform: scale(1.02); z-index: 10; }
+        .match-item.matched { background: #DCFCE7; border-color: #16A34A; color: #166534; opacity: 0.5; pointer-events: none; text-decoration: line-through; }
+        
+        .arcade-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem; }
+        .arcade-btn { background: white; border: 1px solid #E5E7EB; padding: 1.5rem; text-align: center; border-radius: 12px; cursor: pointer; font-weight: 700; color: var(--text-main); transition: all 0.2s; display: flex; flex-direction: column; gap: 5px; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .arcade-btn span { font-size: 1.5rem; }
+        .arcade-btn:hover { border-color: var(--primary); transform: translateY(-2px); color: var(--primary); }
 
-        /* UOE Parts */
-        .wf-line { display: flex; justify-content: space-between; border-bottom: 1px dashed #e5e7eb; padding: 5px 0; }
-        .wf-root { font-weight: bold; font-family: monospace; letter-spacing: 1px; }
+        .magic-gap { display: inline-block; min-width: 80px; padding: 2px 10px; margin: 0 5px; border-bottom: 2px solid #CBD5E1; background: #F8FAFC; color: transparent; cursor: pointer; text-align: center; font-weight: 600; border-radius: 4px; transition: all 0.3s; }
+        .magic-gap.revealed { background: #DCFCE7; border-color: #16A34A; color: #166534; }
 
-        /* Drawing Layer */
-        #drawing-layer { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1000; }
-        .cursor-pen { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>') 0 24, auto !important; }
-
-        @media print {
-            #sidebar, .stage-header { display: none !important; }
-            #paper-page { margin: 0; padding: 0; box-shadow: none; max-width: 100%; }
-            body { background: white; height: auto; overflow: visible; }
-            .magic-gap { color: transparent !important; border-bottom: 1px solid #000; }
-        }
+        #drawing-layer { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 9999; touch-action: none; }
+        .cursor-pen { cursor: crosshair !important; }
+        
+        @media print { #sidebar, .stage-header { display: none !important; } body { background: white; height: auto; overflow: visible; } #paper-page { max-width: 100%; width: 100%; margin: 0; padding: 0; box-shadow: none; border-radius: 0; } #unit-container { display: block; } .col-span-2 { width: 100%; } }
+        @media (max-width: 1000px) { #unit-container { display: block; } .col-span-2 { width: 100%; } }
     </style>
 </head>
 <body>
-
+    
     <aside id="sidebar">
-        <div class="sidebar-header">COURSEBOOK PRO</div>
+        <div class="sidebar-header"><span>📚</span> COURSEBOOK PRO</div>
         <div class="tools-panel">
-            <button class="sidebar-btn" id="btn-pen" onclick="togglePen()">✏️ Board Pen</button>
-            <div id="pen-options" style="display:none; padding-left:10px; margin-bottom:10px;">
-                <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <div style="width:20px; height:20px; background:blue; border-radius:50%; cursor:pointer;" onclick="setPenColor('blue')"></div>
-                    <div style="width:20px; height:20px; background:red; border-radius:50%; cursor:pointer;" onclick="setPenColor('red')"></div>
-                    <div style="width:20px; height:20px; background:black; border-radius:50%; cursor:pointer;" onclick="setPenColor('black')"></div>
+            <button class="sidebar-btn" id="btn-pen" onclick="togglePen()"><span>✏️</span> <span>Board Pen</span></button>
+            <div id="pen-options" style="display:none; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 10px;">
+                <div style="display:flex; justify-content: space-between; margin-bottom:10px;">
+                    <div style="width:30px; height:30px; background:#2563EB; border-radius:50%; cursor:pointer; border:2px solid white;" onclick="setPenColor('#2563EB')"></div>
+                    <div style="width:30px; height:30px; background:#DC2626; border-radius:50%; cursor:pointer; border:2px solid white;" onclick="setPenColor('#DC2626')"></div>
+                    <div style="width:30px; height:30px; background:#000000; border-radius:50%; cursor:pointer; border:2px solid white;" onclick="setPenColor('#000000')"></div>
                 </div>
-                <button class="sidebar-btn" onclick="clearDrawings()" style="font-size:0.8rem; padding:5px;">Clear</button>
+                <button class="sidebar-btn" onclick="setEraser()" style="font-size:0.8rem; background:#4B5563;">⚪ Eraser</button>
+                <button class="sidebar-btn" onclick="clearDrawings()" style="font-size:0.8rem; background:#EF4444;">🗑 Clear Board</button>
             </div>
-            <button class="sidebar-btn" id="btn-reveal" onclick="toggleRevealAll()">👁️ Reveal All</button>
-            <button class="sidebar-btn" onclick="window.print()">📄 PDF Export</button>
+            <button class="sidebar-btn" id="btn-reveal" onclick="toggleRevealAll()"><span>👁️</span> <span>Reveal Answers</span></button>
+            <button class="sidebar-btn pdf-btn" onclick="window.print()"><span>📄</span> <span>Export PDF</span></button>
         </div>
         <div class="nav-list" id="nav-list"></div>
-        <div style="padding:1rem;"><button class="sidebar-btn" onclick="loadDemoData()" style="background:transparent; border:1px dashed #666; color:#888;">↻ Reset Unit</button></div>
+        <div style="padding:1.5rem; border-top:1px solid #374151;">
+            <button class="sidebar-btn" onclick="window.location.href='builder-v2.html'" style="background:transparent; border:1px dashed #4B5563; color:#9CA3AF;">← Back to Builder</button>
+        </div>
     </aside>
 
     <div id="main-stage">
-        <div class="stage-header">
-            <button id="toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button>
-        </div>
+        <div class="stage-header"><button id="toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰</button></div>
         <div id="paper-page">
             <canvas id="drawing-layer"></canvas>
             <div id="unit-container"></div>
@@ -155,202 +162,141 @@
     </div>
 
     <script>
-        // STATE
-        let db = null;
         let isPenActive = false;
         let signaturePad;
-        let revealState = false; // false = hidden, true = revealed
-        let selectedMatchItem = null; // For matching exercise
+        let revealState = false;
+        let selectedMatchItem = null;
 
-        // INIT
         window.addEventListener('load', () => {
-            initCanvas();
-            initSupabase();
+            initCanvas(); 
             const urlParams = new URLSearchParams(window.location.search);
-            const unitId = urlParams.get('id');
-            if(unitId && db) loadUnit(unitId); else loadDemoData();
+            if (urlParams.get('source') === 'demo') {
+                const localData = localStorage.getItem('demo_unit_data_v4');
+                if (localData) {
+                    const parsedData = JSON.parse(localData);
+                    parsedData.forEach(block => {
+                        if(block.type === 'image' || block.type === 'text_with_image') {
+                            if(!block.url) block.url = `https://picsum.photos/seed/${Math.random()}/1000/600`;
+                        }
+                    });
+                    renderBlocks(parsedData);
+                } else loadFallbackDemo();
+            } else loadFallbackDemo();
+            new ResizeObserver(() => resizeCanvas()).observe(document.getElementById('paper-page'));
         });
 
-        function initSupabase() {
-            try {
-                // Add keys here if needed
-                if(window.supabase) db = window.supabase.createClient('URL', 'KEY');
-            } catch(e){}
-        }
-
-        // --- RENDERER ---
         function renderBlocks(blocks) {
             const container = document.getElementById('unit-container');
             const nav = document.getElementById('nav-list');
             container.innerHTML = '';
             nav.innerHTML = '';
-
-            // Section Tracker
             let currentSection = '';
+            let currentNavContainer = null;
 
             blocks.forEach((block, index) => {
                 const blockId = `block-${index}`;
-                
-                // Add Nav Section Headers
-                if(block.section && block.section !== currentSection) {
+
+                if (block.section && block.section !== currentSection) {
                     currentSection = block.section;
-                    const h = document.createElement('div');
-                    h.className = 'nav-section-title';
-                    h.innerText = currentSection;
-                    nav.appendChild(h);
+                    const sectionTitle = document.createElement('div');
+                    sectionTitle.className = 'nav-section-title';
+                    sectionTitle.innerText = currentSection;
+                    sectionTitle.onclick = () => document.getElementById(blockId).scrollIntoView({behavior:'smooth'});
+                    nav.appendChild(sectionTitle);
+                    currentNavContainer = document.createElement('div');
+                    nav.appendChild(currentNavContainer);
+                }
+                
+                if(currentNavContainer && ['text', 'ue_part2', 'audio', 'speaking', 'arcade', 'matching', 'multiple_choice', 'exam_tip'].includes(block.type)) {
+                    const item = document.createElement('div');
+                    item.className = 'nav-item';
+                    item.innerText = block.title || block.headline || getLabel(block.type);
+                    item.onclick = () => document.getElementById(blockId).scrollIntoView({behavior:'smooth'});
+                    currentNavContainer.appendChild(item);
                 }
 
                 const div = document.createElement('div');
-                div.className = 'block';
-                div.id = blockId;
+                div.className = 'block'; div.id = blockId;
+                
+                // EXAM TIP NOW FORCED TO FULL WIDTH (COL-SPAN-2)
+                if(['header', 'text', 'text_with_image', 'image', 'magazine_split', 'speaking', 'audio', 'exam_tip'].includes(block.type)) {
+                    div.classList.add('col-span-2');
+                }
 
                 switch(block.type) {
-                    // HEADER
                     case 'header':
-                        div.innerHTML = `
-                            <div style="text-transform:uppercase; color:#2563EB; font-weight:bold; letter-spacing:2px; margin-bottom:10px;">${block.level} | Unit ${block.unit_num || '1'}</div>
-                            <h1>${block.title}</h1>
-                            <p style="font-size:1.2rem; color:#6b7280; max-width:600px;">${block.subtitle || ''}</p>
-                            <hr style="margin-top:3rem; border-color:#e5e7eb;">
-                        `;
-                        addNavLink('Start', blockId);
+                        div.className += ' header-card';
+                        div.innerHTML = `<div class="level-tag">${block.level || 'UNIT'}</div><h1>${block.title}</h1><p style="font-size:1.2rem; color:#4B5563; margin-top:1rem;">${block.subtitle || ''}</p>`;
                         break;
 
-                    // READING
+                    case 'text_with_image':
+                        div.innerHTML = `<div class="wrapped-text-container"><img src="${block.url}" class="wrapped-image"><div class="wrapped-content"><h3>${block.headline}</h3><div style="width:50px; height:4px; background:var(--primary); margin-bottom:1rem;"></div><p>${block.text}</p></div></div>`;
+                        break;
+
                     case 'text':
-                        div.innerHTML = `
-                            <h2>${block.headline}</h2>
-                            <div class="reading-text ${block.columns ? 'reading-columns' : ''}">${block.content}</div>
-                        `;
-                        addNavLink('Reading', blockId);
+                        div.className += ' reading-card';
+                        div.innerHTML = `<h2>📖 ${block.headline || 'Reading'}</h2><div class="reading-text ${block.columns ? 'reading-columns' : ''}">${block.content}</div>`;
                         break;
 
-                    // AUDIO
-                    case 'audio':
-                         div.innerHTML = `
-                            <div style="background:#f3f4f6; padding:1.5rem; border-radius:8px; border-left:4px solid #2563EB;">
-                                <h3>🎧 Listening: ${block.title}</h3>
-                                <p>${block.instructions}</p>
-                                <audio controls style="width:100%; margin-top:10px;">
-                                    <source src="${block.url}" type="audio/mpeg">
-                                </audio>
-                            </div>
-                        `;
-                        addNavLink('Listening', blockId);
-                        break;
-
-                    // IMAGE / CARTOON
                     case 'image':
-                        div.innerHTML = `
-                            <figure style="text-align:center;">
-                                <img src="${block.url}" style="max-width:100%; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-                                ${block.caption ? `<figcaption style="margin-top:10px; color:#6b7280; font-style:italic;">${block.caption}</figcaption>` : ''}
-                            </figure>
-                        `;
+                        div.innerHTML = `<figure style="margin:0;"><img src="${block.url}" style="width:100%; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,0.1); display:block; object-fit: cover;"></figure>`;
                         break;
 
-                    // EXAM TIP
+                    case 'audio':
+                         div.className += ' audio-card';
+                         const scriptId = `script-${index}`;
+                         div.innerHTML = `<div style="font-size:2rem;">🎧</div><div style="flex-grow:1;"><h3 style="color:white; margin:0 0 5px 0;">Listening Task</h3><p style="margin:0; font-size:0.9rem; opacity:0.8;">${block.instructions || 'Listen to the track.'}</p></div><button class="script-btn" onclick="document.getElementById('${scriptId}').style.display = document.getElementById('${scriptId}').style.display === 'block' ? 'none' : 'block'">📜 Show Script</button><audio controls style="height:40px;"><source src="${block.url}" type="audio/mpeg"></audio><div id="${scriptId}" class="script-box">${block.script || 'No transcript available.'}</div>`;
+                        break;
+
+                    case 'multiple_choice':
+                         div.innerHTML = `<h2>❓ ${block.title || 'Quiz'}</h2>`;
+                         const qContainer = document.createElement('div');
+                         qContainer.className = 'quiz-container';
+                         block.questions.forEach((qObj, i) => {
+                             const qDiv = document.createElement('div');
+                             qDiv.className = 'mc-question';
+                             qDiv.innerHTML = `<div class="mc-q-title">${i+1}. ${qObj.q}</div>`;
+                             qObj.options.forEach(opt => {
+                                 const btn = document.createElement('div'); btn.className = 'mc-option'; btn.innerText = opt;
+                                 btn.onclick = function() { Array.from(qDiv.children).forEach(child => { if(child.classList.contains('mc-option')) child.classList.remove('wrong', 'correct'); }); if(opt === qObj.a) this.classList.add('correct'); else this.classList.add('wrong'); };
+                                 qDiv.appendChild(btn);
+                             });
+                             qContainer.appendChild(qDiv);
+                         });
+                         div.appendChild(qContainer);
+                         break;
+                    
+                    case 'arcade':
+                         div.innerHTML = `<h2>🕹️ Arcade</h2><div class="arcade-grid">${(block.games || ['Hangman', 'Wordsearch']).map(game => `<div class="arcade-btn" onclick="alert('Launching ${game}...')"><span>${getGameIcon(game)}</span>${game}</div>`).join('')}</div>`;
+                        break;
+
                     case 'exam_tip':
-                        div.className = 'exam-tip';
-                        div.innerHTML = block.content;
+                        div.className += ' exam-tip';
+                        div.innerHTML = `<span class="tip-icon">📌</span><div><strong>EXAM TIP:</strong> ${block.content}</div>`; 
                         break;
 
-                    // SPEAKING BOX
                     case 'speaking':
-                        div.className = 'speaking-box';
-                        div.innerHTML = `
-                            <div class="speaking-icon">💬</div>
-                            <div>
-                                <h3 style="margin-top:0;">Speaking: ${block.title}</h3>
-                                <p>${block.content}</p>
-                                <ul style="padding-left:20px; color:#4b5563;">
-                                    ${block.points.map(p => `<li>${p}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                        addNavLink('Speaking', blockId);
+                        div.className += ' speaking-card';
+                        div.innerHTML = `<div style="font-size:3rem;">💬</div><div class="chat-bubble"><h3 style="margin-top:0; color:var(--primary);">Speaking: ${block.title}</h3><p>${block.content}</p><ul style="padding-left:20px; color:#4B5563;">${block.points.map(p => `<li style="margin-bottom:5px;">${p}</li>`).join('')}</ul></div>`;
                         break;
 
-                    // WRITING BOX
-                    case 'writing':
-                        div.className = 'writing-box';
-                        div.innerHTML = `
-                            <h3 style="color:#be185d; margin-top:0;">✍️ Writing: ${block.title}</h3>
-                            <p><strong>Task:</strong> ${block.task}</p>
-                            <div class="useful-lang">
-                                <strong>Useful Language:</strong>
-                                <ul style="margin:5px 0; padding-left:20px;">
-                                    ${block.useful_lang.map(l => `<li>${l}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                        addNavLink('Writing', blockId);
-                        break;
-
-                    // UOE Part 2 (Open Cloze)
                     case 'ue_part2':
-                        div.innerHTML = `<h2>Use of English Part 2</h2><p>Complete the text with <strong>one word</strong> in each gap.</p>`;
-                        const txt = document.createElement('div');
-                        txt.className = 'reading-text';
+                        div.innerHTML = `<h2>📝 Open Cloze</h2><p style="color:#6B7280; margin-bottom:1rem;">One word per gap.</p>`;
+                        const txt = document.createElement('div'); txt.className = 'reading-text';
                         txt.innerHTML = block.text.replace(/{{(.*?)}}/g, `<span class="magic-gap" onclick="this.classList.toggle('revealed')">$1</span>`);
                         div.appendChild(txt);
-                        addNavLink('Open Cloze', blockId);
                         break;
 
-                    // UOE Part 3 (Word Formation)
-                    case 'ue_part3':
-                        div.innerHTML = `<h2>Use of English Part 3</h2><p>Form a word from the root to fit the gap.</p>`;
-                        const wfList = document.createElement('div');
-                        wfList.className = 'reading-text';
-                        block.lines.forEach(line => {
-                            const row = document.createElement('div');
-                            row.className = 'wf-line';
-                            const left = document.createElement('div');
-                            if(line.gap) {
-                                const p = line.text.split('____');
-                                left.innerHTML = `${p[0]} <span class="magic-gap" onclick="this.classList.toggle('revealed')">${line.answer}</span> ${p[1]||''}`;
-                            } else left.innerHTML = line.text;
-                            row.innerHTML = `<div>${left.innerHTML}</div><div class="wf-root">${line.root||''}</div>`;
-                            wfList.appendChild(row);
-                        });
-                        div.appendChild(wfList);
-                        addNavLink('Word Formation', blockId);
-                        break;
-
-                    // MATCHING (Click Logic)
                     case 'matching':
-                        div.innerHTML = `<h2>Matching</h2><p>${block.instruction}</p>`;
-                        const container = document.createElement('div');
-                        container.className = 'match-container';
-                        
-                        // Left Col
+                        div.innerHTML = `<h2>🧩 Matching</h2>`;
+                        const container = document.createElement('div'); container.className = 'match-container';
+                        const leftData = block.pairs.map((p,i) => ({t:p.left, id:i}));
+                        const rightData = block.pairs.map((p,i) => ({t:p.right, id:i})).sort(() => Math.random()-0.5);
                         const leftCol = document.createElement('div'); leftCol.className = 'match-col';
                         const rightCol = document.createElement('div'); rightCol.className = 'match-col';
-                        
-                        block.pairs.forEach((pair, idx) => {
-                            // Left Item
-                            const l = document.createElement('div');
-                            l.className = 'match-item';
-                            l.innerText = pair.left;
-                            l.dataset.id = idx;
-                            l.dataset.side = 'left';
-                            l.onclick = (e) => handleMatchClick(e.target);
-                            leftCol.appendChild(l);
-
-                            // Right Item (Randomized in real app, keeping simple here)
-                            const r = document.createElement('div');
-                            r.className = 'match-item';
-                            r.innerText = pair.right;
-                            r.dataset.id = idx; // Matching ID
-                            r.dataset.side = 'right';
-                            r.onclick = (e) => handleMatchClick(e.target);
-                            rightCol.appendChild(r);
-                        });
-                        
-                        container.appendChild(leftCol);
-                        container.appendChild(rightCol);
-                        div.appendChild(container);
-                        addNavLink('Matching', blockId);
+                        leftData.forEach(d => { const l=document.createElement('div'); l.className='match-item'; l.innerText=d.t; l.dataset.id=d.id; l.dataset.side='left'; l.onclick=(e)=>handleMatchClick(e.target); leftCol.appendChild(l); });
+                        rightData.forEach(d => { const r=document.createElement('div'); r.className='match-item'; r.innerText=d.t; r.dataset.id=d.id; r.dataset.side='right'; r.onclick=(e)=>handleMatchClick(e.target); rightCol.appendChild(r); });
+                        container.appendChild(leftCol); container.appendChild(rightCol); div.appendChild(container);
                         break;
                 }
                 container.appendChild(div);
@@ -358,136 +304,54 @@
             setTimeout(resizeCanvas, 500);
         }
 
-        function addNavLink(label, id) {
-            const l = document.createElement('div');
-            l.className = 'nav-item';
-            l.innerText = label;
-            l.onclick = () => document.getElementById(id).scrollIntoView({behavior:'smooth'});
-            document.getElementById('nav-list').appendChild(l);
-        }
+        function getLabel(type) { const map = {'text':'Reading', 'ue_part2':'Open Cloze', 'audio':'Audio', 'speaking':'Discussion', 'arcade':'Games', 'multiple_choice':'Quiz', 'exam_tip':'Tip'}; return map[type] || 'Activity'; }
+        function getGameIcon(name) { const icons = {'Hangman':'😵', 'Wordsearch':'🔍', 'Crossword':'▦', 'Anagram':'🔠'}; return icons[name] || '🎮'; }
 
-        // --- MATCHING LOGIC ---
         function handleMatchClick(el) {
             if(el.classList.contains('matched')) return;
-
-            if(!selectedMatchItem) {
-                // Select first
-                selectedMatchItem = el;
-                el.classList.add('selected');
-            } else {
-                // Try to match
-                if(selectedMatchItem === el) {
-                    // Deselect self
-                    el.classList.remove('selected');
-                    selectedMatchItem = null;
-                } else if(selectedMatchItem.dataset.side === el.dataset.side) {
-                    // Changed mind, selected same side
-                    selectedMatchItem.classList.remove('selected');
-                    selectedMatchItem = el;
-                    el.classList.add('selected');
-                } else {
-                    // Cross match attempt
-                    if(selectedMatchItem.dataset.id === el.dataset.id) {
-                        // SUCCESS
-                        el.classList.add('matched');
-                        selectedMatchItem.classList.add('matched');
-                        selectedMatchItem.classList.remove('selected');
-                        selectedMatchItem = null;
-                    } else {
-                        // FAIL - Shake effect?
-                        alert("Try again!");
-                        selectedMatchItem.classList.remove('selected');
-                        selectedMatchItem = null;
-                    }
+            if(!selectedMatchItem) { selectedMatchItem = el; el.classList.add('selected'); }
+            else {
+                if(selectedMatchItem === el) { el.classList.remove('selected'); selectedMatchItem = null; }
+                else if(selectedMatchItem.dataset.side === el.dataset.side) { selectedMatchItem.classList.remove('selected'); selectedMatchItem = el; el.classList.add('selected'); }
+                else {
+                    if(selectedMatchItem.dataset.id === el.dataset.id) { el.classList.add('matched'); selectedMatchItem.classList.add('matched'); selectedMatchItem.classList.remove('selected'); selectedMatchItem = null; }
+                    else { alert("Try again!"); selectedMatchItem.classList.remove('selected'); selectedMatchItem = null; }
                 }
             }
         }
 
-        // --- REVEAL ALL LOGIC ---
         function toggleRevealAll() {
             revealState = !revealState;
             const btn = document.getElementById('btn-reveal');
             const gaps = document.querySelectorAll('.magic-gap');
-            
-            if(revealState) {
-                gaps.forEach(g => g.classList.add('revealed'));
-                btn.innerHTML = "🙈 Hide All";
-            } else {
-                gaps.forEach(g => g.classList.remove('revealed'));
-                btn.innerHTML = "👁️ Reveal All";
-            }
+            if(revealState) { gaps.forEach(g => g.classList.add('revealed')); btn.innerHTML = "<span>🙈</span> <span>Hide All</span>"; }
+            else { gaps.forEach(g => g.classList.remove('revealed')); btn.innerHTML = "<span>👁️</span> <span>Reveal All</span>"; }
         }
 
-        // --- DRAWING ---
         function togglePen() {
             isPenActive = !isPenActive;
             const btn = document.getElementById('btn-pen');
             const opts = document.getElementById('pen-options');
             const canvas = document.getElementById('drawing-layer');
             const paper = document.getElementById('paper-page');
-
             if(isPenActive) {
-                btn.classList.add('active'); opts.style.display = 'block';
-                canvas.style.pointerEvents = 'auto'; paper.classList.add('cursor-pen');
-                signaturePad.on();
+                btn.classList.add('active'); opts.style.display = 'block'; btn.innerHTML = "<span>❌</span> <span>Stop Ink</span>";
+                resizeCanvas();
+                canvas.style.pointerEvents = 'auto'; canvas.style.border = "2px dashed rgba(79, 70, 229, 0.3)";
+                paper.classList.add('cursor-pen');
+                if(signaturePad) signaturePad.on();
             } else {
-                btn.classList.remove('active'); opts.style.display = 'none';
-                canvas.style.pointerEvents = 'none'; paper.classList.remove('cursor-pen');
-                signaturePad.off();
+                btn.classList.remove('active'); opts.style.display = 'none'; btn.innerHTML = "<span>✏️</span> <span>Board Pen</span>";
+                canvas.style.border = "none"; canvas.style.pointerEvents = 'none'; paper.classList.remove('cursor-pen');
+                if(signaturePad) signaturePad.off();
             }
         }
-        function setPenColor(c) { signaturePad.penColor = c; }
-        function clearDrawings() { signaturePad.clear(); }
-        function initCanvas() {
-            const canvas = document.getElementById('drawing-layer');
-            resizeCanvas();
-            if(typeof SignaturePad !== 'undefined') {
-                signaturePad = new SignaturePad(canvas, { penColor: 'blue', minWidth: 2, maxWidth: 3 });
-                signaturePad.off();
-            }
-        }
-        function resizeCanvas() {
-            const canvas = document.getElementById('drawing-layer');
-            const paper = document.getElementById('paper-page');
-            canvas.width = paper.clientWidth; canvas.height = paper.clientHeight;
-        }
-
-        // --- THE MEGA UNIT SIMULATION ---
-        function loadDemoData() {
-            const blocks = [
-                { section: 'Lead-in', type: 'header', title: 'The Future of Work', level: 'B2 UPPER INTERMEDIATE', subtitle: 'Unit 4: Careers & Technology' },
-                { section: 'Lead-in', type: 'image', url: 'https://images.unsplash.com/photo-1593642632823-8f7853670961', caption: 'Is the office obsolete?' },
-                { section: 'Lead-in', type: 'speaking', title: 'Workplace Trends', content: 'Discuss the following questions in pairs:', points: ['Would you prefer to work entirely from home?', 'What are the disadvantages of being a "digital nomad"?', 'Will AI replace your future job?'] },
-                
-                { section: 'Reading', type: 'text', headline: 'The Death of the Commute', columns: true, content: 'For decades, the "9-to-5" structure dictated our lives. We squeezed into trains, sat in traffic, and endured the daily grind just to sit at a desk. But the post-2020 world has shattered this model. Asynchronous work—working when it suits you, not when the boss is watching—is the new gold standard. However, this freedom comes at a cost: the blurring of lines between "home" and "office". Sociologists warn that without the physical separation of the workplace, we risk a burnout epidemic.' },
-                { section: 'Reading', type: 'exam_tip', content: 'In <strong>Part 6 (Gapped Text)</strong>, look for reference words like "this", "that", or "such" to link the missing paragraphs to the text.' },
-                
-                { section: 'Vocabulary', type: 'matching', instruction: 'Match the phrasal verbs to their definitions.', pairs: [
-                    { left: 'Burn out', right: 'Become exhausted from overwork' },
-                    { left: 'Clock off', right: 'Finish work for the day' },
-                    { left: 'Take on', right: 'Accept new responsibility' }
-                ]},
-
-                { section: 'Use of English', type: 'ue_part2', text: 'The problem with home working is not the isolation {{itself}}, but rather the lack of boundaries. We seem incapable {{of}} switching off. Whenever there is a quiet moment, we instinctively reach {{for}} our phones.' },
-                { section: 'Use of English', type: 'ue_part3', lines: [
-                    { text: 'The internet has caused a revolution in...', root: 'COMMUNICATE', gap: true, answer: 'COMMUNICATION' },
-                    { text: 'Many people find it impossible to...', root: 'CONNECT', gap: true, answer: 'DISCONNECT' },
-                    { text: 'This can lead to feelings of...', root: 'LONELY', gap: true, answer: 'LONELINESS' }
-                ]},
-
-                { section: 'Listening', type: 'audio', title: 'Remote Work Survey', instructions: 'You will hear five short extracts in which people are talking about their jobs.', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-                
-                { section: 'Writing', type: 'writing', title: 'A Report', task: 'Your manager has asked you to write a report on the benefits of remote working for your department.', useful_lang: ['The purpose of this report is to...', 'It is generally agreed that...', 'I would recommend that...'] }
-            ];
-            renderBlocks(blocks);
-        }
-        
-        async function loadUnit(id) {
-            try {
-                const { data } = await db.from('units').select('*').eq('id', id).single();
-                if(data && data.content) renderBlocks(data.content.blocks || data.content);
-            } catch(e){ loadDemoData(); }
-        }
+        function resizeCanvas() { const c = document.getElementById('drawing-layer'); const p = document.getElementById('paper-page'); if(c&&p) { c.width = p.scrollWidth; c.height = p.scrollHeight; } }
+        function setPenColor(c) { if(signaturePad) { signaturePad.compositeOperation = 'source-over'; signaturePad.penColor = c; signaturePad.maxWidth = 3; } }
+        function setEraser() { if(signaturePad) { signaturePad.compositeOperation = 'destination-out'; signaturePad.maxWidth = 20; } }
+        function clearDrawings() { if(signaturePad) signaturePad.clear(); }
+        function initCanvas() { const c = document.getElementById('drawing-layer'); if(typeof SignaturePad !== 'undefined') { signaturePad = new SignaturePad(c, { penColor: '#2563EB', minWidth: 2, maxWidth: 3 }); signaturePad.off(); } }
+        function loadFallbackDemo() { renderBlocks([{ section: 'Welcome', type: 'header', title: 'Demo Mode', level: 'TEST', subtitle: 'Please generate a unit in the Builder.' }]); }
     </script>
 </body>
 </html>

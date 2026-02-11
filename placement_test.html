@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Placement Test</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --ih-blue: #003366;
+            --ih-yellow: #FFCC00;
+            --text-dark: #333;
+            --bg-grey: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-grey);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        .test-container {
+            background: white;
+            width: 95%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            background-color: var(--ih-blue);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .logo-area {
+            background: white;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .logo-area img {
+            height: 50px;
+            display: block;
+        }
+
+        .progress-track {
+            background: rgba(255,255,255,0.2);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            background: var(--ih-yellow);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .content {
+            padding: 40px;
+            flex-grow: 1;
+        }
+
+        .meta-text {
+            color: #888;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--ih-blue);
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+            line-height: 1.4;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--ih-blue);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-dark);
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .btn:hover {
+            border-color: var(--ih-blue);
+            background-color: #f0f7ff;
+        }
+
+        .option-btn {
+            text-align: left;
+        }
+
+        .footer {
+            padding: 15px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #999;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--ih-yellow);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .level-badge {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--ih-blue);
+            background: var(--ih-yellow);
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="test-container">
+    <div class="header">
+        <div class="logo-area">
+            <img src="images/logo.png" alt="School Logo">
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+    </div>
+
+    <div class="content" id="quiz-area">
+        <div id="start-screen">
+            <div class="meta-text">Registration</div>
+            <h2>Please enter your details to begin the assessment.</h2>
+            <input type="text" id="student-name" placeholder="Your Full Name" required>
+            <button class="btn" onclick="beginTest()">Start Test</button>
+        </div>
+
+        <div id="question-screen" style="display:none;">
+            <div class="meta-text" id="status-text">Question 1</div>
+            <h2 id="question-text">Loading question...</h2>
+            <div class="options-list" id="options-container"></div>
+        </div>
+
+        <input type="text" id="website_url" name="website_url" tabindex="-1" autocomplete="off" style="position: absolute; left: -9999px;">
+    </div>
+
+    <div class="footer">
+        Powered by AI • British English Standard<br>
+        <span style="opacity: 0.6">© 2026 Language School</span>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. CONFIGURATION (PASTE YOUR KEYS HERE)
+    // ==========================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+    // ==========================================
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let history = []; 
+    let currentLevel = "B1"; 
+    let questionCount = 0;
+    let studentName = "";
+    const MAX_QUESTIONS = 15;
+
+    // 2. BEGIN TEST (Handle Name Input)
+    function beginTest() {
+        const nameInput = document.getElementById('student-name').value;
+        if (nameInput.trim() === "") {
+            alert("Please enter your name to continue.");
+            return;
+        }
+        studentName = nameInput;
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('question-screen').style.display = 'block';
+        fetchNextQuestion();
+    }
+
+    // 3. FETCH QUESTION
+    async function fetchNextQuestion() {
+        document.getElementById('question-text').innerText = "Generating next question...";
+        document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
+
+        try {
+            const response = await fetch('/.netlify/functions/examiner', {
+                method: 'POST',
+                body: JSON.stringify({ history, currentLevel })
+            });
+            const data = await response.json();
+            renderQuestion(data);
+        } catch (error) {
+            console.error(error);
+            document.getElementById('question-text').innerText = "Connection Error. Please try again.";
+        }
+    }
+
+    // 4. RENDER QUESTION
+    function renderQuestion(qData) {
+        document.getElementById('question-text').innerText = qData.question;
+        document.getElementById('status-text').innerText = `Question ${questionCount + 1} / ${MAX_QUESTIONS}`;
+        
+        const percentage = (questionCount / MAX_QUESTIONS) * 100;
+        document.getElementById('progress').style.width = percentage + "%";
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = "";
+
+        qData.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(opt, qData);
+            container.appendChild(btn);
+        });
+    }
+
+    // 5. HANDLE ANSWER
+    function handleAnswer(selectedOption, qData) {
+        const isCorrect = selectedOption === qData.correct_answer;
+
+        history.push({
+            question: qData.question,
+            student_answer: selectedOption,
+            correct: isCorrect,
+            level_tested: qData.level
+        });
+
+        // Adapt level
+        if (isCorrect) currentLevel = "Up";
+        else currentLevel = "Down";
+
+        questionCount++;
+
+        if (questionCount >= MAX_QUESTIONS) {
+            finishTest();
+        } else {
+            fetchNextQuestion();
+        }
+    }
+
+    // 6. FINISH & SAVE
+    async function finishTest() {
+        // Honeypot check
+        if (document.getElementById('website_url').value !== "") return;
+
+        const container = document.getElementById('quiz-area');
+        container.innerHTML = `<h3>Finishing assessment...</h3><div class="loader"></div>`;
+
+        let teacherNotes = "Analysis in progress.";
+        let finalLevel = history[history.length - 1].level_tested || "B1";
+
+        try {
+            const reportResp = await fetch('/.netlify/functions/report', {
+                method: 'POST',
+                body: JSON.stringify({ history, studentName })
+            });
+            const reportData = await reportResp.json();
+            teacherNotes = reportData.report;
+        } catch (e) {
+            console.error("Report failed", e);
+        }
+
+        // Save to Supabase
+        await supabaseClient.from('placement_results').insert([{
+            student_name: studentName,
+            final_level: finalLevel,
+            teacher_notes: teacherNotes,
+            raw_history: JSON.stringify(history)
+        }]);
+
+        // Show Final Screen
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <h1 style="color: var(--ih-blue);">Test Complete</h1>
+                <p>Well done, ${studentName}! Your level is:</p>
+                <div class="level-badge">${finalLevel}</div>
+                <div style="background: #eef; padding: 15px; border-radius: 8px; text-align: left; margin-top: 20px;">
+                    <strong>Teacher's Observation:</strong><br>
+                    <small>${teacherNotes}</small>
+                </div>
+                <button class="btn" onclick="location.reload()" style="margin-top:20px;">Exit Test</button>
+            </div>
+        `;
+        document.getElementById('progress').style.width = "100%";
+    }
+</script>
+</body>
+</html>

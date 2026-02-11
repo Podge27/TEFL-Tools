@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writing Architect | C2 Proficiency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        body { background-color: #F8FAFC; font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 20px; }
+
+        /* BUILDER BLOCKS */
+        .builder-block { transition: all 0.1s; cursor: pointer; user-select: none; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .builder-block:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* ACTIVE INGREDIENT CHIP */
+        .active-chip { transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .active-chip:hover .remove-x { color: #DC2626; } /* Red X on hover */
+
+        /* HIGHLIGHTER */
+        .c2-sentence { cursor: pointer; padding: 2px 0; border-radius: 4px; border-bottom: 2px solid transparent; transition: background-color 0.2s; }
+        .c2-sentence:hover { background-color: #FEF3C7; } 
+        .c2-sentence.selected { background-color: #FCD34D; box-shadow: 0 0 0 2px #F59E0B; font-weight: 700; color: #78350F; }
+        .c2-sentence.correct-answer { background-color: #86EFAC !important; box-shadow: 0 0 0 2px #22C55E !important; color: #14532D !important; }
+
+        /* DRAFTING CARDS */
+        .source-card { background: #F8FAFC; border-left: 4px solid #64748B; padding: 16px; border-radius: 8px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .sub-card { background: white; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; margin-top: 12px; }
+        .sub-card:focus-within { border-color: #6366F1; ring: 2px solid #E0E7FF; }
+        
+        /* LEGO BRICKS */
+        .lego-brick { cursor: grab; padding: 12px; border-radius: 6px; margin-bottom: 8px; font-size: 0.85rem; border-left-width: 4px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-weight: 500; }
+        .lego-brick:active { cursor: grabbing; transform: scale(0.98); }
+        .brick-summary { border-color: #38BDF8; background: #F0F9FF; color: #0C4A6E; }
+        .brick-eval { border-color: #A855F7; background: #FAF5FF; color: #581C87; }
+
+        /* ZONES */
+        .drop-zone { min-height: 140px; background: #F1F5F9; border: 2px dashed #CBD5E1; border-radius: 12px; padding: 12px; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background: #EEF2FF; border-color: #6366F1; }
+        .intro-bar { background: linear-gradient(to right, #EEF2FF, #F5F3FF); border-bottom: 1px solid #E0E7FF; padding: 10px 20px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 10; border-radius: 8px; margin-bottom: 20px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #result-view, #result-view * { visibility: visible; }
+            #result-view { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white; z-index: 9999; padding: 0; margin: 0; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800 bg-slate-50">
+
+    <header class="bg-white border-b border-gray-200 h-16 flex items-center px-6 justify-between flex-shrink-0 z-40 relative shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="writing_index.html" class="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold transition">
+                <span class="hidden sm:inline">← Back</span>
+            </a>
+            <div id="mode-toggle" class="flex bg-gray-100 p-1 rounded-lg hidden">
+                <button onclick="switchMode('question')" id="btn-mode-question" class="px-4 py-1.5 rounded-md text-xs font-bold shadow-sm bg-white text-indigo-600">1. Highlight</button>
+                <button onclick="switchMode('builder')" id="btn-mode-builder" class="px-4 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-indigo-600">2. Build</button>
+            </div>
+            <div class="px-3 py-1 rounded-full text-[10px] font-bold bg-pink-100 text-pink-700 border border-pink-200">C2 PROFICIENCY</div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <div id="view-question" class="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center p-8">
+            <div id="initial-select-container" class="w-full max-w-md mb-10">
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block text-center">Select Task:</label>
+                <select id="topic-select-main" onchange="loadQuestion(this.value)" class="w-full p-4 bg-white border-2 border-indigo-100 rounded-xl font-bold text-lg shadow-lg cursor-pointer outline-none text-center">
+                    <option value="" disabled selected>Loading C2 Questions...</option>
+                </select>
+            </div>
+            
+            <div id="big-paper-container" class="hidden w-full max-w-6xl h-full overflow-y-auto pb-20">
+                
+                <div class="sticky top-0 z-50 mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex justify-between items-center shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-amber-100 text-amber-600 rounded-lg">👇</div>
+                        <div>
+                            <h3 class="text-sm font-bold text-amber-900">Identify Key Points</h3>
+                            <p class="text-xs text-amber-700">Find and click the 4 key ideas (2 in each text).</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-500">
+                            <input type="checkbox" id="check-answers" onclick="toggleAnswers()" class="w-4 h-4 text-green-600 rounded"> 
+                            Show Answers
+                        </label>
+                        <div class="text-xs font-bold text-gray-400 pl-4 border-l border-gray-300" id="highlight-counter">0/4 Selected</div>
+                    </div>
+                </div>
+
+                <div class="exam-paper p-12">
+                    <div class="flex justify-between items-start mb-10 border-b border-gray-100 pb-6">
+                        <div><h2 class="text-sm font-sans font-bold text-gray-400 uppercase tracking-widest">Part 1</h2><h1 class="text-4xl font-bold text-gray-900 mt-2">Essay Task</h1></div>
+                        <div class="text-right"><div class="inline-block px-4 py-2 rounded bg-gray-100 text-sm font-sans font-bold text-gray-500">45 Minutes</div></div>
+                    </div>
+                    
+                    <div id="big-content-area"></div>
+
+                    <div class="mt-12 flex justify-center">
+                        <button onclick="switchMode('builder')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold px-10 py-4 rounded-full shadow-xl">
+                            Next: Draft Essay →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-builder" class="absolute inset-0 z-20 flex hidden bg-slate-100">
+            
+            <aside class="w-[320px] bg-white border-r border-gray-200 flex flex-col z-20 shadow-xl">
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
+                    
+                    <div id="section-linkers">
+                        <label class="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">1. Linkers</label>
+                        <div id="warehouse-linkers" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div id="section-grammar">
+                        <label class="flex items-center gap-2 text-xs font-bold text-green-600 uppercase tracking-wider mb-2">2. Grammar</label>
+                        <div id="warehouse-grammar" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div id="section-vocab">
+                        <label class="flex items-center gap-2 text-xs font-bold text-fuchsia-600 uppercase tracking-wider mb-2">3. Vocabulary</label>
+                        
+                        <div id="topic-vocab-section" class="mb-3 hidden">
+                            <button onclick="document.getElementById('warehouse-topic-vocab').classList.toggle('hidden')" class="flex items-center justify-between w-full text-left text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 p-2 rounded hover:bg-teal-100 transition">
+                                <span>+ Topic Specific</span>
+                            </button>
+                            <div id="warehouse-topic-vocab" class="hidden flex flex-wrap gap-2 mt-2 p-2 bg-teal-50/30 rounded border border-teal-100"></div>
+                        </div>
+
+                        <div id="warehouse-vocab" class="flex flex-wrap gap-2 mb-3"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-vocab-input" placeholder="Add word..." class="flex-1 text-xs border border-fuchsia-200 rounded px-2 py-1 outline-none">
+                            <button onclick="addCustomVocab()" class="bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 font-bold px-2 py-1 rounded text-xs">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-gray-200 bg-slate-50">
+                    <button onclick="generateEssay()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-lg">Generate Essay</button>
+                </div>
+            </aside>
+
+            <main class="flex-1 overflow-y-auto custom-scrollbar p-8">
+                <div class="max-w-4xl mx-auto pb-32">
+                    
+                    <div id="c2-stage-draft">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-slate-700">Phase 1: Draft Ideas</h2>
+                            <span class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-bold">12 Cards</span>
+                        </div>
+                        <div id="c2-draft-container"></div>
+                        <div class="flex justify-end mt-8">
+                            <button onclick="switchToAssembly()" class="bg-indigo-600 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:bg-indigo-700">Finish Drafting →</button>
+                        </div>
+                    </div>
+
+                    <div id="c2-stage-assembly" class="hidden">
+                        <h2 class="text-2xl font-bold text-slate-700 mb-6">Phase 2: Assembly</h2>
+                        
+                        <div class="intro-bar">
+                            <div class="text-xs font-bold text-indigo-400 uppercase whitespace-nowrap">Introduction</div>
+                            <div class="flex-1">
+                                <input type="text" id="c2-intro-input" placeholder="One sentence summarizing the theme..." class="w-full bg-transparent border-none outline-none text-sm font-medium">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mb-4 gap-2 items-center">
+                            <span class="text-xs font-bold text-gray-400 uppercase">Paragraphs:</span>
+                            <select onchange="renderC2Slots(this.value)" class="text-xs font-bold p-2 rounded border bg-white cursor-pointer">
+                                <option value="4" selected>4 (Standard)</option>
+                                <option value="5">5 (Detailed)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                            <div class="md:col-span-4 sticky top-4">
+                                <div class="text-xs font-bold text-gray-400 uppercase mb-2">Brick Pile</div>
+                                <div id="c2-brick-pile" class="min-h-[200px] bg-slate-200/50 rounded-xl p-3 border-2 border-dashed border-slate-300"></div>
+                                <button onclick="document.getElementById('c2-stage-draft').classList.remove('hidden'); document.getElementById('c2-stage-assembly').classList.add('hidden');" class="mt-4 text-xs font-bold text-indigo-500 underline">← Back to Editing</button>
+                            </div>
+                            <div class="md:col-span-8 space-y-4" id="c2-drop-zones"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 border-t border-gray-200 pt-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Added Ingredients</h3>
+                        <div id="construction-ingredients" class="min-h-[60px] bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div id="result-view" class="absolute inset-0 z-50 bg-slate-900/50 flex hidden items-center justify-center p-8">
+            <div class="bg-white w-full max-w-5xl max-h-full rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                <div class="bg-indigo-900 text-white px-8 py-5 flex justify-between items-center no-print">
+                    <h3 class="font-bold text-2xl">Essay Result</h3>
+                    <div class="flex gap-2">
+                        <button onclick="saveEssayToDB()" id="btn-save" class="bg-indigo-800 px-4 py-2 rounded-lg font-bold text-sm">💾 Save</button>
+                        <button onclick="document.getElementById('result-view').classList.add('hidden')" class="bg-white/10 px-4 py-2 rounded-lg font-bold text-sm">Close</button>
+                    </div>
+                </div>
+                <div class="p-10 overflow-y-auto prose prose-lg custom-scrollbar" id="ai-output-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --------------------------------------------------------
+        // CONFIGURATION (PASTE KEYS HERE)
+        // --------------------------------------------------------
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const LEVEL = 'C2';
+        
+        let allQuestions = [];
+        let currentQuestion = null;
+        let activeIngredients = [];
+        let c2Selected = [];
+        let c2DraftData = {};
+        let lastGeneratedData = null;
+
+        // --------------------------------------------------------
+        // INITIALIZATION
+        // --------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("C2 Builder Loaded.");
+            await fetchTopics();
+            await fetchResources();
+        });
+
+        // --------------------------------------------------------
+        // DATABASE FETCHING
+        // --------------------------------------------------------
+        async function fetchTopics() {
+            const { data, error } = await db.from('writing_exam_questions').select('*').eq('level', LEVEL);
+            const sel = document.getElementById('topic-select-main');
+            
+            if (error || !data || data.length === 0) {
+                sel.innerHTML = '<option disabled selected>No C2 Questions Found.</option>';
+                return;
+            }
+
+            allQuestions = data; 
+            sel.innerHTML = '<option value="" disabled selected>Select C2 Task...</option>';
+            data.forEach(q => sel.innerHTML += `<option value="${q.id}">${q.title}</option>`); 
+        }
+
+        async function fetchResources() {
+            const { data } = await db.from('writing_resources').select('*').order('content', { ascending: true });
+            if(data) renderWarehouseItems(data);
+        }
+
+        function renderWarehouseItems(data) {
+            const divLink = document.getElementById('warehouse-linkers');
+            const divGram = document.getElementById('warehouse-grammar');
+            const divVoc = document.getElementById('warehouse-vocab');
+            const divTopic = document.getElementById('warehouse-topic-vocab');
+
+            [divLink, divGram, divVoc, divTopic].forEach(d => d.innerHTML='');
+            
+            const seen = new Set();
+            const currentTags = currentQuestion ? (currentQuestion.topic_tags || []) : [];
+
+            data.forEach(item => {
+                if(seen.has(item.content)) return; // No duplicates
+                
+                const chip = `<div onclick="addIngredient('${item.id}', '${item.content.replace(/'/g, "\\'")}', '${item.type}')" class="builder-block px-2 py-1 rounded text-xs font-bold border border-gray-200 bg-white inline-block mr-1 mb-1 ${getChipColor(item.type)}" title="${item.explanation||''}">${item.content}</div>`;
+
+                if (item.type === 'linker' && item.level !== 'B2') { 
+                    seen.add(item.content);
+                    divLink.innerHTML += chip;
+                }
+                else if (item.type === 'grammar') {
+                    seen.add(item.content);
+                    divGram.innerHTML += chip;
+                }
+                else if (item.type === 'vocabulary') {
+                    seen.add(item.content);
+                    if (LEVEL === 'C2' && item.vocab_tags && item.vocab_tags.some(t => currentTags.includes(t))) {
+                        divTopic.innerHTML += chip.replace('bg-white', 'bg-teal-50 text-teal-700');
+                    } else if (item.level === 'C2' || item.level === 'C1') {
+                        divVoc.innerHTML += chip;
+                    }
+                }
+            });
+        }
+
+        function getChipColor(type) {
+            if(type==='linker') return 'text-blue-700 hover:bg-blue-50';
+            if(type==='grammar') return 'text-green-700 hover:bg-green-50';
+            return 'text-fuchsia-700 hover:bg-fuchsia-50';
+        }
+
+        // --------------------------------------------------------
+        // UI LOGIC: QUESTION
+        // --------------------------------------------------------
+        function loadQuestion(id) {
+            currentQuestion = allQuestions.find(q => q.id === id);
+            if(!currentQuestion) return;
+
+            document.getElementById('initial-select-container').classList.add('hidden');
+            document.getElementById('big-paper-container').classList.remove('hidden');
+            document.getElementById('mode-toggle').classList.remove('hidden'); // Fixed ID
+            document.getElementById('topic-vocab-section').classList.remove('hidden');
+            
+            const t1 = currentQuestion.structure_data.text1 || "";
+            const t2 = currentQuestion.structure_data.text2 || "";
+            
+            // Safer Split
+            const split = t => {
+                const matches = t.match(/[^\.!\?]+[\.!\?]+/g);
+                if (!matches) return `<span class="c2-sentence" onclick="toggleHighlight(this)">${t}</span>`;
+                return matches.map(s => `<span class="c2-sentence" onclick="toggleHighlight(this)">${s.trim()}</span>`).join(' ');
+            };
+            
+            document.getElementById('big-content-area').innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">${currentQuestion.title}</h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="prose bg-gray-50 p-6 rounded border leading-loose">${split(t1)}</div>
+                    <div class="prose bg-gray-50 p-6 rounded border leading-loose">${split(t2)}</div>
+                </div>`;
+            
+            fetchResources(); // Refresh for Topic Vocab
+        }
+
+        function toggleHighlight(el) {
+            el.classList.toggle('selected');
+            const txt = el.innerText;
+            if(c2Selected.includes(txt)) c2Selected = c2Selected.filter(t=>t!==txt);
+            else c2Selected.push(txt);
+            document.getElementById('highlight-counter').innerText = `${c2Selected.length}/4 Selected`;
+        }
+
+        function toggleAnswers() {
+            const show = document.getElementById('check-answers').checked;
+            const keys = currentQuestion.key_points_json || [];
+            document.querySelectorAll('.c2-sentence').forEach(span => {
+                const txt = span.innerText;
+                const isKey = keys.some(k => k.includes(txt.substring(0,20)) || txt.includes(k.substring(0,20)));
+                if(show && isKey) span.classList.add('correct-answer');
+                else span.classList.remove('correct-answer');
+            });
+        }
+
+        // --------------------------------------------------------
+        // UI LOGIC: BUILDER
+        // --------------------------------------------------------
+        function switchMode(mode) {
+            const q = document.getElementById('view-question');
+            const b = document.getElementById('view-builder');
+            
+            if(mode === 'question') { 
+                q.classList.remove('hidden'); 
+                b.classList.add('hidden'); 
+            } else { 
+                q.classList.add('hidden'); 
+                b.classList.remove('hidden'); 
+                initC2Drafting();
+            }
+            
+            // Buttons
+            document.getElementById('btn-mode-question').className = mode === 'question' 
+                ? "px-4 py-1.5 rounded-md text-xs font-bold shadow-sm bg-white text-indigo-600" 
+                : "px-4 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-indigo-600";
+            
+            document.getElementById('btn-mode-builder').className = mode === 'builder' 
+                ? "px-4 py-1.5 rounded-md text-xs font-bold shadow-sm bg-white text-indigo-600" 
+                : "px-4 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-indigo-600";
+        }
+
+        function initC2Drafting() {
+            const container = document.getElementById('c2-draft-container');
+            container.innerHTML = '';
+            
+            if(c2Selected.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 border-2 border-dashed rounded">No text highlighted. Go back to Step 1.</div>`;
+                return;
+            }
+
+            c2Selected.forEach((txt, i) => {
+                const idSum = `sum-${i}`;
+                const idEval = `eval-${i}`;
+                const valSum = c2DraftData[idSum]?.val || '';
+                const valEval = c2DraftData[idEval]?.val || '';
+
+                container.innerHTML += `
+                    <div class="source-card">
+                        <div class="font-serif italic text-gray-600 mb-4 border-l-2 border-gray-300 pl-3">"${txt}"</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="sub-card">
+                                <label class="text-[10px] font-bold text-blue-500 uppercase">Summary</label>
+                                <textarea oninput="c2DraftData['${idSum}']={type:'summary',val:this.value}" class="w-full text-sm outline-none mt-1 resize-none" rows="3" placeholder="Paraphrase...">${valSum}</textarea>
+                            </div>
+                            <div class="sub-card">
+                                <label class="text-[10px] font-bold text-purple-500 uppercase">Evaluation</label>
+                                <textarea oninput="c2DraftData['${idEval}']={type:'eval',val:this.value}" class="w-full text-sm outline-none mt-1 resize-none" rows="3" placeholder="Critique/Opinion...">${valEval}</textarea>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function switchToAssembly() {
+            document.getElementById('c2-stage-draft').classList.add('hidden');
+            document.getElementById('c2-stage-assembly').classList.remove('hidden');
+            renderPile();
+            renderC2Slots(4);
+        }
+
+        function renderPile() {
+            const pile = document.getElementById('c2-brick-pile');
+            pile.innerHTML = '';
+            Object.keys(c2DraftData).forEach(key => {
+                const item = c2DraftData[key];
+                if(!item.val) return;
+                const div = document.createElement('div');
+                div.className = `lego-brick ${item.type==='summary'?'brick-summary':'brick-eval'}`;
+                div.innerText = item.val;
+                div.draggable = true;
+                div.id = `drag-${key}`;
+                div.addEventListener('dragstart', e => e.dataTransfer.setData('id', key));
+                pile.appendChild(div);
+            });
+        }
+
+        function renderC2Slots(count) {
+            const area = document.getElementById('c2-drop-zones');
+            area.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                let lbl = i===0 ? `Paragraph ${i+1} (Body)` : (i===count-1 ? "Conclusion" : `Paragraph ${i+1}`);
+                area.innerHTML += `
+                    <div>
+                        <div class="text-xs font-bold text-gray-400 uppercase mb-2">${lbl}</div>
+                        <div class="drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>`;
+            }
+        }
+
+        function allowDrop(e) { e.preventDefault(); }
+        function drop(e) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData("id");
+            const el = document.getElementById('drag-'+id);
+            if(el) e.target.appendChild(el);
+        }
+
+        // --------------------------------------------------------
+        // INGREDIENTS LOGIC (FIXED)
+        // --------------------------------------------------------
+        function addIngredient(id, content, type) {
+            if(activeIngredients.find(i=>i.id===id)) return;
+            activeIngredients.push({id, content, type});
+            renderActiveIngredients();
+        }
+
+        function removeIngredient(id) { 
+            activeIngredients = activeIngredients.filter(i=>i.id!==id); 
+            renderActiveIngredients(); 
+        }
+
+        function renderActiveIngredients() {
+            const area = document.getElementById('construction-ingredients');
+            area.innerHTML = '';
+            activeIngredients.forEach(i => {
+                let color = 'bg-gray-100 text-gray-600 border-gray-200';
+                if(i.type==='grammar') color='bg-green-50 text-green-700 border-green-200';
+                if(i.type==='linker') color='bg-blue-50 text-blue-700 border-blue-200';
+                if(i.type==='vocabulary') color='bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
+                
+                // NEW: Added remove function call and X icon
+                area.innerHTML += `
+                <span onclick="removeIngredient('${i.id}')" class="active-chip px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer group ${color}">
+                    ${i.content}
+                    <span class="remove-x text-xs opacity-50 group-hover:opacity-100 font-bold">×</span>
+                </span>`;
+            });
+        }
+
+        function addCustomVocab() { 
+            const val = document.getElementById('custom-vocab-input').value; 
+            if(val) addIngredient('cust-'+Date.now(), val, 'vocabulary'); 
+            document.getElementById('custom-vocab-input').value='';
+        }
+
+        // --------------------------------------------------------
+        // GENERATE
+        // --------------------------------------------------------
+        async function generateEssay() {
+            if(!currentQuestion) return alert("Select Task");
+            
+            const payload = {
+                level: 'C2', quality: 'distinction', topic: currentQuestion.title,
+                grammar: activeIngredients.filter(i=>i.type==='grammar').map(i=>i.content),
+                linkers: activeIngredients.filter(i=>i.type==='linker').map(i=>i.content),
+                vocabulary: activeIngredients.filter(i=>i.type==='vocabulary').map(i=>i.content),
+                points_data: []
+            };
+
+            const intro = document.getElementById('c2-intro-input').value;
+            if(intro) payload.points_data.push({topic:'Intro', argument:intro});
+            
+            document.querySelectorAll('.drop-zone').forEach((z, i) => {
+                z.querySelectorAll('.lego-brick').forEach(b => {
+                   const id = b.id.replace('drag-','');
+                   if(c2DraftData[id]) payload.points_data.push({topic:`Para ${i+1} (${c2DraftData[id].type})`, argument: c2DraftData[id].val}); 
+                });
+            });
+
+            document.getElementById('result-view').classList.remove('hidden');
+            document.getElementById('ai-output-text').innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-gray-400 gap-4"><span class="font-sans font-bold text-2xl animate-pulse text-indigo-900">Writing Essay...</span></div>`;
+            
+            try {
+                const res = await fetch('/.netlify/functions/generate_essay', { method:'POST', body:JSON.stringify(payload)});
+                if(!res.ok) throw new Error(await res.text());
+                const json = await res.json();
+                
+                document.getElementById('ai-output-text').innerHTML = json.essay_text.replace(/\n/g, '<br>');
+                
+                lastGeneratedData = {
+                    level: 'C2', quality: 'distinction', topic_title: currentQuestion.title,
+                    essay_text: json.essay_text, analysis_json: json.analysis
+                };
+
+            } catch(e) { document.getElementById('ai-output-text').innerHTML = "Error: "+e.message; }
+        }
+
+        async function saveEssayToDB() {
+            if (!lastGeneratedData) return;
+            const btn = document.getElementById('btn-save');
+            btn.innerHTML = `Saving...`;
+            const { error } = await db.from('saved_essays').insert([lastGeneratedData]);
+            if (error) { alert(error.message); btn.innerHTML = `Save`; }
+            else { btn.innerHTML = `✅ Saved`; setTimeout(() => btn.innerHTML = `💾 Save`, 3000); }
+        }
+    </script>
+</body>
+</html>
