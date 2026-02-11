@@ -1,24 +1,13 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
 exports.handler = async function(event, context) {
-  // 1. SECURITY: Only allow POST requests
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
   try {
     const { history, currentLevel } = JSON.parse(event.body);
-
-    // 2. AI CONFIG: Initialize Gemini 2.5
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const apiKey = process.env.GEMINI_API_KEY;
     
-    // UPDATED: Using the 2.5 Flash model for speed
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.5-flash",
-        generationConfig: { responseMimeType: "application/json" }
-    });
+    // The exact 2.5 Flash URL that works in your other program
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-    // 3. THE PROMPT
     const prompt = `
       You are a strict British Director of Studies at a language school.
       Your goal is to accurately determine the CEFR level of a student (A1 to C2).
@@ -45,21 +34,39 @@ exports.handler = async function(event, context) {
       }
     `;
 
-    // 4. GENERATE
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!data.candidates || !data.candidates[0].content) {
+      throw new Error("AI response was empty. Check your API key in Netlify.");
+    }
+
+    let aiText = data.candidates[0].content.parts[0].text;
+    
+    // This scrubs off the ```json markers so the browser doesn't crash
+    const cleanJson = aiText.replace(/```json|```/g, "").trim();
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: responseText
+      headers: { 
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*" 
+      },
+      body: cleanJson
     };
 
   } catch (error) {
     console.error("Examiner Error:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "The examiner is having a tea break. Please try again." })
+    return { 
+      statusCode: 500, 
+      body: JSON.stringify({ error: "Brain failure", message: error.message }) 
     };
   }
 };
