@@ -51,22 +51,25 @@
             background-color: #e2e8f0;
         }
         .keyboard-key:disabled {
-            opacity: 0.5;
+            opacity: 0.8; /* Keep opacity higher so we can see the color clearly */
             cursor: default;
             transform: none;
             border-bottom-width: 4px;
         }
 
-        /* Key States */
+        /* --- ACCESSIBILITY COLOR FIX --- */
+        /* Replaced Green with Blue, and Red with Dark Grey for high contrast */
+        
         .correct-guess {
-            background-color: #10b981 !important; /* Green */
-            border-color: #059669 !important;
+            background-color: #2563eb !important; /* Royal Blue */
+            border-color: #1d4ed8 !important;
             color: white !important;
         }
         .incorrect-guess {
-            background-color: #ef4444 !important; /* Red */
-            border-color: #b91c1c !important;
-            color: white !important;
+            background-color: #334155 !important; /* Dark Slate Gray (High Contrast) */
+            border-color: #1e293b !important;
+            color: #94a3b8 !important; /* Light grey text */
+            opacity: 0.6;
         }
 
         /* --- WORD DISPLAY --- */
@@ -137,6 +140,11 @@
         .btn-dark { background-color: #374151; }
         .btn-dark:hover { background-color: #1f2937; }
 
+        /* NEW: Hint Button Style */
+        .btn-yellow { background-color: #F59E0B; }
+        .btn-yellow:hover { background-color: #D97706; }
+        .btn-yellow:disabled { background-color: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
         /* Back Button */
         #back-to-main-button {
             background-color: #94a3b8;
@@ -201,6 +209,10 @@
                     <div id="message" class="text-2xl font-black text-slate-800 mb-2"></div>
                     <div id="guesses-left" class="text-lg font-bold text-slate-400"></div>
                     
+                    <button id="hint-button" class="action-btn btn-yellow mt-4">
+                        💡 Hint
+                    </button>
+
                     <button id="new-game-button" class="action-btn btn-blue mt-6 hidden">
                         Next Word ➜
                     </button>
@@ -250,6 +262,7 @@
         const hangmanSvg = document.getElementById('hangman-svg');
         const newGameBtn = document.getElementById('new-game-button');
         const resetSetupBtn = document.getElementById('reset-setup-button');
+        const hintBtn = document.getElementById('hint-button');
         
         const csvInput = document.getElementById('csv-file-input');
         const typedInput = document.getElementById('typed-word-input');
@@ -324,8 +337,9 @@
             messageEl.textContent = "";
             guessesLeftEl.textContent = `Lives: ${maxErrors}`;
             newGameBtn.classList.add('hidden');
+            hintBtn.disabled = false; 
             
-            drawHangman(); // Reset Gallow
+            drawHangman(); 
             drawWord();
             drawKeyboard();
         }
@@ -396,7 +410,6 @@
         }
 
         function drawHangman() {
-            // Static Gallow SVG
             const baseSvg = `
                 <line x1="20" y1="230" x2="100" y2="230" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
                 <line x1="60" y1="230" x2="60" y2="20" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
@@ -407,7 +420,6 @@
         }
 
         function updateHangman() {
-            // Append part based on error index
             const partIndex = errors - 1;
             if (partIndex >= 0 && partIndex < hangmanParts.length) {
                 hangmanSvg.innerHTML += hangmanParts[partIndex];
@@ -416,7 +428,8 @@
 
         function endGame(won) {
             gameActive = false;
-            drawKeyboard(); // Disable all keys
+            drawKeyboard(); 
+            hintBtn.disabled = true; 
             
             if (won) {
                 messageEl.textContent = "🎉 YOU WON!";
@@ -425,12 +438,21 @@
                 messageEl.textContent = `💀 GAME OVER! Word: ${wordToGuess}`;
                 messageEl.className = "text-2xl font-black text-red-500";
                 
-                // Reveal word
                 for (const char of wordToGuess) guessedLetters.add(char);
-                drawWord(); // Show full word
+                drawWord(); 
             }
             newGameBtn.classList.remove('hidden');
         }
+
+        // --- HINT LOGIC ---
+        hintBtn.addEventListener('click', () => {
+            if(!gameActive) return;
+            const unguessed = [...wordToGuess].filter(char => char !== ' ' && !guessedLetters.has(char));
+            if(unguessed.length === 0) return; 
+
+            const randomChar = unguessed[Math.floor(Math.random() * unguessed.length)];
+            handleGuess(randomChar);
+        });
 
         // Listeners
         newGameBtn.addEventListener('click', nextRound);

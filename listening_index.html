@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listening Lab | TEFL Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* --- Button Styling --- */
+        .tool-button {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem; 
+            text-align: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.25rem;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            min-height: 150px;
+            cursor: pointer;
+        }
+
+        /* Full Exam Button (Slightly larger text) */
+        .btn-full-exam {
+            font-size: 1.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Reflective Shine */
+        .tool-button::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 150%; height: 150%;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.15) 35%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0.15) 65%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: translate(-100%, -100%) rotate(45deg);
+            transition: transform 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .tool-button:hover::after { transform: translate(0%, 0%) rotate(45deg); }
+        .tool-button:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); }
+
+        /* --- PART SPECIFIC GRADIENTS --- */
+        
+        /* Part 1: Teal/Cyan (Fresh Start) */
+        .btn-part1 { background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%); } 
+
+        /* Part 2: Pink/Red (Focus/Gap Fill) */
+        .btn-part2 { background: linear-gradient(135deg, #CB356B 0%, #BD3F32 100%); } 
+
+        /* Part 3: Deep Purple (Matching/Context) */
+        .btn-part3 { background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); } 
+
+        /* Part 4: Midnight Blue (Interview/Long Text) */
+        .btn-part4 { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
+
+        /* Full Exam: Gold (Achievement) */
+        .btn-full { background: linear-gradient(135deg, #CAC531 0%, #F3F9A7 100%); } 
+
+
+        /* --- Toggle Switch Styling --- */
+        .toggle-btn {
+            cursor: pointer; padding: 0.75rem 1.2rem; border-radius: 9999px;
+            font-weight: 700; transition: all 0.3s ease; font-size: 0.9rem;
+        }
+        .toggle-active { background-color: #4F46E5; color: white; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.4); }
+        .toggle-inactive { background-color: #E5E7EB; color: #4B5563; }
+        
+        body { font-family: 'Inter', sans-serif; background-color: #FFF8DC; min-height: 100vh; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <a href="index.html" class="absolute top-6 left-6 flex items-center gap-2 text-gray-500 hover:text-indigo-700 font-bold transition z-50 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Tools</span>
+    </a>
+
+    <div class="max-w-5xl mx-auto py-10 mt-8">
+
+        <header class="text-center mb-10">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tighter">
+                The Listening <span class="text-indigo-600">Lab</span>
+            </h1>
+            <p class="mt-4 text-xl text-gray-500 font-medium">
+                Select your level and exam part.
+            </p>
+            
+            <div class="mt-8 inline-flex bg-gray-200 rounded-full p-1 gap-1 flex-wrap justify-center">
+                <button id="btn-b1" onclick="showLevel('b1')" class="toggle-btn toggle-inactive">B1 Preliminary</button>
+                <button id="btn-b2" onclick="showLevel('b2')" class="toggle-btn toggle-active">B2 First</button>
+                <button id="btn-c1" onclick="showLevel('c1')" class="toggle-btn toggle-inactive">C1 Advanced</button>
+                <button id="btn-c2" onclick="showLevel('c2')" class="toggle-btn toggle-inactive">C2 Proficiency</button>
+            </div>
+        </header>
+
+        <div id="content-b1" class="hidden grid-cols-1 md:grid-cols-2 gap-4 p-4">
+            <a href="listening_player.html?level=B1&part=1" class="tool-button btn-part1 flex flex-col gap-1">
+                <span>Part 1</span><span class="text-sm font-normal opacity-90">Multiple Choice (Pictures)</span>
+            </a>
+            <a href="listening_player.html?level=B1&part=2" class="tool-button btn-part2 flex flex-col gap-1">
+                <span>Part 2</span><span class="text-sm font-normal opacity-90">Short Texts</span>
+            </a>
+            <a href="listening_player.html?level=B1&part=3" class="tool-button btn-part3 flex flex-col gap-1">
+                <span>Part 3</span><span class="text-sm font-normal opacity-90">Gap Fill</span>
+            </a>
+            <a href="listening_player.html?level=B1&part=4" class="tool-button btn-part4 flex flex-col gap-1">
+                <span>Part 4</span><span class="text-sm font-normal opacity-90">Interview</span>
+            </a>
+            <a href="listening_player.html?level=B1&part=full" class="tool-button btn-full btn-full-exam md:col-span-2 flex flex-col gap-1 ring-4 ring-offset-2 ring-transparent hover:ring-yellow-300">
+                <span>Full B1 Exam</span>
+                <span class="text-lg font-normal opacity-90 text-gray-800">All Parts</span>
+            </a>
+        </div>
+
+        <div id="content-b2" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+            <a href="listening_player.html?level=B2&part=1" class="tool-button btn-part1 flex flex-col gap-1">
+                <span>Part 1</span><span class="text-sm font-normal opacity-90">Short Extracts</span>
+            </a>
+            <a href="listening_player.html?level=B2&part=2" class="tool-button btn-part2 flex flex-col gap-1">
+                <span>Part 2</span><span class="text-sm font-normal opacity-90">Gap Fill</span>
+            </a>
+            <a href="listening_player.html?level=B2&part=3" class="tool-button btn-part3 flex flex-col gap-1">
+                <span>Part 3</span><span class="text-sm font-normal opacity-90">Matching</span>
+            </a>
+            <a href="listening_player.html?level=B2&part=4" class="tool-button btn-part4 flex flex-col gap-1">
+                <span>Part 4</span><span class="text-sm font-normal opacity-90">Multiple Choice</span>
+            </a>
+            <a href="listening_player.html?level=B2&part=full" class="tool-button btn-full btn-full-exam md:col-span-2 flex flex-col gap-1 ring-4 ring-offset-2 ring-transparent hover:ring-yellow-300">
+                <span>Full B2 Exam</span>
+                <span class="text-lg font-normal opacity-90 text-gray-800">All Parts</span>
+            </a>
+        </div>
+
+        <div id="content-c1" class="hidden grid-cols-1 md:grid-cols-2 gap-4 p-4">
+            <a href="listening_player.html?level=C1&part=1" class="tool-button btn-part1 flex flex-col gap-1">
+                <span>Part 1</span><span class="text-sm font-normal opacity-90">Interaction</span>
+            </a>
+            <a href="listening_player.html?level=C1&part=2" class="tool-button btn-part2 flex flex-col gap-1">
+                <span>Part 2</span><span class="text-sm font-normal opacity-90">Gap Fill</span>
+            </a>
+            <a href="listening_player.html?level=C1&part=3" class="tool-button btn-part4 flex flex-col gap-1">
+                <span>Part 3</span><span class="text-sm font-normal opacity-90">Interview</span>
+            </a>
+            <a href="listening_player.html?level=C1&part=4" class="tool-button btn-part3 flex flex-col gap-1">
+                <span>Part 4</span><span class="text-sm font-normal opacity-90">Matching</span>
+            </a>
+            <a href="listening_player.html?level=C1&part=full" class="tool-button btn-full btn-full-exam md:col-span-2 flex flex-col gap-1 ring-4 ring-offset-2 ring-transparent hover:ring-yellow-300">
+                <span>Full C1 Exam</span>
+                <span class="text-lg font-normal opacity-90 text-gray-800">All Parts</span>
+            </a>
+        </div>
+
+        <div id="content-c2" class="hidden grid-cols-1 md:grid-cols-2 gap-4 p-4">
+            <a href="listening_player.html?level=C2&part=1" class="tool-button btn-part1 flex flex-col gap-1">
+                <span>Part 1</span><span class="text-sm font-normal opacity-90">Three Extracts</span>
+            </a>
+            <a href="listening_player.html?level=C2&part=2" class="tool-button btn-part2 flex flex-col gap-1">
+                <span>Part 2</span><span class="text-sm font-normal opacity-90">Gap Fill</span>
+            </a>
+            <a href="listening_player.html?level=C2&part=3" class="tool-button btn-part4 flex flex-col gap-1">
+                <span>Part 3</span><span class="text-sm font-normal opacity-90">Interview</span>
+            </a>
+            <a href="listening_player.html?level=C2&part=4" class="tool-button btn-part3 flex flex-col gap-1">
+                <span>Part 4</span><span class="text-sm font-normal opacity-90">Matching</span>
+            </a>
+            <a href="listening_player.html?level=C2&part=full" class="tool-button btn-full btn-full-exam md:col-span-2 flex flex-col gap-1 ring-4 ring-offset-2 ring-transparent hover:ring-yellow-300">
+                <span>Full C2 Exam</span>
+                <span class="text-lg font-normal opacity-90 text-gray-800">All Parts</span>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        function showLevel(level) {
+            // Content Divs
+            const contents = {
+                b1: document.getElementById('content-b1'),
+                b2: document.getElementById('content-b2'),
+                c1: document.getElementById('content-c1'),
+                c2: document.getElementById('content-c2')
+            };
+            
+            // Buttons
+            const btns = {
+                b1: document.getElementById('btn-b1'),
+                b2: document.getElementById('btn-b2'),
+                c1: document.getElementById('btn-c1'),
+                c2: document.getElementById('btn-c2')
+            };
+
+            // Hide All Content & Deactivate Buttons
+            Object.values(contents).forEach(el => {
+                if(el) { el.classList.add('hidden'); el.classList.remove('grid'); }
+            });
+            Object.values(btns).forEach(btn => {
+                if(btn) { btn.classList.remove('toggle-active'); btn.classList.add('toggle-inactive'); }
+            });
+
+            // Activate Selected
+            if (contents[level] && btns[level]) {
+                contents[level].classList.remove('hidden');
+                contents[level].classList.add('grid');
+                btns[level].classList.add('toggle-active');
+                btns[level].classList.remove('toggle-inactive');
+            }
+        }
+    </script>
+</body>
+</html>

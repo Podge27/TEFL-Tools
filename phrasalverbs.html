@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phrasal Verb Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="global.css">
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
+        #app-container { @apply w-full max-w-7xl mx-auto my-8 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden; min-height: 800px; }
+        
+        /* Header Z-index fix */
+        .app-header { z-index: 50; position: relative; }
+
+        /* Level Selection */
+        .level-btn { @apply text-4xl p-8 font-black rounded-2xl border-4 transition-all opacity-60 grayscale scale-95; }
+        .level-btn.active { @apply opacity-100 grayscale-0 scale-105 ring-4 ring-indigo-500 ring-offset-4; }
+        .btn-b1 { background: linear-gradient(145deg, #10B981 0%, #059669 100%); color: white; border-color: #A7F3D0; }
+        .btn-b2 { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
+        .btn-c1 { background: linear-gradient(145deg, #F59E0B 0%, #D97706 100%); color: white; border-color: #FDE68A; }
+
+        /* Mode Selection */
+        .mode-btn { @apply flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 bg-white transition-all shadow-sm disabled:opacity-30; }
+        .mode-btn.active { @apply border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600; }
+        
+        /* Classroom Mode Tooltips (Positioned Below) */
+        .text-content { font-size: 1.35rem; line-height: 2.3; color: #1F2937; }
+        .gap-reveal { @apply relative inline-block border-b-2 border-dashed border-indigo-400 font-bold text-transparent bg-indigo-50 px-2 mx-1 cursor-help transition-all duration-300; min-width: 80px; border-radius: 4px; }
+        .gap-reveal:hover::after { content: attr(data-definition); @apply absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-gray-800 text-white text-sm font-normal rounded-lg w-64 text-center z-40 shadow-xl; pointer-events: none; }
+        .gap-reveal.revealed { @apply text-indigo-700 bg-indigo-100 border-indigo-600; }
+
+        /* Exam Mode Drills */
+        .drill-card { @apply p-6 mb-4 bg-gray-50 rounded-xl border-l-4 border-indigo-500 text-lg shadow-sm animate-fade-in; }
+        .gap-input { @apply border-b-2 border-indigo-300 px-2 font-bold text-indigo-800 focus:outline-none focus:border-indigo-600 text-center uppercase; background: transparent; width: 160px; }
+        .correction-label { @apply ml-2 text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded border border-green-200; }
+        .input-error { @apply text-red-600 border-red-400 bg-red-50; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="app-container">
+        <header class="app-header bg-indigo-900 p-8 text-white shadow-lg">
+            <h1 class="text-4xl font-black text-center tracking-tighter italic">PHRASAL VERB <span class="text-indigo-400">EXPLORER</span></h1>
+        </header>
+
+        <main id="screen-menu" class="flex-1 p-8 space-y-10">
+            <section class="max-w-4xl mx-auto">
+                <h3 class="text-center text-gray-400 font-bold uppercase tracking-widest mb-6">1. Select Level</h3>
+                <div class="grid grid-cols-3 gap-6">
+                    <button onclick="app.setLevel('B1')" id="btn-B1" class="level-btn btn-b1">B1</button>
+                    <button onclick="app.setLevel('B2')" id="btn-B2" class="level-btn btn-b2">B2</button>
+                    <button onclick="app.setLevel('C1')" id="btn-C1" class="level-btn btn-c1">C1</button>
+                </div>
+            </section>
+
+            <section class="max-w-5xl mx-auto">
+                <h3 class="text-center text-gray-400 font-bold uppercase tracking-widest mb-6">2. Select Activity</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <button onclick="app.setMode('classroom')" id="mode-classroom" class="mode-btn">
+                        <span class="text-4xl mb-2">🏫</span>
+                        <span class="font-bold">Classroom</span>
+                    </button>
+                    <button onclick="app.setMode('exam')" id="mode-exam" class="mode-btn">
+                        <span class="text-4xl mb-2">📝</span>
+                        <span class="font-bold">Exam</span>
+                    </button>
+                    <button disabled class="mode-btn">
+                        <span class="text-4xl mb-2">📖</span>
+                        <span class="font-bold">Study</span>
+                    </button>
+                    <button disabled class="mode-btn">
+                        <span class="text-4xl mb-2">🧩</span>
+                        <span class="font-bold">Match</span>
+                    </button>
+                    <button disabled class="mode-btn">
+                        <span class="text-4xl mb-2">💡</span>
+                        <span class="font-bold">Grammar</span>
+                    </button>
+                </div>
+            </section>
+
+            <div class="flex justify-center pt-6">
+                <button onclick="app.fetchUnits()" id="btn-find" disabled class="bg-indigo-600 text-white px-16 py-5 rounded-full font-black text-2xl shadow-xl hover:bg-indigo-700 transition transform hover:scale-105 disabled:opacity-20">FIND TOPICS →</button>
+            </div>
+        </main>
+
+        <section id="screen-list" class="hidden p-8 flex-1">
+            <div class="flex justify-between items-end mb-8 border-b-2 pb-4">
+                <h2 class="text-4xl font-black text-gray-800">Available Topics</h2>
+                <span id="level-indicator" class="px-4 py-1 bg-gray-200 rounded-full font-bold text-gray-600">Level</span>
+            </div>
+            <div id="list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[500px] p-2"></div>
+            <button onclick="app.navigate('screen-menu')" class="mt-8 font-bold text-indigo-600 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                Back to Dashboard
+            </button>
+        </section>
+
+        <section id="screen-activity" class="hidden flex-1 flex flex-col bg-gray-50">
+            <div class="bg-white p-6 border-b flex justify-between items-center shadow-sm">
+                <h2 id="current-title" class="text-2xl font-black text-indigo-900 uppercase">Topic Title</h2>
+                <div class="flex gap-3">
+                    <span id="score-box" class="hidden bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold">Score: 0/0</span>
+                    <button onclick="app.navigate('screen-menu')" class="bg-gray-200 px-6 py-2 rounded-lg font-bold text-gray-600 hover:bg-gray-300">Exit</button>
+                </div>
+            </div>
+
+            <div class="flex-1 p-8 overflow-y-auto">
+                <div id="activity-canvas" class="text-content max-w-4xl mx-auto"></div>
+            </div>
+
+            <footer class="p-8 bg-white border-t flex justify-center gap-4 shadow-inner">
+                <button id="ctrl-check" onclick="app.evaluateExam()" class="hidden bg-green-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-green-700">Check Answers</button>
+                <button id="ctrl-next" onclick="app.renderContent()" class="hidden bg-blue-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700">Next 5 Questions →</button>
+                <button id="ctrl-reveal" onclick="app.revealAllGaps()" class="hidden bg-purple-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-purple-700">Reveal All</button>
+            </footer>
+        </section>
+    </div>
+
+    <script>
+        const { createClient } = supabase;
+        const _db = createClient("https://ehhkjhyanmovymjqlxwo.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk");
+
+        const app = {
+            state: {
+                level: null,
+                mode: null,
+                unit: null,
+                verbs: [],
+                examPointer: 0
+            },
+
+            setLevel: function(lvl) {
+                this.state.level = lvl;
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`btn-${lvl}`).classList.add('active');
+                this.syncMenu();
+            },
+
+            setMode: function(md) {
+                this.state.mode = md;
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`mode-${md}`).classList.add('active');
+                this.syncMenu();
+            },
+
+            syncMenu: function() {
+                if(this.state.level && this.state.mode) document.getElementById('btn-find').disabled = false;
+            },
+
+            fetchUnits: async function() {
+                const { data } = await _db.from('phrasal_units').select('*').eq('level', this.state.level);
+                const container = document.getElementById('list-container');
+                container.innerHTML = '';
+                document.getElementById('level-indicator').innerText = this.state.level;
+
+                data.forEach(u => {
+                    const el = document.createElement('button');
+                    el.className = "text-left p-6 bg-white border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all flex justify-between items-center group shadow-sm";
+                    el.innerHTML = `<div><div class='font-black text-xl text-gray-800'>${u.title}</div><div class='text-sm text-gray-400 font-bold uppercase'>${u.category}</div></div><span class='text-2xl group-hover:translate-x-2 transition-transform'>→</span>`;
+                    el.onclick = () => this.initUnit(u);
+                    container.appendChild(el);
+                });
+                this.navigate('screen-list');
+            },
+
+            initUnit: async function(unit) {
+                this.state.unit = unit;
+                this.state.examPointer = 0;
+                const { data } = await _db.from('phrasal_verbs').select('*').in('id', unit.verb_ids);
+                // Shuffle for variety
+                this.state.verbs = data.sort(() => Math.random() - 0.5);
+                
+                document.getElementById('current-title').innerText = unit.title;
+                this.renderContent();
+                this.navigate('screen-activity');
+            },
+
+            renderContent: function() {
+                const canvas = document.getElementById('activity-canvas');
+                if (this.state.examPointer === 0) canvas.innerHTML = '';
+                
+                if(this.state.mode === 'classroom') {
+                    this.toggleControls('classroom');
+                    let story = this.state.unit.anchor_text;
+                    
+                    // Regex handles [[id:display_text]]
+                    const tagRegex = /\[\[(.*?):(.*?)\]\]/g;
+                    story = story.replace(tagRegex, (match, id, display) => {
+                        const vData = this.state.verbs.find(v => v.id === id);
+                        const definition = vData ? vData.definition : "Definition missing";
+                        return `<span class="gap-reveal" onclick="this.classList.toggle('revealed')" data-definition="${definition}">${display}</span>`;
+                    });
+                    canvas.innerHTML = `<div class='p-8 bg-white rounded-2xl shadow-sm border border-gray-100'>${story}</div>`;
+                } 
+                else if(this.state.mode === 'exam') {
+                    this.toggleControls('exam');
+                    const batch = this.state.verbs.slice(this.state.examPointer, this.state.examPointer + 5);
+                    
+                    batch.forEach((v, i) => {
+                        const example = Math.random() > 0.5 ? v.example_1 : v.example_2;
+                        const markup = example.replace(/\{\{(.*?)\}\}/g, `<input type='text' data-answer="$1" class='gap-input' autocomplete='off' placeholder='...'>`);
+                        canvas.innerHTML += `<div class='drill-card'>
+                            <span class='text-indigo-300 font-black mr-3'>${this.state.examPointer + i + 1}.</span>${markup}
+                        </div>`;
+                    });
+
+                    this.state.examPointer += 5;
+                    const nextBtn = document.getElementById('ctrl-next');
+                    (this.state.examPointer >= this.state.verbs.length) ? nextBtn.classList.add('hidden') : nextBtn.classList.remove('hidden');
+                }
+            },
+
+            evaluateExam: function() {
+                let correctCount = 0;
+                const fields = document.querySelectorAll('.gap-input');
+                fields.forEach(f => {
+                    const userVal = f.value.trim().toLowerCase();
+                    const actualVal = f.dataset.answer.toLowerCase();
+                    if(userVal === actualVal) {
+                        correctCount++;
+                        f.classList.add('text-green-600', 'bg-green-50', 'border-green-500');
+                    } else {
+                        f.classList.add('input-error');
+                        const correction = document.createElement('span');
+                        correction.className = 'correction-label';
+                        correction.innerText = actualVal;
+                        f.after(correction);
+                    }
+                    f.disabled = true;
+                });
+                const pill = document.getElementById('score-box');
+                pill.innerText = `Score: ${correctCount}/${fields.length}`;
+                pill.classList.remove('hidden');
+            },
+
+            revealAllGaps: function() {
+                document.querySelectorAll('.gap-reveal').forEach(g => g.classList.add('revealed'));
+            },
+
+            toggleControls: function(mode) {
+                const check = document.getElementById('ctrl-check');
+                const next = document.getElementById('ctrl-next');
+                const reveal = document.getElementById('ctrl-reveal');
+                const score = document.getElementById('score-box');
+                
+                score.classList.add('hidden');
+                if(mode === 'classroom') {
+                    reveal.classList.remove('hidden');
+                    check.classList.add('hidden');
+                    next.classList.add('hidden');
+                } else {
+                    reveal.classList.add('hidden');
+                    check.classList.remove('hidden');
+                }
+            },
+
+            navigate: function(id) {
+                ['screen-menu', 'screen-list', 'screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                window.scrollTo(0,0);
+            }
+        };
+    </script>
+</body>
+</html>
