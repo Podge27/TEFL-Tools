@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phrasal Verb Explorer</title>
+    <title>Phrasal Verb Explorer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,33 +11,46 @@
     
     <style type="text/tailwindcss">
         body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
-        #app-container { @apply w-full max-w-7xl mx-auto my-8 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden; min-height: 800px; }
+        #app-container { @apply w-full max-w-7xl mx-auto my-8 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden; min-height: 850px; }
         
-        /* Header Z-index fix */
+        /* Header & Navigation */
         .app-header { z-index: 50; position: relative; }
+        .sub-nav-btn { @apply px-6 py-2 rounded-full font-bold text-sm transition-all border-2 border-transparent; }
+        .sub-nav-btn.active { @apply bg-indigo-100 text-indigo-700 border-indigo-200; }
+        .sub-nav-btn.inactive { @apply text-gray-400 hover:text-gray-600; }
 
-        /* Level Selection */
+        /* Level & Mode Buttons */
         .level-btn { @apply text-4xl p-8 font-black rounded-2xl border-4 transition-all opacity-60 grayscale scale-95; }
         .level-btn.active { @apply opacity-100 grayscale-0 scale-105 ring-4 ring-indigo-500 ring-offset-4; }
         .btn-b1 { background: linear-gradient(145deg, #10B981 0%, #059669 100%); color: white; border-color: #A7F3D0; }
         .btn-b2 { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
         .btn-c1 { background: linear-gradient(145deg, #F59E0B 0%, #D97706 100%); color: white; border-color: #FDE68A; }
 
-        /* Mode Selection */
         .mode-btn { @apply flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 bg-white transition-all shadow-sm disabled:opacity-30; }
         .mode-btn.active { @apply border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600; }
         
-        /* Classroom Mode Tooltips (Positioned Below) */
+        /* Interactive Gaps */
         .text-content { font-size: 1.35rem; line-height: 2.3; color: #1F2937; }
         .gap-reveal { @apply relative inline-block border-b-2 border-dashed border-indigo-400 font-bold text-transparent bg-indigo-50 px-2 mx-1 cursor-help transition-all duration-300; min-width: 80px; border-radius: 4px; }
+        /* Tooltip positioned BELOW the word */
         .gap-reveal:hover::after { content: attr(data-definition); @apply absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-gray-800 text-white text-sm font-normal rounded-lg w-64 text-center z-40 shadow-xl; pointer-events: none; }
         .gap-reveal.revealed { @apply text-indigo-700 bg-indigo-100 border-indigo-600; }
 
-        /* Exam Mode Drills */
+        /* Inputs */
+        .gap-input { @apply border-b-2 border-indigo-300 px-2 font-bold text-indigo-800 focus:outline-none focus:border-indigo-600 text-center uppercase transition-colors; background: transparent; min-width: 140px; }
+        .input-correct { @apply text-green-700 bg-green-50 border-green-500; }
+        .input-error { @apply text-red-600 bg-red-50 border-red-400; }
+        .correction-label { @apply ml-2 text-xs font-bold text-white bg-green-600 px-2 py-1 rounded shadow-sm; }
+
+        /* Drills & Cards */
         .drill-card { @apply p-6 mb-4 bg-gray-50 rounded-xl border-l-4 border-indigo-500 text-lg shadow-sm animate-fade-in; }
-        .gap-input { @apply border-b-2 border-indigo-300 px-2 font-bold text-indigo-800 focus:outline-none focus:border-indigo-600 text-center uppercase; background: transparent; width: 160px; }
-        .correction-label { @apply ml-2 text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded border border-green-200; }
-        .input-error { @apply text-red-600 border-red-400 bg-red-50; }
+        
+        /* Study Mode Styles */
+        .flashcard { @apply bg-white border-2 border-gray-100 rounded-2xl p-8 shadow-lg max-w-2xl mx-auto text-center animate-fade-in; }
+        .grammar-badge { @apply inline-block px-3 py-1 rounded-full text-sm font-bold mb-4 cursor-help; }
+        .grammar-I { @apply bg-blue-100 text-blue-700; }
+        .grammar-T { @apply bg-purple-100 text-purple-700; }
+        .grammar-TS { @apply bg-orange-100 text-orange-700; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -46,13 +59,23 @@
 <body class="p-4 md:p-8">
 
     <div id="app-container">
-        <header class="app-header bg-indigo-900 p-8 text-white shadow-lg">
-            <h1 class="text-4xl font-black text-center tracking-tighter italic">PHRASAL VERB <span class="text-indigo-400">EXPLORER</span></h1>
+        <header class="app-header bg-indigo-900 p-6 text-white shadow-lg flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-2 text-indigo-200 hover:text-white font-bold text-sm transition-colors">
+            <span>←</span> Back to Tools
+        </a>
+
+        <h1 class="text-2xl font-black italic tracking-tighter hidden md:block">
+            PHRASAL VERB <span class="text-indigo-400">EXPLORER</span>
+        </h1>
+
+        <button onclick="app.navigate('screen-menu')" class="bg-indigo-800 hover:bg-indigo-700 px-4 py-2 rounded-lg text-white font-bold text-sm transition-colors shadow-sm border border-indigo-700">
+            Main Menu
+        </button>
         </header>
 
-        <main id="screen-menu" class="flex-1 p-8 space-y-10">
-            <section class="max-w-4xl mx-auto">
-                <h3 class="text-center text-gray-400 font-bold uppercase tracking-widest mb-6">1. Select Level</h3>
+        <main id="screen-menu" class="flex-1 p-8 space-y-10 overflow-y-auto">
+            <section class="max-w-4xl mx-auto text-center">
+                <h3 class="text-gray-400 font-bold uppercase tracking-widest mb-6">1. Select Level</h3>
                 <div class="grid grid-cols-3 gap-6">
                     <button onclick="app.setLevel('B1')" id="btn-B1" class="level-btn btn-b1">B1</button>
                     <button onclick="app.setLevel('B2')" id="btn-B2" class="level-btn btn-b2">B2</button>
@@ -60,8 +83,8 @@
                 </div>
             </section>
 
-            <section class="max-w-5xl mx-auto">
-                <h3 class="text-center text-gray-400 font-bold uppercase tracking-widest mb-6">2. Select Activity</h3>
+            <section class="max-w-5xl mx-auto text-center">
+                <h3 class="text-gray-400 font-bold uppercase tracking-widest mb-6">2. Select Activity</h3>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <button onclick="app.setMode('classroom')" id="mode-classroom" class="mode-btn">
                         <span class="text-4xl mb-2">🏫</span>
@@ -71,15 +94,15 @@
                         <span class="text-4xl mb-2">📝</span>
                         <span class="font-bold">Exam</span>
                     </button>
-                    <button disabled class="mode-btn">
+                    <button onclick="app.setMode('study')" id="mode-study" class="mode-btn">
                         <span class="text-4xl mb-2">📖</span>
                         <span class="font-bold">Study</span>
                     </button>
-                    <button disabled class="mode-btn">
+                    <button onclick="app.setMode('match')" id="mode-match" class="mode-btn">
                         <span class="text-4xl mb-2">🧩</span>
                         <span class="font-bold">Match</span>
                     </button>
-                    <button disabled class="mode-btn">
+                    <button onclick="window.location.href='phrasalverbsgrammar.html'" id="mode-grammar" class="mode-btn">
                         <span class="text-4xl mb-2">💡</span>
                         <span class="font-bold">Grammar</span>
                     </button>
@@ -87,28 +110,29 @@
             </section>
 
             <div class="flex justify-center pt-6">
-                <button onclick="app.fetchUnits()" id="btn-find" disabled class="bg-indigo-600 text-white px-16 py-5 rounded-full font-black text-2xl shadow-xl hover:bg-indigo-700 transition transform hover:scale-105 disabled:opacity-20">FIND TOPICS →</button>
+                <button onclick="app.fetchUnits()" id="btn-find" disabled class="bg-indigo-600 text-white px-16 py-5 rounded-full font-black text-2xl shadow-xl hover:bg-indigo-700 transition transform hover:scale-105 disabled:opacity-20 disabled:cursor-not-allowed">FIND TOPICS →</button>
             </div>
         </main>
 
-        <section id="screen-list" class="hidden p-8 flex-1">
+        <section id="screen-list" class="hidden p-8 flex-1 flex flex-col">
             <div class="flex justify-between items-end mb-8 border-b-2 pb-4">
                 <h2 class="text-4xl font-black text-gray-800">Available Topics</h2>
                 <span id="level-indicator" class="px-4 py-1 bg-gray-200 rounded-full font-bold text-gray-600">Level</span>
             </div>
-            <div id="list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[500px] p-2"></div>
-            <button onclick="app.navigate('screen-menu')" class="mt-8 font-bold text-indigo-600 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
-                Back to Dashboard
-            </button>
+            <div id="list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[600px] p-2"></div>
         </section>
 
         <section id="screen-activity" class="hidden flex-1 flex flex-col bg-gray-50">
-            <div class="bg-white p-6 border-b flex justify-between items-center shadow-sm">
-                <h2 id="current-title" class="text-2xl font-black text-indigo-900 uppercase">Topic Title</h2>
-                <div class="flex gap-3">
-                    <span id="score-box" class="hidden bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold">Score: 0/0</span>
-                    <button onclick="app.navigate('screen-menu')" class="bg-gray-200 px-6 py-2 rounded-lg font-bold text-gray-600 hover:bg-gray-300">Exit</button>
+            <div class="bg-white p-4 border-b flex flex-col md:flex-row justify-between items-center shadow-sm gap-4">
+                <h2 id="current-title" class="text-xl font-black text-indigo-900 uppercase">Topic Title</h2>
+                
+                <div id="content-toggle" class="bg-gray-100 p-1 rounded-full flex gap-1">
+                    <button onclick="app.setContent('story')" id="tog-story" class="sub-nav-btn active">Story Text</button>
+                    <button onclick="app.setContent('sentences')" id="tog-sentences" class="sub-nav-btn inactive">Sentences</button>
+                </div>
+
+                <div class="flex gap-3 items-center">
+                    <span id="score-box" class="hidden bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold text-sm">Score: 0/0</span>
                 </div>
             </div>
 
@@ -116,27 +140,42 @@
                 <div id="activity-canvas" class="text-content max-w-4xl mx-auto"></div>
             </div>
 
-            <footer class="p-8 bg-white border-t flex justify-center gap-4 shadow-inner">
-                <button id="ctrl-check" onclick="app.evaluateExam()" class="hidden bg-green-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-green-700">Check Answers</button>
-                <button id="ctrl-next" onclick="app.renderContent()" class="hidden bg-blue-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700">Next 5 Questions →</button>
-                <button id="ctrl-reveal" onclick="app.revealAllGaps()" class="hidden bg-purple-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-purple-700">Reveal All</button>
+            <footer class="p-6 bg-white border-t flex justify-center gap-4 shadow-inner">
+                <button id="ctrl-check" onclick="app.evaluateExam()" class="hidden bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700">Check Answers</button>
+                <button id="ctrl-next" onclick="app.nextPage()" class="hidden bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700">Next 5 →</button>
+                <button id="ctrl-reveal" onclick="app.toggleReveal()" class="hidden bg-purple-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-purple-700">Reveal All</button>
+                
+                <button id="ctrl-study-prev" onclick="app.prevFlashcard()" class="hidden bg-gray-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-gray-600">← Last Verb</button>
+                <button id="ctrl-study-next" onclick="app.nextFlashcard()" class="hidden bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700">Next Verb →</button>
             </footer>
         </section>
     </div>
 
     <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
         const { createClient } = supabase;
         const _db = createClient("https://ehhkjhyanmovymjqlxwo.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk");
 
         const app = {
             state: {
                 level: null,
-                mode: null,
+                mode: null,      
+                contentType: 'story', 
                 unit: null,
                 verbs: [],
-                examPointer: 0
+                pointer: 0,
+                revealed: false // Track reveal state
             },
 
+            grammarMap: {
+                'I': { text: 'Intransitive', color: 'grammar-I', tip: 'No object needed (e.g., "It broke down").' },
+                'T': { text: 'Transitive', color: 'grammar-T', tip: 'Needs an object (e.g., "Look for it").' },
+                'TS': { text: 'Separable', color: 'grammar-TS', tip: 'Object can go in the middle (e.g., "Turn it off").' }
+            },
+
+            // --- SETUP ---
             setLevel: function(lvl) {
                 this.state.level = lvl;
                 document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
@@ -151,10 +190,23 @@
                 this.syncMenu();
             },
 
+            setContent: function(type) {
+                this.state.contentType = type;
+                this.state.pointer = 0; // Reset pagination when switching views
+                this.state.revealed = false; // Reset reveal state
+                
+                // Update toggle UI
+                document.getElementById('tog-story').className = type === 'story' ? 'sub-nav-btn active' : 'sub-nav-btn inactive';
+                document.getElementById('tog-sentences').className = type === 'sentences' ? 'sub-nav-btn active' : 'sub-nav-btn inactive';
+                
+                this.renderContent();
+            },
+
             syncMenu: function() {
                 if(this.state.level && this.state.mode) document.getElementById('btn-find').disabled = false;
             },
 
+            // --- DATA FETCHING ---
             fetchUnits: async function() {
                 const { data } = await _db.from('phrasal_units').select('*').eq('level', this.state.level);
                 const container = document.getElementById('list-container');
@@ -172,52 +224,159 @@
             },
 
             initUnit: async function(unit) {
+                // 🚀 NEW: Check for Match Mode and Redirect
+                if (this.state.mode === 'match') {
+                    // Redirects to match.html with the Unit ID
+                    // NOTE: Ensure your game file is named 'match.html'
+                    window.location.href = `match.html?unit=${unit.id}`;
+                    return; 
+                }
+
+                // Standard Logic for Classroom/Exam/Study
                 this.state.unit = unit;
-                this.state.examPointer = 0;
+                this.state.pointer = 0;
+                this.state.contentType = 'story'; 
+                this.state.revealed = false;
+                
                 const { data } = await _db.from('phrasal_verbs').select('*').in('id', unit.verb_ids);
-                // Shuffle for variety
-                this.state.verbs = data.sort(() => Math.random() - 0.5);
+                this.state.verbs = data.sort(() => Math.random() - 0.5); 
                 
                 document.getElementById('current-title').innerText = unit.title;
-                this.renderContent();
+                
+                const toggle = document.getElementById('content-toggle');
+                if (this.state.mode === 'study') {
+                    toggle.classList.add('hidden'); 
+                    this.renderStudy();
+                } else {
+                    toggle.classList.remove('hidden'); 
+                    // Reset to Story view for text-based modes
+                    document.getElementById('tog-story').className = 'sub-nav-btn active';
+                    document.getElementById('tog-sentences').className = 'sub-nav-btn inactive';
+                    this.renderContent();
+                }
+                
                 this.navigate('screen-activity');
             },
 
+            // --- RENDER LOGIC (CLASSROOM & EXAM) ---
             renderContent: function() {
                 const canvas = document.getElementById('activity-canvas');
-                if (this.state.examPointer === 0) canvas.innerHTML = '';
-                
-                if(this.state.mode === 'classroom') {
-                    this.toggleControls('classroom');
+                this.resetFooter();
+                this.updateRevealButton(false); // Reset button text
+
+                // 1. STORY VIEW
+                if (this.state.contentType === 'story') {
                     let story = this.state.unit.anchor_text;
-                    
-                    // Regex handles [[id:display_text]]
                     const tagRegex = /\[\[(.*?):(.*?)\]\]/g;
-                    story = story.replace(tagRegex, (match, id, display) => {
-                        const vData = this.state.verbs.find(v => v.id === id);
-                        const definition = vData ? vData.definition : "Definition missing";
-                        return `<span class="gap-reveal" onclick="this.classList.toggle('revealed')" data-definition="${definition}">${display}</span>`;
-                    });
-                    canvas.innerHTML = `<div class='p-8 bg-white rounded-2xl shadow-sm border border-gray-100'>${story}</div>`;
-                } 
-                else if(this.state.mode === 'exam') {
-                    this.toggleControls('exam');
-                    const batch = this.state.verbs.slice(this.state.examPointer, this.state.examPointer + 5);
+
+                    if (this.state.mode === 'classroom') {
+                        document.getElementById('ctrl-reveal').classList.remove('hidden');
+                        story = story.replace(tagRegex, (match, id, display) => {
+                            const vData = this.state.verbs.find(v => v.id === id);
+                            const def = vData ? vData.definition : "";
+                            return `<span class="gap-reveal" onclick="this.classList.toggle('revealed')" data-definition="${def}">${display}</span>`;
+                        });
+                    } else {
+                        document.getElementById('ctrl-check').classList.remove('hidden');
+                        story = story.replace(tagRegex, (match, id, display) => {
+                            return `<input type='text' data-answer="${display}" class='gap-input' autocomplete='off'>`;
+                        });
+                    }
+                    canvas.innerHTML = `<div class='p-8 bg-white rounded-2xl shadow-sm border border-gray-100 leading-loose'>${story}</div>`;
+                }
+
+                // 2. SENTENCES VIEW (PAGINATED)
+                else if (this.state.contentType === 'sentences') {
+                    canvas.innerHTML = ''; // Clear previous page
                     
+                    const batch = this.state.verbs.slice(this.state.pointer, this.state.pointer + 5);
+                    
+                    if (batch.length === 0) {
+                         canvas.innerHTML = `<div class='text-center p-10 text-gray-400 font-bold'>End of list.</div>`;
+                    }
+
                     batch.forEach((v, i) => {
                         const example = Math.random() > 0.5 ? v.example_1 : v.example_2;
-                        const markup = example.replace(/\{\{(.*?)\}\}/g, `<input type='text' data-answer="$1" class='gap-input' autocomplete='off' placeholder='...'>`);
-                        canvas.innerHTML += `<div class='drill-card'>
-                            <span class='text-indigo-300 font-black mr-3'>${this.state.examPointer + i + 1}.</span>${markup}
-                        </div>`;
+                        let markup = "";
+
+                        if (this.state.mode === 'classroom') {
+                            markup = example.replace(/\{\{(.*?)\}\}/g, `<span class="gap-reveal" onclick="this.classList.toggle('revealed')" data-definition="${v.definition}">$1</span>`);
+                        } else {
+                            markup = example.replace(/\{\{(.*?)\}\}/g, `<input type='text' data-answer="$1" class='gap-input' autocomplete='off' placeholder='...'>`);
+                        }
+
+                        const num = this.state.pointer + i + 1;
+                        canvas.innerHTML += `<div class='drill-card'><span class='text-indigo-300 font-black mr-3'>${num}.</span>${markup}</div>`;
                     });
 
-                    this.state.examPointer += 5;
+                    // Pagination Buttons
+                    if (this.state.mode === 'classroom') document.getElementById('ctrl-reveal').classList.remove('hidden');
+                    if (this.state.mode === 'exam') document.getElementById('ctrl-check').classList.remove('hidden');
+
                     const nextBtn = document.getElementById('ctrl-next');
-                    (this.state.examPointer >= this.state.verbs.length) ? nextBtn.classList.add('hidden') : nextBtn.classList.remove('hidden');
+                    if (this.state.pointer + 5 < this.state.verbs.length) {
+                        nextBtn.classList.remove('hidden');
+                    } else {
+                        nextBtn.classList.add('hidden');
+                    }
                 }
             },
 
+            nextPage: function() {
+                this.state.pointer += 5;
+                this.renderContent();
+            },
+
+            // --- RENDER LOGIC (STUDY MODE) ---
+            renderStudy: function() {
+                const canvas = document.getElementById('activity-canvas');
+                this.resetFooter();
+                
+                const nextBtn = document.getElementById('ctrl-study-next');
+                const prevBtn = document.getElementById('ctrl-study-prev');
+                
+                // Show/Hide Nav Buttons
+                if (this.state.pointer < this.state.verbs.length - 1) nextBtn.classList.remove('hidden');
+                if (this.state.pointer > 0) prevBtn.classList.remove('hidden');
+
+                const v = this.state.verbs[this.state.pointer];
+                const grammarInfo = this.grammarMap[v.grammar] || { text: v.grammar, color: 'bg-gray-100', tip: '' };
+                const ex1 = v.example_1.replace(/\{\{|\}\}/g, '');
+                const ex2 = v.example_2.replace(/\{\{|\}\}/g, '');
+
+                canvas.innerHTML = `
+                    <div class="flashcard">
+                        <div class="text-gray-400 font-bold uppercase tracking-widest text-sm mb-2">Phrasal Verb</div>
+                        <h2 class="text-5xl font-black text-indigo-900 mb-4">${v.verb}</h2>
+                        <div title="${grammarInfo.tip}" class="grammar-badge ${grammarInfo.color}">${grammarInfo.text}</div>
+                        <div class="my-6">
+                            <div class="text-gray-400 font-bold uppercase tracking-widest text-xs mb-1">Definition</div>
+                            <p class="text-xl font-medium text-gray-700">${v.definition}</p>
+                        </div>
+                        <div class="text-left bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                            <p class="text-gray-600 italic">" ${ex1} "</p>
+                            <p class="text-gray-600 italic">" ${ex2} "</p>
+                        </div>
+                    </div>
+                    <p class="text-center text-gray-400 text-sm mt-4">${this.state.pointer + 1} / ${this.state.verbs.length}</p>
+                `;
+            },
+
+            nextFlashcard: function() {
+                if (this.state.pointer < this.state.verbs.length - 1) {
+                    this.state.pointer++;
+                    this.renderStudy();
+                }
+            },
+
+            prevFlashcard: function() {
+                if (this.state.pointer > 0) {
+                    this.state.pointer--;
+                    this.renderStudy();
+                }
+            },
+
+            // --- UTILITIES ---
             evaluateExam: function() {
                 let correctCount = 0;
                 const fields = document.querySelectorAll('.gap-input');
@@ -226,7 +385,7 @@
                     const actualVal = f.dataset.answer.toLowerCase();
                     if(userVal === actualVal) {
                         correctCount++;
-                        f.classList.add('text-green-600', 'bg-green-50', 'border-green-500');
+                        f.classList.add('input-correct');
                     } else {
                         f.classList.add('input-error');
                         const correction = document.createElement('span');
@@ -241,25 +400,34 @@
                 pill.classList.remove('hidden');
             },
 
-            revealAllGaps: function() {
-                document.querySelectorAll('.gap-reveal').forEach(g => g.classList.add('revealed'));
+            toggleReveal: function() {
+                const allGaps = document.querySelectorAll('.gap-reveal');
+                this.state.revealed = !this.state.revealed; // Flip state
+
+                allGaps.forEach(g => {
+                    if (this.state.revealed) g.classList.add('revealed');
+                    else g.classList.remove('revealed');
+                });
+
+                this.updateRevealButton(this.state.revealed);
             },
 
-            toggleControls: function(mode) {
-                const check = document.getElementById('ctrl-check');
-                const next = document.getElementById('ctrl-next');
-                const reveal = document.getElementById('ctrl-reveal');
-                const score = document.getElementById('score-box');
-                
-                score.classList.add('hidden');
-                if(mode === 'classroom') {
-                    reveal.classList.remove('hidden');
-                    check.classList.add('hidden');
-                    next.classList.add('hidden');
+            updateRevealButton: function(isRevealed) {
+                const btn = document.getElementById('ctrl-reveal');
+                if (isRevealed) {
+                    btn.innerText = "Hide All";
+                    btn.classList.replace('bg-purple-600', 'bg-gray-500');
+                    btn.classList.replace('hover:bg-purple-700', 'hover:bg-gray-600');
                 } else {
-                    reveal.classList.add('hidden');
-                    check.classList.remove('hidden');
+                    btn.innerText = "Reveal All";
+                    btn.classList.replace('bg-gray-500', 'bg-purple-600');
+                    btn.classList.replace('hover:bg-gray-600', 'hover:bg-purple-700');
                 }
+            },
+
+            resetFooter: function() {
+                ['ctrl-check', 'ctrl-next', 'ctrl-reveal', 'ctrl-study-next', 'ctrl-study-prev'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                document.getElementById('score-box').classList.add('hidden');
             },
 
             navigate: function(id) {

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Grammar of Phrasal Verbs</title>
+    
+    <link rel="stylesheet" href="global.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 40px;
+        }
+
+        /* --- Grammar Card Styling --- */
+        .grammar-card {
+            @apply p-6 rounded-2xl border-2 transition hover:shadow-xl hover:-translate-y-1 transform duration-200 relative overflow-hidden;
+        }
+        
+        .badge {
+            @apply inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide mb-3 shadow-sm;
+        }
+
+        .example-box {
+            @apply mt-4 bg-white/60 p-3 rounded-lg border border-gray-200 text-sm font-medium text-gray-700;
+        }
+
+        .wrong-example {
+            @apply text-red-500 line-through opacity-60 decoration-2;
+        }
+
+        .highlight {
+            @apply font-black text-indigo-600;
+        }
+
+        /* --- LEGO BRICK STYLING (Database) --- */
+        #verb-list-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px; /* Space between bricks */
+            padding-top: 20px;
+        }
+
+        .verb-brick {
+            position: relative;
+            display: inline-block;
+            padding: 12px 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            border-radius: 8px;
+            cursor: help;
+            transition: transform 0.1s;
+            border-bottom-width: 4px; /* The 3D effect */
+            user-select: none;
+            color: white;
+        }
+
+        .verb-brick:hover {
+            transform: translateY(2px); /* Push down effect */
+            border-bottom-width: 2px;
+            margin-bottom: 2px; /* Keep alignment */
+        }
+
+        /* Brick Colors - UPDATED TO GREEN */
+        .brick-blue { 
+            background-color: #3b82f6; border-color: #1d4ed8; 
+        }
+        .brick-orange { 
+            background-color: #f97316; border-color: #c2410c; 
+        }
+        .brick-green { 
+            background-color: #22c55e; border-color: #15803d; 
+        }
+
+        /* --- THE FLOATING TOOLTIP --- */
+        .verb-brick::after {
+            content: attr(data-def);
+            position: absolute;
+            bottom: 130%; /* Float clearly above */
+            left: 50%;
+            transform: translateX(-50%);
+            
+            width: 220px;
+            background-color: #1f2937; /* Dark Grey */
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: none; /* Normal case for definition */
+            line-height: 1.4;
+            
+            /* Hidden by default */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, bottom 0.2s;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Little Arrow for Tooltip */
+        .verb-brick::before {
+            content: '';
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #1f2937;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, bottom 0.2s;
+            z-index: 100;
+        }
+
+        /* Show on Hover */
+        .verb-brick:hover::after {
+            opacity: 1;
+            visibility: visible;
+            bottom: 115%; /* Slight animation down */
+        }
+        .verb-brick:hover::before {
+            opacity: 1;
+            visibility: visible;
+            bottom: 115%;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <div class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+            <a href="phrasalverbs.html" class="flex items-center text-gray-500 hover:text-indigo-600 font-bold transition">
+                ← Back to Explorer
+            </a>
+            <h1 class="text-2xl md:text-3xl font-black text-indigo-900 tracking-tight text-center">
+                The Grammar Guide 🤓
+            </h1>
+            <div class="w-20 hidden md:block"></div>
+        </div>
+
+        <div class="space-y-10">
+            
+            <section class="text-center max-w-2xl mx-auto">
+                <h2 class="text-2xl font-bold mb-3 text-gray-800">What is a Phrasal Verb?</h2>
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    It's a verb + a particle (preposition or adverb). <br>
+                    The magic is that the particle <strong>changes the meaning</strong>!
+                </p>
+                
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <div class="bg-gray-100 p-4 rounded-xl border border-gray-200 opacity-60">
+                        <span class="text-xs font-bold uppercase text-gray-400">Normal Verb</span>
+                        <p class="font-bold text-gray-800 text-lg">"Look into"</p>
+                        <p class="text-sm text-gray-600">To physically gaze inside an object. 📦</p>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 shadow-md transform scale-105">
+                        <span class="text-xs font-bold uppercase text-indigo-400">Phrasal Verb</span>
+                        <p class="font-bold text-indigo-900 text-lg">"Look into"</p>
+                        <p class="text-sm text-indigo-700">To investigate a crime! 🕵️‍♂️</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="flex items-center gap-3 mb-6 justify-center">
+                    <span class="text-3xl">🚦</span>
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wide">The 3 Traffic Rules</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="grammar-card bg-blue-50 border-blue-200 hover:border-blue-400">
+                        <span class="badge bg-blue-500 text-white">Type 1: Intransitive</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">The "Loner"</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            These verbs <strong>do not need an object</strong>. They are happy being alone.
+                        </p>
+                        
+                        <div class="example-box border-blue-200">
+                            <p class="mb-2">✅ "I <span class="highlight">wake up</span> at 8:00."</p>
+                            <p>✅ "The car <span class="highlight">broke down</span>."</p>
+                        </div>
+                        <p class="text-xs text-center mt-3 text-blue-400 font-bold uppercase">No Object Needed</p>
+                    </div>
+
+                    <div class="grammar-card bg-orange-50 border-orange-200 hover:border-orange-400 md:col-span-2">
+                        <div class="absolute top-0 right-0 bg-orange-200 text-orange-800 text-xs font-bold px-3 py-1 rounded-bl-xl">Most Common!</div>
+                        <span class="badge bg-orange-500 text-white">Type 2: Separable</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">The "Splitter"</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            These verbs need an object. You can put the object <strong>after</strong> the verb OR <strong>in the middle</strong>.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="example-box border-orange-200">
+                                <p class="text-xs font-bold text-orange-400 uppercase mb-1">Option A (Together)</p>
+                                <p>✅ "Please <span class="highlight">turn on</span> the light."</p>
+                            </div>
+                            <div class="example-box border-orange-200">
+                                <p class="text-xs font-bold text-orange-400 uppercase mb-1">Option B (Split)</p>
+                                <p>✅ "Please <span class="highlight">turn</span> the light <span class="highlight">on</span>."</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 bg-white p-4 rounded-xl border-l-4 border-red-500 shadow-sm">
+                            <h4 class="font-bold text-red-600 text-sm uppercase mb-1">⚠️ The Golden Pronoun Rule</h4>
+                            <p class="text-sm text-gray-600 mb-2">
+                                If the object is a Pronoun (<em>it, me, them, him</em>), it <strong>MUST</strong> go in the middle.
+                            </p>
+                            <div class="flex flex-col gap-1 text-sm">
+                                <p>✅ "Turn <span class="highlight">it</span> on."</p>
+                                <p class="wrong-example">❌ "Turn on it."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grammar-card bg-green-50 border-green-200 hover:border-green-400 md:col-span-3">
+                        <span class="badge bg-green-500 text-white">Type 3: Inseparable</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">The "Super Glue"</h3>
+                        <p class="text-sm text-gray-600">
+                            These verbs need an object, but the words are <strong>glued together</strong>. You cannot split them apart, even with a pronoun!
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1 mb-4">
+                            (Hint: These often have 3 words, but not always).
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="example-box border-green-200">
+                                <p class="mb-1"><strong>Look into</strong> (Investigate)</p>
+                                <p>✅ "The police <span class="highlight">looked into</span> the crime."</p>
+                                <p class="wrong-example text-xs">❌ "The police looked the crime into."</p>
+                            </div>
+                            <div class="example-box border-green-200">
+                                <p class="mb-1"><strong>Run into</strong> (Meet)</p>
+                                <p>✅ "I <span class="highlight">ran into</span> him yesterday."</p>
+                                <p class="wrong-example text-xs">❌ "I ran him into yesterday."</p>
+                            </div>
+                            <div class="example-box border-green-200">
+                                <p class="mb-1"><strong>Put up with</strong> (Tolerate)</p>
+                                <p>✅ "I can't <span class="highlight">put up with</span> this noise!"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="text-center pt-8 border-t border-gray-100">
+                <p class="text-gray-400 font-medium italic mb-8">
+                    "Don't let grammar <span class="text-indigo-400 font-bold not-italic">stress you out!</span>" <br> 
+                    (Type 2: Separable!) 😉
+                </p>
+
+                <div class="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100">
+                    <h3 class="text-lg font-black text-gray-800 mb-4 uppercase tracking-widest">Brick Builder Database</h3>
+                    <div class="flex justify-center gap-4 mb-6 flex-wrap">
+                        <button onclick="fetchVerbs('I')" class="px-6 py-3 rounded-xl font-black text-white bg-blue-500 hover:bg-blue-600 border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition-all">Type 1 (Blue)</button>
+                        <button onclick="fetchVerbs('TS')" class="px-6 py-3 rounded-xl font-black text-white bg-orange-500 hover:bg-orange-600 border-b-4 border-orange-700 active:border-b-0 active:translate-y-1 transition-all">Type 2 (Orange)</button>
+                        <button onclick="fetchVerbs('T')" class="px-6 py-3 rounded-xl font-black text-white bg-green-500 hover:bg-green-600 border-b-4 border-green-700 active:border-b-0 active:translate-y-1 transition-all">Type 3 (Green)</button>
+                    </div>
+                    
+                    <div id="verb-list-container" class="min-h-[120px]">
+                        <p class="text-gray-400 text-sm italic mt-8">Click a colored brick above to load verbs...</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 👇 PASTE YOUR SUPABASE KEYS HERE
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+        // ============================================================
+        const _db = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+        async function fetchVerbs(grammarType) {
+            const container = document.getElementById('verb-list-container');
+            
+            // Loading State
+            container.innerHTML = '<div class="loader"></div>';
+
+            if (!_db) {
+                container.innerHTML = '<p class="text-red-500 font-bold">Error: Database not connected.</p>';
+                return;
+            }
+
+            try {
+                // Fetch from Supabase
+                const { data, error } = await _db
+                    .from('phrasal_verbs')
+                    .select('verb, definition')
+                    .eq('grammar', grammarType);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 font-bold">No verbs found for this type.</p>';
+                    return;
+                }
+
+                // Map Grammar Codes to Colors
+                let colorClass = 'brick-blue';
+                if (grammarType === 'TS') colorClass = 'brick-orange';
+                // CHANGED TO GREEN
+                if (grammarType === 'T') colorClass = 'brick-green';
+
+                // Render List
+                container.innerHTML = ''; 
+                data.forEach(v => {
+                    const brick = document.createElement('span');
+                    brick.className = `verb-brick ${colorClass}`; 
+                    brick.innerText = v.verb;
+                    brick.setAttribute('data-def', v.definition);
+                    container.appendChild(brick);
+                });
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p class="text-red-500">Error loading verbs. Check console.</p>';
+            }
+        }
+    </script>
+
+</body>
+</html>
