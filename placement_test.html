@@ -6,258 +6,299 @@
     <title>Academy Placement Test</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
+        :root { --primary: #003366; --accent: #FFCC00; --bg: #f4f4f4; --text: #333; }
+        body { font-family: 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; width: 100%; max-width: 800px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; border-top: 6px solid var(--primary); }
+        header { text-align: center; padding: 20px; border-bottom: 1px solid #eee; }
+        .logo { max-height: 80px; display: block; margin: 0 auto; }
+        .content-box { padding: 30px; }
+        .hidden { display: none !important; }
         
-        h1 { color: #003366; margin-bottom: 20px; }
-        .hidden { display: none; }
+        /* UI Elements */
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--accent); color: var(--primary); font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; margin-top: 15px; border-radius: 4px; }
+        button:hover { background: #e6b800; }
+        .option-btn { background: white; border: 2px solid #ddd; width: 100%; padding: 15px; margin-bottom: 10px; text-align: left; cursor: pointer; color: #444; border-radius: 4px; }
+        .option-btn:hover { border-color: var(--primary); background: #f0f8ff; }
         
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { background: #003366; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #002244; }
-        
-        /* Question Styles */
-        .option-btn { background: #f8f9fa; color: #333; border: 1px solid #ddd; text-align: left; margin: 5px 0; }
-        .option-btn:hover { background: #e2e6ea; }
-        .selected { background: #003366 !important; color: white !important; border-color: #003366; }
+        /* SCRAMBLE STYLES */
+        .word-pill { display: inline-block; background: #eef4fa; border: 1px solid #ccc; padding: 8px 12px; margin: 5px; border-radius: 20px; cursor: pointer; user-select: none; font-weight: bold; color: var(--primary); }
+        .word-pill:hover { background: #FFCC00; border-color: #FFCC00; }
 
-        /* Scramble Styles */
-        #scramble-container { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; min-height: 50px; padding: 10px; border: 2px dashed #ddd; border-radius: 8px; background: #fafafa; }
-        #word-bank { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
-        .word-tile { background: #FFCC00; color: #003366; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; user-select: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Reading & Audio Box */
+        .asset-box { background: #eef4fa; padding: 25px; border-left: 5px solid var(--primary); margin-bottom: 25px; animation: fadeIn 0.5s; }
+        #reading-text { max-height: 250px; overflow-y: auto; line-height: 1.6; white-space: pre-wrap; }
         
-        /* Loading Spinner */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Progress */
+        #progress-bar { height: 6px; background: #eee; margin-top: 30px; border-radius: 3px; }
+        #fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+        
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div id="intro-screen">
-            <img src="images/logo.png" alt="Academy Logo" style="max-width: 150px; margin-bottom: 20px;">
-            <h1>English Placement Test</h1>
-            <p>Please enter your details to begin.</p>
-            <input type="text" id="student-name" placeholder="Full Name">
-            <input type="email" id="student-email" placeholder="Email Address">
-            <button onclick="startTest()">Start Test</button>
-        </div>
+        <header>
+            <img src="images/logo.png" alt="Academy Logo" class="logo" onerror="this.style.display='none'; document.getElementById('alt-logo').innerText='ACADEMY TEST'">
+            <h2 id="alt-logo" style="margin:10px 0 0 0; color:var(--primary);"></h2>
+        </header>
 
-        <div id="quiz-screen" class="hidden">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color: #666;">
-                <span id="progress-text">Question 1</span>
+        <div class="content-box">
+            
+            <div id="registration-screen">
+                <h2 style="color:var(--primary)">Student Registration</h2>
+                <input type="text" id="student-name" placeholder="Full Name">
+                <input type="email" id="student-email" placeholder="Email Address">
+                <button onclick="startTest()">Start Assessment</button>
             </div>
-            <h2 id="question-text" style="color:#444; font-size: 1.2em; margin-bottom: 25px;"></h2>
-            
-            <audio id="audio-player" controls style="display:none; width:100%; margin-bottom:20px;"></audio>
-            
-            <div id="options-container"></div>
-            
-            <div id="scramble-ui" class="hidden">
-                <p style="font-size:0.9em; color:#666;">Tap words to build the sentence:</p>
-                <div id="scramble-container"></div> <div id="word-bank"></div> </div>
 
-            <button onclick="nextQuestion()" style="margin-top: 30px;">Next Question</button>
-        </div>
+            <div id="loading-screen" class="hidden"><h3>Loading...</h3></div>
 
-        <div id="loading-screen" class="hidden">
-            <div class="loader" style="display:block"></div>
-            <h3>Analyzing Results...</h3>
-            <p>Our AI is grading your test. Please wait.</p>
-        </div>
+            <div id="test-screen" class="hidden">
+                <div style="display:flex; justify-content:space-between; color:#888; font-size:0.9em; margin-bottom:15px;">
+                    <span id="phase-label">Section 1: Grammar</span>
+                    <span id="q-progress"></span>
+                </div>
 
-        <div id="result-screen" class="hidden">
-            <h1>Test Complete!</h1>
-            <p style="font-size: 1.2em;">Your estimated level is:</p>
-            <h2 id="final-score" style="color: #003366; font-size: 3em; margin: 10px 0;"></h2>
-            <p>We have sent a detailed report to your email.</p>
-            <button onclick="location.reload()">Return Home</button>
+                <div id="reading-container" class="asset-box hidden">
+                    <h4 style="margin-top:0;">📖 Reading Comprehension</h4>
+                    <div id="reading-text"></div> 
+                </div>
+
+                <div id="audio-container" class="asset-box hidden">
+                    <h4 style="margin-top:0;">🎧 Listening Comprehension</h4>
+                    <audio id="main-audio" controls style="width:100%"></audio>
+                </div>
+
+                <h3 id="question-text" style="font-size: 1.3em; margin: 20px 0;"></h3>
+                <div id="answer-area"></div>
+                <div id="progress-bar"><div id="fill"></div></div>
+            </div>
+
+            <div id="thank-you-screen" class="hidden" style="text-align:center;">
+                <h2 style="color:var(--primary)">Assessment Received</h2>
+                <div style="font-size: 50px; margin: 20px;">✅</div>
+                <p>Thank you for completing your placement test.</p>
+                <p>Our Director of Studies is currently reviewing your results.</p>
+                <p><strong>We will contact you shortly at <span id="confirm-email"></span> with your course options.</strong></p>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // REPLACE WITH YOUR KEYS
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        
+
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        let questions = [];
-        let currentQIndex = 0;
-        let answers = [];
-        let studentName = "";
-        let studentEmail = "";
-        let currentScrambleOrder = [];
 
-        // --- 1. START TEST ---
+        let student = {};
+        let banks = { grammar: [], reading: [], listening: [] };
+        let testHistory = [];
+        let currentLevel = 'B1';
+        let phase = 'GRAMMAR';
+        let counters = { grammar: 0, reading: 0, listening: 0 };
+        const MAX_GRAMMAR = 20;
+
         async function startTest() {
-            studentName = document.getElementById('student-name').value;
-            studentEmail = document.getElementById('student-email').value;
-
-            if (!studentName || !studentEmail.includes('@')) {
-                alert("Please enter a valid name and email.");
-                return;
-            }
-
-            document.getElementById('intro-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-
-            // Fetch questions from Supabase
-            const { data, error } = await db.from('questions').select('*').order('id');
-            if (error) { alert("Error loading test. Please refresh."); return; }
+            const name = document.getElementById('student-name').value;
+            const email = document.getElementById('student-email').value;
+            if(!name || !email) return alert("Please fill in all fields.");
+            student = { name, email };
             
-            questions = data;
-            renderQuestion();
+            document.getElementById('registration-screen').classList.add('hidden');
+            document.getElementById('loading-screen').classList.remove('hidden');
+
+            const { data, error } = await db.from('questions').select('*');
+            if(error) return alert("Connection Error");
+
+            // Filter questions correctly
+            banks.grammar = data.filter(q => q.q_type !== 'RS' && q.q_type !== 'LS' && q.q_type !== 'READ_SET' && q.q_type !== 'LISTEN_SET');
+            banks.reading = data.filter(q => q.q_type === 'RS' || q.q_type === 'READ_SET').sort((a,b) => a.id - b.id);
+            banks.listening = data.filter(q => q.q_type === 'LS' || q.q_type === 'LISTEN_SET').sort((a,b) => a.id - b.id);
+
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('test-screen').classList.remove('hidden');
+            loadNextQuestion();
         }
 
-        // --- 2. RENDER QUESTION ---
-        function renderQuestion() {
-            const q = questions[currentQIndex];
-            document.getElementById('progress-text').innerText = `Question ${currentQIndex + 1} of ${questions.length}`;
-            document.getElementById('question-text').innerText = q.question_text;
-            
-            const optsDiv = document.getElementById('options-container');
-            const audioPlayer = document.getElementById('audio-player');
-            const scrambleUI = document.getElementById('scramble-ui');
-            
-            // Reset UI
-            optsDiv.innerHTML = '';
-            audioPlayer.style.display = 'none';
-            scrambleUI.classList.add('hidden');
-            optsDiv.classList.remove('hidden');
-            currentScrambleOrder = []; // Reset scramble
+        function loadNextQuestion() {
+            // GRAMMAR
+            if (phase === 'GRAMMAR') {
+                if (counters.grammar >= MAX_GRAMMAR) { initReading(); return; }
+                
+                let suitable = banks.grammar.filter(q => q.level === currentLevel && !testHistory.some(h => h.id === q.id));
+                if (suitable.length === 0) suitable = banks.grammar.filter(q => !testHistory.some(h => h.id === q.id));
+                if (suitable.length === 0) { initReading(); return; }
 
-            // HANDLE AUDIO
-            if (q.q_type === 'LISTEN_SET' && q.content.audio_url) {
-                audioPlayer.src = q.content.audio_url;
-                audioPlayer.style.display = 'block';
+                renderQuestion(suitable[Math.floor(Math.random() * suitable.length)]);
+                counters.grammar++;
+                updateUI(counters.grammar, MAX_GRAMMAR, "Section 1: Grammar");
+
+            // READING
+            } else if (phase === 'READING') {
+                if (counters.reading >= banks.reading.length) { initListening(); return; }
+                renderQuestion(banks.reading[counters.reading]);
+                counters.reading++;
+                updateUI(counters.reading, banks.reading.length, "Section 2: Reading");
+
+            // LISTENING
+            } else if (phase === 'LISTENING') {
+                if (counters.listening >= banks.listening.length) { finishTest(); return; }
+                renderQuestion(banks.listening[counters.listening]);
+                counters.listening++;
+                updateUI(counters.listening, banks.listening.length, "Section 3: Listening");
             }
+        }
 
-            // HANDLE MULTIPLE CHOICE (MC) & LISTENING (LISTEN_SET)
-            if (q.q_type === 'MC' || q.q_type === 'LISTEN_SET') {
+        function initReading() {
+            phase = 'READING';
+            if(banks.reading.length === 0) { initListening(); return; }
+            
+            // Handle both structure types (content.text or just content)
+            const firstQ = banks.reading[0];
+            const textContent = firstQ.content.text || firstQ.content; 
+            
+            document.getElementById('reading-text').innerText = textContent;
+            document.getElementById('reading-container').classList.remove('hidden');
+            loadNextQuestion();
+        }
+
+        function initListening() {
+            phase = 'LISTENING';
+            if(banks.listening.length === 0) { finishTest(); return; }
+
+            document.getElementById('reading-container').classList.add('hidden');
+            
+            const firstQ = banks.listening[0];
+            const audioUrl = firstQ.content.audio_url || firstQ.content;
+            
+            document.getElementById('main-audio').src = audioUrl;
+            document.getElementById('audio-container').classList.remove('hidden');
+            loadNextQuestion();
+        }
+
+        function renderQuestion(q) {
+            currentQuestion = q;
+            document.getElementById('answer-area').innerHTML = '';
+            document.getElementById('question-text').innerText = q.question_text || q.content.question; // Handle both structures
+
+            // 1. STANDARD BUTTONS (MC)
+            if (q.q_type === 'MC' || (q.content.options && q.q_type !== 'SS')) {
                 q.content.options.forEach(opt => {
                     const btn = document.createElement('button');
                     btn.className = 'option-btn';
                     btn.innerText = opt;
-                    btn.onclick = () => selectOption(btn, opt);
-                    optsDiv.appendChild(btn);
+                    btn.onclick = () => submit(opt);
+                    document.getElementById('answer-area').appendChild(btn);
                 });
             } 
-            // HANDLE SCRAMBLE (SS) - *** THE FIX IS HERE ***
+            // 2. SCRAMBLE (SS)
             else if (q.q_type === 'SS') {
-                optsDiv.classList.add('hidden'); // Hide normal buttons
-                scrambleUI.classList.remove('hidden'); // Show scramble UI
-                
                 let words = q.content.words;
-
-                // *** SCRAMBLE FIX: Handle Strings vs Arrays ***
+                // Safety check: is it a string or array?
                 if (typeof words === 'string') {
-                    try {
-                        words = JSON.parse(words); // Try to turn string "['I','am']" into array
-                    } catch (e) {
-                        words = words.split(' '); // Fallback: Split by space
-                    }
+                    try { words = JSON.parse(words); } 
+                    catch(e) { words = words.split(' '); }
                 }
-                
                 setupScramble(words);
             }
-        }
-
-        // --- 3. SCRAMBLE LOGIC ---
-        function setupScramble(wordsList) {
-            const bank = document.getElementById('word-bank');
-            const container = document.getElementById('scramble-container');
-            bank.innerHTML = '';
-            container.innerHTML = '';
-
-            // Shuffle words for display
-            const shuffled = [...wordsList].sort(() => Math.random() - 0.5);
-
-            shuffled.forEach(word => {
-                const tile = document.createElement('div');
-                tile.className = 'word-tile';
-                tile.innerText = word;
-                tile.onclick = () => {
-                    // Move to container
-                    if (tile.parentElement === bank) {
-                        container.appendChild(tile);
-                        currentScrambleOrder.push(word);
-                    } else {
-                        // Move back to bank
-                        bank.appendChild(tile);
-                        currentScrambleOrder = currentScrambleOrder.filter(w => w !== word);
-                    }
-                };
-                bank.appendChild(tile);
-            });
-        }
-
-        // --- 4. HANDLE ANSWERS ---
-        let currentSelection = null;
-        function selectOption(btn, text) {
-            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            currentSelection = text;
-        }
-
-        function nextQuestion() {
-            const q = questions[currentQIndex];
-            let answer = null;
-
-            if (q.q_type === 'SS') {
-                if (currentScrambleOrder.length === 0) { alert("Please arrange the words."); return; }
-                answer = currentScrambleOrder.join(' ');
-            } else {
-                if (!currentSelection) { alert("Please select an answer."); return; }
-                answer = currentSelection;
-            }
-
-            answers.push({ q_id: q.id, answer: answer });
-            currentSelection = null;
-            currentQIndex++;
-
-            if (currentQIndex < questions.length) {
-                renderQuestion();
-            } else {
-                submitTest();
-            }
-        }
-
-        // --- 5. SUBMIT TO AI ---
-        async function submitTest() {
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('loading-screen').classList.remove('hidden');
-
-            const payload = {
-                studentName,
-                studentEmail,
-                answers
-            };
-
-            try {
-                // *** NETLIFY FUNCTION CALL - Updated to 'report' ***
-                const res = await fetch('/.netlify/functions/report', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+            // 3. OPEN INPUT (Typing) - *** RESTORED ***
+            else if (q.q_type === 'OI') {
+                 document.getElementById('answer-area').innerHTML = `
+                    <input type="text" id="oi-input" placeholder="Type your answer here..." style="width:100%; padding:15px; border:2px solid #ddd; margin-bottom:15px;">
+                    <button onclick="submit(document.getElementById('oi-input').value)">Submit Answer</button>
+                `;
+                // Allow "Enter" key
+                document.getElementById('oi-input').addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') submit(this.value);
                 });
+            }
+        }
 
-                if (!res.ok) throw new Error("Server error");
+        // --- SCRAMBLE LOGIC ---
+        let built = [], pool = [];
+        function setupScramble(words) { 
+            built = []; 
+            pool = [...words].sort(()=>Math.random()-0.5); 
+            drawScramble(); 
+        }
 
-                const result = await res.json();
-                
-                // Show Result
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('result-screen').classList.remove('hidden');
-                document.getElementById('final-score').innerText = result.level || "Pending";
+        function drawScramble() {
+            const div = document.getElementById('answer-area');
+            div.innerHTML = `
+                <div style="min-height:60px; border:2px dashed #ccc; padding:15px; margin-bottom:15px; border-radius:8px; background:white;">
+                    ${built.length === 0 ? '<span style="color:#ccc">Tap words below...</span>' : ''}
+                    ${built.map((w,i)=>`<span class="word-pill" onclick="move(1,${i})">${w}</span>`).join('')}
+                </div>
+                <div>${pool.map((w,i)=>`<span class="word-pill" onclick="move(0,${i})">${w}</span>`).join('')}</div>
+                <button onclick="submit(built.join(' '))" style="margin-top:20px;">Submit Answer</button>
+            `;
+        }
 
-            } catch (err) {
-                console.error(err);
-                alert("Test submitted, but we couldn't fetch the report immediately. Check your email.");
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('result-screen').classList.remove('hidden');
-                document.getElementById('final-score').innerText = "Submitted";
+        window.move = (dir, i) => {
+            if(dir===1) pool.push(built.splice(i,1)[0]);
+            else built.push(pool.splice(i,1)[0]);
+            drawScramble();
+        }
+        // ---------------------------
+
+        window.submit = (ans) => {
+            if (!ans) return; // Prevent empty submission
+
+            let correct = false;
+            // Handle different correct_answer locations
+            const rightAns = currentQuestion.content.correct_answer || currentQuestion.correct_answer;
+            
+            if(rightAns) {
+                correct = ans.trim().toLowerCase() === rightAns.trim().toLowerCase();
+            }
+
+            testHistory.push({ 
+                q_id: currentQuestion.id, 
+                question: currentQuestion.question_text || currentQuestion.content.question,
+                level: currentQuestion.level, 
+                correct,
+                user_answer: ans,
+                correct_answer: rightAns
+            });
+
+            // Adaptive Logic
+            if (phase === 'GRAMMAR') {
+                const levels = ['A1','A2','B1','B2','C1','C2'];
+                let idx = levels.indexOf(currentLevel);
+                if (correct && idx < 5) currentLevel = levels[idx+1];
+                if (!correct && idx > 0) currentLevel = levels[idx-1];
+            }
+            loadNextQuestion();
+        }
+
+        function updateUI(cur, max, label) {
+            document.getElementById('phase-label').innerText = label;
+            document.getElementById('q-progress').innerText = `${cur} / ${max}`;
+            document.getElementById('fill').style.width = `${(cur/max)*100}%`;
+        }
+
+        async function finishTest() {
+            document.getElementById('test-screen').classList.add('hidden');
+            document.getElementById('thank-you-screen').classList.remove('hidden');
+            document.getElementById('confirm-email').innerText = student.email;
+            
+            try {
+                // We send 'answers' instead of 'history' to match your report.js
+                await fetch('/.netlify/functions/report', {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        answers: testHistory, 
+                        studentName: student.name,
+                        studentEmail: student.email
+                    })
+                });
+            } catch (e) { 
+                console.error("Error sending to backend:", e); 
             }
         }
     </script>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Own Adventure</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #00BCD4, #4DD0E1); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        #game-container { width: 100%; max-width: 1100px; background-color: white; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); border-radius: 20px; padding: 30px; }
+
+        /* UI Cards */
+        .card { border: 3px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; overflow: hidden; background: white; }
+        .card:hover { border-color: #00BCD4; transform: translateY(-2px); }
+        .card.selected { border-color: #00BCD4; background-color: #ecfeff; box-shadow: 0 0 0 4px rgba(0, 188, 212, 0.2); }
+        .card img { width: 100%; height: 120px; object-fit: cover; background-color: #f8fafc; }
+        
+        /* Lego Buttons */
+        .lego-btn { background-color: #E3000F; color: white; border: none; padding: 15px 20px; font-weight: 900; font-size: 1.1rem; border-radius: 6px; box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -4px 0 rgba(0,0,0,0.2), 0 4px 4px rgba(0,0,0,0.2); cursor: pointer; transition: all 0.1s; text-transform: uppercase; }
+        .lego-btn.selected { transform: translateY(4px); box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), inset 0 -2px 0 rgba(0,0,0,0.2); border: 3px solid #1e293b; }
+
+        /* Action Buttons */
+        .action-btn { width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; color: white; box-shadow: 0 6px 0 rgba(0,0,0,0.2); transition: transform 0.1s, box-shadow 0.1s; cursor: pointer; }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+        .btn-cyan { background-color: #00BCD4; }
+        .btn-cyan:hover { background-color: #00acc1; }
+        .btn-red { background-color: #ef4444; }
+        .btn-red:hover { background-color: #dc2626; }
+
+        /* Story Screen */
+        #story-screen { background-color: #FFFDF0; border-radius: 16px; padding: 40px; border: 2px solid #fef08a; }
+        .story-text { font-size: 2.5rem; font-weight: 700; color: #334155; line-height: 1.6; }
+        .choice-btn { width: 100%; padding: 20px; margin-top: 15px; font-size: 1.8rem; font-weight: 800; text-align: left; background-color: #f1f5f9; color: #1e293b; border: 4px solid #cbd5e1; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+        .choice-btn:hover { background-color: #e2e8f0; border-color: #94a3b8; transform: translateX(8px); }
+
+        /* Nav Buttons */
+        .btn-nav { background-color: #94a3b8; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-nav:hover { background-color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <div id="setup-screen" class="space-y-8">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                <button class="btn-nav" onclick="window.location.href = 'index.html'">← Back to Tools</button>
+                <h1 class="text-3xl font-black text-slate-800 uppercase tracking-wide">Story Setup</h1>
+                <div class="w-24"></div>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-bold text-slate-700 mb-3">1. Select Level</h3>
+                <div class="grid grid-cols-3 gap-4" id="level-container">
+                    <div class="card p-4 text-center font-black text-xl text-slate-700 selected" onclick="selectLevel(this, 'Starters')">STARTERS</div>
+                    <div class="card p-4 text-center font-black text-xl text-slate-700" onclick="selectLevel(this, 'Movers')">MOVERS</div>
+                    <div class="card p-4 text-center font-black text-xl text-slate-700" onclick="selectLevel(this, 'Flyers')">FLYERS</div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold text-slate-700 mb-3">2. Choose Characters (Max 2)</h3>
+                <div class="grid grid-cols-4 md:grid-cols-7 gap-3">
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/jimmy_avatar.png" alt="Jimmy"><div class="p-2 text-center font-bold text-slate-700">Jimmy</div></div>
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/katy.jpg" alt="Katy"><div class="p-2 text-center font-bold text-slate-700">Katy</div></div>
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/belinda.jpg" alt="Belinda"><div class="p-2 text-center font-bold text-slate-700">Belinda</div></div>
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/denny.jpg" alt="Denny"><div class="p-2 text-center font-bold text-slate-700">Denny</div></div>
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/bob.jpg" alt="Bob"><div class="p-2 text-center font-bold text-slate-700">Bob</div></div>
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/susan.jpg" alt="Susan"><div class="p-2 text-center font-bold text-slate-700">Susan</div></div>
+                    <div class="card" onclick="toggleCharacter(this)"><img src="images/julia.jpg" alt="Julia"><div class="p-2 text-center font-bold text-slate-700">Julia</div></div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold text-slate-700 mb-3">3. Choose a Setting</h3>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-3" id="setting-container">
+                    <div class="card" onclick="selectSingle(this, 'setting-container')"><img src="images/mountain.jpg" alt="Mountain"></div>
+                    <div class="card" onclick="selectSingle(this, 'setting-container')"><img src="images/city.jpg" alt="City"></div>
+                    <div class="card" onclick="selectSingle(this, 'setting-container')"><img src="images/house.jpg" alt="House"></div>
+                    <div class="card" onclick="selectSingle(this, 'setting-container')"><img src="images/park.jpg" alt="Park"></div>
+                    <div class="card" onclick="selectSingle(this, 'setting-container')"><img src="images/beach.jpg" alt="Beach"></div>
+                    <div class="card" onclick="selectSingle(this, 'setting-container')"><img src="images/school.jpg" alt="School"></div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold text-slate-700 mb-3">4. Choose a Problem</h3>
+                <div id="problem-container" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold text-slate-700 mb-3">5. Teacher Instructions (Optional)</h3>
+                <textarea id="teacher-notes" class="w-full p-4 border-2 border-slate-300 rounded-xl font-bold text-slate-700 focus:border-cyan-500 outline-none" rows="3" placeholder="e.g., Focus on action verbs..."></textarea>
+            </div>
+
+            <button class="action-btn btn-cyan" onclick="startStory()">Start the Adventure!</button>
+        </div>
+
+        <div id="story-screen" class="hidden">
+            
+            <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-slate-200">
+                <button class="btn-nav" onclick="backToSetup()">← Back to Setup</button>
+                <button id="emergency-end-btn" class="btn-nav btn-red" onclick="endStoryEarly()">⏹ End Story Now</button>
+            </div>
+
+            <div class="story-text mb-10" id="story-text-area">
+                Waiting for the magic to start...
+            </div>
+            
+            <div id="choices-container" class="flex flex-col gap-4"></div>
+
+            <div id="end-controls" class="hidden mt-12 grid grid-cols-2 gap-6 pt-8 border-t-4 border-slate-200">
+                <button class="action-btn" style="background-color: #F59E0B;" onclick="generateQuestions()">Ask Questions</button>
+                <button class="action-btn btn-cyan" onclick="saveToPDF()">Save to PDF</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data
+        const problems = {
+            'Starters': ['Lost a toy', 'Hungry pet', 'Can\'t find mum', 'Broken glasses'],
+            'Movers': ['Missed the bus', 'Lost map', 'Broken bicycle', 'Locked out'],
+            'Flyers': ['Stuck in a storm', 'Stolen treasure', 'Power cut', 'Lost ticket']
+        };
+
+        // State Variables
+        let selectedCharacters = [];
+        let fullStoryHistory = ""; 
+
+        // 1. Setup Functions
+        function selectLevel(clickedElement, levelName) {
+            selectSingle(clickedElement, 'level-container');
+            const problemBox = document.getElementById('problem-container');
+            problemBox.innerHTML = ''; 
+            problems[levelName].forEach(prob => {
+                let btn = document.createElement('button');
+                btn.className = 'lego-btn';
+                btn.innerText = prob;
+                btn.onclick = function() { selectSingle(this, 'problem-container'); };
+                problemBox.appendChild(btn);
+            });
+        }
+
+        function toggleCharacter(element) {
+            if (selectedCharacters.includes(element)) {
+                selectedCharacters = selectedCharacters.filter(el => el !== element);
+                element.classList.remove('selected');
+            } else {
+                if (selectedCharacters.length >= 2) {
+                    let oldest = selectedCharacters.shift();
+                    oldest.classList.remove('selected');
+                }
+                selectedCharacters.push(element);
+                element.classList.add('selected');
+            }
+        }
+
+        function selectSingle(clickedElement, containerId) {
+            let container = document.getElementById(containerId);
+            Array.from(container.children).forEach(child => child.classList.remove('selected'));
+            clickedElement.classList.add('selected');
+        }
+
+        // 2. Navigation Functions
+        function backToSetup() {
+            document.getElementById('story-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+        }
+
+        function endStoryEarly() {
+            document.getElementById('choices-container').classList.add('hidden');
+            document.getElementById('emergency-end-btn').classList.add('hidden');
+            document.getElementById('end-controls').classList.remove('hidden');
+        }
+
+        // 3. AI Communication Functions
+        async function startStory() {
+            const level = document.querySelector('#level-container .selected').innerText;
+            const settingElement = document.querySelector('#setting-container .selected img');
+            const setting = settingElement ? settingElement.alt : 'a mysterious place';
+            const problemElement = document.querySelector('#problem-container .selected');
+            const problem = problemElement ? problemElement.innerText : 'a surprise';
+            const notes = document.getElementById('teacher-notes').value;
+            const charNames = selectedCharacters.map(el => el.innerText.trim());
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('story-screen').classList.remove('hidden');
+            
+            document.getElementById('choices-container').classList.remove('hidden');
+            document.getElementById('end-controls').classList.add('hidden');
+            document.getElementById('emergency-end-btn').classList.remove('hidden');
+
+            document.getElementById('story-text-area').innerText = "Thinking...";
+            document.getElementById('choices-container').innerHTML = ''; 
+            fullStoryHistory = ""; // Clear the backpack for a new game
+
+            try {
+                const response = await fetch('/.netlify/functions/story', {
+                    method: 'POST',
+                    body: JSON.stringify({ level, characters: charNames, setting, problem, teacherNotes: notes, history: "" })
+                });
+
+                const aiData = await response.json();
+                document.getElementById('story-text-area').innerText = aiData.story;
+                fullStoryHistory = aiData.story; 
+                
+                let choicesHtml = '';
+                aiData.options.forEach(opt => {
+                    choicesHtml += `<button class="choice-btn" onclick="continueStory('${opt}')">${opt}</button>`;
+                });
+                document.getElementById('choices-container').innerHTML = choicesHtml;
+
+            } catch (error) {
+                document.getElementById('story-text-area').innerText = "Oops! The brain stopped working. Please try again.";
+            }
+        }
+
+        async function continueStory(chosenOption) {
+            fullStoryHistory += "\n\nThe students chose: " + chosenOption;
+
+            document.getElementById('choices-container').innerHTML = '';
+            document.getElementById('story-text-area').innerText = "Writing the next chapter...";
+
+            try {
+                const response = await fetch('/.netlify/functions/story', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        level: document.querySelector('#level-container .selected').innerText,
+                        characters: selectedCharacters.map(el => el.innerText.trim()),
+                        setting: document.querySelector('#setting-container .selected img').alt,
+                        problem: document.querySelector('#problem-container .selected').innerText,
+                        teacherNotes: document.getElementById('teacher-notes').value,
+                        history: fullStoryHistory
+                    })
+                });
+
+                const aiData = await response.json();
+                
+                document.getElementById('story-text-area').innerText = aiData.story;
+                fullStoryHistory += "\n\n" + aiData.story;
+                
+                let choicesHtml = '';
+                aiData.options.forEach(opt => {
+                    choicesHtml += `<button class="choice-btn" onclick="continueStory('${opt}')">${opt}</button>`;
+                });
+                document.getElementById('choices-container').innerHTML = choicesHtml;
+
+            } catch (error) {
+                document.getElementById('story-text-area').innerText = "Oops! The brain stopped working. Please try again.";
+            }
+        }
+
+        async function generateQuestions() {
+            document.getElementById('story-text-area').innerText = "Writing questions...";
+            document.getElementById('end-controls').classList.add('hidden');
+
+            try {
+                const response = await fetch('/.netlify/functions/quiz', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        level: document.querySelector('#level-container .selected').innerText,
+                        history: fullStoryHistory
+                    })
+                });
+
+                const aiData = await response.json();
+                
+                // Show on screen
+                document.getElementById('story-text-area').innerHTML = "<h3>Quiz Time!</h3>" + aiData.questionsHtml;
+                document.getElementById('end-controls').classList.remove('hidden');
+
+                // Add to backpack for the PDF, stripping out the HTML formatting
+                fullStoryHistory += "\n\n--- Quiz Time ---\n" + aiData.questionsHtml.replace(/<[^>]*>?/gm, '\n');
+
+            } catch (error) {
+                document.getElementById('story-text-area').innerText = "Oops! Could not write the questions.";
+                document.getElementById('end-controls').classList.remove('hidden');
+            }
+        }
+
+        // 4. PDF Generation
+        function saveToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF(); 
+
+            doc.setFontSize(22);
+            doc.text("Our Class Adventure", 20, 20);
+
+            doc.setFontSize(14);
+            const splitText = doc.splitTextToSize(fullStoryHistory, 170); 
+            doc.text(splitText, 20, 35);
+
+            doc.save("adventure-story.pdf");
+        }
+
+        // Initialise
+        selectLevel(document.getElementById('level-container').firstElementChild, 'Starters');
+    </script>
+</body>
+</html>
