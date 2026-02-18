@@ -1,10 +1,8 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { createClient } = require("@supabase/supabase-js");
-// const { Resend } = require("resend"); // <--- UNCOMMENT THIS WHEN PAID
+// const { Resend } = require("resend"); // <--- UNCOMMENT WHEN PAID
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// const resend = new Resend(process.env.RESEND_API_KEY); // <--- UNCOMMENT THIS WHEN PAID
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
@@ -16,13 +14,9 @@ exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "ok" };
 
   try {
-    // 1. RECEIVE DATA
     const { studentName, studentEmail, answers } = JSON.parse(event.body);
-
-    // 2. AI CONFIG (Using your available 2.5 Flash model)
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // 3. THE FULL "DIRECTOR" PROMPT
     const prompt = `
       Act as a Director of Studies. Analyse this English placement test.
       Student: ${studentName} (${studentEmail})
@@ -37,10 +31,10 @@ exports.handler = async function(event, context) {
       OUTPUT JSON ONLY with this structure:
       {
         "level": "B1",
-        "html_report": "HTML string here..."
+        "report": "HTML string here..."
       }
 
-      STRUCTURE FOR HTML_REPORT:
+      STRUCTURE FOR HTML REPORT:
       1. <h3>Summary</h3>: A 2-sentence overview of their level and key trait.
       2. <details><summary><strong>Click for Full Director's Analysis</strong></summary>
          <div style="margin-top:10px; border-left:3px solid #ccc; padding-left:10px;">
@@ -59,23 +53,9 @@ exports.handler = async function(event, context) {
          </details>
     `;
 
-    // 4. GENERATE CONTENT
     const result = await model.generateContent(prompt);
     const responseText = result.response.text().replace(/```json|```/g, "").trim();
     const aiData = JSON.parse(responseText);
-
-    // 5. SAVE TO SUPABASE
-    const { error: dbError } = await supabase
-      .from('results')
-      .insert([{
-        student_name: studentName,
-        student_email: studentEmail,
-        cefr_level: aiData.level,
-        report_html: aiData.html_report,
-        created_at: new Date()
-      }]);
-
-    if (dbError) throw new Error("DB Error: " + dbError.message);
 
     /* --- EMAIL SYSTEM (UNCOMMENT WHEN PAID) ---
     if (process.env.RESEND_API_KEY) {
@@ -96,14 +76,12 @@ exports.handler = async function(event, context) {
        });
     }
     ------------------------------------------- */
-
-    // 6. RETURN SUCCESS
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ 
         level: aiData.level, 
-        report: aiData.html_report 
+        report: aiData.report 
       })
     };
 

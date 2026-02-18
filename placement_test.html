@@ -281,14 +281,14 @@
             document.getElementById('fill').style.width = `${(cur/max)*100}%`;
         }
 
-        async function finishTest() {
+async function finishTest() {
             document.getElementById('test-screen').classList.add('hidden');
             document.getElementById('thank-you-screen').classList.remove('hidden');
             document.getElementById('confirm-email').innerText = student.email;
             
             try {
-                // We send 'answers' instead of 'history' to match your report.js
-                await fetch('/.netlify/functions/report', {
+                // 1. Ask the backend AI to generate the HTML report
+                const res = await fetch('/.netlify/functions/report', {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ 
@@ -297,8 +297,35 @@
                         studentEmail: student.email
                     })
                 });
+
+                let aiLevel = currentLevel;
+                let aiReportHtml = "<p>Standard report generation pending.</p>";
+
+                if (res.ok) {
+                    const aiData = await res.json();
+                    aiLevel = aiData.level || currentLevel;
+                    aiReportHtml = aiData.report || aiReportHtml;
+                } else {
+                    console.warn("AI took too long or failed, saving fallback data.");
+                }
+
+                // 2. SAVE DIRECTLY TO DATABASE FROM THE FRONTEND
+                const { error: dbError } = await db.from('results').insert([{
+                    student_name: student.name,
+                    student_email: student.email,
+                    cefr_level: aiLevel, 
+                    report_html: aiReportHtml,
+                    created_at: new Date()
+                }]);
+
+                if (dbError) {
+                    console.error("Supabase Save Error:", dbError);
+                } else {
+                    console.log("Successfully saved to database!");
+                }
+
             } catch (e) { 
-                console.error("Error sending to backend:", e); 
+                console.error("Critical error during finish:", e); 
             }
         }
     </script>
