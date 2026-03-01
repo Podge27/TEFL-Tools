@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Files: The Fun Guide</title>
+    
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; min-height: 100vh; display: flex; justify-content: center; padding: 20px; }
+        #app-container { width: 100%; max-width: 900px; background-color: white; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border-radius: 12px; border: 1px solid #e5e7eb; padding: 40px; }
+        .code-box { @apply bg-slate-800 text-green-400 font-mono text-sm p-4 rounded-lg overflow-x-auto my-4 border-l-4 border-indigo-500 shadow-inner; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <div class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+            <a href="index.html" class="btn-back px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition shadow-sm no-underline">
+                ← Back to Menu
+            </a>
+            <h1 class="text-3xl font-extrabold text-indigo-600 tracking-tight">JSONs Made Easy! 🧩</h1>
+            <div class="w-20"></div>
+        </div>
+
+        <div class="space-y-8">
+            
+            <section class="text-center">
+                <h2 class="text-2xl font-bold mb-3 text-gray-800">What on earth is a JSON?! 😱</h2>
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    Luckily for you, you don't need to know! <br>
+                    Just know that it's a type of document that is extremely easy for the computer to read.
+                </p>
+
+            </section>
+
+            <section class="bg-emerald-600 rounded-2xl p-6 md:p-8 text-white shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-4xl">👉</span>
+                    <h2 class="text-2xl font-black uppercase tracking-wide">Here's what you do</h2>
+                </div>
+                
+                <p class="mb-4 font-medium text-emerald-100 text-lg">
+                    You can just ask an AI (like ChatGPT, Gemini, or Claude) to do all the formatting for you!
+                </p>
+                <div class="bg-emerald-800/50 p-4 rounded-lg mb-6 border border-emerald-400">
+                    <ol class="list-decimal list-inside space-y-2 text-sm text-emerald-100 font-bold">
+                        <li>Click "Copy Prompt" below.</li>
+                        <li>Paste it into your favourite AI.</li>
+                        <li>Change the Level and Topic to whatever you want.</li>
+                        <li>Press enter and let the AI write the code!</li>
+                    </ol>
+                </div>
+
+                <div class="relative">
+                    <textarea id="ai-prompt" class="w-full h-80 p-4 rounded-xl bg-slate-900 text-emerald-300 font-mono text-xs md:text-sm border-2 border-emerald-400 focus:outline-none focus:border-white resize-none" readonly>
+Role: You are an expert English teacher creating a gap-fill exercise for Spanish students.
+
+Task: Create exactly 6 separate practice sentences. 
+Target Level: [INSERT LEVEL HERE, e.g., B2]
+Topic / Target Language: [INSERT TOPIC OR VOCAB HERE]
+
+Rules:
+1. Each sentence must have ONE missing word.
+2. Replace the missing word with [1], [2], [3], [4], [5], [6] matching the sentence number.
+3. If testing Vocabulary, put the 6 answers in a shuffled list in the "word_bank" array. If testing Grammar, leave "word_bank" empty [] and put the base verb in brackets in the text (e.g., "I [1] (be) happy.").
+4. You must return ONLY a raw JSON object. 
+5. DO NOT wrap the output in markdown code blocks (do not use ```json). Just the raw text.
+
+Format Requirement:
+{
+  "title": "A short, engaging title",
+  "level": "B2",
+  "type": "gapfill_sentences",
+  "word_bank": ["word1", "word2", "word3", "word4", "word5", "word6"],
+  "items": [
+    { "number": 1, "text": "First sentence with [1] missing.", "answer": "word1" },
+    { "number": 2, "text": "Second sentence with [2] missing.", "answer": "word2" }
+  ]
+}
+</textarea>
+                    
+                    <button onclick="copyToClipboard()" id="copy-btn" class="absolute top-4 right-4 bg-white text-emerald-700 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-yellow-400 hover:text-black transition-all flex items-center gap-2">
+                        <span>📋</span> <span id="btn-text">Copy Prompt</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="border-t-2 border-gray-100 pt-8">
+                <h2 class="text-2xl font-bold mb-3 text-gray-800 text-center">Step 2: How to Save it (The Tricky Part!) 🚨</h2>
+                <p class="text-gray-600 mb-6 text-lg text-center">
+                    Once the AI gives you the code, you need to save it as a file on your computer. 
+                </p>
+                
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border-2 border-gray-200">
+                    <ol class="list-decimal list-inside space-y-4 text-gray-700 font-medium text-lg mb-8">
+                        <li>Open a simple text editor (<strong>Notepad</strong> on Windows or <strong>TextEdit</strong> on Mac).
+                            <div class="text-sm bg-blue-50 text-blue-800 p-2 mt-2 rounded inline-block">🍎 <strong>Mac Users:</strong> Before you paste, you MUST click <em>Format > Make Plain Text</em> at the top of your screen, or this won't work!</div>
+                        </li>
+                        <li>Paste the code the AI gave you.</li>
+                        <li>Click <strong>File -> Save As...</strong></li>
+                    </ol>
+
+                    <div class="bg-red-50 border-l-8 border-red-500 p-6 rounded-r-xl mb-8">
+                        <h3 class="text-xl font-black text-red-700 uppercase mb-2">⚠️ The Dreaded ".txt" Trap ⚠️</h3>
+                        <p class="text-gray-800 mb-4">
+                            Computers try to be "helpful" by secretly adding <strong>.txt</strong> to the end of your file name. If your file is saved as <em>my_quiz.json.txt</em>, our website will reject it!
+                        </p>
+
+                        <div class="bg-white p-4 rounded border border-red-200 mt-4">
+                            <p class="font-bold text-gray-900 mb-2">How to beat the trap:</p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 text-sm">
+                                <li><strong>Windows:</strong> At the bottom of the save window, change "Save as type" from <em>Text Documents (*.txt)</em> to <strong class="text-black bg-yellow-200 px-1">All Files (*.*)</strong>.</li>
+                                <li><strong>Mac:</strong> Uncheck the little box that says <em>"If no extension is provided, use .txt"</em>.</li>
+                                <li>Name your file and type <strong>.json</strong> at the very end (Example: <span class="text-indigo-600 font-mono font-bold">animals.json</span>).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <ol start="4" class="list-decimal list-inside space-y-4 text-gray-700 font-medium text-lg">
+                        <li>Go back to the Gapfill app and click the <strong>Load File</strong> button to upload your new file!</li>
+                    </ol>
+                </div>
+                
+                <p class="mt-8 text-indigo-600 font-black text-xl text-center uppercase tracking-wide">
+                    Now you're ready for Gapfill Fun! 🚀
+                </p>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const promptText = document.getElementById('ai-prompt');
+            promptText.select();
+            promptText.setSelectionRange(0, 99999); 
+
+            navigator.clipboard.writeText(promptText.value).then(() => {
+                const btnText = document.getElementById('btn-text');
+                const btn = document.getElementById('copy-btn');
+                
+                btnText.innerText = "Copied! ✅";
+                btn.classList.add('bg-yellow-400', 'text-black');
+                btn.classList.remove('bg-white', 'text-emerald-700');
+
+                setTimeout(() => {
+                    btnText.innerText = "Copy Prompt";
+                    btn.classList.remove('bg-yellow-400', 'text-black');
+                    btn.classList.add('bg-white', 'text-emerald-700');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

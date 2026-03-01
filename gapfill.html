@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Gap Fill Generator</title>
+    
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style type="text/tailwindcss">
+        /* Soft, low-glare background and dark grey text */
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #334155; }
+        .loader { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ffffff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Unified, calm button gradients */
+        .level-btn { transition: all 0.3s; transform: scale(1); cursor: pointer; border: 4px solid transparent; opacity: 0.7; filter: grayscale(0.2); }
+        .level-btn.active { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); border-color: #64748B; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); z-index: 10; }
+        
+        /* Muted Pastels */
+        .bg-kids { background: linear-gradient(135deg, #FDE68A, #FCD34D); color: #78350F; }
+        .bg-a1   { background: linear-gradient(135deg, #BAE6FD, #7DD3FC); color: #0C4A6E; }
+        .bg-a2   { background: linear-gradient(135deg, #93C5FD, #60A5FA); color: #1E3A8A; }
+        .bg-b1   { background: linear-gradient(135deg, #C4B5FD, #A78BFA); color: #4C1D95; }
+        .bg-b2   { background: linear-gradient(135deg, #A78BFA, #8B5CF6); color: #4C1D95; }
+        .bg-c1   { background: linear-gradient(135deg, #FCA5A5, #F87171); color: #7F1D1D; }
+        .bg-c2   { background: linear-gradient(135deg, #6EE7B7, #34D399); color: #064E3B; }
+
+        /* Softer Gap Boxes */
+        .sentence-row { font-size: 1.35rem; line-height: 2; color: #334155; padding: 1rem 0; border-bottom: 1px dashed #CBD5E1; }
+        .gap-box { @apply inline-flex items-center justify-center border-b-2 border-slate-300 font-bold text-slate-400 px-2 mx-1 transition-all duration-200 select-none; min-width: 3rem; cursor: pointer; vertical-align: baseline; background-color: #F1F5F9; border-radius: 4px 4px 0 0; }
+        .gap-box:hover { background-color: #FEF3C7; color: #D97706; border-color: #FBBF24; }
+        .gap-box.revealed { border-color: #4ADE80; color: #166534; background-color: #DCFCE7; }
+
+        /* --- PRINTER MAGIC --- */
+        @media print {
+            body, #app-container, #view-activity { background-color: white !important; box-shadow: none !important; border: none !important; margin: 0; padding: 0; }
+            .print-hide { display: none !important; }
+            .sentence-row { border-bottom: none; margin-bottom: 1.5rem; }
+            .gap-box { background: transparent !important; border: none !important; border-bottom: 2px solid black !important; color: black !important; min-width: 80px; }
+            #text-title { margin-top: 0; }
+            #word-bank-container div { border: 2px solid black !important; background: transparent !important; box-shadow: none !important; }
+            .wb-word { border: 1px solid black !important; background: transparent !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[700px] flex flex-col relative">
+        
+        <div class="bg-white border-b border-slate-100 px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4 print-hide">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <a href="index.html" class="btn-back text-sm">
+                    ← Back to Tools
+                </a>
+                <h1 class="text-3xl font-black text-slate-800">Gap<span class="text-indigo-500">Fill</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="json-help.html" target="_blank" class="text-sm font-bold text-indigo-500 hover:text-indigo-700 underline decoration-2 underline-offset-4 transition">Need Help?</a>
+                <input type="file" id="file-upload" accept=".json" class="hidden" onchange="app.uploadJSON(event)">
+                <button onclick="document.getElementById('file-upload').click()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition shadow-sm flex items-center gap-2">
+                    📂 Load File
+                </button>
+            </div>
+        </div>
+
+        <div id="view-menu" class="flex-1 flex flex-col p-8 md:p-12 print-hide">
+            
+            <h2 class="text-2xl font-bold text-slate-600 mb-6 text-center">1. Select Level</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 w-full max-w-4xl mx-auto">
+                <button onclick="app.setLevel('Kids')" id="btn-Kids" class="level-btn bg-kids p-6 rounded-2xl flex flex-col items-center justify-center col-span-2 md:col-span-1"><span class="text-3xl font-black uppercase">Kids</span></button>
+                <button onclick="app.setLevel('A1')" id="btn-A1" class="level-btn bg-a1 p-6 rounded-2xl flex flex-col items-center justify-center"><span class="text-3xl font-black">A1</span></button>
+                <button onclick="app.setLevel('A2')" id="btn-A2" class="level-btn bg-a2 p-6 rounded-2xl flex flex-col items-center justify-center"><span class="text-3xl font-black">A2</span></button>
+                <button onclick="app.setLevel('B1')" id="btn-B1" class="level-btn bg-b1 p-6 rounded-2xl flex flex-col items-center justify-center"><span class="text-3xl font-black">B1</span></button>
+                <button onclick="app.setLevel('B2')" id="btn-B2" class="level-btn bg-b2 p-6 rounded-2xl flex flex-col items-center justify-center"><span class="text-3xl font-black">B2</span></button>
+                <button onclick="app.setLevel('C1')" id="btn-C1" class="level-btn bg-c1 p-6 rounded-2xl flex flex-col items-center justify-center"><span class="text-3xl font-black">C1</span></button>
+                <button onclick="app.setLevel('C2')" id="btn-C2" class="level-btn bg-c2 p-6 rounded-2xl flex flex-col items-center justify-center"><span class="text-3xl font-black">C2</span></button>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-md max-w-3xl mx-auto w-full relative overflow-hidden">
+                <h3 class="text-2xl font-black mb-6 text-slate-700 relative z-10">✨ AI Generator</h3>
+                <div class="flex flex-col gap-4 relative z-10">
+                    
+                    <div class="flex gap-4">
+                        <select id="ai-category" class="p-4 rounded-xl text-slate-700 bg-slate-50 border border-slate-200 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-200 cursor-pointer w-1/3 transition">
+                            <option value="grammar">Grammar</option>
+                            <option value="vocabulary">Vocabulary</option>
+                        </select>
+                        <input type="text" id="ai-topic" placeholder="Topic (e.g., Holidays, Technology)" class="w-2/3 p-4 rounded-xl text-slate-700 bg-slate-50 border border-slate-200 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-200 transition">
+                    </div>
+                    
+                    <textarea id="ai-target" rows="2" placeholder="Target Language: Enter the grammar point or dump vocabulary words here..." class="w-full p-4 rounded-xl text-slate-700 bg-slate-50 border border-slate-200 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-200 resize-none transition"></textarea>
+                    
+                    <button onclick="app.generateExercise()" id="btn-generate" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50">
+                        <span id="gen-text">Generate 6 Sentences</span>
+                        <div id="gen-loader" class="hidden loader"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-activity" class="hidden flex-1 flex flex-col">
+            <div class="p-8 pb-0 flex justify-between items-center print-hide">
+                <button onclick="app.showMenu()" class="text-slate-500 hover:text-indigo-600 font-bold transition">← Back to Menu</button>
+                <div class="flex gap-4">
+                    <button onclick="window.print()" class="px-4 py-2 bg-blue-100 text-blue-800 hover:bg-blue-200 font-bold rounded-xl transition flex items-center gap-2">
+                        🖨️ Print PDF
+                    </button>
+                    <button onclick="app.downloadJSON()" class="px-4 py-2 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-bold rounded-xl transition flex items-center gap-2">
+                        💾 Save Gapfill
+                    </button>
+                </div>
+            </div>
+            
+            <h2 id="text-title" class="text-3xl font-black text-slate-800 mt-6 mb-6 text-center uppercase tracking-wide">...</h2>
+            
+            <div class="flex-1 px-8 md:px-16 overflow-y-auto mb-8">
+                <div id="word-bank-container" class="hidden"></div>
+
+                <div id="sentences-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const app = {
+            state: {
+                level: null,
+                currentData: null 
+            },
+
+            setLevel: function(lvl) {
+                this.state.level = lvl;
+                ['Kids', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'].forEach(l => {
+                    const btn = document.getElementById(`btn-${l}`);
+                    if(l === lvl) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
+            },
+
+            showMenu: function() {
+                document.getElementById('view-activity').classList.add('hidden');
+                document.getElementById('view-menu').classList.remove('hidden');
+                document.getElementById('view-menu').classList.add('flex');
+            },
+
+            showActivity: function() {
+                document.getElementById('view-menu').classList.add('hidden');
+                document.getElementById('view-menu').classList.remove('flex');
+                document.getElementById('view-activity').classList.remove('hidden');
+                document.getElementById('view-activity').classList.add('flex');
+            },
+
+            generateExercise: async function() {
+                const category = document.getElementById('ai-category').value;
+                const topic = document.getElementById('ai-topic').value;
+                const target = document.getElementById('ai-target').value;
+
+                if(!this.state.level) return alert("Please select a level!");
+                if(!topic || !target) return alert("Please fill in the topic and target language!");
+
+                const btnText = document.getElementById('gen-text');
+                const loader = document.getElementById('gen-loader');
+                const btn = document.getElementById('btn-generate');
+
+                btnText.innerText = "Creating...";
+                loader.classList.remove('hidden');
+                btn.disabled = true;
+
+                try {
+                    const response = await fetch('/.netlify/functions/generate-gapfill', {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            level: this.state.level,
+                            category: category,
+                            topic: topic,
+                            target: target
+                        })
+                    });
+                    
+                    const newData = await response.json();
+                    if(newData.error) throw new Error(newData.error);
+
+                    this.state.currentData = newData;
+                    this.renderExercise();
+
+                } catch (error) {
+                    alert("AI Error: " + error.message);
+                } finally {
+                    btnText.innerText = "Generate 6 Sentences";
+                    loader.classList.add('hidden');
+                    btn.disabled = false;
+                }
+            },
+
+            downloadJSON: function() {
+                if(!this.state.currentData) return;
+                const dataString = JSON.stringify(this.state.currentData, null, 2);
+                const blob = new Blob([dataString], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `gapfill_${this.state.level || 'custom'}_${Date.now()}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            },
+
+            uploadJSON: function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        this.state.currentData = JSON.parse(e.target.result);
+                        this.renderExercise();
+                        event.target.value = ''; 
+                    } catch (error) {
+                        alert("Error reading file. Make sure it's a valid JSON.");
+                    }
+                };
+                reader.readAsText(file);
+            },
+
+            renderExercise: function() {
+                const data = this.state.currentData;
+                document.getElementById('text-title').innerText = data.title;
+                
+                // 1. Handle the Word Bank
+                const wbContainer = document.getElementById('word-bank-container');
+                if (data.word_bank && data.word_bank.length > 0) {
+                    const wordsHtml = data.word_bank.map(word => 
+                        `<span class="wb-word px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-lg border border-slate-200">${word}</span>`
+                    ).join('');
+                    
+                    wbContainer.innerHTML = `<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-wrap gap-3 justify-center">${wordsHtml}</div>`;
+                    wbContainer.classList.remove('hidden');
+                } else {
+                    wbContainer.innerHTML = '';
+                    wbContainer.classList.add('hidden');
+                }
+
+                // 2. Handle the Sentences
+                const container = document.getElementById('sentences-container');
+                container.innerHTML = ''; 
+
+                if (data.type === 'gapfill_sentences' && data.items) {
+                    data.items.forEach(item => {
+                        let sentenceHtml = item.text;
+                        const gapHtml = `<span class="gap-box" onclick="app.toggleGap(this)" data-answer="${item.answer}" data-index="${item.number}">[${item.number}]</span>`;
+                        
+                        sentenceHtml = sentenceHtml.replace(`[${item.number}]`, gapHtml);
+
+                        const row = document.createElement('div');
+                        row.className = 'sentence-row flex gap-4';
+                        row.innerHTML = `<span class="font-bold text-slate-400 select-none">${item.number}.</span> <p class="flex-1">${sentenceHtml}</p>`;
+                        
+                        container.appendChild(row);
+                    });
+                } else {
+                    container.innerHTML = `<p class="text-red-500 font-bold p-8 text-center border-2 border-red-200 bg-red-50 rounded-xl">Error: This file is not formatted as a sentence gap-fill.</p>`;
+                }
+
+                this.showActivity();
+            },
+
+            toggleGap: function(el) {
+                const ans = el.getAttribute('data-answer');
+                const index = el.getAttribute('data-index');
+                
+                if (el.innerText === ans) {
+                    el.innerText = `[${index}]`;
+                    el.classList.remove('revealed');
+                } else {
+                    el.innerText = ans;
+                    el.classList.add('revealed');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

@@ -43,7 +43,8 @@
         .correction-label { @apply ml-2 text-xs font-bold text-white bg-green-600 px-2 py-1 rounded shadow-sm; }
 
         /* Drills & Cards */
-        .drill-card { @apply p-6 mb-4 bg-gray-50 rounded-xl border-l-4 border-indigo-500 text-lg shadow-sm animate-fade-in; }
+        .drill-card { @apply p-6 mb-4 bg-gray-50 rounded-xl border-l-4 border-indigo-500 text-lg shadow-sm animate-fade-in relative z-10; }
+        .drill-card:hover { z-index: 50; }
         
         /* Study Mode Styles */
         .flashcard { @apply bg-white border-2 border-gray-100 rounded-2xl p-8 shadow-lg max-w-2xl mx-auto text-center animate-fade-in; }
@@ -60,9 +61,9 @@
 
     <div id="app-container">
         <header class="app-header bg-indigo-900 p-6 text-white shadow-lg flex justify-between items-center">
-        <a href="index.html" class="flex items-center gap-2 text-indigo-200 hover:text-white font-bold text-sm transition-colors">
-            <span>←</span> Back to Tools
-        </a>
+        <button onclick="app.handleBack()" class="flex items-center gap-2 text-indigo-200 hover:text-white font-bold text-sm transition-colors">
+            <span>←</span> <span id="back-btn-text">Back to Tools</span>
+        </button>
 
         <h1 class="text-2xl font-black italic tracking-tighter hidden md:block">
             PHRASAL VERB <span class="text-indigo-400">EXPLORER</span>
@@ -158,6 +159,7 @@
         const { createClient } = supabase;
         const _db = createClient("https://ehhkjhyanmovymjqlxwo.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk");
 
+
         const app = {
             state: {
                 level: null,
@@ -200,6 +202,21 @@
                 document.getElementById('tog-sentences').className = type === 'sentences' ? 'sub-nav-btn active' : 'sub-nav-btn inactive';
                 
                 this.renderContent();
+            },
+
+            handleBack: function() {
+                // If we are looking at an activity, go back to the list
+                if (!document.getElementById('screen-activity').classList.contains('hidden')) {
+                    this.navigate('screen-list');
+                }
+                // If we are looking at the list, go back to the main menu
+                else if (!document.getElementById('screen-list').classList.contains('hidden')) {
+                    this.navigate('screen-menu');
+                }
+                // If we are on the main menu, leave the app entirely
+                else {
+                    window.location.href = 'index.html';
+                }
             },
 
             syncMenu: function() {
@@ -434,6 +451,14 @@
                 ['screen-menu', 'screen-list', 'screen-activity'].forEach(s => document.getElementById(s).classList.add('hidden'));
                 document.getElementById(id).classList.remove('hidden');
                 window.scrollTo(0,0);
+
+                // Make the button say "Back to Tools" only on the main menu
+                const backText = document.getElementById('back-btn-text');
+                if (id === 'screen-menu') {
+                    backText.innerText = 'Back to Tools';
+                } else {
+                    backText.innerText = 'Back';
+                }
             }
         };
     </script>
