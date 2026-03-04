@@ -15,9 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap" rel="stylesheet">
     
     <style>
-        /* --- Tool-Specific Styles --- */
         body {
-            background: linear-gradient(135deg, #00BCD4, #4DD0E1); /* Cyan Blue Theme */
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1); 
             min-height: 100vh;
             padding: 20px;
             display: flex;
@@ -38,7 +37,6 @@
             align-items: center;
         }
         
-        /* Header Row for Back Button */
         .header-row {
             width: 100%;
             display: flex;
@@ -46,7 +44,6 @@
             margin-bottom: 20px;
         }
 
-        /* If you don't have global.css loaded yet, this ensures the button looks okay */
         .btn-back {
             display: inline-flex;
             align-items: center;
@@ -57,16 +54,13 @@
         }
         .btn-back:hover { color: #2563eb; }
 
-        /* Game Board Grid */
         #game-board {
             width: 100%;
             display: grid;
             gap: 12px;
-            /* Auto-fill with a min-width of 110px to fit more cards */
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         }
 
-        /* Card Styles */
         .card {
             aspect-ratio: 1 / 1; 
             cursor: pointer;
@@ -74,8 +68,8 @@
             transform-style: preserve-3d;
             transition: opacity 0.3s, transform 0.2s;
             border-radius: 12px;
-            box-shadow: 0 6px 0 rgba(0,0,0,0.15); /* 3D Clicky Look */
-            font-size: 0.95rem; /* Slightly smaller font for dense boards */
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15); 
+            font-size: 0.95rem; 
             font-weight: 700;
             user-select: none;
             touch-action: manipulation;
@@ -89,11 +83,9 @@
             box-shadow: 0 2px 0 rgba(0,0,0,0.15);
         }
         
-        /* Card Colors */
         .card-type-a { background-color: #E0F7FA; border-color: #00BCD4; color: #006064; }
         .card-type-b { background-color: #FFF3E0; border-color: #FF9800; color: #E65100; }
 
-        /* Selected State */
         .card-selected {
             transform: scale(1.05) !important;
             box-shadow: 0 0 0 4px #FFD600, 0 10px 20px rgba(0,0,0,0.2) !important;
@@ -101,7 +93,6 @@
             border-color: #FFD600 !important;
         }
 
-        /* Matched State */
         .card-match {
             opacity: 0.4;
             transform: scale(0.95);
@@ -125,7 +116,6 @@
             line-height: 1.2;
         }
         
-        /* Scoreboard */
         #timer-display { @apply text-4xl font-extrabold text-blue-800; }
         .timer-label-box { @apply p-3 bg-yellow-100 rounded-xl shadow-md flex-1; }
     </style>
@@ -199,17 +189,12 @@
     </div>
 
     <script>
-        // ============================================================
-        // 👇 PASTE YOUR KEYS HERE (Same as phrasal_verbs.html)
-        // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
-        // ============================================================
-        
+
         const _db = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-        // --- Global State ---
         let CARDS = []; 
         let cardContentPairs = []; 
         let cardsFlipped = []; 
@@ -217,11 +202,9 @@
         let isProcessing = false; 
         let isGameStarted = false; 
 
-        // --- Stopwatch State ---
         let timeElapsed = 0;
         let stopwatchInterval = null;
         
-        // --- Tone.js Setup ---
         let toneLoaded = false;
         try { if (typeof Tone !== 'undefined') toneLoaded = true; } catch(e) { console.warn("Tone.js failed"); }
 
@@ -247,7 +230,6 @@
             } catch (e) {}
         };
 
-        // --- UI Elements ---
         const ui = {
             startScreen: document.getElementById('start-screen'),
             gameInfo: document.getElementById('game-info'),
@@ -265,7 +247,6 @@
             backBtn: document.getElementById('smart-back-btn')
         };
         
-        // --- Core Functions ---
         function secondsToDisplay(seconds) {
             const m = Math.floor(seconds / 60);
             const s = seconds % 60;
@@ -287,7 +268,6 @@
             }
         }
 
-        // --- File Loading ---
         window.handleFileUpload = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -309,11 +289,12 @@
             reader.readAsText(file);
         };
 
-        // --- Supabase Loader ---
         async function checkUrlMode() {
+            // These lines read the URL to see who sent the student here
             const params = new URLSearchParams(window.location.search);
-            const unitId = params.get('unit');
-            
+            const unitId = params.get('unit'); 
+            const hospId = params.get('hosp_id'); 
+
             if (unitId && _db) {
                 ui.uploadSection.classList.add('hidden');
                 ui.supabaseStatus.classList.remove('hidden');
@@ -326,7 +307,6 @@
                     const { data: verbsData } = await _db.from('phrasal_verbs').select('verb, definition').in('id', unitData.verb_ids);
                     if (!verbsData) throw new Error("Verbs not found");
 
-                    // Map to pairs
                     cardContentPairs = verbsData.map(v => [v.verb, v.definition]);
 
                     ui.supabaseStatus.classList.add('hidden');
@@ -338,32 +318,50 @@
                     ui.supabaseStatus.innerHTML = `<p class="text-red-600">Error loading data.</p>`;
                     ui.uploadSection.classList.remove('hidden');
                 }
+            } 
+            else if (hospId && _db) {
+                ui.uploadSection.classList.add('hidden');
+                ui.supabaseStatus.classList.remove('hidden');
+                ui.sourceTitle.innerText = "Loading Hospitality Topic...";
+
+                try {
+                    const { data: vocabData } = await _db.from('hospitality_vocab').select('set_name, matching_pairs').eq('id', hospId).single();
+                    if (!vocabData) throw new Error("Vocabulary set not found");
+
+                    // This takes your JSON and turns it into the arrays the game needs to work
+                    cardContentPairs = Object.entries(vocabData.matching_pairs);
+
+                    ui.supabaseStatus.classList.add('hidden');
+                    ui.sourceTitle.innerHTML = `<span class="text-indigo-600">${vocabData.set_name}</span>`;
+                    ui.fileStatus.innerHTML = `Loaded ${cardContentPairs.length} pairs from database.`;
+                    ui.startRaceBtn.disabled = false;
+                } catch (e) {
+                    console.error(e);
+                    ui.supabaseStatus.innerHTML = `<p class="text-red-600">Error loading data.</p>`;
+                    ui.uploadSection.classList.remove('hidden');
+                }
             }
         }
 
-        // --- Game Lifecycle ---
         window.startGame = function() {
             if (cardContentPairs.length === 0) return;
             stopStopwatch();
             timeElapsed = 0;
             ui.timerDisplay.textContent = "00:00";
             
-            // UNLIMITED: Use all pairs available, just shuffle them
-// Cap at 30 pairs (60 cards)
             const MAX_PAIRS = 15;
             let pairsToUse = [...cardContentPairs];
             if (pairsToUse.length > MAX_PAIRS) {
-              pairsToUse.sort(() => Math.random() - 0.5); // Shuffle first
-                 pairsToUse = pairsToUse.slice(0, MAX_PAIRS); // Then cut
+              pairsToUse.sort(() => Math.random() - 0.5); 
+                 pairsToUse = pairsToUse.slice(0, MAX_PAIRS); 
             } else {
-              pairsToUse.sort(() => Math.random() - 0.5); // Just shuffle
+              pairsToUse.sort(() => Math.random() - 0.5); 
             }
 
             pairsFound = 0;
             cardsFlipped = [];
             isGameStarted = false;
             
-            // Build Deck
             const cardData = [];
             let cardId = 0;
             pairsToUse.forEach(pair => {
@@ -372,14 +370,12 @@
             });
             CARDS = cardData.sort(() => Math.random() - 0.5);
 
-            // Update UI
             ui.startScreen.classList.add('hidden');
             ui.gameInfo.classList.remove('hidden');
             ui.gameBoard.classList.remove('hidden');
             ui.totalPairs.textContent = pairsToUse.length;
             ui.score.textContent = "0";
             
-            // Change Back Button to Quit
             ui.backBtn.innerHTML = "Back to Menu";
             
             renderBoard();
@@ -393,15 +389,13 @@
             ui.winModal.classList.add('hidden');
             ui.startRaceBtn.disabled = cardContentPairs.length === 0;
             
-            // Change Back Button to Back
             ui.backBtn.innerHTML = "← Back to Tools";
             
             CARDS = [];
             ui.gameBoard.innerHTML = '';
             
-            // Keep Supabase UI clean if reloading
             const params = new URLSearchParams(window.location.search);
-            if(params.get('unit')) ui.uploadSection.classList.add('hidden');
+            if(params.get('unit') || params.get('hosp_id')) ui.uploadSection.classList.add('hidden');
         };
 
         function renderBoard() {
@@ -410,7 +404,6 @@
                 const el = document.createElement('div');
                 const typeClass = card.type === 'A' ? 'card-type-a' : 'card-type-b';
                 
-                // Dynamic font size for long text
                 let sizeClass = "";
                 if (card.text.length > 50) sizeClass = "text-xs";
                 else if (card.text.length > 25) sizeClass = "text-sm";
@@ -422,7 +415,6 @@
             });
         }
 
-        // --- Game Logic ---
         function isValidPair(t1, t2) {
             return cardContentPairs.some(p => (p[0]===t1 && p[1]===t2) || (p[0]===t2 && p[1]===t1));
         }
@@ -487,7 +479,6 @@
             }
         }
 
-        // --- Smart Back Button Logic ---
         window.handleSmartBack = function() {
             const isGameRunning = ui.startScreen.classList.contains('hidden');
             if (isGameRunning) {
@@ -498,7 +489,6 @@
             }
         };
 
-        // Init
         document.addEventListener('DOMContentLoaded', () => {
              checkUrlMode();
         });

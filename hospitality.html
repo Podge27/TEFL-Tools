@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospitality English Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="global.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        .gap-input { 
+            border-bottom: 2px solid #67e8f9; padding: 0 0.5rem; font-weight: 700; 
+            color: #155e75; outline: none; text-align: center; transition: all 0.2s; 
+            background: transparent; min-width: 130px; text-transform: uppercase; 
+        }
+        .input-correct { color: #15803d; background-color: #f0fdf4; border-color: #22c55e; }
+        .input-error { color: #dc2626; background-color: #fef2f2; border-color: #f87171; }
+        .mcq-correct { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
+        .mcq-wrong { border-color: #f87171; background-color: #fef2f2; color: #dc2626; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-5xl mx-auto my-8 bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[850px] flex flex-col">
+    
+    <header class="bg-white p-6 flex justify-between items-center border-b-2 border-slate-100 shadow-sm">
+        <div class="flex items-center gap-4">
+            <img src="assets/logo2.svg" alt="Primary Logo" class="h-10 w-auto"> 
+            <img src="assets/logo1.png" alt="Secondary Logo" class="h-10 w-auto border-l-2 border-slate-200 pl-4 object-contain">
+        </div>
+        <button onclick="app.goBack()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-lg font-bold transition-colors">← Back</button>
+    </header>
+
+    <main id="view-menu" class="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <button onclick="app.loadTasks('multiple_choice')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">🎯 Multiple Choice</span>
+        </button>
+        <button onclick="app.loadTasks('gap_fill')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">✍️ Role Play Gaps</span>
+        </button>
+        <button onclick="app.loadVocab('study')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">📖 Study Mode</span>
+        </button>
+        <button onclick="app.loadVocab('match')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">🧩 Matching Game</span>
+        </button>
+        <button onclick="app.loadVocab('typing')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group lg:col-span-2">
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">⌨️ Typing Test</span>
+        </button>
+        <div class="col-span-full mt-12 text-center text-slate-400 font-bold tracking-widest text-sm">
+            Course Designed by Pádraig Meehan & Lewis Ross &copy 2026
+        </div>
+    </main>
+
+    <section id="view-list" class="hidden p-8 flex-1 overflow-y-auto">
+        <h2 id="list-title" class="text-3xl font-black mb-8 text-slate-800">Select Topic</h2>
+        <div id="list-items" class="grid gap-4"></div>
+    </section>
+
+    <section id="view-activity" class="hidden p-8 flex-1 flex flex-col">
+        <div id="activity-content" class="max-w-4xl mx-auto w-full"></div>
+        
+        <footer id="activity-footer" class="mt-auto pt-8 border-t flex justify-center gap-4 hidden">
+            <button id="btn-prev" onclick="app.prevItem()" class="hidden bg-slate-500 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-opacity">← Previous</button>
+            <button id="btn-check" class="hidden bg-green-600 text-white px-12 py-4 rounded-xl font-bold shadow-lg hover:bg-green-700">Check Answers</button>
+            <button id="btn-next" onclick="app.nextItem()" class="hidden bg-cyan-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-opacity">Next →</button>
+        </footer>
+    </section>
+</div>
+
+<script>
+        const { createClient } = supabase;
+        const _db = createClient("https://ehhkjhyanmovymjqlxwo.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk");
+
+
+    const app = {
+        state: { view: 'menu', pointer: 0, currentList: [], type: '' },
+        
+        // Typing Session Data
+        typingSession: { pairs: [], promptIdx: 0, answerIdx: 1, current: 0, score: 0 },
+
+        goBack: function() {
+            if (this.state.view === 'activity') this.nav('list');
+            else if (this.state.view === 'list') this.nav('menu');
+            else window.location.href = 'index.html';
+        },
+
+        nav: function(v) {
+            this.state.view = v;
+            document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${v}`).classList.remove('hidden');
+            
+            ['btn-check', 'btn-prev', 'btn-next', 'activity-footer'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        },
+
+        loadTasks: async function(type) {
+            const { data } = await _db.from('hospitality_tasks').select('*').eq('task_type', type).order('sort_order', { ascending: true });
+            this.state.currentList = data;
+            this.state.type = 'task';
+            this.renderList(data, (idx) => this.startActivity(idx));
+        },
+
+        loadVocab: async function(mode) {
+            const { data } = await _db.from('hospitality_vocab').select('*');
+            this.state.currentList = data;
+            this.state.type = mode;
+            this.renderList(data, (idx) => this.startActivity(idx));
+        },
+
+        renderList: function(items, callback) {
+            const container = document.getElementById('list-items');
+            container.innerHTML = '';
+            items.forEach((item, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-6 bg-white border-2 border-slate-100 rounded-xl hover:border-cyan-400 flex justify-between items-center group transition-all";
+                btn.innerHTML = `<span class="font-bold text-lg text-slate-700">${item.title || item.set_name}</span><span class="text-cyan-600 font-bold">→</span>`;
+                btn.onclick = () => callback(idx);
+                container.appendChild(btn);
+            });
+            this.nav('list');
+        },
+
+        startActivity: function(idx) {
+            this.state.pointer = idx;
+            const item = this.state.currentList[idx];
+            this.nav('activity');
+            
+            const canvas = document.getElementById('activity-content');
+            canvas.innerHTML = '';
+
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const footer = document.getElementById('activity-footer');
+
+            if (this.state.type === 'task') {
+                footer.classList.remove('hidden');
+                btnPrev.classList.remove('hidden');
+                btnNext.classList.remove('hidden');
+                btnPrev.disabled = (this.state.pointer === 0);
+                btnNext.disabled = (this.state.pointer === this.state.currentList.length - 1);
+
+                if (item.task_type === 'gap_fill') {
+                    document.getElementById('btn-check').classList.remove('hidden');
+                    document.getElementById('btn-check').onclick = () => this.evaluateGaps();
+                    let text = item.content.replace(/\\n|\n/g, '<br><br>').replace(/\[\[(.*?):(.*?)\]\]/g, (m, id, ans) => `<span class="gap-wrap inline-block"><input type="text" data-ans="${ans}" class="gap-input"></span>`);
+                    canvas.innerHTML = `<div class="text-2xl leading-relaxed bg-slate-50 p-10 rounded-3xl border border-slate-200 text-slate-800">${text}</div>`;
+                } else {
+                    canvas.innerHTML = `<h3 class="text-2xl font-bold mb-8 text-slate-700">${item.content}</h3><div id="mcq-box" class="space-y-3"></div>`;
+                    item.task_data.forEach(opt => {
+                        const b = document.createElement('button');
+                        b.className = "w-full text-left p-5 rounded-xl border-2 border-slate-100 bg-white shadow-sm font-semibold text-slate-700 transition-all hover:border-cyan-500";
+                        b.innerText = opt.text;
+                        b.onclick = () => {
+                            document.querySelectorAll('#mcq-box button').forEach(el => el.disabled = true);
+                            b.classList.add(opt.correct ? 'mcq-correct' : 'mcq-wrong');
+                            canvas.insertAdjacentHTML('beforeend', `<div class="mt-6 p-6 bg-cyan-50 border-l-4 border-cyan-500 rounded-r-xl italic text-slate-700">${opt.feedback}</div>`);
+                        };
+                        document.getElementById('mcq-box').appendChild(b);
+                    });
+                }
+            } else if (this.state.type === 'study') {
+                const pairs = Object.entries(item.matching_pairs);
+                canvas.innerHTML = `<div id="flash-zone"></div>`;
+                this.renderStudySet(pairs);
+            } else if (this.state.type === 'typing') {
+                const pairs = Object.entries(item.matching_pairs);
+                this.renderTypingSetup(pairs);
+            } else if (this.state.type === 'match') {
+                window.location.href = `match.html?hosp_id=${item.id}`;
+            }
+        },
+
+        evaluateGaps: function() {
+            document.querySelectorAll('.gap-input').forEach(input => {
+                const correct = input.value.trim().toLowerCase() === input.dataset.ans.toLowerCase();
+                input.classList.add(correct ? 'input-correct' : 'input-error');
+                
+                const parent = input.parentElement;
+                if(!correct && !parent.querySelector('.correction-label')) {
+                    const tip = document.createElement('span');
+                    tip.className = "correction-label ml-2 text-xs font-bold text-white bg-green-600 px-2 py-1 rounded shadow-sm inline-block";
+                    tip.innerText = input.dataset.ans;
+                    input.after(tip);
+                }
+                input.disabled = true;
+            });
+        },
+
+        renderStudySet: function(pairs) {
+            let pIdx = 0;
+            const zone = document.getElementById('flash-zone');
+            const draw = () => {
+                const [eng, esp] = pairs[pIdx];
+                zone.innerHTML = `
+                    <div class="bg-white border-2 border-slate-100 rounded-3xl p-12 shadow-xl text-center max-w-xl mx-auto">
+                        <div class="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">English</div>
+                        <h2 class="text-5xl font-black text-slate-900 mb-8">${eng}</h2>
+                        <div class="h-1 w-20 bg-cyan-500 mx-auto mb-8 rounded-full"></div>
+                        <div class="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">Spanish</div>
+                        <h2 class="text-4xl font-bold text-cyan-700">${esp}</h2>
+                        <div class="flex justify-between mt-10">
+                            <button id="p-inner" class="text-slate-400 font-bold hover:text-slate-600 transition-colors">← Back</button>
+                            <span class="text-slate-300 font-bold">${pIdx+1}/${pairs.length}</span>
+                            <button id="n-inner" class="text-cyan-600 font-bold hover:text-cyan-800 transition-colors">Next →</button>
+                        </div>
+                    </div>`;
+                document.getElementById('p-inner').onclick = () => { if(pIdx > 0) { pIdx--; draw(); }};
+                document.getElementById('n-inner').onclick = () => { if(pIdx < pairs.length - 1) { pIdx++; draw(); }};
+            };
+            draw();
+        },
+
+        // --- NEW TYPING TEST LOGIC ---
+
+        renderTypingSetup: function(pairs) {
+            const canvas = document.getElementById('activity-content');
+            canvas.innerHTML = `
+                <div class="bg-white border-2 border-slate-100 rounded-3xl p-10 shadow-xl max-w-lg mx-auto text-center">
+                    <h3 class="text-2xl font-black text-slate-800 mb-8">Typing Test Setup</h3>
+                    
+                    <div class="mb-6 text-left">
+                        <label class="block text-slate-500 font-bold mb-2 uppercase text-xs tracking-wider">Translation Direction</label>
+                        <select id="type-dir" class="w-full p-4 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-cyan-500 bg-slate-50">
+                            <option value="es-en">Spanish ➔ English (Type English)</option>
+                            <option value="en-es">English ➔ Spanish (Type Spanish)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-8 text-left">
+                        <label class="block text-slate-500 font-bold mb-2 uppercase text-xs tracking-wider">How many words?</label>
+                        <input type="number" id="type-count" min="1" max="${pairs.length}" value="${pairs.length}" class="w-full p-4 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-cyan-500 bg-slate-50">
+                        <p class="text-xs text-slate-400 mt-2">Max available: ${pairs.length}</p>
+                    </div>
+
+                    <button onclick="app.startTypingSession()" class="w-full bg-cyan-600 text-white py-4 rounded-xl font-black text-lg shadow-lg hover:bg-cyan-700 transition-colors">
+                        Start Test
+                    </button>
+                </div>
+            `;
+            // Store pairs globally for the setup to use
+            this.typingSession.rawPairs = pairs;
+        },
+
+        startTypingSession: function() {
+            const dir = document.getElementById('type-dir').value;
+            let count = parseInt(document.getElementById('type-count').value);
+            
+            // Ensure they don't ask for more cards than exist
+            if (count > this.typingSession.rawPairs.length) count = this.typingSession.rawPairs.length;
+            if (count < 1) count = 1;
+
+            // Set indexing based on direction chosen
+            this.typingSession.promptIdx = (dir === 'en-es') ? 0 : 1; 
+            this.typingSession.answerIdx = (dir === 'en-es') ? 1 : 0;
+            
+            // Shuffle and slice the array to the requested amount
+            let shuffled = [...this.typingSession.rawPairs].sort(() => Math.random() - 0.5);
+            this.typingSession.pairs = shuffled.slice(0, count);
+            
+            this.typingSession.current = 0;
+            this.typingSession.score = 0;
+
+            this.renderTypingCard();
+        },
+
+        renderTypingCard: function() {
+            const pair = this.typingSession.pairs[this.typingSession.current];
+            const promptWord = pair[this.typingSession.promptIdx];
+            const progress = `${this.typingSession.current + 1} / ${this.typingSession.pairs.length}`;
+
+            const canvas = document.getElementById('activity-content');
+            canvas.innerHTML = `
+                <div class="bg-white border-2 border-slate-100 rounded-3xl p-10 shadow-xl max-w-xl mx-auto text-center">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-slate-400 font-bold uppercase tracking-widest text-xs">Translate</span>
+                        <span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">${progress}</span>
+                    </div>
+                    
+                    <h2 class="text-4xl font-black text-slate-900 mb-8">${promptWord}</h2>
+                    
+                    <input type="text" id="type-answer" autocomplete="off" placeholder="Type your answer here..." 
+                        class="w-full text-center text-2xl p-4 border-2 border-slate-200 rounded-xl focus:border-cyan-500 outline-none mb-6 transition-colors font-bold text-slate-700"
+                        onkeydown="if(event.key === 'Enter') app.checkTyping()">
+                    
+                    <div id="type-feedback" class="min-h-[4rem] mb-4 flex items-center justify-center rounded-xl font-bold text-lg"></div>
+                    
+                    <button id="btn-submit-type" onclick="app.checkTyping()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black text-lg shadow-md hover:bg-slate-900 transition-colors">
+                        Submit Answer
+                    </button>
+                    <button id="btn-next-type" onclick="app.nextTyping()" class="hidden w-full bg-cyan-600 text-white py-4 rounded-xl font-black text-lg shadow-md hover:bg-cyan-700 transition-colors">
+                        Next Word →
+                    </button>
+                </div>
+            `;
+            setTimeout(() => document.getElementById('type-answer').focus(), 100);
+        },
+
+        // This is the "Car Wash" function. It strips punctuation and makes everything lowercase.
+        sanitizeString: function(str) {
+            return str.toLowerCase()
+                      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?¡!]/g,"") // Removes punctuation
+                      .trim() // Removes accidental spaces at start/end
+                      .replace(/\s{2,}/g," "); // Fixes double spaces
+        },
+
+        checkTyping: function() {
+            const inputEl = document.getElementById('type-answer');
+            if (inputEl.disabled) return; // Prevent double checking
+
+            const userAnswerRaw = inputEl.value;
+            const correctAnswerRaw = this.typingSession.pairs[this.typingSession.current][this.typingSession.answerIdx];
+
+            // Put both through the "Car Wash"
+            const cleanUser = this.sanitizeString(userAnswerRaw);
+            const cleanCorrect = this.sanitizeString(correctAnswerRaw);
+
+            const feedbackEl = document.getElementById('type-feedback');
+            
+            if (cleanUser === cleanCorrect) {
+                this.typingSession.score++;
+                inputEl.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                feedbackEl.classList.add('bg-green-100', 'text-green-800');
+                feedbackEl.innerText = "Correct! 🎉";
+            } else {
+                inputEl.classList.add('border-red-400', 'bg-red-50', 'text-red-700');
+                feedbackEl.classList.add('bg-red-100', 'text-red-800');
+                feedbackEl.innerHTML = `Incorrect. The correct answer is:<br><span class="text-xl font-black mt-1">${correctAnswerRaw}</span>`;
+            }
+
+            inputEl.disabled = true;
+            document.getElementById('btn-submit-type').classList.add('hidden');
+            document.getElementById('btn-next-type').classList.remove('hidden');
+            document.getElementById('btn-next-type').focus();
+        },
+
+        nextTyping: function() {
+            this.typingSession.current++;
+            if (this.typingSession.current >= this.typingSession.pairs.length) {
+                this.renderTypingResults();
+            } else {
+                this.renderTypingCard();
+            }
+        },
+
+        renderTypingResults: function() {
+            const total = this.typingSession.pairs.length;
+            const score = this.typingSession.score;
+            const percentage = Math.round((score / total) * 100);
+            
+            let message = "Good effort!";
+            if (percentage === 100) message = "Perfect Score! 🏆";
+            else if (percentage >= 80) message = "Great job! 🌟";
+
+            const canvas = document.getElementById('activity-content');
+            canvas.innerHTML = `
+                <div class="bg-white border-2 border-slate-100 rounded-3xl p-12 shadow-xl text-center max-w-lg mx-auto">
+                    <h2 class="text-3xl font-black text-slate-800 mb-2">Test Complete</h2>
+                    <p class="text-slate-500 font-bold mb-8">${message}</p>
+                    
+                    <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-8 mb-8">
+                        <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Final Score</div>
+                        <div class="text-6xl font-black text-cyan-600">${score} / ${total}</div>
+                        <div class="text-xl font-bold text-slate-400 mt-2">${percentage}%</div>
+                    </div>
+
+                    <button onclick="app.startActivity(app.state.pointer)" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black text-lg shadow-md hover:bg-slate-900 transition-colors">
+                        Restart Setup
+                    </button>
+                </div>
+            `;
+        },
+
+        nextItem: function() { if(this.state.pointer < this.state.currentList.length - 1) this.startActivity(this.state.pointer + 1); },
+        prevItem: function() { if(this.state.pointer > 0) this.startActivity(this.state.pointer - 1); }
+    };
+</script>
+</body>
+</html>

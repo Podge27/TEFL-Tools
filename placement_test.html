@@ -123,8 +123,9 @@
             if (phase === 'GRAMMAR') {
                 if (counters.grammar >= MAX_GRAMMAR) { initReading(); return; }
                 
-                let suitable = banks.grammar.filter(q => q.level === currentLevel && !testHistory.some(h => h.id === q.id));
-                if (suitable.length === 0) suitable = banks.grammar.filter(q => !testHistory.some(h => h.id === q.id));
+                // FIXED: Now checks h.q_id to prevent duplicates
+                let suitable = banks.grammar.filter(q => q.level === currentLevel && !testHistory.some(h => h.q_id === q.id));
+                if (suitable.length === 0) suitable = banks.grammar.filter(q => !testHistory.some(h => h.q_id === q.id));
                 if (suitable.length === 0) { initReading(); return; }
 
                 renderQuestion(suitable[Math.floor(Math.random() * suitable.length)]);
@@ -225,7 +226,11 @@
             const rightAns = currentQuestion.content.correct_answer || currentQuestion.correct_answer;
             
             if(rightAns) {
-                correct = ans.trim().toLowerCase() === rightAns.trim().toLowerCase();
+                // FIXED: The Washing Machine - removes punctuation, extra spaces, and makes lowercase
+                const cleanAns = ans.replace(/[.,!?]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+                const cleanRight = rightAns.replace(/[.,!?]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+                
+                correct = cleanAns === cleanRight;
             }
 
             testHistory.push({ 
@@ -258,7 +263,6 @@
             document.getElementById('confirm-email').innerText = student.email;
             
             try {
-                // 1. Ask the AI for the deep diagnostic
                 const res = await fetch('/.netlify/functions/report', {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
@@ -274,7 +278,6 @@
                     aiReportHtml = aiData.report || aiReportHtml;
                 }
 
-                // 2. Staple the raw errors to the bottom using frontend logic
                 const wrongAnswers = testHistory.filter(item => item.correct === false);
                 
                 let wrongAnswersHtml = `
@@ -301,7 +304,6 @@
 
                 const finalReport = aiReportHtml + wrongAnswersHtml;
 
-                // 3. Save everything directly to Supabase
                 await db.from('results').insert([{
                     student_name: student.name,
                     student_email: student.email,
