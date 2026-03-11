@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movers Part 2: Conversations</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #FDFBF7; min-height: 100vh; display: flex; flex-direction: column; margin: 0; padding: 0; }
+        
+        .btn-back { display: inline-block; background: linear-gradient(135deg, #00BCD4, #4DD0E1); color: black; padding: 10px 20px; border-radius: 8px; font-weight: bold; border: 1px solid white; cursor: pointer; transition: transform 0.2s; text-decoration: none;}
+        .btn-back:hover { background-color: #555; transform: translateY(-2px); color: white; }
+
+        .bubble-left { background-color: #f8fafc; border: 2px solid #e2e8f0; align-self: flex-start; border-bottom-left-radius: 0; color: #334155; padding: 1rem 1.5rem; border-radius: 1rem; margin-bottom: 1rem; max-width: 85%; font-size: 1.25rem; font-weight: 700; }
+        .bubble-right { background-color: #eef2ff; border: 2px solid #c7d2fe; align-self: flex-end; border-bottom-right-radius: 0; color: #3730a3; padding: 1rem 1.5rem; border-radius: 1rem; margin-bottom: 1rem; max-width: 85%; font-size: 1.25rem; font-weight: 700; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="w-full max-w-5xl mx-auto mt-2 bg-white shadow-xl rounded-3xl border-4 border-slate-100 flex flex-col min-h-[85vh] overflow-hidden">
+        
+        <div class="bg-white border-b-2 border-slate-100 p-4 md:p-6 flex justify-between items-center flex-shrink-0">
+            <div class="flex items-center gap-6">
+                <a href="reading_kids_index.html" class="btn-back">← Menu</a>
+                <h1 class="text-2xl font-extrabold text-slate-800">Movers <span class="text-indigo-500">Part 2</span></h1>
+            </div>
+            <div id="progress-bar" class="hidden text-xl font-bold text-indigo-400 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">
+                Number <span id="cur-step">1</span> of <span id="tot-steps">0</span>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-hidden relative flex flex-col">
+            
+            <div id="screen-dashboard" class="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
+                <h3 class="text-3xl font-bold mb-8 text-center text-slate-600">Choose how to play!</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full mb-10 max-w-3xl">
+                    <button onclick="app.selectMode('classroom')" id="mode-classroom" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
+                        <span class="text-6xl mb-4">👨‍🏫</span>
+                        <span class="text-3xl font-bold text-slate-700">Classroom</span>
+                        <span class="text-lg mt-2">Find out immediately.</span>
+                    </button>
+                    <button onclick="app.selectMode('exam')" id="mode-exam" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
+                        <span class="text-6xl mb-4">📝</span>
+                        <span class="text-3xl font-bold text-slate-700">Exam Practice</span>
+                        <span class="text-lg mt-2">See score at the end.</span>
+                    </button>
+                </div>
+                <div class="flex flex-col items-center gap-4">
+                    <button onclick="app.startActivity()" id="start-btn" disabled class="px-12 py-4 bg-indigo-500 text-white rounded-2xl font-bold text-2xl transition hover:bg-indigo-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">Loading Database... ⏳</button>
+                    <button onclick="app.showList()" id="btn-list" disabled class="text-slate-400 font-bold hover:text-indigo-500 text-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed">or Pick from List</button>
+                </div>
+            </div>
+
+            <div id="screen-list" class="hidden flex-1 overflow-y-auto p-8 flex flex-col w-full bg-slate-50">
+                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Conversation</h2>
+                <div id="list-container" class="space-y-4 pb-10 flex-1 max-w-3xl mx-auto w-full"></div>
+                <div class="flex justify-center mt-4"><button onclick="app.showDashboard()" class="px-8 py-3 font-bold text-white rounded-xl bg-slate-400 hover:bg-slate-500 shadow-sm transition">Back</button></div>
+            </div>
+
+            <div id="screen-steps" class="hidden flex-1 flex flex-col bg-slate-50">
+                <div class="flex-1 p-4 sm:p-8 overflow-y-auto flex flex-col justify-center">
+                    <div class="max-w-3xl mx-auto w-full space-y-6">
+                        <div id="step-statement" class="text-2xl font-black text-slate-800 text-center leading-relaxed bg-white p-6 sm:p-8 rounded-3xl border-4 border-indigo-100 shadow-sm w-full">
+                            "Statement goes here?"
+                        </div>
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1 h-px bg-slate-200"></div>
+                            <span id="responder-name" class="text-lg font-bold text-slate-400 uppercase tracking-wider">Responder says...</span>
+                            <div class="flex-1 h-px bg-slate-200"></div>
+                        </div>
+
+                        <div id="step-options" class="grid grid-cols-1 gap-3">
+                            </div>
+                    </div>
+                </div>
+                <div class="p-4 sm:p-6 bg-white border-t-2 border-slate-200 flex justify-between items-center shadow-inner">
+                    <button id="nav-prev" onclick="app.prevStep()" class="px-6 py-3 rounded-xl font-bold text-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition-all disabled:opacity-30">← Back</button>
+                    <button id="nav-next" onclick="app.nextStep()" class="px-6 py-3 rounded-xl font-bold text-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-all shadow-md">Next Question →</button>
+                    <button id="nav-finish" onclick="app.finishActivity()" class="hidden px-6 py-3 rounded-xl font-bold text-lg bg-green-500 text-white hover:bg-green-600 transition-all shadow-md">Read Full Story ✨</button>
+                </div>
+            </div>
+
+            <div id="screen-review" class="hidden flex-1 flex flex-col">
+                <div class="flex-1 p-4 sm:p-8 overflow-y-auto bg-slate-50">
+                    <h2 class="text-3xl font-black text-center text-slate-800 mb-8" id="review-title">Full Conversation</h2>
+                    <div class="max-w-3xl mx-auto flex flex-col" id="review-container">
+                        </div>
+                </div>
+                <div class="p-4 sm:p-6 bg-white border-t-2 border-slate-200 flex justify-center gap-4 sm:gap-6 shadow-inner items-center">
+                    <span id="final-score" class="text-xl sm:text-2xl font-black text-slate-700 bg-slate-100 px-4 py-2 sm:px-6 sm:py-3 rounded-xl border-2 border-slate-200 hidden"></span>
+                    <button onclick="location.reload()" class="px-6 py-3 rounded-xl font-bold text-lg bg-amber-400 text-amber-900 hover:bg-amber-500 shadow-md transition">Try Another</button>
+                    <button onclick="app.showDashboard()" class="px-6 py-3 rounded-xl font-bold text-lg bg-slate-400 text-white hover:bg-slate-500 shadow-md transition">Menu</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 👇 PASTE YOUR SUPABASE KEYS HERE 👇
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+
+        const app = {
+            supabase: null,
+            data: [], 
+            state: { mode: null, currentIdx: 0, currentStep: 0, userAnswers: {}, totalSteps: 0, gapOrder: [] },
+
+            classes: {
+                baseCard: "w-full p-4 sm:p-5 rounded-2xl border-4 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all text-xl font-bold text-slate-600 cursor-pointer flex items-center gap-4 bg-white shadow-sm",
+                selectedCard: "w-full p-4 sm:p-5 rounded-2xl border-4 border-indigo-500 bg-indigo-100 text-indigo-900 transition-all text-xl font-bold cursor-pointer flex items-center gap-4 shadow-md transform scale-[1.01]",
+                correctCard: "w-full p-4 sm:p-5 rounded-2xl border-4 border-green-500 bg-green-50 text-green-700 transition-all text-xl font-bold cursor-pointer flex items-center gap-4 shadow-md",
+                wrongCard: "w-full p-4 sm:p-5 rounded-2xl border-4 border-red-500 bg-red-50 text-red-700 transition-all text-xl font-bold cursor-pointer flex items-center gap-4 shadow-md"
+            },
+
+            // --- THE RECEIVER ---
+            getParams: function() {
+                const params = new URLSearchParams(window.location.search);
+                const extensions = ['storyId', 'mode', 'chap'];
+                let result = {};
+                for (const ext of extensions) {
+                    if (params.has(ext)) {
+                        result[ext] = params.get(ext);
+                    }
+                }
+                return result;
+            },
+
+            // Default Startup
+            startApp: async function() {
+                await this.loadData();
+                if (this.data.length > 0) {
+                    document.getElementById('start-btn').innerText = "Let's Go! →";
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                } else {
+                    document.getElementById('start-btn').innerText = "No texts found!";
+                }
+            },
+
+            // Shared Link Startup
+            startSharedApp: async function(extensions) {
+                try {
+                    const { data, error } = await this.supabase
+                        .from('reading_materials')
+                        .select('material_data')
+                        .eq('exam_part', 2)
+                        .eq('material_data->>id', extensions.storyId);
+
+                    if (error || data.length === 0) {
+                        console.warn("Extension not found! Reverting to default menu.");
+                        return await this.startApp(); 
+                    }
+
+                    this.data = [data[0].material_data]; 
+                    this.state.currentIdx = 0; 
+                    document.getElementById('start-btn').innerText = "Let's Go! →";
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                } catch (e) {
+                    console.error("Shared link error", e);
+                    await this.startApp();
+                }
+            },
+
+            init: async function() {
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    
+                    const extensions = this.getParams();
+
+                    // Route traffic based on the URL
+                    if (extensions.storyId) {
+                        await this.startSharedApp(extensions);
+                    } else {
+                        await this.startApp();
+                    }
+
+                    // If they shared a specific mode, apply it and jump straight in!
+                    if (extensions.mode) {
+                        this.selectMode(extensions.mode);
+                        if (this.data.length > 0) {
+                            this.startActivity(false); // Start immediately without randomising!
+                        }
+                    }
+                } else {
+                    document.getElementById('start-btn').innerText = "Database error.";
+                }
+            },
+
+            loadData: async function() {
+                try {
+                    const { data, error } = await this.supabase
+                        .from('reading_materials')
+                        .select('material_data')
+                        .eq('exam_level', 'Movers')
+                        .eq('exam_part', 2);
+
+                    if (error) throw error;
+                    this.data = data.map(row => row.material_data);
+                } catch (e) {
+                    console.error("Connection Error:", e);
+                    document.getElementById('start-btn').innerText = "Error connecting! ❌";
+                }
+            },
+
+            selectMode: function(m) {
+                this.state.mode = m;
+                document.getElementById('mode-classroom').className = m === 'classroom' ? "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-indigo-400 bg-indigo-50 text-indigo-700 transition-all cursor-pointer min-h-[160px] shadow-md transform -translate-y-1" : "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50";
+                
+                document.getElementById('mode-exam').className = m === 'exam' ? "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-indigo-400 bg-indigo-50 text-indigo-700 transition-all cursor-pointer min-h-[160px] shadow-md transform -translate-y-1" : "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50";
+                
+                if (this.data.length > 0) {
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                }
+            },
+
+            showList: function() {
+                const container = document.getElementById('list-container');
+                container.innerHTML = '';
+                this.data.forEach((item, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-5 bg-white rounded-2xl hover:bg-indigo-50 border-2 border-slate-200 font-bold text-slate-700 text-xl shadow-sm hover:-translate-y-1 transition";
+                    btn.innerText = item.title;
+                    btn.onclick = () => {
+                        this.state.currentIdx = idx;
+                        this.startActivity(false); 
+                    }
+                    container.appendChild(btn);
+                });
+                this.switchScreen('screen-list');
+            },
+
+            startActivity: function(isRandom = true) {
+                if (isRandom) {
+                    this.state.currentIdx = Math.floor(Math.random() * this.data.length);
+                }
+                
+                const item = this.data[this.state.currentIdx];
+
+                // --- THE TRANSMITTER ---
+                // Update the URL bar so the user can copy and paste the link
+                if (item.id && this.state.mode) {
+                    const newUrl = window.location.pathname + '?storyId=' + item.id + '&mode=' + this.state.mode;
+                    window.history.replaceState(null, '', newUrl);
+                }
+
+                this.state.gapOrder = item.dialogue.filter(line => line.is_gap).map(line => line.gap_id);
+                this.state.totalSteps = this.state.gapOrder.length;
+                this.state.currentStep = 0;
+                this.state.userAnswers = {};
+
+                document.getElementById('tot-steps').innerText = this.state.totalSteps;
+                
+                this.switchScreen('screen-steps');
+                document.getElementById('progress-bar').classList.remove('hidden');
+                
+                this.renderStep();
+            },
+
+            renderStep: function() {
+                const stepNum = this.state.currentStep + 1;
+                const gapId = this.state.gapOrder[this.state.currentStep];
+                const item = this.data[this.state.currentIdx];
+                
+                const lineIndex = item.dialogue.findIndex(line => line.gap_id === gapId);
+                const prevLine = item.dialogue[lineIndex - 1];
+                const curLine = item.dialogue[lineIndex]; // This is the responder
+
+                document.getElementById('cur-step').innerText = stepNum;
+                document.getElementById('step-statement').innerHTML = `<span class="block text-lg text-indigo-400 uppercase tracking-widest mb-1">${prevLine.speaker}</span>"${prevLine.text}"`;
+                
+                // Set the responder name above options
+                document.getElementById('responder-name').innerText = `${curLine.speaker} says...`;
+
+                const optCont = document.getElementById('step-options');
+                optCont.innerHTML = '';
+
+                ['A','B','C'].forEach(L => {
+                    const text = item.questions[gapId][L];
+                    const card = document.createElement('div');
+                    
+                    if (this.state.userAnswers[gapId] === L) {
+                        card.className = this.classes.selectedCard;
+                        if (this.state.mode === 'classroom') {
+                            card.className = (L === item.answers[gapId]) ? this.classes.correctCard : this.classes.wrongCard;
+                        }
+                    } else {
+                        card.className = this.classes.baseCard;
+                    }
+                    
+                    card.id = `card-${gapId}-${L}`;
+                    card.innerHTML = `<span class="bg-white border-2 border-slate-200 text-slate-400 w-8 h-8 flex items-center justify-center rounded-lg font-black shrink-0">${L}</span> <span>${text}</span>`;
+                    
+                    card.onclick = () => this.handleSelection(gapId, L);
+                    optCont.appendChild(card);
+                });
+
+                document.getElementById('nav-prev').disabled = (this.state.currentStep === 0);
+                const isLast = (this.state.currentStep === this.state.totalSteps - 1);
+                document.getElementById('nav-next').classList.toggle('hidden', isLast);
+                document.getElementById('nav-finish').classList.toggle('hidden', !isLast);
+            },
+
+            handleSelection: function(gapId, L) {
+                const item = this.data[this.state.currentIdx];
+                this.state.userAnswers[gapId] = L;
+                
+                ['A','B','C'].forEach(letter => {
+                    const card = document.getElementById(`card-${gapId}-${letter}`);
+                    if(card) card.className = this.classes.baseCard;
+                });
+
+                const selectedCard = document.getElementById(`card-${gapId}-${L}`);
+                
+                if (this.state.mode === 'classroom') {
+                    if (L === item.answers[gapId]) {
+                        selectedCard.className = this.classes.correctCard;
+                        setTimeout(() => {
+                            if (this.state.currentStep < this.state.totalSteps - 1) {
+                                this.nextStep();
+                            }
+                        }, 800);
+                    } else {
+                        selectedCard.className = this.classes.wrongCard;
+                    }
+                } else {
+                    selectedCard.className = this.classes.selectedCard;
+                }
+            },
+
+            nextStep: function() {
+                if (this.state.currentStep < this.state.totalSteps - 1) {
+                    this.state.currentStep++;
+                    this.renderStep();
+                }
+            },
+
+            prevStep: function() {
+                if (this.state.currentStep > 0) {
+                    this.state.currentStep--;
+                    this.renderStep();
+                }
+            },
+
+            finishActivity: function() {
+                this.switchScreen('screen-review');
+                
+                const item = this.data[this.state.currentIdx];
+                document.getElementById('review-title').innerText = item.title;
+                const container = document.getElementById('review-container');
+                container.innerHTML = '';
+                
+                let score = 0;
+
+                item.dialogue.forEach(line => {
+                    const bubble = document.createElement('div');
+                    
+                    let text = line.text;
+                    if (line.is_gap) {
+                        const userChoice = this.state.userAnswers[line.gap_id];
+                        const correctChoice = item.answers[line.gap_id];
+                        
+                        if (this.state.mode === 'exam') {
+                            if (userChoice === correctChoice) {
+                                score++;
+                                text = `<span class="text-green-600">${item.questions[line.gap_id][correctChoice]} ✅</span>`;
+                            } else {
+                                const wrongText = userChoice ? item.questions[line.gap_id][userChoice] : "No answer";
+                                text = `<span class="line-through text-red-500 opacity-60">${wrongText}</span> <span class="text-green-600 ml-2">${item.questions[line.gap_id][correctChoice]}</span>`;
+                            }
+                        } else {
+                            text = `<span class="text-indigo-600">${item.questions[line.gap_id][correctChoice]}</span>`;
+                        }
+                        bubble.className = "bubble-right";
+                    } else {
+                        bubble.className = "bubble-left";
+                    }
+
+                    bubble.innerHTML = `<span class="text-xs block opacity-40 uppercase mb-1 tracking-widest">${line.speaker}</span>${text}`;
+                    container.appendChild(bubble);
+                });
+
+                if (this.state.mode === 'exam') {
+                    const scoreDisp = document.getElementById('final-score');
+                    scoreDisp.innerText = `Score: ${score} / ${this.state.totalSteps}`;
+                    scoreDisp.classList.remove('hidden');
+                } else {
+                    document.getElementById('final-score').classList.add('hidden');
+                }
+            },
+
+            switchScreen: function(s) {
+                ['screen-dashboard', 'screen-list', 'screen-steps', 'screen-review'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.classList.add('hidden');
+                });
+                const target = document.getElementById(s);
+                if(target) target.classList.remove('hidden');
+                
+                const prog = document.getElementById('progress-bar');
+                if(prog) {
+                    if (s === 'screen-steps') prog.classList.remove('hidden');
+                    else prog.classList.add('hidden');
+                }
+            },
+
+            showDashboard: function() { 
+                // Clear the parameters from the URL when going back to the menu
+                window.history.replaceState(null, '', window.location.pathname);
+                this.switchScreen('screen-dashboard'); 
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

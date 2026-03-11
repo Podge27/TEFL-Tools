@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Use of English Part 2 (Open Cloze)</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -102,11 +103,13 @@
 
     <script>
         // ============================================================
-        // 👇 2. PASTE YOUR KEYS HERE
+        // 👇 PASTE YOUR KEYS HERE
         // ============================================================
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
-    // ============================================================
+
+
+        // ============================================================
 
         const app = {
             supabase: null,
@@ -115,12 +118,19 @@
             state: { level: null, mode: null, currentIndex: 0 },
             isRandom: false,
 
+            // --- THE RECEIVER ---
+            getParams: function() {
+                const params = new URLSearchParams(window.location.search);
+                let result = {};
+                if (params.has('id')) result.id = params.get('id');
+                if (params.has('mode')) result.mode = params.get('mode');
+                return result;
+            },
+
             init: async function() {
                 const status = document.getElementById('data-loading-status');
                 
-                // Initialize Supabase
                 if (typeof supabase !== 'undefined') {
-                    // String().trim() prevents errors if you accidentally paste a space
                     this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
                 } else {
                     status.innerText = "Error: Library not loaded.";
@@ -128,6 +138,23 @@
                 }
 
                 await this.loadData();
+
+                // Intercept logic for shared URLs
+                const params = this.getParams();
+                if (params.id && this.data.length > 0) {
+                    const targetItem = this.data.find(i => String(i.id) === String(params.id));
+                    if (targetItem) {
+                        this.state.level = targetItem.level;
+                        this.state.mode = params.mode || 'exam';
+                        this.filteredData = this.data.filter(i => i.level === this.state.level);
+                        this.currentIndex = this.filteredData.findIndex(i => String(i.id) === String(params.id));
+                        this.isRandom = false;
+                        
+                        this.updateUI();
+                        this.loadTextIntoView();
+                        this.switchScreen('screen-activity');
+                    }
+                }
             },
 
             loadData: async function() {
@@ -135,7 +162,6 @@
                 try {
                     status.innerText = "Loading data from Supabase...";
                     
-                    // 3. FETCH FROM TABLE 'exam_part2'
                     let { data, error } = await this.supabase
                         .from('exam_part2')
                         .select('*');
@@ -236,6 +262,13 @@
             // --- ACTIVITY LOGIC ---
             loadTextIntoView: function() {
                 const item = this.filteredData[this.currentIndex];
+                
+                // --- THE TRANSMITTER ---
+                if (item.id && this.state.mode) {
+                    const newUrl = window.location.pathname + '?id=' + item.id + '&mode=' + this.state.mode;
+                    window.history.replaceState(null, '', newUrl);
+                }
+
                 document.getElementById('text-title').innerText = item.title;
                 const displayArea = document.getElementById('text-display');
                 
@@ -254,7 +287,6 @@
 
                 let htmlContent = item.content;
                 for(let i = 1; i <= 8; i++) {
-                    // Check if answers exist to prevent crash
                     const rawAns = item.answers && item.answers[i-1] ? item.answers[i-1] : "?";
                     const displayAns = Array.isArray(rawAns) ? rawAns.join('/') : rawAns;
 
@@ -347,7 +379,10 @@
                 else menuBtn.classList.add('hidden');
             },
 
-            showDashboard: function() { this.switchScreen('screen-dashboard'); },
+            showDashboard: function() { 
+                window.history.replaceState(null, '', window.location.pathname);
+                this.switchScreen('screen-dashboard'); 
+            },
             goHome: function() { this.showDashboard(); }
         };
 

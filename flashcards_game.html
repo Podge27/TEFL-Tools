@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Fun - Collocations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="global.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .mcq-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #15803d !important; }
+        .mcq-wrong { border-color: #f87171 !important; background-color: #fef2f2 !important; color: #dc2626 !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-3xl mx-auto my-8 bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[650px] flex flex-col relative">
+    
+    <header class="bg-white p-6 flex justify-between items-center border-b-2 border-slate-100 shadow-sm">
+        <h1 class="font-black text-slate-800 text-2xl tracking-tight">✨ Flashcard Fun</h1>
+        <div class="flex gap-2">
+            <button onclick="app.goBack()" id="back-btn" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-lg font-bold transition-colors">← Back to Tools</button>
+            <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-lg font-bold transition-colors">Reset</button>
+        </div>
+    </header>
+
+    <main id="view-upload" class="p-10 flex flex-col items-center justify-center flex-1">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-black text-slate-800 mb-2">Ready to play?</h2>
+            <p class="text-slate-500">Upload your CSV file to get started</p>
+        </div>
+        <input type="file" id="csv-file" accept=".csv" class="hidden" onchange="app.handleFileUpload(event)">
+        <label for="csv-file" class="cursor-pointer bg-cyan-600 hover:bg-cyan-700 text-white px-10 py-5 rounded-2xl font-black text-xl shadow-lg transition-all active:scale-95">
+            📁 Select CSV File
+        </label>
+    </main>
+
+    <section id="view-setup" class="hidden p-10 flex-1">
+        <h2 class="text-2xl font-black text-slate-800 mb-6 text-center" id="setup-title">Game Settings</h2>
+        
+        <div class="space-y-6 max-w-md mx-auto">
+            <div id="col-selectors" class="flex items-end gap-2">
+                <div class="flex-1">
+                    <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">Question Column</label>
+                    <select id="col-q" class="w-full p-3 border-2 border-slate-100 rounded-xl font-bold bg-slate-50 text-sm"></select>
+                </div>
+                <button onclick="app.swapColumns()" class="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors h-[52px] flex items-center justify-center" title="Swap Columns">
+                    🔄
+                </button>
+                <div class="flex-1">
+                    <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">Answer Column</label>
+                    <select id="col-a" class="w-full p-3 border-2 border-slate-100 rounded-xl font-bold bg-slate-50 text-sm"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-slate-500 font-bold mb-3 uppercase text-xs">How many cards?</label>
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                    <button onclick="app.setLimit(10)" id="lim-10" class="limit-btn p-3 border-2 border-slate-100 rounded-xl font-bold">10</button>
+                    <button onclick="app.setLimit(20)" id="lim-20" class="limit-btn p-3 border-2 border-slate-100 rounded-xl font-bold">20</button>
+                    <button onclick="app.setLimit('all')" id="lim-all" class="limit-btn p-3 border-2 border-cyan-500 bg-cyan-50 text-cyan-700 rounded-xl font-bold">All</button>
+                    <button onclick="app.setLimit('custom')" id="lim-custom" class="limit-btn p-3 border-2 border-slate-100 rounded-xl font-bold">Custom</button>
+                </div>
+                <input type="number" id="custom-limit-input" placeholder="Enter number..." class="hidden w-full p-4 border-2 border-slate-200 rounded-xl font-bold mb-4">
+            </div>
+
+            <div>
+                <label class="block text-slate-500 font-bold mb-3 uppercase text-xs">Choose Style</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="app.setStyle('typing')" id="btn-style-typing" class="style-btn p-4 border-2 border-cyan-500 bg-cyan-50 rounded-xl font-bold text-cyan-700">⌨️ Typing</button>
+                    <button onclick="app.setStyle('mcq')" id="btn-style-mcq" class="style-btn p-4 border-2 border-slate-100 bg-white rounded-xl font-bold text-slate-600">🎯 MCQ</button>
+                </div>
+            </div>
+
+            <button onclick="app.startGame()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-black transition-all">Start Game</button>
+        </div>
+    </section>
+
+    <section id="view-game" class="hidden p-10 flex-1 flex flex-col items-center justify-center relative">
+        <div id="game-content" class="w-full max-w-xl text-center"></div>
+    </section>
+
+    <section id="view-review" class="hidden p-10 flex-1 overflow-y-auto">
+        <div id="review-content" class="max-w-xl mx-auto text-center"></div>
+    </section>
+</div>
+
+<audio id="audio-yay" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
+
+<script>
+// Initialize Supabase
+        const { createClient } = supabase;
+        const _db = createClient("https://ehhkjhyanmovymjqlxwo.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk");
+
+
+const app = {
+    data: [],
+    isSupabaseMode: false,
+    style: 'typing',
+    limit: 'all',
+    currentIndex: 0,
+    score: 0,
+    currentPairs: [],
+    mistakes: [],
+
+    goBack: function() {
+        if (this.isSupabaseMode) {
+            window.location.href = 'collocations.html';
+        } else {
+            window.location.href = 'index.html';
+        }
+    },
+
+    init: async function() {
+        const params = new URLSearchParams(window.location.search);
+        const unitId = params.get('unit');
+        
+        if (unitId) {
+            this.isSupabaseMode = true;
+            document.getElementById('back-btn').innerText = '← Back to Topics';
+            
+            // Fetch Unit Data
+            const { data: unit } = await _db.from('collocation_units').select('*').eq('id', unitId).single();
+            if (unit) {
+                const { data: collocations } = await _db.from('collocation_list').select('*').in('id', unit.collocation_ids);
+                
+                // Map the Database to the format the game expects
+                this.data = collocations.map(c => {
+                    // Turn "I am interested {{in}} art." into "I am interested _____ art."
+                    const questionStr = c.example_1.replace(/\{\{.*?\}\}/, '_____');
+                    return { q: questionStr, a: c.preposition };
+                });
+                
+                // Set Title and hide column selectors
+                document.getElementById('setup-title').innerText = `Topic: ${unit.title}`;
+                document.getElementById('col-selectors').classList.add('hidden');
+                this.showView('setup');
+            }
+        } else {
+            // Default CSV behavior
+            this.showView('upload');
+        }
+    },
+
+    handleFileUpload: function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => this.processCSV(event.target.result);
+        reader.readAsText(file);
+    },
+
+    processCSV: function(text) {
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        const headers = lines[0].split(',').map(h => h.trim());
+        this.data = lines.slice(1).map(line => line.split(',').map(cell => cell.trim()));
+        
+        const qSelect = document.getElementById('col-q');
+        const aSelect = document.getElementById('col-a');
+        qSelect.innerHTML = aSelect.innerHTML = '';
+        headers.forEach((h, i) => {
+            qSelect.innerHTML += `<option value="${i}">${h}</option>`;
+            aSelect.innerHTML += `<option value="${i}" ${i===1?'selected':''}>${h}</option>`;
+        });
+        this.showView('setup');
+    },
+
+    swapColumns: function() {
+        const qSelect = document.getElementById('col-q');
+        const aSelect = document.getElementById('col-a');
+        const temp = qSelect.value;
+        qSelect.value = aSelect.value;
+        aSelect.value = temp;
+    },
+
+    setLimit: function(val) {
+        this.limit = val;
+        document.querySelectorAll('.limit-btn').forEach(b => b.className = 'limit-btn p-3 border-2 border-slate-100 rounded-xl font-bold');
+        document.getElementById(`lim-${val}`).className = 'limit-btn p-3 border-2 border-cyan-500 bg-cyan-50 text-cyan-700 rounded-xl font-bold';
+        document.getElementById('custom-limit-input').classList.toggle('hidden', val !== 'custom');
+    },
+
+    setStyle: function(s) {
+        this.style = s;
+        document.getElementById('btn-style-typing').className = s === 'typing' ? 'style-btn p-4 border-2 border-cyan-500 bg-cyan-50 rounded-xl font-bold text-cyan-700' : 'style-btn p-4 border-2 border-slate-100 bg-white rounded-xl font-bold text-slate-600';
+        document.getElementById('btn-style-mcq').className = s === 'mcq' ? 'style-btn p-4 border-2 border-cyan-500 bg-cyan-50 rounded-xl font-bold text-cyan-700' : 'style-btn p-4 border-2 border-slate-100 bg-white rounded-xl font-bold text-slate-600';
+    },
+
+    showView: function(v) {
+        ['upload', 'setup', 'game', 'review'].forEach(id => document.getElementById(`view-${id}`).classList.add('hidden'));
+        document.getElementById(`view-${v}`).classList.remove('hidden');
+    },
+
+    startGame: function() {
+        let allPairs = [];
+        
+        if (this.isSupabaseMode) {
+            allPairs = [...this.data].sort(() => Math.random() - 0.5);
+        } else {
+            const qIdx = document.getElementById('col-q').value;
+            const aIdx = document.getElementById('col-a').value;
+            allPairs = this.data.map(row => ({ q: row[qIdx], a: row[aIdx] })).sort(() => Math.random() - 0.5);
+        }
+        
+        let count = allPairs.length;
+        if (this.limit === 'custom') count = parseInt(document.getElementById('custom-limit-input').value) || 10;
+        else if (typeof this.limit === 'number') count = this.limit;
+
+        count = Math.min(count, allPairs.length);
+
+        this.currentPairs = allPairs.slice(0, count);
+        this.currentIndex = 0;
+        this.score = 0;
+        this.mistakes = [];
+        this.showView('game');
+        this.renderQuestion();
+    },
+
+    cleanText: function(str) {
+        return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?¡!]/g,"").trim().replace(/\s{2,}/g," ");
+    },
+
+    speakText: function(text) {
+        window.speechSynthesis.cancel(); 
+        const readText = text.replace(/_+/g, "blank");
+        const utterance = new SpeechSynthesisUtterance(readText);
+        utterance.lang = 'en-GB'; 
+        window.speechSynthesis.speak(utterance);
+    },
+
+    renderQuestion: function() {
+        const item = this.currentPairs[this.currentIndex];
+        const container = document.getElementById('game-content');
+        const progressPct = ((this.currentIndex) / this.currentPairs.length) * 100;
+        
+        const progressBar = `
+            <div class="absolute bottom-0 left-0 w-full h-2 bg-slate-100">
+                <div class="h-full bg-cyan-500 transition-all duration-300" style="width: ${progressPct}%"></div>
+            </div>
+        `;
+
+        const titleBlock = `
+            <div class="flex items-center justify-center gap-4 mb-8">
+                <h2 class="text-3xl font-black text-slate-900 leading-snug">${item.q}</h2>
+                <button onclick="app.speakText('${item.q.replace(/'/g, "\\'")}')" class="text-3xl hover:scale-110 transition-transform bg-slate-100 hover:bg-slate-200 rounded-full h-12 w-12 flex items-center justify-center shrink-0" title="Listen">🔊</button>
+            </div>
+        `;
+        
+        if (this.style === 'typing') {
+            container.innerHTML = `
+                ${titleBlock}
+                <input type="text" id="answer-input" class="w-full text-center text-2xl p-4 border-2 border-slate-200 rounded-xl focus:border-cyan-500 outline-none mb-4 font-bold lowercase" placeholder="Type preposition..." autocomplete="off">
+                <div id="feedback" class="h-12 mb-4 font-bold text-lg"></div>
+                <button onclick="app.checkTyping()" class="w-full bg-cyan-600 text-white py-4 rounded-xl font-black text-lg">Submit</button>
+                ${progressBar}`;
+            setTimeout(() => document.getElementById('answer-input').focus(), 50);
+            document.getElementById('answer-input').onkeydown = (e) => { if(e.key === 'Enter') this.checkTyping(); };
+        } else {
+            const answers = [item.a];
+            
+            let others = [];
+            if (this.isSupabaseMode) {
+                others = this.data.map(d => d.a).filter(a => a !== item.a);
+            } else {
+                others = this.data.map(row => row[document.getElementById('col-a').value]).filter(a => a !== item.a);
+            }
+            others = [...new Set(others)]; 
+
+            while(answers.length < 3 && others.length > 0) {
+                const rand = others.splice(Math.floor(Math.random() * others.length), 1)[0];
+                if(!answers.includes(rand)) answers.push(rand);
+            }
+            answers.sort(() => Math.random() - 0.5);
+
+            container.innerHTML = `
+                ${titleBlock}
+                <div class="grid gap-3" id="mcq-options">
+                    ${answers.map(ans => `<button onclick="app.checkMCQ(this, '${ans.replace(/'/g, "\\'")}')" class="w-full p-5 rounded-xl border-2 border-slate-100 font-bold text-slate-700 hover:border-cyan-500 transition-all bg-white text-lg lowercase">${ans}</button>`).join('')}
+                </div><div id="feedback" class="h-12 mt-6 font-bold text-lg"></div>
+                ${progressBar}`;
+        }
+    },
+
+    checkTyping: function() {
+        const input = document.getElementById('answer-input');
+        if(!input || input.disabled) return;
+        
+        const cleanUser = this.cleanText(input.value);
+        const cleanCorrect = this.cleanText(this.currentPairs[this.currentIndex].a);
+        const correct = cleanUser === cleanCorrect;
+        
+        input.disabled = true;
+        this.handleResult(correct, this.currentPairs[this.currentIndex].a);
+    },
+
+    checkMCQ: function(btn, choice) {
+        const correct = choice === this.currentPairs[this.currentIndex].a;
+        document.querySelectorAll('#mcq-options button').forEach(b => b.disabled = true);
+        btn.classList.add(correct ? 'mcq-correct' : 'mcq-wrong');
+        this.handleResult(correct, this.currentPairs[this.currentIndex].a);
+    },
+
+    handleResult: function(isCorrect, correctVal) {
+        const feedback = document.getElementById('feedback');
+        if (isCorrect) {
+            this.score++;
+            feedback.innerHTML = "<span class='text-green-600 font-black'>Correct! 🎉</span>";
+            document.getElementById('audio-yay').play();
+        } else {
+            feedback.innerHTML = `<span class='text-red-500'>Incorrect. Answer: <span class="text-slate-900">${correctVal}</span></span>`;
+            this.mistakes.push(this.currentPairs[this.currentIndex]);
+        }
+
+        setTimeout(() => {
+            this.currentIndex++;
+            if (this.currentIndex < this.currentPairs.length) this.renderQuestion();
+            else this.showResults();
+        }, 1600);
+    },
+
+    showResults: function() {
+        this.showView('review');
+        let reviewHTML = `
+            <h2 class="text-4xl font-black mb-4 text-slate-800">Review Complete</h2>
+            <div class="bg-slate-50 p-8 rounded-3xl border-2 border-slate-100 mb-8 inline-block px-16">
+                <div class="text-sm font-bold text-slate-400 uppercase mb-2">Final Score</div>
+                <div class="text-7xl font-black text-cyan-600">${this.score} / ${this.currentPairs.length}</div>
+            </div>`;
+
+        if (this.mistakes.length > 0) {
+            reviewHTML += `<div class="text-left bg-white rounded-2xl border-2 border-slate-100 p-6 mb-8 shadow-sm">
+                <h3 class="font-black text-slate-800 text-xl mb-4 border-b-2 border-slate-50 pb-4">Needs Practice:</h3>
+                <ul class="space-y-3">
+                    ${this.mistakes.map(m => `
+                        <li class="flex justify-between items-center bg-red-50 p-3 rounded-xl border border-red-100">
+                            <span class="font-bold text-slate-700">${m.q}</span>
+                            <span class="font-bold text-green-700 bg-green-100 px-3 py-1 rounded-lg">➔ ${m.a}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>`;
+        }
+
+        reviewHTML += `<button onclick="app.showView('setup')" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-black transition-all">Play Again</button>`;
+        
+        document.getElementById('review-content').innerHTML = reviewHTML;
+    }
+};
+
+app.init();
+</script>
+</body>
+</html>

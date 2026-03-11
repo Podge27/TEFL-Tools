@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Time</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 1. Your Global Brand Font */
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #FDFBF7; }
+
+        /* 2. Your Universal Back Button Style */
+        .btn-back {
+            display: inline-block;
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1);
+            color: black;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid white;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .btn-back:hover { background-color: #555; transform: translateY(-2px); }
+
+        /* 3. Dashboard Specifics */
+        .kids-font { font-family: 'Quicksand', sans-serif; }
+
+        .tool-button {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem; 
+            text-align: center;
+            color: #1E293B;
+            font-weight: 700;
+            border-radius: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            min-height: 130px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        /* Shine Effect */
+        .tool-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: rotate(30deg);
+            transition: all 0.6s;
+        }
+        .tool-button:hover::after { left: 120%; }
+        .tool-button:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); }
+
+        /* Gradients */
+        .btn-p1 { background: linear-gradient(135deg, #FFD1DC 0%, #FFB7CE 100%); }
+        .btn-p2 { background: linear-gradient(135deg, #C1E1C1 0%, #98FB98 100%); }
+        .btn-p3 { background: linear-gradient(135deg, #FFEF96 0%, #F6D365 100%); }
+        .btn-p4 { background: linear-gradient(135deg, #B2E2F2 0%, #89CFF0 100%); }
+        .btn-p5 { background: linear-gradient(135deg, #D1BBFF 0%, #B19CD9 100%); }
+        .btn-p6 { background: linear-gradient(135deg, #FFD8B1 0%, #FFB347 100%); }
+        .btn-p7 { background: linear-gradient(135deg, #B9FBC0 0%, #98F5E1 100%); }
+
+        .btn-locked { filter: grayscale(0.8); opacity: 0.7; cursor: default; }
+        .tag-soon { font-size: 0.7rem; background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 10px; margin-top: 5px; }
+
+        .toggle-btn { cursor: pointer; padding: 0.75rem 2rem; border-radius: 20px; font-weight: 700; transition: all 0.3s ease; font-family: 'Quicksand'; }
+        .toggle-active { background-color: #6366F1; color: white; }
+        .toggle-inactive { background-color: #FFFFFF; color: #64748B; border: 2px solid #E2E8F0; }
+    </style>
+</head>
+<body class="p-8">
+
+    <a href="index.html" class="btn-back">← Back</a>
+
+    <div class="max-w-5xl mx-auto py-10 mt-4">
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-extrabold text-slate-800 kids-font">
+                Reading <span class="text-indigo-600">Time!</span>
+            </h1>
+            
+            <div class="mt-8 inline-flex bg-white rounded-3xl p-2 gap-2 shadow-sm border border-slate-200">
+                <button id="tab-starters" onclick="showLevel('starters')" class="toggle-btn toggle-inactive">Starters</button>
+                <button id="tab-movers" onclick="showLevel('movers')" class="toggle-btn toggle-active">Movers</button>
+                <button id="tab-flyers" onclick="showLevel('flyers')" class="toggle-btn toggle-inactive">Flyers</button>
+            </div>
+        </header>
+
+        <div id="content-starters" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="tool-button btn-p1 btn-locked"><span>Part 1</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p2 btn-locked"><span>Part 2</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p3 btn-locked"><span>Part 3</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p4 btn-locked"><span>Part 4</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p5 btn-locked"><span>Part 5</span><span class="tag-soon">Coming Soon</span></div>
+        </div>
+
+        <div id="content-movers" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="tool-button btn-p1 btn-locked"><span>Part 1</span><span class="tag-soon">Coming Soon</span></div>
+            <a href="reading_movers_part2.html" class="tool-button btn-p2"><span>Part 2</span><span class="text-sm opacity-80">Conversations</span></a>
+            <a href="reading_movers_part3.html" class="tool-button btn-p3"><span>Part 3</span><span class="text-sm opacity-80">Story</span></a>
+            <a href="reading_movers_part4.html" class="tool-button btn-p4"><span>Part 4</span><span class="text-sm opacity-80">Grammar Cloze</span></a>
+            <a href="reading_movers_part5.html" class="tool-button btn-p5"><span>Part 5</span><span class="text-sm opacity-80">Story Completion</span></a>
+            <a href="reading_movers_part6.html" class="tool-button btn-p6"><span>Part 6</span><span class="text-sm opacity-80">Guided Writing</span></a>
+        </div>
+
+        <div id="content-flyers" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="tool-button btn-p1 btn-locked"><span>Part 1</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p2 btn-locked"><span>Part 2</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p3 btn-locked"><span>Part 3</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p4 btn-locked"><span>Part 4</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p5 btn-locked"><span>Part 5</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p6 btn-locked"><span>Part 6</span><span class="tag-soon">Coming Soon</span></div>
+            <div class="tool-button btn-p7 btn-locked"><span>Part 7</span><span class="tag-soon">Coming Soon</span></div>
+        </div>
+    </div>
+
+    <script>
+        function showLevel(level) {
+            const levels = ['starters', 'movers', 'flyers'];
+            levels.forEach(l => {
+                document.getElementById(`content-${l}`).classList.toggle('hidden', l !== level);
+                document.getElementById(`content-${l}`).classList.toggle('grid', l === level);
+                const btn = document.getElementById(`tab-${l}`);
+                btn.className = l === level ? 'toggle-btn toggle-active' : 'toggle-btn toggle-inactive';
+            });
+        }
+    </script>
+</body>
+</html>

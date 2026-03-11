@@ -212,21 +212,40 @@
             if (!toneLoaded) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
-                new Tone.MembraneSynth().toDestination().triggerAttackRelease("C5", "32n");
+                const click = new Tone.MembraneSynth({
+                    pitchDecay: 0.005,
+                    octaves: 2,
+                    envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
+                }).toDestination();
+                click.volume.value = -15; 
+                click.triggerAttackRelease("G5", "32n");
             } catch (e) {}
         };
+
         const MATCH_SOUND = () => {
             if (!toneLoaded) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
-                new Tone.PolySynth(Tone.Synth).toDestination().triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n");
+                const chime = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.05, decay: 0.2, sustain: 0.1, release: 1 }
+                }).toDestination();
+                chime.volume.value = -12; 
+                chime.triggerAttackRelease(["C5", "G5", "C6"], "8n");
             } catch (e) {}
         };
+
         const ERROR_SOUND = () => {
             if (!toneLoaded) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
-                new Tone.MembraneSynth().toDestination().triggerAttackRelease("A2", "16n");
+                // A classic "wrong" buzzer, but kept at a polite volume
+                const buzzer = new Tone.Synth({
+                    oscillator: { type: "square" }, // Square waves sound buzzy
+                    envelope: { attack: 0.01, decay: 0.2, sustain: 0 }
+                }).toDestination();
+                buzzer.volume.value = -12; // Loud enough to hear, but not deafening
+                buzzer.triggerAttackRelease("Eb2", "8n");
             } catch (e) {}
         };
 
@@ -290,7 +309,6 @@
         };
 
         async function checkUrlMode() {
-            // These lines read the URL to see who sent the student here
             const params = new URLSearchParams(window.location.search);
             const unitId = params.get('unit'); 
             const hospId = params.get('hosp_id'); 
@@ -328,7 +346,6 @@
                     const { data: vocabData } = await _db.from('hospitality_vocab').select('set_name, matching_pairs').eq('id', hospId).single();
                     if (!vocabData) throw new Error("Vocabulary set not found");
 
-                    // This takes your JSON and turns it into the arrays the game needs to work
                     cardContentPairs = Object.entries(vocabData.matching_pairs);
 
                     ui.supabaseStatus.classList.add('hidden');
@@ -352,10 +369,10 @@
             const MAX_PAIRS = 15;
             let pairsToUse = [...cardContentPairs];
             if (pairsToUse.length > MAX_PAIRS) {
-              pairsToUse.sort(() => Math.random() - 0.5); 
-                 pairsToUse = pairsToUse.slice(0, MAX_PAIRS); 
+                pairsToUse.sort(() => Math.random() - 0.5); 
+                pairsToUse = pairsToUse.slice(0, MAX_PAIRS); 
             } else {
-              pairsToUse.sort(() => Math.random() - 0.5); 
+                pairsToUse.sort(() => Math.random() - 0.5); 
             }
 
             pairsFound = 0;

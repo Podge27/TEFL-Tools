@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movers Part 4: Grammar Cloze</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Quicksand', sans-serif; background-color: #FDFBF7; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; padding: 0;}
+        
+        .btn-back {
+            display: inline-block;
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1);
+            color: black;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid white;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .btn-back:hover { background-color: #555; transform: translateY(-2px); color: white; }
+
+        #app-container { 
+            @apply w-full max-w-[95%] mx-auto mt-4 bg-white shadow-xl rounded-3xl border-4 border-slate-100;
+            display: flex; flex-direction: column; height: 90vh; overflow: hidden; 
+        }
+
+        .mode-select-btn { @apply flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all duration-200 cursor-pointer shadow-sm hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-md hover:text-indigo-600; min-height: 180px; width: 100%; }
+        .mode-select-btn.active { @apply border-indigo-400 bg-indigo-50 text-indigo-700 shadow-md transform -translate-y-1; }
+        .app-btn { @apply px-8 py-4 font-bold rounded-2xl shadow-sm transition duration-200 transform hover:-translate-y-1 active:scale-95 text-xl; }
+
+        .text-content { font-size: 1.5rem; line-height: 2.2; color: #334155; text-align: left; white-space: pre-wrap; }
+
+        .classroom-gap { @apply inline-flex items-center justify-center border-b-4 border-gray-300 font-bold text-gray-400 px-3 mx-1 transition-all duration-200 select-none cursor-pointer bg-slate-50 rounded-t-xl min-w-[90px] h-10; }
+        .classroom-gap:hover { @apply bg-amber-100 text-amber-600 border-amber-400; }
+        .classroom-gap.revealed { @apply border-green-400 text-green-700 bg-green-50; }
+
+        .gap-slot { @apply inline-flex items-center justify-center min-w-[90px] h-10 px-2 mx-1 border-b-4 border-indigo-200 text-indigo-700 font-bold transition-all bg-slate-50 rounded-t-xl; vertical-align: baseline; }
+        .gap-slot.filled { @apply border-indigo-500 bg-indigo-100; }
+        .gap-slot.correct { @apply text-green-700 border-green-500 bg-green-100; }
+        .gap-slot.wrong { @apply text-red-700 border-red-500 bg-red-100; }
+
+        .question-block { @apply mb-6 p-5 bg-white border-2 border-slate-100 rounded-2xl shadow-sm transition-all; }
+        .q-header { @apply font-bold text-slate-400 text-lg mb-3 uppercase tracking-wide flex justify-between; }
+        .opt-grid { @apply grid grid-cols-1 gap-3; }
+        
+        .opt-btn { @apply flex items-center justify-between p-3 rounded-xl border-2 border-slate-100 hover:bg-indigo-50 hover:border-indigo-300 transition-all text-left text-lg font-bold text-slate-600 select-none cursor-pointer hover:-translate-y-1; }
+        .opt-btn.selected { @apply bg-indigo-500 text-white border-indigo-500 shadow-md transform scale-[1.02]; }
+        .opt-btn.state-correct { @apply bg-green-400 text-white border-green-400 ring-4 ring-green-100; }
+        .opt-btn.state-wrong { @apply bg-red-400 text-white border-red-400 opacity-70; }
+        .opt-btn.state-missed { @apply border-green-400 text-green-700 bg-green-50 ring-4 ring-green-100 font-bold; }
+
+        .opt-btn-readonly { @apply flex items-center justify-between p-3 rounded-xl border-2 border-slate-100 bg-white text-left text-lg font-bold text-slate-600 select-none cursor-default; }
+
+        .btn-action { @apply px-8 py-3 font-bold text-white rounded-xl shadow-sm transition hover:opacity-90 hover:-translate-y-1 active:scale-95 text-lg; }
+    </style>
+</head>
+<body class="bg-slate-50 p-4">
+
+    <div id="app-container">
+        <div class="bg-white border-b-2 border-slate-100 p-4 md:p-6 flex justify-between items-center z-50 flex-shrink-0">
+            <div class="flex items-center gap-6">
+                <a href="reading_kids_index.html" class="btn-back">← Back</a>
+                <h1 class="text-3xl font-extrabold text-slate-800">
+                    Movers <span class="text-indigo-500">Part 4</span>
+                </h1>
+            </div>
+            
+            <div id="exam-controls" class="hidden flex gap-4 items-center">
+                <span id="score-display" class="hidden font-black text-2xl mr-4 text-slate-700 bg-slate-100 px-4 py-2 rounded-xl"></span>
+                <button onclick="app.checkAnswers()" id="btn-check" class="btn-action bg-green-500">Check Answers</button>
+                <button onclick="app.resetActivity()" id="btn-retry" class="btn-action bg-amber-400 text-amber-900 hidden">Try Again</button>
+                <button onclick="app.showDashboard()" class="btn-action bg-slate-400">Exit</button>
+            </div>
+
+            <div id="class-controls" class="hidden flex gap-4 items-center">
+                <button onclick="app.revealAll()" class="btn-action bg-purple-500">Reveal All</button>
+                <button onclick="app.resetActivity()" class="btn-action bg-amber-400 text-amber-900">Reset</button>
+                <button onclick="app.showDashboard()" class="btn-action bg-slate-400">Exit</button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-hidden relative">
+            
+            <div id="screen-dashboard" class="h-full overflow-y-auto p-8 flex flex-col items-center justify-center max-w-4xl mx-auto w-full">
+                <h3 class="text-3xl font-bold mb-8 text-center text-slate-600">Choose how to play!</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full mb-12">
+                    <button onclick="app.selectMode('classroom')" id="mode-classroom" class="mode-select-btn">
+                        <span class="text-6xl mb-4">👨‍🏫</span>
+                        <span class="text-3xl font-bold text-slate-700">Classroom</span>
+                        <span class="text-lg mt-2">Click gaps to reveal.</span>
+                    </button>
+                    <button onclick="app.selectMode('exam')" id="mode-exam" class="mode-select-btn">
+                        <span class="text-6xl mb-4">📝</span>
+                        <span class="text-3xl font-bold text-slate-700">Exam Practice</span>
+                        <span class="text-lg mt-2">Select options. Scored.</span>
+                    </button>
+                </div>
+                
+                <div class="flex flex-col items-center gap-3">
+                    <button onclick="app.startActivity()" id="start-btn" disabled class="app-btn bg-indigo-500 text-white disabled:opacity-40 disabled:cursor-not-allowed">Loading Database... ⏳</button>
+                    <button onclick="app.showList()" id="btn-list" disabled class="text-slate-400 font-bold hover:text-indigo-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-lg">or Pick from List</button>
+                </div>
+            </div>
+
+            <div id="screen-list" class="hidden h-full overflow-y-auto p-8 flex flex-col w-full">
+                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Story</h2>
+                <div id="list-container" class="space-y-4 pb-10 flex-1 max-w-3xl mx-auto w-full">
+                    </div>
+                <div class="flex justify-center mt-4">
+                    <button onclick="app.showDashboard()" class="btn-action bg-slate-400">Back</button>
+                </div>
+            </div>
+
+            <div id="screen-activity" class="hidden h-full flex flex-row">
+                <div id="left-panel" class="h-full overflow-y-auto p-8 md:p-12 scroll-smooth bg-white w-[65%] flex justify-center">
+                    <div class="max-w-2xl w-full">
+                        <h2 id="act-title" class="text-4xl md:text-5xl font-black text-slate-800 mb-8 leading-tight text-center"></h2>
+                        <div id="act-text" class="text-content pb-32"></div>
+                    </div>
+                </div>
+
+                <div id="right-panel" class="flex flex-col h-full bg-slate-50 border-l-4 border-slate-100 shadow-inner flex-shrink-0 w-[35%]">
+                    <div class="p-6 bg-indigo-50 border-b-2 border-indigo-100 font-black text-indigo-400 uppercase tracking-widest text-lg text-center">
+                        Choose the words
+                    </div>
+                    <div id="options-container" class="flex-1 overflow-y-auto p-6 space-y-4 pb-20"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PASTE YOUR SUPABASE KEYS HERE
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+
+        const app = {
+            supabase: null,
+            data: [], 
+            state: { mode: null, userAnswers: {}, currentIdx: 0 },
+
+            // --- THE RECEIVER ---
+            getParams: function() {
+                const params = new URLSearchParams(window.location.search);
+                const extensions = ['storyId', 'mode'];
+                let result = {};
+                for (const ext of extensions) {
+                    if (params.has(ext)) {
+                        result[ext] = params.get(ext);
+                    }
+                }
+                return result; 
+            },
+
+            startApp: async function() {
+                await this.loadData();
+                if (this.data.length > 0) {
+                    document.getElementById('start-btn').innerText = "Let's Go! →";
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                } else {
+                    document.getElementById('start-btn').innerText = "No texts found!";
+                }
+            },
+
+            startSharedApp: async function(extensions) {
+                try {
+                    const { data, error } = await this.supabase
+                        .from('reading_materials')
+                        .select('material_data')
+                        .eq('exam_part', 4) 
+                        .eq('material_data->>id', extensions.storyId); 
+
+                    if (error || data.length === 0) {
+                        console.warn("Extension not found! Reverting to default menu.");
+                        return await this.startApp(); 
+                    }
+
+                    this.data = [data[0].material_data]; 
+                    this.state.currentIdx = 0; 
+                    document.getElementById('start-btn').innerText = "Let's Go! →";
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                } catch (e) {
+                    console.error("Shared link error", e);
+                    await this.startApp();
+                }
+            },
+
+            init: async function() {
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    
+                    const extensions = this.getParams();
+
+                    if (extensions.storyId) {
+                        await this.startSharedApp(extensions);
+                    } else {
+                        await this.startApp();
+                    }
+
+                    if (extensions.mode) {
+                        this.selectMode(extensions.mode);
+                        if (this.data.length > 0) {
+                            this.startActivity(false); 
+                        }
+                    }
+                } else {
+                    document.getElementById('start-btn').innerText = "Database error. Check code.";
+                }
+            },
+
+            loadData: async function() {
+                try {
+                    const { data, error } = await this.supabase
+                        .from('reading_materials')
+                        .select('material_data')
+                        .eq('exam_level', 'Movers')
+                        .eq('exam_part', 4);
+
+                    if (error) throw error;
+                    
+                    this.data = data.map(row => row.material_data);
+                } catch (e) {
+                    console.error("Database error:", e);
+                    document.getElementById('start-btn').innerText = "Error connecting! ❌";
+                }
+            },
+
+            selectMode: function(m) {
+                this.state.mode = m;
+                ['classroom','exam'].forEach(md => {
+                    const btn = document.getElementById(`mode-${md}`);
+                    if (this.state.mode === md) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
+                
+                if (this.data.length > 0) {
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                }
+            },
+
+            switchScreen: function(screenId) {
+                ['screen-dashboard', 'screen-list', 'screen-activity'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(screenId).classList.remove('hidden');
+
+                if (screenId !== 'screen-activity') {
+                    document.getElementById('exam-controls').classList.add('hidden');
+                    document.getElementById('class-controls').classList.add('hidden');
+                }
+            },
+
+            showDashboard: function() {
+                // Clear the parameters from the URL when going back to the menu
+                window.history.replaceState(null, '', window.location.pathname);
+                this.switchScreen('screen-dashboard');
+            },
+
+            startActivity: function(isRandom = true) {
+                if (isRandom) {
+                    this.state.currentIdx = Math.floor(Math.random() * this.data.length);
+                }
+                this.switchScreen('screen-activity');
+                this.loadActivity();
+            },
+
+            showList: function() {
+                if (this.data.length === 0) return alert("No texts found.");
+                
+                const container = document.getElementById('list-container');
+                container.innerHTML = '';
+                
+                this.data.forEach((item, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-5 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:border-indigo-300 border-2 border-slate-200 font-bold text-slate-700 text-xl transition-all hover:-translate-y-1 shadow-sm";
+                    btn.innerText = item.title;
+                    btn.onclick = () => {
+                        this.state.currentIdx = idx;
+                        this.switchScreen('screen-activity');
+                        this.loadActivity();
+                    }
+                    container.appendChild(btn);
+                });
+                
+                this.switchScreen('screen-list');
+            },
+
+            loadActivity: function() {
+                const item = this.data[this.state.currentIdx];
+                
+                // --- THE TRANSMITTER ---
+                if (item.id && this.state.mode) {
+                    const newUrl = window.location.pathname + '?storyId=' + item.id + '&mode=' + this.state.mode;
+                    window.history.replaceState(null, '', newUrl);
+                }
+
+                this.state.userAnswers = {}; 
+                
+                document.getElementById('act-title').innerText = item.title;
+                const textDiv = document.getElementById('act-text');
+                const optionsDiv = document.getElementById('options-container');
+                
+                let content = item.content;
+                optionsDiv.innerHTML = '';
+
+                if (this.state.mode === 'classroom') {
+                    document.getElementById('exam-controls').classList.add('hidden');
+                    document.getElementById('class-controls').classList.remove('hidden');
+
+                    content = content.replace(/\[(\d+)\]/g, (match, id) => {
+                        const correctLetter = item.answers[id];
+                        const word = item.questions[id][correctLetter];
+                        return `<span class="classroom-gap" onclick="app.toggleClassroomGap(this, '${word}', '${id}')">[ ${id} ]</span>`;
+                    });
+
+                    Object.keys(item.questions).forEach(qNum => {
+                        const block = document.createElement('div');
+                        block.className = 'question-block';
+                        block.innerHTML = `<div class="q-header">Number ${qNum}</div>`;
+                        const grid = document.createElement('div');
+                        grid.className = 'opt-grid';
+
+                        ['A','B','C'].forEach(letter => {
+                            const btn = document.createElement('div');
+                            btn.className = 'opt-btn-readonly';
+                            btn.innerHTML = `<span>${letter}) ${item.questions[qNum][letter]}</span><span class="icon-slot text-xl"></span>`;
+                            grid.appendChild(btn);
+                        });
+                        block.appendChild(grid);
+                        optionsDiv.appendChild(block);
+                    });
+
+                } else {
+                    document.getElementById('exam-controls').classList.remove('hidden');
+                    document.getElementById('class-controls').classList.add('hidden');
+
+                    document.getElementById('score-display').classList.add('hidden');
+                    document.getElementById('btn-check').classList.remove('hidden');
+                    document.getElementById('btn-retry').classList.add('hidden');
+
+                    content = content.replace(/\[(\d+)\]/g, (match, id) => {
+                        return `<span id="gap-${id}" class="gap-slot">[ ${id} ]</span>`;
+                    });
+
+                    Object.keys(item.questions).forEach(qNum => {
+                        const block = document.createElement('div');
+                        block.className = 'question-block hover:border-indigo-200';
+                        block.innerHTML = `<div class="q-header">Number ${qNum}</div>`;
+                        const grid = document.createElement('div');
+                        grid.className = 'opt-grid';
+
+                        ['A','B','C'].forEach(letter => {
+                            const btn = document.createElement('div');
+                            btn.className = `opt-btn btn-q${qNum}`;
+                            btn.id = `btn-${qNum}-${letter}`;
+                            btn.innerHTML = `<span>${letter}) ${item.questions[qNum][letter]}</span><span class="icon-slot text-xl"></span>`;
+                            
+                            btn.onclick = () => {
+                                document.querySelectorAll(`.btn-q${qNum}`).forEach(b => b.classList.remove('selected'));
+                                btn.classList.add('selected');
+                                this.state.userAnswers[qNum] = letter;
+                                const slot = document.getElementById(`gap-${qNum}`);
+                                slot.innerText = item.questions[qNum][letter];
+                                slot.classList.add('filled');
+                            };
+                            grid.appendChild(btn);
+                        });
+                        block.appendChild(grid);
+                        optionsDiv.appendChild(block);
+                    });
+                }
+
+                textDiv.innerHTML = content;
+            },
+
+            toggleClassroomGap: function(el, word, id) {
+                if(el.classList.contains('revealed')) {
+                    el.innerText = `[ ${id} ]`;
+                    el.classList.remove('revealed');
+                } else {
+                    el.innerText = word;
+                    el.classList.add('revealed');
+                }
+            },
+
+            revealAll: function() {
+                const item = this.data[this.state.currentIdx];
+                document.querySelectorAll('.classroom-gap').forEach((el, index) => {
+                    const id = index + 1;
+                    const correctLetter = item.answers[id];
+                    el.innerText = item.questions[id][correctLetter];
+                    el.classList.add('revealed');
+                });
+            },
+
+            checkAnswers: function() {
+                const item = this.data[this.state.currentIdx];
+                let score = 0;
+                let total = Object.keys(item.answers).length;
+
+                Object.keys(item.answers).forEach(qNum => {
+                    const correctLetter = item.answers[qNum];
+                    const userLetter = this.state.userAnswers[qNum];
+                    const slot = document.getElementById(`gap-${qNum}`);
+                    const correctBtn = document.getElementById(`btn-${qNum}-${correctLetter}`);
+                    const userBtn = userLetter ? document.getElementById(`btn-${qNum}-${userLetter}`) : null;
+
+                    document.querySelectorAll(`.btn-q${qNum}`).forEach(b => {
+                        b.classList.remove('selected'); 
+                        b.style.pointerEvents = 'none'; 
+                    });
+
+                    if (userLetter === correctLetter) {
+                        score++;
+                        if(userBtn) {
+                            userBtn.classList.add('state-correct');
+                            userBtn.querySelector('.icon-slot').innerText = '✅';
+                        }
+                        slot.classList.add('correct');
+                    } else {
+                        if(userBtn) {
+                            userBtn.classList.add('state-wrong');
+                            userBtn.querySelector('.icon-slot').innerText = '❌';
+                        }
+                        if(correctBtn) {
+                            correctBtn.classList.add('state-missed');
+                            correctBtn.querySelector('.icon-slot').innerText = '✅';
+                        }
+                        slot.classList.add('wrong');
+                        const wrongWord = slot.innerText === `[ ${qNum} ]` ? "?" : slot.innerText;
+                        const correctWord = item.questions[qNum][correctLetter];
+                        slot.innerHTML = `<span class="line-through opacity-70">${wrongWord}</span> <span class="bg-green-500 text-white px-2 py-1 ml-2 rounded-lg shadow-sm">${correctWord}</span>`;
+                    }
+                });
+
+                const disp = document.getElementById('score-display');
+                disp.innerText = `${score} / ${total}`;
+                disp.classList.remove('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('btn-retry').classList.remove('hidden');
+            },
+
+            resetActivity: function() { this.loadActivity(); }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
