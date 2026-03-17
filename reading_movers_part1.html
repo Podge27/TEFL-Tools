@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movers Part 3: Reading for Detail</title>
+    <title>Movers Part 1: Definitions</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
@@ -15,41 +15,26 @@
         .btn-back { display: inline-block; background: linear-gradient(135deg, #00BCD4, #4DD0E1); color: black; padding: 10px 20px; border-radius: 8px; font-weight: bold; border: 1px solid white; cursor: pointer; transition: transform 0.2s; text-decoration: none;}
         .btn-back:hover { background-color: #555; transform: translateY(-2px); color: white; }
 
-        /* Classroom Mode Gaps */
-        .class-gap { display: inline-flex; align-items: center; justify-content: center; min-width: 100px; height: 35px; border-bottom: 4px solid #cbd5e1; font-weight: 700; color: #94a3b8; cursor: pointer; transition: all 0.2s; margin: 0 5px; background-color: #f8fafc; border-radius: 8px 8px 0 0; }
-        .class-gap:hover { background-color: #fef3c7; border-bottom-color: #fbbf24; color: #d97706; }
-        .class-gap.revealed { border-bottom-color: #22c55e; color: #15803d; background-color: #f0fdf4; }
-
-        /* Exam Mode Click & Drop Gaps */
-        .exam-gap { display: inline-flex; align-items: center; justify-content: center; min-width: 120px; height: 35px; border-bottom: 4px dashed #cbd5e1; font-weight: 700; color: #4338ca; cursor: pointer; transition: all 0.2s; margin: 0 5px; background-color: #f8fafc; border-radius: 8px 8px 0 0; padding: 0 10px; }
-        .exam-gap:hover { border-bottom-color: #818cf8; background-color: #eef2ff; }
-        .exam-gap.filled { border-bottom-style: solid; border-bottom-color: #4f46e5; }
-        .exam-gap.correct { border-bottom-color: #22c55e; background-color: #f0fdf4; color: #15803d; border-bottom-style: solid; }
-        .exam-gap.wrong { border-bottom-color: #ef4444; background-color: #fef2f2; color: #b91c1c; border-bottom-style: solid; text-decoration: line-through; }
-
-        /* Click & Drop Word Bank Items */
-        .bank-item { cursor: pointer; transition: all 0.2s; border: 4px solid transparent; }
-        .bank-item:hover { border-color: #e2e8f0; transform: translateY(-2px); }
-        .bank-item.selected { border-color: #4f46e5; background-color: #eef2ff; transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .bank-item.used { opacity: 0.3; pointer-events: none; filter: grayscale(1); border-color: transparent; }
-
-        /* Title Selection Buttons */
-        .title-btn { width: 100%; text-align: left; padding: 15px; border: 3px solid #e2e8f0; border-radius: 12px; font-weight: bold; color: #475569; transition: all 0.2s; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;}
-        .title-btn:hover { border-color: #818cf8; background-color: #eef2ff; }
-        .title-btn.selected { border-color: #4f46e5; background-color: #eef2ff; color: #4f46e5; }
-        .title-btn.correct { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
-        .title-btn.wrong { border-color: #ef4444; background-color: #fef2f2; color: #b91c1c; }
-        .title-icon { font-size: 1.25rem; }
+        /* Exam Mode Typing Box */
+        .def-input { border: 2px solid #cbd5e1; border-radius: 8px; background: #f8fafc; font-weight: 700; color: #334155; padding: 8px 16px; width: 100%; max-width: 250px; outline: none; transition: all 0.2s; font-size: 1.125rem; }
+        .def-input:focus { border-color: #4f46e5; background: white; }
+        .def-input.correct { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
+        .def-input.wrong { border-color: #ef4444; background-color: #fef2f2; color: #b91c1c; text-decoration: line-through; }
+        
+        /* Classroom Mode Click Box */
+        .class-gap { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 44px; border: 2px dashed #cbd5e1; font-weight: 700; color: #94a3b8; cursor: pointer; transition: all 0.2s; background-color: #f8fafc; border-radius: 8px; padding: 0 16px; font-size: 1.125rem; }
+        .class-gap:hover { background-color: #fef3c7; border-color: #fbbf24; color: #d97706; }
+        .class-gap.revealed { border: 2px solid #22c55e; color: #15803d; background-color: #f0fdf4; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div class="w-full max-w-7xl mx-auto mt-2 bg-white shadow-xl rounded-3xl border-4 border-slate-100 flex flex-col h-[85vh] overflow-hidden">
+    <div class="w-full max-w-5xl mx-auto mt-2 bg-white shadow-xl rounded-3xl border-4 border-slate-100 flex flex-col min-h-[85vh] overflow-hidden">
         
-        <div class="bg-white border-b-2 border-slate-100 p-4 md:p-6 flex justify-between items-center flex-shrink-0 z-10">
+        <div class="bg-white border-b-2 border-slate-100 p-4 md:p-6 flex justify-between items-center flex-shrink-0">
             <div class="flex items-center gap-6">
                 <a href="reading_kids_index.html" class="btn-back">← Menu</a>
-                <h1 class="text-2xl font-extrabold text-slate-800">Movers <span class="text-indigo-500">Part 3</span></h1>
+                <h1 class="text-2xl font-extrabold text-slate-800">Movers <span class="text-indigo-500">Part 1</span></h1>
             </div>
         </div>
 
@@ -61,12 +46,12 @@
                     <button onclick="app.selectMode('classroom')" id="mode-classroom" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
                         <span class="text-6xl mb-4">👨‍🏫</span>
                         <span class="text-3xl font-bold text-slate-700">Classroom</span>
-                        <span class="text-lg mt-2">Click to reveal the missing words.</span>
+                        <span class="text-lg mt-2">Click to reveal the answer.</span>
                     </button>
                     <button onclick="app.selectMode('exam')" id="mode-exam" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
                         <span class="text-6xl mb-4">📝</span>
                         <span class="text-3xl font-bold text-slate-700">Exam Practice</span>
-                        <span class="text-lg mt-2">Click and drop the words. 6 Marks.</span>
+                        <span class="text-lg mt-2">Type exactly. 5 Marks.</span>
                     </button>
                 </div>
                 <div class="flex flex-col items-center gap-4">
@@ -76,38 +61,31 @@
             </div>
 
             <div id="screen-list" class="hidden flex-1 overflow-y-auto p-8 flex flex-col w-full bg-slate-50">
-                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Story</h2>
+                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Task</h2>
                 <div id="list-container" class="space-y-4 pb-10 flex-1 max-w-3xl mx-auto w-full"></div>
                 <div class="flex justify-center mt-4"><button onclick="app.showDashboard()" class="px-8 py-3 font-bold text-white rounded-xl bg-slate-400 hover:bg-slate-500 shadow-sm transition">Back</button></div>
             </div>
 
             <div id="screen-activity" class="hidden flex-1 flex flex-row bg-slate-50 overflow-hidden">
                 
-                <div class="w-[75%] h-full overflow-y-auto p-8 md:p-12 bg-white border-r-4 border-slate-200 shadow-sm">
-                    <div class="max-w-5xl mx-auto w-full pb-24">
-                        <h2 id="act-title" class="text-3xl font-black text-slate-800 mb-8"></h2>
-                        
-                        <div id="act-text" class="text-2xl leading-[2.5] text-slate-700 font-medium mb-12">
+                <div class="w-[60%] h-full overflow-y-auto p-8 border-r-4 border-slate-200">
+                    <div class="max-w-3xl mx-auto pb-24">
+                        <h3 class="text-xl font-black text-slate-400 uppercase tracking-widest mb-6">Read the sentences and choose a word</h3>
+                        <div id="questions-container" class="space-y-6">
                             </div>
-                        
-                        <div class="bg-indigo-50 p-8 rounded-3xl border-4 border-indigo-100">
-                            <h3 class="text-xl font-black text-indigo-800 mb-4">(6) Now choose the best name for the story.</h3>
-                            <div id="title-options-container" class="space-y-3">
-                                </div>
-                        </div>
                     </div>
                 </div>
 
-                <div class="w-[25%] h-full bg-slate-50 p-8 flex flex-col items-center shadow-inner z-10 overflow-y-auto">
-                    <h4 class="font-bold text-indigo-400 uppercase tracking-wider mb-6 text-center" id="bank-instruction">Word Bank</h4>
-                    <div id="word-bank-grid" class="grid grid-cols-2 gap-4 w-full">
+                <div class="w-[40%] h-full bg-white p-8 flex flex-col items-center shadow-inner z-10">
+                    <h4 class="font-bold text-indigo-400 uppercase tracking-wider mb-6 text-center">Word Bank</h4>
+                    <div id="word-bank-grid" class="grid grid-cols-2 gap-4 w-full max-w-sm">
                         </div>
                 </div>
 
             </div>
 
-            <div id="bottom-bar" class="hidden p-6 bg-white border-t-2 border-slate-200 flex justify-between items-center shadow-inner flex-shrink-0 z-50">
-                <div id="score-tally" class="hidden text-2xl font-black text-indigo-600 bg-indigo-50 px-6 py-2 rounded-xl border-2 border-indigo-200">Score: <span id="current-score">0</span> / 6</div>
+            <div id="bottom-bar" class="hidden p-6 bg-white border-t-2 border-slate-200 flex justify-between items-center shadow-inner mt-auto relative z-50">
+                <div id="score-tally" class="hidden text-2xl font-black text-indigo-600 bg-indigo-50 px-6 py-2 rounded-xl border-2 border-indigo-200">Score: <span id="current-score">0</span> / 5</div>
                 <button id="btn-check" onclick="app.checkAnswers()" class="hidden px-8 py-4 rounded-xl font-bold text-xl bg-green-500 text-white hover:bg-green-600 transition shadow-md ml-auto">Check Answers ✓</button>
                 <div id="post-check-btns" class="hidden flex gap-4 ml-auto">
                     <button onclick="location.reload()" class="px-6 py-3 rounded-xl font-bold text-lg bg-amber-400 text-amber-900 hover:bg-amber-500 shadow-md transition">Try Another</button>
@@ -119,22 +97,16 @@
     </div>
 
     <script>
-        // PASTE SUPABASE KEYS HERE
+        // PASTE YOUR SUPABASE KEYS HERE
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
-
 
         const app = {
             supabase: null,
             data: [], 
-            state: { 
-                mode: null, 
-                currentIdx: 0, 
-                selectedTitle: null,
-                selectedWord: null,
-                gapPlacements: { 1: null, 2: null, 3: null, 4: null, 5: null }
-            },
+            state: { mode: null, currentIdx: 0 },
 
+            // --- THE RECEIVER ---
             getParams: function() {
                 const params = new URLSearchParams(window.location.search);
                 const extensions = ['storyId', 'mode'];
@@ -154,7 +126,7 @@
                     document.getElementById('start-btn').disabled = false;
                     document.getElementById('btn-list').disabled = false;
                 } else {
-                    document.getElementById('start-btn').innerText = "No texts found!";
+                    document.getElementById('start-btn').innerText = "No tasks found!";
                 }
             },
 
@@ -163,7 +135,7 @@
                     const { data, error } = await this.supabase
                         .from('reading_materials')
                         .select('material_data')
-                        .eq('exam_part', 3) 
+                        .eq('exam_part', 1) 
                         .eq('material_data->>id', extensions.storyId); 
 
                     if (error || data.length === 0) {
@@ -211,7 +183,7 @@
                         .from('reading_materials')
                         .select('material_data')
                         .eq('exam_level', 'Movers')
-                        .eq('exam_part', 3);
+                        .eq('exam_part', 1);
 
                     if (error) throw error;
                     this.data = data.map(row => row.material_data);
@@ -252,52 +224,46 @@
             startActivity: function(isRandom = true) {
                 if (isRandom) this.state.currentIdx = Math.floor(Math.random() * this.data.length);
                 const item = this.data[this.state.currentIdx];
-                
-                // Reset State
-                this.state.selectedTitle = null;
-                this.state.selectedWord = null;
-                this.state.gapPlacements = { 1: null, 2: null, 3: null, 4: null, 5: null };
 
+                // --- THE TRANSMITTER ---
                 if (item.id && this.state.mode) {
                     const newUrl = window.location.pathname + '?storyId=' + item.id + '&mode=' + this.state.mode;
                     window.history.replaceState(null, '', newUrl);
                 }
 
-                document.getElementById('act-title').innerText = "Read the story. Choose a word from the box.";
+                // 1. Render Word Bank
+                const bankGrid = document.getElementById('word-bank-grid');
+                bankGrid.innerHTML = '';
+                item.word_bank.forEach(w => {
+                    bankGrid.innerHTML += `
+                        <div class="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                            <span class="text-4xl mb-2">${w.emoji}</span>
+                            <span class="font-bold text-slate-600 text-lg">${w.word}</span>
+                        </div>
+                    `;
+                });
+
+                // 2. Render Questions
+                const qContainer = document.getElementById('questions-container');
+                qContainer.innerHTML = '';
                 
-                if (this.state.mode === 'exam') {
-                    document.getElementById('bank-instruction').innerText = "Click a word, then click a gap";
-                } else {
-                    document.getElementById('bank-instruction').innerText = "Word Bank";
-                }
-
-                this.renderWordBank();
-
-                let storyHtml = item.story;
-                for (let i = 1; i <= 5; i++) {
+                item.questions.forEach((q, index) => {
+                    const qNum = index + 1;
+                    const block = document.createElement('div');
+                    block.className = "flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl hover:bg-slate-50 transition";
+                    
+                    const textHtml = `<div class="text-xl font-bold text-slate-700 flex-1"><span class="text-indigo-400 mr-3">${qNum}.</span>${q.definition}</div>`;
+                    
+                    let inputHtml = '';
                     if (this.state.mode === 'classroom') {
-                        const correctWord = item.answers[i];
-                        storyHtml = storyHtml.replace(`[${i}]`, `<span class="class-gap" onclick="app.toggleClassGap(this, '${correctWord.replace(/'/g, "\\'")}', ${i})">[ ${i} ]</span>`);
+                        // Pass the exact string directly into the function call safely
+                        inputHtml = `<span class="class-gap" onclick="app.toggleClassGap(this, '${q.answer.replace(/'/g, "\\'")}')">Reveal Answer</span>`;
                     } else {
-                        storyHtml = storyHtml.replace(`[${i}]`, `
-                            <span class="inline-flex items-center">
-                                <span id="gap-${i}" class="exam-gap" onclick="app.handleGapClick(${i})">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                                <span id="icon-${i}" class="ml-1 text-lg"></span>
-                            </span>
-                        `);
+                        inputHtml = `<div class="flex items-center whitespace-nowrap"><input type="text" id="input-${q.id}" class="def-input" placeholder="Type here..."></div>`;
                     }
-                }
-                document.getElementById('act-text').innerHTML = storyHtml;
 
-                const titleCont = document.getElementById('title-options-container');
-                titleCont.innerHTML = '';
-                item.title_options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = "title-btn";
-                    btn.id = `title-btn-${opt.replace(/\s+/g, '-')}`;
-                    btn.innerHTML = `<span>${opt}</span><span class="title-icon"></span>`;
-                    btn.onclick = () => this.selectTitleOption(opt);
-                    titleCont.appendChild(btn);
+                    block.innerHTML = textHtml + inputHtml;
+                    qContainer.appendChild(block);
                 });
 
                 this.switchScreen('screen-activity');
@@ -314,72 +280,9 @@
                 }
             },
 
-            renderWordBank: function() {
-                const item = this.data[this.state.currentIdx];
-                const bankGrid = document.getElementById('word-bank-grid');
-                bankGrid.innerHTML = '';
-                
-                const usedWords = Object.values(this.state.gapPlacements);
-
-                item.word_bank.forEach(w => {
-                    const isUsed = usedWords.includes(w.word);
-                    const isSelected = this.state.selectedWord === w.word;
-                    
-                    let classes = "flex flex-col items-center justify-center p-3 bg-white rounded-xl text-center bank-item";
-                    
-                    if (this.state.mode === 'exam') {
-                        if (isUsed) classes += " used";
-                        else if (isSelected) classes += " selected";
-                        else classes += " border-2 border-slate-200";
-                    } else {
-                        classes += " border-2 border-slate-200"; // Static in classroom mode
-                    }
-
-                    bankGrid.innerHTML += `
-                        <div class="${classes}" onclick="app.selectBankWord('${w.word.replace(/'/g, "\\'")}')">
-                            <span class="text-4xl mb-2">${w.emoji}</span>
-                            <span class="font-bold text-slate-600 text-lg">${w.word}</span>
-                        </div>
-                    `;
-                });
-            },
-
-            selectBankWord: function(word) {
-                if (this.state.mode !== 'exam') return; 
-                
-                if (this.state.selectedWord === word) {
-                    this.state.selectedWord = null; 
-                } else {
-                    this.state.selectedWord = word;
-                }
-                this.renderWordBank();
-            },
-
-            handleGapClick: function(gapId) {
-                if (this.state.mode !== 'exam') return;
-
-                const gap = document.getElementById(`gap-${gapId}`);
-                
-                if (this.state.gapPlacements[gapId]) {
-                    this.state.gapPlacements[gapId] = null;
-                    gap.innerText = "\u00A0\u00A0\u00A0\u00A0\u00A0"; // Blank spaces
-                    gap.classList.remove('filled');
-                    this.renderWordBank();
-                    return;
-                }
-
-                if (this.state.selectedWord && !this.state.gapPlacements[gapId]) {
-                    this.state.gapPlacements[gapId] = this.state.selectedWord;
-                    gap.innerText = this.state.selectedWord;
-                    gap.classList.add('filled');
-                    this.state.selectedWord = null; 
-                    this.renderWordBank();
-                }
-            },
-
-            toggleClassGap: function(el, word, id) {
+            toggleClassGap: function(el, word) {
                 if (el.classList.contains('revealed')) {
-                    el.innerText = `[ ${id} ]`;
+                    el.innerText = `Reveal Answer`;
                     el.classList.remove('revealed');
                 } else {
                     el.innerText = word;
@@ -387,86 +290,46 @@
                 }
             },
 
-            selectTitleOption: function(selected) {
-                const item = this.data[this.state.currentIdx];
-                this.state.selectedTitle = selected;
-                
-                item.title_options.forEach(opt => {
-                    const btn = document.getElementById(`title-btn-${opt.replace(/\s+/g, '-')}`);
-                    if (btn) {
-                        btn.classList.remove('selected', 'correct', 'wrong');
-                        btn.querySelector('.title-icon').innerText = ''; 
-                    }
-                });
-                
-                const activeBtn = document.getElementById(`title-btn-${selected.replace(/\s+/g, '-')}`);
-                if (activeBtn) activeBtn.classList.add('selected');
-
-                if (this.state.mode === 'classroom') {
-                    if (selected === item.title_answer) {
-                        activeBtn.classList.add('correct');
-                        activeBtn.querySelector('.title-icon').innerText = '✅';
-                    } else {
-                        activeBtn.classList.add('wrong');
-                        activeBtn.querySelector('.title-icon').innerText = '❌';
-                    }
-                }
+            // Explain like I'm 5: Clean text removes extra spaces so typing " coffee " is accepted as "coffee"
+            normalizeText: function(str) {
+                return str.toLowerCase().trim().replace(/\s+/g, ' ');
             },
 
             checkAnswers: function() {
                 const item = this.data[this.state.currentIdx];
                 let score = 0;
 
-                for (let i = 1; i <= 5; i++) {
-                    const gap = document.getElementById(`gap-${i}`);
-                    const iconSpan = document.getElementById(`icon-${i}`);
-                    if (!gap) continue;
+                item.questions.forEach(q => {
+                    const input = document.getElementById(`input-${q.id}`);
+                    if (!input) return;
                     
-                    gap.style.pointerEvents = 'none'; 
-                    const userAnswer = this.state.gapPlacements[i];
+                    input.disabled = true;
+                    const userText = this.normalizeText(input.value);
+                    const correctText = this.normalizeText(q.answer);
                     
-                    if (userAnswer === item.answers[i]) {
-                        gap.classList.add('correct');
-                        if(iconSpan) iconSpan.innerText = '✅';
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = "ml-2 text-xl";
+
+                    if (userText === correctText) {
+                        input.classList.add('correct');
+                        iconSpan.innerText = '✅';
                         score++;
                     } else {
-                        gap.classList.add('wrong');
-                        if(iconSpan) iconSpan.innerText = '❌';
+                        input.classList.add('wrong');
+                        iconSpan.innerText = '❌';
                         
                         const correction = document.createElement('span');
-                        correction.className = "text-sm bg-green-500 text-white px-2 py-1 ml-2 rounded shadow-sm align-middle inline-block font-bold";
-                        correction.innerText = item.answers[i];
-                        gap.parentNode.insertBefore(correction, iconSpan.nextSibling);
+                        correction.className = "text-sm bg-green-500 text-white px-3 py-1 ml-2 rounded-lg shadow-sm font-bold";
+                        correction.innerText = q.answer; // Show them how it should have been spelled
+                        input.parentNode.appendChild(correction);
                     }
-                }
-
-                item.title_options.forEach(opt => {
-                    const btn = document.getElementById(`title-btn-${opt.replace(/\s+/g, '-')}`);
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.style.pointerEvents = 'none';
-                        const icon = btn.querySelector('.title-icon');
-                        
-                        if (opt === item.title_answer) {
-                            btn.classList.add('correct');
-                            icon.innerText = '✅';
-                            if (this.state.selectedTitle === opt) score++;
-                        } else if (this.state.selectedTitle === opt) {
-                            btn.classList.add('wrong');
-                            icon.innerText = '❌';
-                        }
-                    }
+                    input.parentNode.insertBefore(iconSpan, input.nextSibling);
                 });
 
                 document.getElementById('current-score').innerText = score;
                 document.getElementById('score-tally').classList.remove('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('post-check-btns').classList.remove('hidden');
-                
-                // Lock the word bank
-                document.getElementById('word-bank-grid').style.pointerEvents = 'none';
-                this.state.selectedWord = null;
-                this.renderWordBank();
             },
 
             switchScreen: function(s) {

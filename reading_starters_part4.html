@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movers Part 3: Reading for Detail</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Starters Part 4: Factual Reading</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -32,14 +31,6 @@
         .bank-item:hover { border-color: #e2e8f0; transform: translateY(-2px); }
         .bank-item.selected { border-color: #4f46e5; background-color: #eef2ff; transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .bank-item.used { opacity: 0.3; pointer-events: none; filter: grayscale(1); border-color: transparent; }
-
-        /* Title Selection Buttons */
-        .title-btn { width: 100%; text-align: left; padding: 15px; border: 3px solid #e2e8f0; border-radius: 12px; font-weight: bold; color: #475569; transition: all 0.2s; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;}
-        .title-btn:hover { border-color: #818cf8; background-color: #eef2ff; }
-        .title-btn.selected { border-color: #4f46e5; background-color: #eef2ff; color: #4f46e5; }
-        .title-btn.correct { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
-        .title-btn.wrong { border-color: #ef4444; background-color: #fef2f2; color: #b91c1c; }
-        .title-icon { font-size: 1.25rem; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -49,7 +40,7 @@
         <div class="bg-white border-b-2 border-slate-100 p-4 md:p-6 flex justify-between items-center flex-shrink-0 z-10">
             <div class="flex items-center gap-6">
                 <a href="reading_kids_index.html" class="btn-back">← Menu</a>
-                <h1 class="text-2xl font-extrabold text-slate-800">Movers <span class="text-indigo-500">Part 3</span></h1>
+                <h1 class="text-2xl font-extrabold text-slate-800">Starters <span class="text-indigo-500">Part 4</span></h1>
             </div>
         </div>
 
@@ -66,7 +57,7 @@
                     <button onclick="app.selectMode('exam')" id="mode-exam" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
                         <span class="text-6xl mb-4">📝</span>
                         <span class="text-3xl font-bold text-slate-700">Exam Practice</span>
-                        <span class="text-lg mt-2">Click and drop the words. 6 Marks.</span>
+                        <span class="text-lg mt-2">Click and drop the words. 5 Marks.</span>
                     </button>
                 </div>
                 <div class="flex flex-col items-center gap-4">
@@ -76,7 +67,7 @@
             </div>
 
             <div id="screen-list" class="hidden flex-1 overflow-y-auto p-8 flex flex-col w-full bg-slate-50">
-                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Story</h2>
+                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Text</h2>
                 <div id="list-container" class="space-y-4 pb-10 flex-1 max-w-3xl mx-auto w-full"></div>
                 <div class="flex justify-center mt-4"><button onclick="app.showDashboard()" class="px-8 py-3 font-bold text-white rounded-xl bg-slate-400 hover:bg-slate-500 shadow-sm transition">Back</button></div>
             </div>
@@ -86,15 +77,8 @@
                 <div class="w-[75%] h-full overflow-y-auto p-8 md:p-12 bg-white border-r-4 border-slate-200 shadow-sm">
                     <div class="max-w-5xl mx-auto w-full pb-24">
                         <h2 id="act-title" class="text-3xl font-black text-slate-800 mb-8"></h2>
-                        
                         <div id="act-text" class="text-2xl leading-[2.5] text-slate-700 font-medium mb-12">
                             </div>
-                        
-                        <div class="bg-indigo-50 p-8 rounded-3xl border-4 border-indigo-100">
-                            <h3 class="text-xl font-black text-indigo-800 mb-4">(6) Now choose the best name for the story.</h3>
-                            <div id="title-options-container" class="space-y-3">
-                                </div>
-                        </div>
                     </div>
                 </div>
 
@@ -107,7 +91,7 @@
             </div>
 
             <div id="bottom-bar" class="hidden p-6 bg-white border-t-2 border-slate-200 flex justify-between items-center shadow-inner flex-shrink-0 z-50">
-                <div id="score-tally" class="hidden text-2xl font-black text-indigo-600 bg-indigo-50 px-6 py-2 rounded-xl border-2 border-indigo-200">Score: <span id="current-score">0</span> / 6</div>
+                <div id="score-tally" class="hidden text-2xl font-black text-indigo-600 bg-indigo-50 px-6 py-2 rounded-xl border-2 border-indigo-200">Score: <span id="current-score">0</span> / 5</div>
                 <button id="btn-check" onclick="app.checkAnswers()" class="hidden px-8 py-4 rounded-xl font-bold text-xl bg-green-500 text-white hover:bg-green-600 transition shadow-md ml-auto">Check Answers ✓</button>
                 <div id="post-check-btns" class="hidden flex gap-4 ml-auto">
                     <button onclick="location.reload()" class="px-6 py-3 rounded-xl font-bold text-lg bg-amber-400 text-amber-900 hover:bg-amber-500 shadow-md transition">Try Another</button>
@@ -130,21 +114,13 @@
             state: { 
                 mode: null, 
                 currentIdx: 0, 
-                selectedTitle: null,
                 selectedWord: null,
                 gapPlacements: { 1: null, 2: null, 3: null, 4: null, 5: null }
             },
 
             getParams: function() {
                 const params = new URLSearchParams(window.location.search);
-                const extensions = ['storyId', 'mode'];
-                let result = {};
-                for (const ext of extensions) {
-                    if (params.has(ext)) {
-                        result[ext] = params.get(ext);
-                    }
-                }
-                return result; 
+                return { storyId: params.get('storyId'), mode: params.get('mode') }; 
             },
 
             startApp: async function() {
@@ -163,13 +139,11 @@
                     const { data, error } = await this.supabase
                         .from('reading_materials')
                         .select('material_data')
-                        .eq('exam_part', 3) 
+                        .eq('exam_level', 'Starters')
+                        .eq('exam_part', 4) 
                         .eq('material_data->>id', extensions.storyId); 
 
-                    if (error || data.length === 0) {
-                        console.warn("Extension not found! Reverting to default menu.");
-                        return await this.startApp(); 
-                    }
+                    if (error || data.length === 0) throw error;
 
                     this.data = [data[0].material_data]; 
                     this.state.currentIdx = 0; 
@@ -177,7 +151,6 @@
                     document.getElementById('start-btn').disabled = false;
                     document.getElementById('btn-list').disabled = false;
                 } catch (e) {
-                    console.error("Shared link error", e);
                     await this.startApp();
                 }
             },
@@ -185,23 +158,15 @@
             init: async function() {
                 if (typeof supabase !== 'undefined') {
                     this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    
                     const extensions = this.getParams();
 
-                    if (extensions.storyId) {
-                        await this.startSharedApp(extensions);
-                    } else {
-                        await this.startApp();
-                    }
+                    if (extensions.storyId) await this.startSharedApp(extensions);
+                    else await this.startApp();
 
                     if (extensions.mode) {
                         this.selectMode(extensions.mode);
-                        if (this.data.length > 0) {
-                            this.startActivity(false); 
-                        }
+                        if (this.data.length > 0) this.startActivity(false); 
                     }
-                } else {
-                    document.getElementById('start-btn').innerText = "Database error.";
                 }
             },
 
@@ -210,13 +175,12 @@
                     const { data, error } = await this.supabase
                         .from('reading_materials')
                         .select('material_data')
-                        .eq('exam_level', 'Movers')
-                        .eq('exam_part', 3);
+                        .eq('exam_level', 'Starters')
+                        .eq('exam_part', 4);
 
                     if (error) throw error;
                     this.data = data.map(row => row.material_data);
                 } catch (e) {
-                    console.error("Connection Error:", e);
                     document.getElementById('start-btn').innerText = "Error connecting! ❌";
                 }
             },
@@ -224,7 +188,6 @@
             selectMode: function(m) {
                 this.state.mode = m;
                 document.getElementById('mode-classroom').className = m === 'classroom' ? "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-indigo-400 bg-indigo-50 text-indigo-700 transition-all cursor-pointer min-h-[160px] shadow-md transform -translate-y-1" : "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50";
-                
                 document.getElementById('mode-exam').className = m === 'exam' ? "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-indigo-400 bg-indigo-50 text-indigo-700 transition-all cursor-pointer min-h-[160px] shadow-md transform -translate-y-1" : "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50";
 
                 if (this.data.length > 0) {
@@ -240,10 +203,7 @@
                     const btn = document.createElement('button');
                     btn.className = "w-full text-left p-5 bg-white rounded-2xl hover:bg-indigo-50 border-2 border-slate-200 font-bold text-slate-700 text-xl shadow-sm hover:-translate-y-1 transition";
                     btn.innerText = item.title;
-                    btn.onclick = () => {
-                        this.state.currentIdx = idx;
-                        this.startActivity(false); 
-                    }
+                    btn.onclick = () => { this.state.currentIdx = idx; this.startActivity(false); }
                     container.appendChild(btn);
                 });
                 this.switchScreen('screen-list');
@@ -253,8 +213,6 @@
                 if (isRandom) this.state.currentIdx = Math.floor(Math.random() * this.data.length);
                 const item = this.data[this.state.currentIdx];
                 
-                // Reset State
-                this.state.selectedTitle = null;
                 this.state.selectedWord = null;
                 this.state.gapPlacements = { 1: null, 2: null, 3: null, 4: null, 5: null };
 
@@ -263,7 +221,7 @@
                     window.history.replaceState(null, '', newUrl);
                 }
 
-                document.getElementById('act-title').innerText = "Read the story. Choose a word from the box.";
+                document.getElementById('act-title').innerText = "Read this. Choose a word from the box.";
                 
                 if (this.state.mode === 'exam') {
                     document.getElementById('bank-instruction').innerText = "Click a word, then click a gap";
@@ -277,7 +235,7 @@
                 for (let i = 1; i <= 5; i++) {
                     if (this.state.mode === 'classroom') {
                         const correctWord = item.answers[i];
-                        storyHtml = storyHtml.replace(`[${i}]`, `<span class="class-gap" onclick="app.toggleClassGap(this, '${correctWord.replace(/'/g, "\\'")}', ${i})">[ ${i} ]</span>`);
+                        storyHtml = storyHtml.replace(`[${i}]`, `<span class="class-gap" id="reveal-${i}" onclick="app.toggleClassGap(this, '${correctWord.replace(/'/g, "\\'")}', ${i})">[ ${i} ]</span>`);
                     } else {
                         storyHtml = storyHtml.replace(`[${i}]`, `
                             <span class="inline-flex items-center">
@@ -288,17 +246,6 @@
                     }
                 }
                 document.getElementById('act-text').innerHTML = storyHtml;
-
-                const titleCont = document.getElementById('title-options-container');
-                titleCont.innerHTML = '';
-                item.title_options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = "title-btn";
-                    btn.id = `title-btn-${opt.replace(/\s+/g, '-')}`;
-                    btn.innerHTML = `<span>${opt}</span><span class="title-icon"></span>`;
-                    btn.onclick = () => this.selectTitleOption(opt);
-                    titleCont.appendChild(btn);
-                });
 
                 this.switchScreen('screen-activity');
                 document.getElementById('bottom-bar').classList.remove('hidden');
@@ -332,7 +279,7 @@
                         else if (isSelected) classes += " selected";
                         else classes += " border-2 border-slate-200";
                     } else {
-                        classes += " border-2 border-slate-200"; // Static in classroom mode
+                        classes += " border-2 border-slate-200"; 
                     }
 
                     bankGrid.innerHTML += `
@@ -362,7 +309,7 @@
                 
                 if (this.state.gapPlacements[gapId]) {
                     this.state.gapPlacements[gapId] = null;
-                    gap.innerText = "\u00A0\u00A0\u00A0\u00A0\u00A0"; // Blank spaces
+                    gap.innerText = "\u00A0\u00A0\u00A0\u00A0\u00A0"; 
                     gap.classList.remove('filled');
                     this.renderWordBank();
                     return;
@@ -387,36 +334,11 @@
                 }
             },
 
-            selectTitleOption: function(selected) {
-                const item = this.data[this.state.currentIdx];
-                this.state.selectedTitle = selected;
-                
-                item.title_options.forEach(opt => {
-                    const btn = document.getElementById(`title-btn-${opt.replace(/\s+/g, '-')}`);
-                    if (btn) {
-                        btn.classList.remove('selected', 'correct', 'wrong');
-                        btn.querySelector('.title-icon').innerText = ''; 
-                    }
-                });
-                
-                const activeBtn = document.getElementById(`title-btn-${selected.replace(/\s+/g, '-')}`);
-                if (activeBtn) activeBtn.classList.add('selected');
-
-                if (this.state.mode === 'classroom') {
-                    if (selected === item.title_answer) {
-                        activeBtn.classList.add('correct');
-                        activeBtn.querySelector('.title-icon').innerText = '✅';
-                    } else {
-                        activeBtn.classList.add('wrong');
-                        activeBtn.querySelector('.title-icon').innerText = '❌';
-                    }
-                }
-            },
-
             checkAnswers: function() {
                 const item = this.data[this.state.currentIdx];
                 let score = 0;
 
+                // Only 5 questions for Starters
                 for (let i = 1; i <= 5; i++) {
                     const gap = document.getElementById(`gap-${i}`);
                     const iconSpan = document.getElementById(`icon-${i}`);
@@ -440,30 +362,11 @@
                     }
                 }
 
-                item.title_options.forEach(opt => {
-                    const btn = document.getElementById(`title-btn-${opt.replace(/\s+/g, '-')}`);
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.style.pointerEvents = 'none';
-                        const icon = btn.querySelector('.title-icon');
-                        
-                        if (opt === item.title_answer) {
-                            btn.classList.add('correct');
-                            icon.innerText = '✅';
-                            if (this.state.selectedTitle === opt) score++;
-                        } else if (this.state.selectedTitle === opt) {
-                            btn.classList.add('wrong');
-                            icon.innerText = '❌';
-                        }
-                    }
-                });
-
                 document.getElementById('current-score').innerText = score;
                 document.getElementById('score-tally').classList.remove('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('post-check-btns').classList.remove('hidden');
                 
-                // Lock the word bank
                 document.getElementById('word-bank-grid').style.pointerEvents = 'none';
                 this.state.selectedWord = null;
                 this.renderWordBank();

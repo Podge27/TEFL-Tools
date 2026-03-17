@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starters Part 2: Look and Read</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #FDFBF7; min-height: 100vh; display: flex; flex-direction: column; margin: 0; padding: 0; }
+        
+        .btn-back { display: inline-block; background: linear-gradient(135deg, #00BCD4, #4DD0E1); color: black; padding: 10px 20px; border-radius: 8px; font-weight: bold; border: 1px solid white; cursor: pointer; transition: transform 0.2s; text-decoration: none;}
+        .btn-back:hover { background-color: #555; transform: translateY(-2px); color: white; }
+
+        /* Exam Mode Buttons */
+        .choice-btn { width: 80px; height: 45px; font-size: 1.25rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 3px solid #cbd5e1; border-radius: 12px; background-color: white; cursor: pointer; transition: all 0.2s; color: #64748b; }
+        .choice-btn:hover { transform: translateY(-2px); border-color: #94a3b8; }
+        
+        .choice-btn.selected { border-color: #4f46e5; background-color: #eef2ff; color: #4f46e5; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .choice-btn.correct { border-color: #22c55e; background-color: #22c55e; color: white; }
+        .choice-btn.wrong { border-color: #ef4444; background-color: #ef4444; color: white; }
+        .choice-btn.missed { border-color: #3b82f6; background-color: #eff6ff; color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        .choice-btn.disabled { pointer-events: none; opacity: 0.5; }
+
+        /* Classroom Mode Button */
+        .reveal-btn { padding: 8px 16px; border: 3px dashed #cbd5e1; border-radius: 12px; font-weight: bold; color: #64748b; background: white; cursor: pointer; transition: all 0.2s; font-size: 1.125rem; min-width: 120px;}
+        .reveal-btn:hover { border-color: #4f46e5; color: #4f46e5; background: #eef2ff; }
+        .reveal-btn.revealed { border-style: solid; padding: 8px 16px;}
+        .revealed.true { border-color: #22c55e; color: #22c55e; background-color: #f0fdf4; }
+        .revealed.false { border-color: #ef4444; color: #ef4444; background-color: #fef2f2; }
+
+        /* Modal specific animation */
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-animate { animation: popIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div id="image-modal" class="fixed inset-0 z-[100] hidden bg-slate-900/95 flex items-center justify-center p-4 sm:p-8 backdrop-blur-sm cursor-zoom-out" onclick="app.closeImage()">
+        <button class="absolute top-6 right-6 sm:top-10 sm:right-10 text-slate-300 hover:text-white font-bold text-5xl transition-colors cursor-pointer z-50" onclick="app.closeImage()">×</button>
+        <img id="modal-image" src="" alt="Fullscreen Scene" class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border-4 border-slate-700 cursor-default modal-animate" onclick="event.stopPropagation()">
+    </div>
+
+    <div class="w-full max-w-7xl mx-auto mt-2 bg-white shadow-xl rounded-3xl border-4 border-slate-100 flex flex-col h-[85vh] overflow-hidden">
+        
+        <div class="bg-white border-b-2 border-slate-100 p-4 md:p-6 flex justify-between items-center flex-shrink-0 z-10">
+            <div class="flex items-center gap-6">
+                <a href="reading_kids_index.html" class="btn-back">← Menu</a>
+                <h1 class="text-2xl font-extrabold text-slate-800">Starters <span class="text-indigo-500">Part 2</span></h1>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-hidden relative flex flex-col">
+            
+            <div id="screen-dashboard" class="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
+                <h3 class="text-3xl font-bold mb-8 text-center text-slate-600">Choose how to play!</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full mb-10 max-w-3xl">
+                    <button onclick="app.selectMode('classroom')" id="mode-classroom" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
+                        <span class="text-6xl mb-4">👨‍🏫</span>
+                        <span class="text-3xl font-bold text-slate-700">Classroom</span>
+                        <span class="text-lg mt-2">Click to toggle the answer.</span>
+                    </button>
+                    <button onclick="app.selectMode('exam')" id="mode-exam" class="flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50">
+                        <span class="text-6xl mb-4">📝</span>
+                        <span class="text-3xl font-bold text-slate-700">Exam Practice</span>
+                        <span class="text-lg mt-2">Choose yes or no. 5 Marks.</span>
+                    </button>
+                </div>
+                <div class="flex flex-col items-center gap-4">
+                    <button onclick="app.startActivity()" id="start-btn" disabled class="px-12 py-4 bg-indigo-500 text-white rounded-2xl font-bold text-2xl transition hover:bg-indigo-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">Loading Database... ⏳</button>
+                    <button onclick="app.showList()" id="btn-list" disabled class="text-slate-400 font-bold hover:text-indigo-500 text-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed">or Pick from List</button>
+                </div>
+            </div>
+
+            <div id="screen-list" class="hidden flex-1 overflow-y-auto p-8 flex flex-col w-full bg-slate-50">
+                <h2 class="text-4xl font-black text-slate-800 mb-6 text-center">Choose a Picture</h2>
+                <div id="list-container" class="space-y-4 pb-10 flex-1 max-w-3xl mx-auto w-full"></div>
+                <div class="flex justify-center mt-4"><button onclick="app.showDashboard()" class="px-8 py-3 font-bold text-white rounded-xl bg-slate-400 hover:bg-slate-500 shadow-sm transition">Back</button></div>
+            </div>
+
+            <div id="screen-activity" class="hidden flex-1 flex flex-col md:flex-row bg-slate-50 overflow-hidden">
+                
+                <div class="w-full md:w-[50%] h-[40%] md:h-full p-6 md:p-8 bg-white border-b-4 md:border-b-0 md:border-r-4 border-slate-200 shadow-sm flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-black text-slate-400 uppercase tracking-widest">Look at the picture</h3>
+                        <span class="text-sm font-bold text-indigo-400 bg-indigo-50 px-3 py-1 rounded-lg">🔍 Click to zoom</span>
+                    </div>
+                    <div class="flex-1 w-full bg-slate-100 rounded-2xl border-4 border-slate-200 overflow-hidden flex items-center justify-center relative group cursor-zoom-in" onclick="app.openImage()">
+                        <img id="exam-image" src="" alt="Exam Scene" class="w-full h-full object-contain relative z-10 hidden transition-transform duration-300 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center justify-center">
+                            <span class="bg-white text-indigo-600 px-4 py-2 rounded-xl font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all">View Fullscreen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-[50%] h-[60%] md:h-full overflow-y-auto p-6 md:p-10">
+                    <h3 class="text-xl font-black text-slate-400 uppercase tracking-widest mb-6">Read the sentences. Choose yes or no.</h3>
+                    <div id="questions-container" class="space-y-4 pb-20">
+                        </div>
+                </div>
+
+            </div>
+
+            <div id="bottom-bar" class="hidden p-6 bg-white border-t-2 border-slate-200 flex justify-between items-center shadow-inner flex-shrink-0 z-50">
+                <div id="score-tally" class="hidden text-2xl font-black text-indigo-600 bg-indigo-50 px-6 py-2 rounded-xl border-2 border-indigo-200">Score: <span id="current-score">0</span> / 5</div>
+                <button id="btn-check" onclick="app.checkAnswers()" class="hidden px-8 py-4 rounded-xl font-bold text-xl bg-green-500 text-white hover:bg-green-600 transition shadow-md ml-auto">Check Answers ✓</button>
+                <div id="post-check-btns" class="hidden flex gap-4 ml-auto">
+                    <button onclick="location.reload()" class="px-6 py-3 rounded-xl font-bold text-lg bg-amber-400 text-amber-900 hover:bg-amber-500 shadow-md transition">Try Another</button>
+                    <button onclick="app.showDashboard()" class="px-6 py-3 rounded-xl font-bold text-lg bg-slate-400 text-white hover:bg-slate-500 shadow-md transition">Menu</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // PASTE YOUR SUPABASE KEYS HERE
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+
+        const app = {
+            supabase: null,
+            data: [], 
+            state: { mode: null, currentIdx: 0, userChoices: {} },
+
+            getParams: function() {
+                const params = new URLSearchParams(window.location.search);
+                return { storyId: params.get('storyId'), mode: params.get('mode') }; 
+            },
+
+            startApp: async function() {
+                await this.loadData();
+                if (this.data.length > 0) {
+                    document.getElementById('start-btn').innerText = "Let's Go! →";
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                } else {
+                    document.getElementById('start-btn').innerText = "No tasks found!";
+                }
+            },
+
+            startSharedApp: async function(extensions) {
+                try {
+                    const { data, error } = await this.supabase
+                        .from('reading_materials')
+                        .select('material_data')
+                        .eq('exam_part', 2)
+                        .eq('exam_level', 'Starters') 
+                        .eq('material_data->>id', extensions.storyId); 
+
+                    if (error || data.length === 0) throw error;
+
+                    this.data = [data[0].material_data]; 
+                    this.state.currentIdx = 0; 
+                    document.getElementById('start-btn').innerText = "Let's Go! →";
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                } catch (e) {
+                    await this.startApp();
+                }
+            },
+
+            init: async function() {
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    const extensions = this.getParams();
+
+                    if (extensions.storyId) await this.startSharedApp(extensions);
+                    else await this.startApp();
+
+                    if (extensions.mode) {
+                        this.selectMode(extensions.mode);
+                        if (this.data.length > 0) this.startActivity(false); 
+                    }
+                }
+            },
+
+            loadData: async function() {
+                try {
+                    const { data, error } = await this.supabase
+                        .from('reading_materials')
+                        .select('material_data')
+                        .eq('exam_level', 'Starters')
+                        .eq('exam_part', 2);
+                    if (error) throw error;
+                    this.data = data.map(row => row.material_data);
+                } catch (e) {
+                    document.getElementById('start-btn').innerText = "Error connecting! ❌";
+                }
+            },
+
+            selectMode: function(m) {
+                this.state.mode = m;
+                document.getElementById('mode-classroom').className = m === 'classroom' ? "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-indigo-400 bg-indigo-50 text-indigo-700 transition-all cursor-pointer min-h-[160px] shadow-md transform -translate-y-1" : "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50";
+                document.getElementById('mode-exam').className = m === 'exam' ? "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-indigo-400 bg-indigo-50 text-indigo-700 transition-all cursor-pointer min-h-[160px] shadow-md transform -translate-y-1" : "flex flex-col items-center justify-center p-6 rounded-3xl border-4 border-gray-100 bg-white text-gray-500 transition-all cursor-pointer min-h-[160px] hover:border-indigo-300 hover:bg-indigo-50";
+
+                if (this.data.length > 0) {
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('btn-list').disabled = false;
+                }
+            },
+
+            showList: function() {
+                const container = document.getElementById('list-container');
+                container.innerHTML = '';
+                this.data.forEach((item, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-5 bg-white rounded-2xl hover:bg-indigo-50 border-2 border-slate-200 font-bold text-slate-700 text-xl shadow-sm hover:-translate-y-1 transition";
+                    btn.innerText = item.title;
+                    btn.onclick = () => { this.state.currentIdx = idx; this.startActivity(false); }
+                    container.appendChild(btn);
+                });
+                this.switchScreen('screen-list');
+            },
+
+            startActivity: function(isRandom = true) {
+                if (isRandom) this.state.currentIdx = Math.floor(Math.random() * this.data.length);
+                const item = this.data[this.state.currentIdx];
+                this.state.userChoices = {}; 
+
+                if (item.id && this.state.mode) {
+                    const newUrl = window.location.pathname + '?storyId=' + item.id + '&mode=' + this.state.mode;
+                    window.history.replaceState(null, '', newUrl);
+                }
+
+                const imgEl = document.getElementById('exam-image');
+                if (item.image_url) {
+                    imgEl.src = item.image_url;
+                    imgEl.classList.remove('hidden');
+                } else {
+                    imgEl.classList.add('hidden');
+                }
+
+                const qContainer = document.getElementById('questions-container');
+                qContainer.innerHTML = '';
+                
+                item.questions.forEach((q, index) => {
+                    const block = document.createElement('div');
+                    block.className = "flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 p-5 bg-white rounded-2xl border-2 border-slate-100 shadow-sm hover:border-indigo-100 transition";
+                    
+                    const textHtml = `
+                        <div class="text-xl font-bold text-slate-700 flex-1">
+                            <span class="text-indigo-400 mr-2">${index + 1}.</span>${q.statement}
+                        </div>
+                    `;
+                    
+                    let controlsHtml = '';
+                    if (this.state.mode === 'classroom') {
+                        controlsHtml = `
+                            <button id="reveal-${q.id}" class="reveal-btn whitespace-nowrap" onclick="app.revealAnswer(${q.id}, ${q.is_true})">Reveal</button>
+                        `;
+                    } else {
+                        controlsHtml = `
+                            <div class="flex gap-3 shrink-0 mt-2 xl:mt-0">
+                                <button id="btn-true-${q.id}" class="choice-btn" onclick="app.selectOption(${q.id}, true)">yes</button>
+                                <button id="btn-false-${q.id}" class="choice-btn" onclick="app.selectOption(${q.id}, false)">no</button>
+                            </div>
+                        `;
+                    }
+
+                    block.innerHTML = textHtml + controlsHtml;
+                    qContainer.appendChild(block);
+                });
+
+                this.switchScreen('screen-activity');
+                document.getElementById('bottom-bar').classList.remove('hidden');
+                
+                if (this.state.mode === 'exam') {
+                    document.getElementById('btn-check').classList.remove('hidden');
+                    document.getElementById('post-check-btns').classList.add('hidden');
+                    document.getElementById('score-tally').classList.add('hidden');
+                } else {
+                    document.getElementById('btn-check').classList.add('hidden');
+                    document.getElementById('post-check-btns').classList.remove('hidden');
+                    document.getElementById('score-tally').classList.add('hidden');
+                }
+            },
+
+            /* Fullscreen Image Logic */
+            openImage: function() {
+                const src = document.getElementById('exam-image').src;
+                if (!src) return;
+                document.getElementById('modal-image').src = src;
+                document.getElementById('image-modal').classList.remove('hidden');
+            },
+
+            closeImage: function() {
+                document.getElementById('image-modal').classList.add('hidden');
+            },
+
+            revealAnswer: function(qId, isTrue) {
+                const btn = document.getElementById(`reveal-${qId}`);
+                if (btn.classList.contains('revealed')) {
+                    btn.className = 'reveal-btn whitespace-nowrap';
+                    btn.innerText = 'Reveal';
+                } else {
+                    btn.className = `reveal-btn revealed ${isTrue ? 'true' : 'false'}`;
+                    btn.innerText = isTrue ? 'yes' : 'no';
+                }
+            },
+
+            selectOption: function(qId, choice) {
+                this.state.userChoices[qId] = choice;
+                const btnTrue = document.getElementById(`btn-true-${qId}`);
+                const btnFalse = document.getElementById(`btn-false-${qId}`);
+                
+                btnTrue.classList.remove('selected');
+                btnFalse.classList.remove('selected');
+                
+                if (choice === true) btnTrue.classList.add('selected');
+                if (choice === false) btnFalse.classList.add('selected');
+            },
+
+            checkAnswers: function() {
+                const item = this.data[this.state.currentIdx];
+                let score = 0;
+
+                item.questions.forEach(q => {
+                    const btnTrue = document.getElementById(`btn-true-${q.id}`);
+                    const btnFalse = document.getElementById(`btn-false-${q.id}`);
+                    const userChoice = this.state.userChoices[q.id];
+                    const correctChoice = q.is_true;
+
+                    btnTrue.classList.add('disabled');
+                    btnFalse.classList.add('disabled');
+                    btnTrue.classList.remove('selected');
+                    btnFalse.classList.remove('selected');
+
+                    if (userChoice === correctChoice) {
+                        score++;
+                        if (correctChoice === true) btnTrue.classList.add('correct');
+                        else btnFalse.classList.add('correct');
+                    } else {
+                        if (userChoice === true) btnTrue.classList.add('wrong');
+                        if (userChoice === false) btnFalse.classList.add('wrong');
+                        
+                        if (correctChoice === true) btnTrue.classList.add('missed');
+                        if (correctChoice === false) btnFalse.classList.add('missed');
+                    }
+                });
+
+                document.getElementById('current-score').innerText = score;
+                document.getElementById('score-tally').classList.remove('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('post-check-btns').classList.remove('hidden');
+            },
+
+            switchScreen: function(s) {
+                ['screen-dashboard', 'screen-list', 'screen-activity'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(s).classList.remove('hidden');
+                if (s !== 'screen-activity') document.getElementById('bottom-bar').classList.add('hidden');
+            },
+
+            showDashboard: function() { 
+                window.history.replaceState(null, '', window.location.pathname);
+                this.switchScreen('screen-dashboard'); 
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

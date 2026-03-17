@@ -36,8 +36,14 @@
         /* ADDED: Styles for the new Pop-Out Modal */
         #zoom-modal { display: flex; justify-content: center; align-items: center; z-index: 1000; transition: opacity 0.3s; pointer-events: none; opacity: 0; }
         #zoom-modal.visible { pointer-events: auto; opacity: 1; }
-        /* The container for the pinch-zoom-js library */
         .pinch-zoom-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        
+        /* Add this piece right here to stop the bottom cutting off! */
+        #zoomed-image {
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8">

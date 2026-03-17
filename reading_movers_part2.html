@@ -360,10 +360,15 @@
                 
                 let score = 0;
 
+                // NEW: Figure out the name of the first person speaking
+                const firstSpeaker = item.dialogue[0].speaker;
+
                 item.dialogue.forEach(line => {
                     const bubble = document.createElement('div');
                     
                     let text = line.text;
+                    
+                    // 1. Handle the grading text (Leave this checking if it's a gap)
                     if (line.is_gap) {
                         const userChoice = this.state.userAnswers[line.gap_id];
                         const correctChoice = item.answers[line.gap_id];
@@ -379,9 +384,13 @@
                         } else {
                             text = `<span class="text-indigo-600">${item.questions[line.gap_id][correctChoice]}</span>`;
                         }
-                        bubble.className = "bubble-right";
-                    } else {
+                    }
+
+                    // 2. Handle the bubble placement (NEW: Check WHO is speaking)
+                    if (line.speaker === firstSpeaker) {
                         bubble.className = "bubble-left";
+                    } else {
+                        bubble.className = "bubble-right";
                     }
 
                     bubble.innerHTML = `<span class="text-xs block opacity-40 uppercase mb-1 tracking-widest">${line.speaker}</span>${text}`;
