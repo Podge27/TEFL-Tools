@@ -12,15 +12,21 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        .gap-input { 
-            border-bottom: 2px solid #67e8f9; padding: 0 0.5rem; font-weight: 700; 
-            color: #155e75; outline: none; text-align: center; transition: all 0.2s; 
-            background: transparent; min-width: 130px; text-transform: uppercase; 
+        .mcq-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #15803d !important; }
+        .mcq-wrong { border-color: #f87171 !important; background-color: #fef2f2 !important; color: #dc2626 !important; cursor: not-allowed; }
+        
+        /* Click-and-Drop Styles */
+        .gap-slot { 
+            display: inline-block; min-width: 100px; height: 32px; 
+            border-bottom: 3px solid #cbd5e1; background-color: #f1f5f9; 
+            margin: 0 6px; vertical-align: middle; text-align: center; 
+            font-weight: bold; cursor: pointer; transition: all 0.2s;
+            color: transparent; 
+            border-radius: 4px;
         }
-        .input-correct { color: #15803d; background-color: #f0fdf4; border-color: #22c55e; }
-        .input-error { color: #dc2626; background-color: #fef2f2; border-color: #f87171; }
-        .mcq-correct { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
-        .mcq-wrong { border-color: #f87171; background-color: #fef2f2; color: #dc2626; }
+        .gap-filled { background-color: #cffafe; border-color: #06b6d4; color: #0f766e; }
+        .gap-correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+        .gap-error { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -40,7 +46,7 @@
             <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">🎯 Multiple Choice</span>
         </button>
         <button onclick="app.loadTasks('gap_fill')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
-            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">✍️ Role Play Gaps</span>
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">👆 Role Play Gaps</span>
         </button>
         <button onclick="app.loadVocab('study')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
             <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">📖 Study Mode</span>
@@ -51,8 +57,9 @@
         <button onclick="app.loadVocab('typing')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group lg:col-span-2">
             <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">⌨️ Typing Test</span>
         </button>
-        <div class="col-span-full mt-12 text-center text-slate-400 font-bold tracking-widest text-sm">
-            Course Designed by Pádraig Meehan & Lewis Ross &copy 2026
+        
+        <div class="col-span-full mt-12 text-center text-slate-400 font-bold uppercase tracking-widest text-sm">
+            Course Designed by Pádraig Meehan & Lewis Ross &copy; 2026 
         </div>
     </main>
 
@@ -79,9 +86,7 @@
 
     const app = {
         state: { view: 'menu', pointer: 0, currentList: [], type: '' },
-        
-        // Typing Session Data
-        typingSession: { pairs: [], promptIdx: 0, answerIdx: 1, current: 0, score: 0 },
+        gapState: { selectedChipId: null, selectedWord: null },
 
         goBack: function() {
             if (this.state.view === 'activity') this.nav('list');
@@ -93,7 +98,6 @@
             this.state.view = v;
             document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${v}`).classList.remove('hidden');
-            
             ['btn-check', 'btn-prev', 'btn-next', 'activity-footer'].forEach(id => document.getElementById(id).classList.add('hidden'));
         },
 
@@ -146,20 +150,67 @@
                 if (item.task_type === 'gap_fill') {
                     document.getElementById('btn-check').classList.remove('hidden');
                     document.getElementById('btn-check').onclick = () => this.evaluateGaps();
-                    let text = item.content.replace(/\\n|\n/g, '<br><br>').replace(/\[\[(.*?):(.*?)\]\]/g, (m, id, ans) => `<span class="gap-wrap inline-block"><input type="text" data-ans="${ans}" class="gap-input"></span>`);
-                    canvas.innerHTML = `<div class="text-2xl leading-relaxed bg-slate-50 p-10 rounded-3xl border border-slate-200 text-slate-800">${text}</div>`;
-                } else {
-                    canvas.innerHTML = `<h3 class="text-2xl font-bold mb-8 text-slate-700">${item.content}</h3><div id="mcq-box" class="space-y-3"></div>`;
-                    item.task_data.forEach(opt => {
-                        const b = document.createElement('button');
-                        b.className = "w-full text-left p-5 rounded-xl border-2 border-slate-100 bg-white shadow-sm font-semibold text-slate-700 transition-all hover:border-cyan-500";
-                        b.innerText = opt.text;
-                        b.onclick = () => {
-                            document.querySelectorAll('#mcq-box button').forEach(el => el.disabled = true);
-                            b.classList.add(opt.correct ? 'mcq-correct' : 'mcq-wrong');
-                            canvas.insertAdjacentHTML('beforeend', `<div class="mt-6 p-6 bg-cyan-50 border-l-4 border-cyan-500 rounded-r-xl italic text-slate-700">${opt.feedback}</div>`);
-                        };
-                        document.getElementById('mcq-box').appendChild(b);
+                    
+                    let answers = [];
+                    let text = item.content.replace(/\\n|\n/g, '<br><br>').replace(/\[\[(.*?):(.*?)\]\]/g, (m, id, ans) => {
+                        answers.push(ans);
+                        return `<span class="gap-wrap inline-block"><button class="gap-slot" data-ans="${ans}" onclick="app.clickGap(this)"></button></span>`;
+                    });
+                    
+                    // ADD DISTRACTORS HERE (If they exist in task_data)
+                    if (item.task_data && Array.isArray(item.task_data)) {
+                        answers = answers.concat(item.task_data);
+                    }
+                    
+                    answers = answers.sort(() => Math.random() - 0.5);
+                    
+                    let bankHtml = `<div id="word-bank" class="flex flex-wrap gap-3 mb-8 justify-center p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl shadow-inner">`;
+                    answers.forEach((w, i) => {
+                        bankHtml += `<button id="chip-${i}" class="word-chip bg-white border-2 border-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:border-cyan-400 transition-all" onclick="app.clickWord(this)">${w}</button>`;
+                    });
+                    bankHtml += `</div>`;
+                    
+                    canvas.innerHTML = bankHtml + `<div class="text-2xl leading-relaxed text-slate-800 p-4">${text}</div>`;
+                    this.gapState = { selectedChipId: null, selectedWord: null };
+                    
+                } else if (item.task_type === 'multiple_choice') {
+                    // NEW MULTIPLE CHOICE LOGIC (Loads a set of questions)
+                    let html = `<h3 class="text-2xl font-black mb-8 text-slate-800 text-center">${item.content || "Quiz"}</h3>`;
+
+                    item.task_data.forEach((q, qIndex) => {
+                        html += `
+                        <div class="mb-8 p-8 bg-white border-2 border-slate-100 rounded-3xl shadow-sm">
+                            <p class="text-xl font-bold text-slate-800 mb-6">${qIndex + 1}. ${q.question}</p>
+                            <div id="mcq-box-${qIndex}" class="space-y-3"></div>
+                            <div id="mcq-feedback-${qIndex}" class="hidden transition-all"></div>
+                        </div>`;
+                    });
+                    canvas.innerHTML = html;
+
+                    // Attach the buttons dynamically after the HTML is injected
+                    item.task_data.forEach((q, qIndex) => {
+                        const box = document.getElementById(`mcq-box-${qIndex}`);
+                        q.options.forEach(opt => {
+                            const b = document.createElement('button');
+                            b.className = "w-full text-left p-5 rounded-xl border-2 border-slate-100 bg-slate-50 shadow-sm font-semibold text-slate-700 transition-all hover:border-cyan-500";
+                            b.innerText = opt.text;
+                            b.onclick = () => {
+                                const fBox = document.getElementById(`mcq-feedback-${qIndex}`);
+                                fBox.classList.remove('hidden');
+                                if (opt.correct) {
+                                    document.querySelectorAll(`#mcq-box-${qIndex} button`).forEach(el => el.disabled = true);
+                                    b.classList.add('mcq-correct');
+                                    fBox.className = "mt-6 p-6 bg-green-50 border-l-4 border-green-500 rounded-r-xl italic text-green-800 shadow-sm";
+                                    fBox.innerHTML = opt.feedback || "Correct!";
+                                } else {
+                                    b.disabled = true;
+                                    b.classList.add('mcq-wrong');
+                                    fBox.className = "mt-6 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl italic text-red-800 shadow-sm";
+                                    fBox.innerHTML = opt.feedback || "Incorrect, try again.";
+                                }
+                            };
+                            box.appendChild(b);
+                        });
                     });
                 }
             } else if (this.state.type === 'study') {
@@ -167,27 +218,66 @@
                 canvas.innerHTML = `<div id="flash-zone"></div>`;
                 this.renderStudySet(pairs);
             } else if (this.state.type === 'typing') {
-                const pairs = Object.entries(item.matching_pairs);
-                this.renderTypingSetup(pairs);
+                window.location.href = `flashcards.html?hosp_id=${item.id}`;
             } else if (this.state.type === 'match') {
                 window.location.href = `match.html?hosp_id=${item.id}`;
             }
         },
 
-        evaluateGaps: function() {
-            document.querySelectorAll('.gap-input').forEach(input => {
-                const correct = input.value.trim().toLowerCase() === input.dataset.ans.toLowerCase();
-                input.classList.add(correct ? 'input-correct' : 'input-error');
-                
-                const parent = input.parentElement;
-                if(!correct && !parent.querySelector('.correction-label')) {
-                    const tip = document.createElement('span');
-                    tip.className = "correction-label ml-2 text-xs font-bold text-white bg-green-600 px-2 py-1 rounded shadow-sm inline-block";
-                    tip.innerText = input.dataset.ans;
-                    input.after(tip);
-                }
-                input.disabled = true;
+        clickWord: function(btn) {
+            document.querySelectorAll('.word-chip').forEach(b => {
+                b.classList.remove('ring-4', 'ring-cyan-400', 'bg-cyan-50', 'border-cyan-400');
             });
+            btn.classList.add('ring-4', 'ring-cyan-400', 'bg-cyan-50', 'border-cyan-400');
+            this.gapState.selectedChipId = btn.id;
+            this.gapState.selectedWord = btn.innerText;
+        },
+
+        clickGap: function(slot) {
+            if (slot.dataset.chipId) {
+                const oldChip = document.getElementById(slot.dataset.chipId);
+                if (oldChip) oldChip.classList.remove('hidden');
+                
+                slot.innerText = "";
+                slot.classList.remove('gap-filled');
+                delete slot.dataset.chipId;
+            }
+
+            if (this.gapState.selectedWord) {
+                slot.innerText = this.gapState.selectedWord;
+                slot.dataset.chipId = this.gapState.selectedChipId;
+                slot.classList.add('gap-filled');
+
+                const activeChip = document.getElementById(this.gapState.selectedChipId);
+                activeChip.classList.add('hidden');
+                activeChip.classList.remove('ring-4', 'ring-cyan-400', 'bg-cyan-50', 'border-cyan-400');
+
+                this.gapState.selectedWord = null;
+                this.gapState.selectedChipId = null;
+            }
+        },
+
+        evaluateGaps: function() {
+            document.querySelectorAll('.gap-slot').forEach(slot => {
+                const userText = slot.innerText || "";
+                const correct = userText.trim().toLowerCase() === slot.dataset.ans.toLowerCase();
+                slot.classList.remove('gap-filled');
+                
+                if (correct) {
+                    slot.classList.add('gap-correct');
+                } else {
+                    slot.classList.add('gap-error');
+                    const parent = slot.parentElement;
+                    if(!parent.querySelector('.correction-label')) {
+                        const tip = document.createElement('span');
+                        tip.className = "correction-label ml-2 text-xs font-bold text-white bg-green-600 px-2 py-1 rounded shadow-sm inline-block";
+                        tip.innerText = slot.dataset.ans;
+                        slot.after(tip);
+                    }
+                }
+                slot.onclick = null; 
+            });
+            document.getElementById('word-bank').classList.add('hidden');
         },
 
         renderStudySet: function(pairs) {
@@ -212,166 +302,6 @@
                 document.getElementById('n-inner').onclick = () => { if(pIdx < pairs.length - 1) { pIdx++; draw(); }};
             };
             draw();
-        },
-
-        // --- NEW TYPING TEST LOGIC ---
-
-        renderTypingSetup: function(pairs) {
-            const canvas = document.getElementById('activity-content');
-            canvas.innerHTML = `
-                <div class="bg-white border-2 border-slate-100 rounded-3xl p-10 shadow-xl max-w-lg mx-auto text-center">
-                    <h3 class="text-2xl font-black text-slate-800 mb-8">Typing Test Setup</h3>
-                    
-                    <div class="mb-6 text-left">
-                        <label class="block text-slate-500 font-bold mb-2 uppercase text-xs tracking-wider">Translation Direction</label>
-                        <select id="type-dir" class="w-full p-4 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-cyan-500 bg-slate-50">
-                            <option value="es-en">Spanish ➔ English (Type English)</option>
-                            <option value="en-es">English ➔ Spanish (Type Spanish)</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-8 text-left">
-                        <label class="block text-slate-500 font-bold mb-2 uppercase text-xs tracking-wider">How many words?</label>
-                        <input type="number" id="type-count" min="1" max="${pairs.length}" value="${pairs.length}" class="w-full p-4 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-cyan-500 bg-slate-50">
-                        <p class="text-xs text-slate-400 mt-2">Max available: ${pairs.length}</p>
-                    </div>
-
-                    <button onclick="app.startTypingSession()" class="w-full bg-cyan-600 text-white py-4 rounded-xl font-black text-lg shadow-lg hover:bg-cyan-700 transition-colors">
-                        Start Test
-                    </button>
-                </div>
-            `;
-            // Store pairs globally for the setup to use
-            this.typingSession.rawPairs = pairs;
-        },
-
-        startTypingSession: function() {
-            const dir = document.getElementById('type-dir').value;
-            let count = parseInt(document.getElementById('type-count').value);
-            
-            // Ensure they don't ask for more cards than exist
-            if (count > this.typingSession.rawPairs.length) count = this.typingSession.rawPairs.length;
-            if (count < 1) count = 1;
-
-            // Set indexing based on direction chosen
-            this.typingSession.promptIdx = (dir === 'en-es') ? 0 : 1; 
-            this.typingSession.answerIdx = (dir === 'en-es') ? 1 : 0;
-            
-            // Shuffle and slice the array to the requested amount
-            let shuffled = [...this.typingSession.rawPairs].sort(() => Math.random() - 0.5);
-            this.typingSession.pairs = shuffled.slice(0, count);
-            
-            this.typingSession.current = 0;
-            this.typingSession.score = 0;
-
-            this.renderTypingCard();
-        },
-
-        renderTypingCard: function() {
-            const pair = this.typingSession.pairs[this.typingSession.current];
-            const promptWord = pair[this.typingSession.promptIdx];
-            const progress = `${this.typingSession.current + 1} / ${this.typingSession.pairs.length}`;
-
-            const canvas = document.getElementById('activity-content');
-            canvas.innerHTML = `
-                <div class="bg-white border-2 border-slate-100 rounded-3xl p-10 shadow-xl max-w-xl mx-auto text-center">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-slate-400 font-bold uppercase tracking-widest text-xs">Translate</span>
-                        <span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">${progress}</span>
-                    </div>
-                    
-                    <h2 class="text-4xl font-black text-slate-900 mb-8">${promptWord}</h2>
-                    
-                    <input type="text" id="type-answer" autocomplete="off" placeholder="Type your answer here..." 
-                        class="w-full text-center text-2xl p-4 border-2 border-slate-200 rounded-xl focus:border-cyan-500 outline-none mb-6 transition-colors font-bold text-slate-700"
-                        onkeydown="if(event.key === 'Enter') app.checkTyping()">
-                    
-                    <div id="type-feedback" class="min-h-[4rem] mb-4 flex items-center justify-center rounded-xl font-bold text-lg"></div>
-                    
-                    <button id="btn-submit-type" onclick="app.checkTyping()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black text-lg shadow-md hover:bg-slate-900 transition-colors">
-                        Submit Answer
-                    </button>
-                    <button id="btn-next-type" onclick="app.nextTyping()" class="hidden w-full bg-cyan-600 text-white py-4 rounded-xl font-black text-lg shadow-md hover:bg-cyan-700 transition-colors">
-                        Next Word →
-                    </button>
-                </div>
-            `;
-            setTimeout(() => document.getElementById('type-answer').focus(), 100);
-        },
-
-        // This is the "Car Wash" function. It strips punctuation and makes everything lowercase.
-        sanitizeString: function(str) {
-            return str.toLowerCase()
-                      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?¡!]/g,"") // Removes punctuation
-                      .trim() // Removes accidental spaces at start/end
-                      .replace(/\s{2,}/g," "); // Fixes double spaces
-        },
-
-        checkTyping: function() {
-            const inputEl = document.getElementById('type-answer');
-            if (inputEl.disabled) return; // Prevent double checking
-
-            const userAnswerRaw = inputEl.value;
-            const correctAnswerRaw = this.typingSession.pairs[this.typingSession.current][this.typingSession.answerIdx];
-
-            // Put both through the "Car Wash"
-            const cleanUser = this.sanitizeString(userAnswerRaw);
-            const cleanCorrect = this.sanitizeString(correctAnswerRaw);
-
-            const feedbackEl = document.getElementById('type-feedback');
-            
-            if (cleanUser === cleanCorrect) {
-                this.typingSession.score++;
-                inputEl.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
-                feedbackEl.classList.add('bg-green-100', 'text-green-800');
-                feedbackEl.innerText = "Correct! 🎉";
-            } else {
-                inputEl.classList.add('border-red-400', 'bg-red-50', 'text-red-700');
-                feedbackEl.classList.add('bg-red-100', 'text-red-800');
-                feedbackEl.innerHTML = `Incorrect. The correct answer is:<br><span class="text-xl font-black mt-1">${correctAnswerRaw}</span>`;
-            }
-
-            inputEl.disabled = true;
-            document.getElementById('btn-submit-type').classList.add('hidden');
-            document.getElementById('btn-next-type').classList.remove('hidden');
-            document.getElementById('btn-next-type').focus();
-        },
-
-        nextTyping: function() {
-            this.typingSession.current++;
-            if (this.typingSession.current >= this.typingSession.pairs.length) {
-                this.renderTypingResults();
-            } else {
-                this.renderTypingCard();
-            }
-        },
-
-        renderTypingResults: function() {
-            const total = this.typingSession.pairs.length;
-            const score = this.typingSession.score;
-            const percentage = Math.round((score / total) * 100);
-            
-            let message = "Good effort!";
-            if (percentage === 100) message = "Perfect Score! 🏆";
-            else if (percentage >= 80) message = "Great job! 🌟";
-
-            const canvas = document.getElementById('activity-content');
-            canvas.innerHTML = `
-                <div class="bg-white border-2 border-slate-100 rounded-3xl p-12 shadow-xl text-center max-w-lg mx-auto">
-                    <h2 class="text-3xl font-black text-slate-800 mb-2">Test Complete</h2>
-                    <p class="text-slate-500 font-bold mb-8">${message}</p>
-                    
-                    <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-8 mb-8">
-                        <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Final Score</div>
-                        <div class="text-6xl font-black text-cyan-600">${score} / ${total}</div>
-                        <div class="text-xl font-bold text-slate-400 mt-2">${percentage}%</div>
-                    </div>
-
-                    <button onclick="app.startActivity(app.state.pointer)" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black text-lg shadow-md hover:bg-slate-900 transition-colors">
-                        Restart Setup
-                    </button>
-                </div>
-            `;
         },
 
         nextItem: function() { if(this.state.pointer < this.state.currentList.length - 1) this.startActivity(this.state.pointer + 1); },
