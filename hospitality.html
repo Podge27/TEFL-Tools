@@ -54,11 +54,14 @@
         <button onclick="app.loadVocab('match')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
             <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">🧩 Matching Game</span>
         </button>
-        <button onclick="app.loadVocab('typing')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group lg:col-span-2">
+        <button onclick="app.loadVocab('typing')" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
             <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">⌨️ Typing Test</span>
         </button>
+        <button onclick="app.loadSorting()" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-slate-100 bg-white transition-all hover:border-cyan-400 hover:shadow-lg active:scale-95 group">
+            <span class="font-black text-slate-800 text-lg group-hover:text-cyan-600 text-center">🗂️ Sorting Tasks</span>
+        </button>
         
-        <div class="col-span-full mt-12 text-center text-slate-400 font-bold uppercase tracking-widest text-sm">
+        <div class="col-span-full mt-12 text-center text-slate-400 font-bold tracking-widest text-sm">
             Course Designed by Pádraig Meehan & Lewis Ross &copy; 2026 
         </div>
     </main>
@@ -87,6 +90,15 @@
     const app = {
         state: { view: 'menu', pointer: 0, currentList: [], type: '' },
         gapState: { selectedChipId: null, selectedWord: null },
+        
+        // ==========================================
+        // ADD NEW SORTING LINKS HERE
+        // ==========================================
+        sortingLinks: [
+            { title: "Pronunciation: 'A' Sounds", url: "https://visionary-kitten-6f9a6d.netlify.app/sorter?id=pronunciation-a-sounds" },
+            { title: "Pronunciation: Past Tense -ed", url: "https://visionary-kitten-6f9a6d.netlify.app/sorter?id=pronunciation-past-kids-01" }
+        ],
+        // ==========================================
 
         goBack: function() {
             if (this.state.view === 'activity') this.nav('list');
@@ -102,6 +114,7 @@
         },
 
         loadTasks: async function(type) {
+            document.getElementById('list-title').innerText = "Select Topic";
             const { data } = await _db.from('hospitality_tasks').select('*').eq('task_type', type).order('sort_order', { ascending: true });
             this.state.currentList = data;
             this.state.type = 'task';
@@ -109,10 +122,19 @@
         },
 
         loadVocab: async function(mode) {
+            document.getElementById('list-title').innerText = "Select Topic";
             const { data } = await _db.from('hospitality_vocab').select('*');
             this.state.currentList = data;
             this.state.type = mode;
             this.renderList(data, (idx) => this.startActivity(idx));
+        },
+        
+        loadSorting: function() {
+            document.getElementById('list-title').innerText = "Select Sorting Task";
+            this.state.type = 'sorting';
+            this.renderList(this.sortingLinks, (idx) => {
+                window.location.href = this.sortingLinks[idx].url;
+            });
         },
 
         renderList: function(items, callback) {
@@ -121,7 +143,9 @@
             items.forEach((item, idx) => {
                 const btn = document.createElement('button');
                 btn.className = "w-full text-left p-6 bg-white border-2 border-slate-100 rounded-xl hover:border-cyan-400 flex justify-between items-center group transition-all";
-                btn.innerHTML = `<span class="font-bold text-lg text-slate-700">${item.title || item.set_name}</span><span class="text-cyan-600 font-bold">→</span>`;
+                // If it's a sorting link, use an arrow pointing out to show it leaves the page
+                const arrow = this.state.type === 'sorting' ? '↗' : '→';
+                btn.innerHTML = `<span class="font-bold text-lg text-slate-700">${item.title || item.set_name}</span><span class="text-cyan-600 font-bold text-xl">${arrow}</span>`;
                 btn.onclick = () => callback(idx);
                 container.appendChild(btn);
             });
@@ -157,7 +181,6 @@
                         return `<span class="gap-wrap inline-block"><button class="gap-slot" data-ans="${ans}" onclick="app.clickGap(this)"></button></span>`;
                     });
                     
-                    // ADD DISTRACTORS HERE (If they exist in task_data)
                     if (item.task_data && Array.isArray(item.task_data)) {
                         answers = answers.concat(item.task_data);
                     }
@@ -174,7 +197,6 @@
                     this.gapState = { selectedChipId: null, selectedWord: null };
                     
                 } else if (item.task_type === 'multiple_choice') {
-                    // NEW MULTIPLE CHOICE LOGIC (Loads a set of questions)
                     let html = `<h3 class="text-2xl font-black mb-8 text-slate-800 text-center">${item.content || "Quiz"}</h3>`;
 
                     item.task_data.forEach((q, qIndex) => {
@@ -187,7 +209,6 @@
                     });
                     canvas.innerHTML = html;
 
-                    // Attach the buttons dynamically after the HTML is injected
                     item.task_data.forEach((q, qIndex) => {
                         const box = document.getElementById(`mcq-box-${qIndex}`);
                         q.options.forEach(opt => {
@@ -218,7 +239,7 @@
                 canvas.innerHTML = `<div id="flash-zone"></div>`;
                 this.renderStudySet(pairs);
             } else if (this.state.type === 'typing') {
-                window.location.href = `flashcards.html?hosp_id=${item.id}`;
+                window.location.href = `flashcards_game.html?hosp_id=${item.id}`;
             } else if (this.state.type === 'match') {
                 window.location.href = `match.html?hosp_id=${item.id}`;
             }

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Search Game</title>
-    <link rel="icon" type="image/png" href="gameicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="global.css">
@@ -19,7 +18,7 @@
             justify-content: center;
             align-items: flex-start;
             overflow-x: hidden;
-            touch-action: none; /* Prevents scrolling while dragging on grid */
+            touch-action: none;
         }
 
         #game-container {
@@ -99,7 +98,7 @@
             display: grid;
             gap: 2px;
             background-color: white;
-            user-select: none; /* Prevent text selection */
+            user-select: none; 
             touch-action: none;
         }
 
@@ -120,13 +119,13 @@
 
         /* Interaction States */
         .ws-cell.selecting {
-            background-color: #fcd34d !important; /* Yellow when dragging */
+            background-color: #fcd34d !important; 
             color: #78350f;
             transform: scale(1.05);
         }
 
         .ws-cell.found {
-            background-color: #22d3ee !important; /* Cyan when found */
+            background-color: #22d3ee !important; 
             color: #0e7490;
             animation: popIn 0.3s ease;
         }
@@ -174,12 +173,11 @@
             #game-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; border: none; }
             .no-print { display: none !important; }
             
-            /* Print Grid Layout */
             #game-layout { display: block; }
             #grid-wrapper { border: none; background: transparent; padding: 0; margin-bottom: 20px; }
             #ws-grid { 
                 border: 2px solid #000; 
-                gap: 0; /* Remove gaps for clean lines */
+                gap: 0; 
             }
             .ws-cell {
                 background-color: white !important;
@@ -189,20 +187,16 @@
                 border-radius: 0;
             }
             
-            /* Print Word List */
-            #word-list-container { 
-                display: block; 
-                margin-top: 20px; 
-            }
+            #word-list-container { display: block; margin-top: 20px; }
             #word-list {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr); /* 4 Columns for words */
+                grid-template-columns: repeat(4, 1fr); 
                 gap: 10px;
             }
             .word-item {
                 background: none !important;
                 border: none;
-                text-decoration: none !important; /* Hide strike-throughs on print */
+                text-decoration: none !important; 
                 color: black !important;
                 opacity: 1 !important;
                 padding: 0;
@@ -287,7 +281,7 @@
                 <div id="word-list-container" class="w-full lg:w-1/4">
                     <h3 class="text-xl font-black text-slate-800 mb-4 border-b-4 border-cyan-100 pb-2 inline-block">Word List</h3>
                     <div id="word-list" class="grid grid-cols-2 lg:grid-cols-1 gap-3 custom-scrollbar overflow-y-auto max-h-[60vh]">
-                        </div>
+                    </div>
                     <div id="progress-text" class="mt-4 font-bold text-cyan-600 text-center no-print">0 / 0 Found</div>
                 </div>
             </div>
@@ -316,14 +310,12 @@
         let words = [];
         let grid = [];
         let gridSize = 15;
-        let solutionMap = []; // Stores where words are for "Reveal"
+        let solutionMap = []; 
         
-        // Interaction State
         let isSelecting = false;
         let startCell = null;
-        let currentSelection = []; // Array of {r, c} objects
+        let currentSelection = []; 
 
-        // DOM
         const fileInput = document.getElementById('csv-file-input');
         const generateBtn = document.getElementById('generate-btn');
         const sizeSlider = document.getElementById('size-slider');
@@ -332,7 +324,6 @@
         const wordListEl = document.getElementById('word-list');
         const allowBackwards = document.getElementById('allow-backwards');
         
-        // Listeners
         sizeSlider.addEventListener('input', (e) => {
             gridSize = parseInt(e.target.value);
             sizeDisplay.textContent = `${gridSize}x${gridSize}`;
@@ -356,7 +347,6 @@
                     .map(l => l.split(',')[0].trim().toUpperCase())
                     .filter(w => w.length > 1 && /^[A-Z]+$/.test(w));
                 
-                // Remove duplicates
                 words = [...new Set(words)];
                 
                 if (words.length > 0) {
@@ -375,25 +365,22 @@
 
         /* --- 3. GENERATOR ENGINE --- */
         function initGame() {
-            // 1. Create Empty Grid
             grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
-            solutionMap = []; // Clear solution
-            
-            // 2. Sort words (Longest first is harder to place but better packing)
+            solutionMap = []; 
             words.sort((a, b) => b.length - a.length);
-            
             const usedWords = [];
 
-            // 3. Directions
-            // 0: E, 1: SE, 2: S, 3: SW, 4: W, 5: NW, 6: N, 7: NE
-            let directions = [[0, 1], [1, 1], [1, 0], [1, -1]];
+            // 3. Directions (FIXED)
+            // Easy Mode: East [0, 1], South [1, 0], South-East [1, 1]
+            let directions = [[0, 1], [1, 0], [1, 1]];
             if (allowBackwards.checked) {
-                directions.push([0, -1], [-1, -1], [-1, 0], [-1, 1]);
+                // Hard Mode adds: West, North, North-West, South-West, North-East
+                directions.push([0, -1], [-1, 0], [-1, -1], [1, -1], [-1, 1]);
             }
 
             // 4. Place Words
             words.forEach(word => {
-                if(word.length > gridSize) return; // Skip if too long
+                if(word.length > gridSize) return; 
 
                 let placed = false;
                 let attempts = 0;
@@ -421,17 +408,14 @@
                 }
             }
 
-            // Update global words list to only those that fit
-            words = usedWords.sort(); // Sort alphabetically for list
+            words = usedWords.sort(); 
             renderGame();
         }
 
         function canPlace(word, r, c, [dr, dc]) {
-            // Check bounds
             if (r + (word.length - 1) * dr < 0 || r + (word.length - 1) * dr >= gridSize) return false;
             if (c + (word.length - 1) * dc < 0 || c + (word.length - 1) * dc >= gridSize) return false;
 
-            // Check overlap
             for (let i = 0; i < word.length; i++) {
                 const cell = grid[r + i * dr][c + i * dc];
                 if (cell !== '' && cell !== word[i]) return false;
@@ -445,24 +429,18 @@
                 grid[r + i * dr][c + i * dc] = word[i];
                 path.push({r: r + i * dr, c: c + i * dc});
             }
-            solutionMap.push(path); // Save for reveal
+            solutionMap.push(path); 
         }
 
         /* --- 4. RENDERER --- */
         function renderGame() {
-            // Draw Grid
             gridEl.innerHTML = '';
             gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            
-            // Calc Cell Size based on available width (responsive)
-            // Approx 35px-45px per cell usually works well
             
             for (let r = 0; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
                     const cell = document.createElement('div');
                     cell.className = 'ws-cell';
-                    // We set width/height via CSS aspect ratio usually, 
-                    // but let's set a min-size for print clarity
                     cell.style.width = '35px'; 
                     cell.style.height = '35px';
                     
@@ -470,23 +448,19 @@
                     cell.dataset.r = r;
                     cell.dataset.c = c;
                     
-                    // Mouse Events
                     cell.addEventListener('mousedown', handleStart);
                     cell.addEventListener('mouseenter', handleMove);
                     cell.addEventListener('mouseup', handleEnd);
                     
-                    // Touch Events (for tablets)
                     cell.addEventListener('touchstart', (e) => {
-                        e.preventDefault(); // Stop scroll
+                        e.preventDefault(); 
                         handleStart(e);
                     });
-                    // Touch move is handled on the grid container
                     
                     gridEl.appendChild(cell);
                 }
             }
 
-            // Draw List
             wordListEl.innerHTML = '';
             words.forEach(word => {
                 const div = document.createElement('div');
@@ -497,23 +471,20 @@
             });
             updateProgress();
 
-            // Global Touch Move Listener
             gridEl.addEventListener('touchmove', handleTouchMove, { passive: false });
             gridEl.addEventListener('touchend', handleEnd);
         }
 
-        /* --- 5. INTERACTION LOGIC (The Hard Part) --- */
-        
+        /* --- 5. INTERACTION LOGIC --- */
         function handleStart(e) {
             isSelecting = true;
-            // Get coordinates from target
             const target = e.target.closest('.ws-cell');
             if(!target) return;
             
             const r = parseInt(target.dataset.r);
             const c = parseInt(target.dataset.c);
             startCell = { r, c };
-            highlightCells(getLineCells(startCell, startCell)); // Highlight start
+            highlightCells(getLineCells(startCell, startCell)); 
         }
 
         function handleMove(e) {
@@ -530,8 +501,6 @@
             highlightCells(line);
         }
 
-        // Touch handling is trickier because 'touchmove' doesn't fire on the element you are over,
-        // it fires on the element you started on. So we use elementFromPoint.
         function handleTouchMove(e) {
             if (!isSelecting) return;
             e.preventDefault();
@@ -552,13 +521,9 @@
             if (!isSelecting) return;
             isSelecting = false;
             
-            // Check word
             const selectedWord = currentSelection.map(pos => grid[pos.r][pos.c]).join('');
-            
-            // Check forward (and implicitly backward if user dragged backward)
             checkWord(selectedWord);
             
-            // Clear selection highlights
             document.querySelectorAll('.ws-cell').forEach(el => el.classList.remove('selecting'));
         }
 
@@ -566,27 +531,22 @@
             const cells = [];
             const dr = end.r - start.r;
             const dc = end.c - start.c;
-
-            // Determine steps (Snap to 8 directions)
-            // If delta R and Delta C are equal (abs), it's diagonal.
-            // If one is 0, it's straight.
             
             let stepR = 0; 
             let stepC = 0;
             let steps = 0;
 
-            if (dr === 0) { // Horizontal
+            if (dr === 0) { 
                 stepC = dc > 0 ? 1 : -1;
                 steps = Math.abs(dc);
-            } else if (dc === 0) { // Vertical
+            } else if (dc === 0) { 
                 stepR = dr > 0 ? 1 : -1;
                 steps = Math.abs(dr);
-            } else if (Math.abs(dr) === Math.abs(dc)) { // Diagonal
+            } else if (Math.abs(dr) === Math.abs(dc)) { 
                 stepR = dr > 0 ? 1 : -1;
                 stepC = dc > 0 ? 1 : -1;
                 steps = Math.abs(dr);
             } else {
-                // Invalid angle -> Just highlight start to show "active" but invalid
                 return [{r: start.r, c: start.c}];
             }
 
@@ -598,9 +558,7 @@
 
         function highlightCells(cells) {
             currentSelection = cells;
-            // Remove old selection
             document.querySelectorAll('.ws-cell.selecting').forEach(el => el.classList.remove('selecting'));
-            // Add new
             cells.forEach(pos => {
                 const el = document.querySelector(`.ws-cell[data-r="${pos.r}"][data-c="${pos.c}"]`);
                 if(el) el.classList.add('selecting');
@@ -608,7 +566,6 @@
         }
 
         function checkWord(wordString) {
-            // Check if word exists in list OR reversed exists
             const reversed = wordString.split('').reverse().join('');
             let foundWord = null;
 
@@ -616,7 +573,6 @@
             else if (words.includes(reversed)) foundWord = reversed;
 
             if (foundWord) {
-                // If it hasn't been found yet
                 const listEl = document.getElementById(`word-${foundWord}`);
                 if (listEl && !listEl.classList.contains('found')) {
                     markFound(currentSelection, foundWord);
@@ -625,13 +581,11 @@
         }
 
         function markFound(cells, wordText) {
-            // Mark Cells
             cells.forEach(pos => {
                 const el = document.querySelector(`.ws-cell[data-r="${pos.r}"][data-c="${pos.c}"]`);
                 el.classList.add('found');
             });
 
-            // Mark List
             const listEl = document.getElementById(`word-${wordText}`);
             listEl.classList.add('found');
             
@@ -648,7 +602,6 @@
             }
         }
 
-        // --- REVEAL BUTTON ---
         document.getElementById('reveal-btn').addEventListener('click', () => {
             if(!confirm("Reveal answers? Game will end.")) return;
             

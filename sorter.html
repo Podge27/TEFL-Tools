@@ -142,7 +142,7 @@
         try { if(!SUPABASE_URL.includes('your-project')) supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
         catch(e) { console.error("Supabase Error", e); }
 
-        let allSets = []; // Stores the database locally for fast searching
+        let allSets = []; 
         let gameState = { categories: [], items: [], queue: [], timer: null, seconds: 0, selectedCard: null };
 
         // --- APP INITIALIZATION ---
@@ -151,7 +151,6 @@
             const setId = urlParams.get('id');
 
             if (setId) {
-                // Load specific game from URL
                 document.getElementById('view-menu').classList.add('hidden');
                 document.getElementById('view-game').classList.remove('hidden');
                 document.getElementById('view-game').classList.add('flex');
@@ -165,7 +164,6 @@
                 }
                 loadGameFromSet(data);
             } else {
-                // Fetch library and build menu
                 await fetchDatabase();
             }
         }
@@ -184,7 +182,6 @@
                 return;
             }
 
-            // Alphabetize globally once
             allSets = data.sort((a, b) => a.title.localeCompare(b.title));
             renderMenu();
         }
@@ -215,7 +212,6 @@
                 groupedSets[level].push(set);
             });
 
-            // 1. A dictionary of paint colours for the boxes
             const gradients = { 
                 'kids': 'from-yellow-400 to-orange-500', 
                 'A1': 'from-blue-300 to-blue-500', 
@@ -230,14 +226,11 @@
                 const levelDiv = document.createElement('div');
                 levelDiv.className = 'w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden';
 
-                // 2. Look up the paint colour for this specific level
                 const gradClass = gradients[level] || 'from-gray-500 to-gray-700';
 
                 const levelButton = document.createElement('button');
-                // 3. Paint the button and change the text colour to white
                 levelButton.className = `w-full text-left font-black text-xl text-white p-5 flex justify-between items-center bg-gradient-to-r ${gradClass} hover:opacity-90 transition`;
                 
-                // 4. Update the text to add the colon and the word "sets"
                 levelButton.innerHTML = `
                     <div class="flex items-center gap-3">
                         <span class="bg-white/20 text-white px-3 py-1 rounded-lg text-sm shadow-inner">${groupedSets[level].length} sets</span>
@@ -285,40 +278,49 @@
             });
         }
 
-                // --- CSV PARSER ---
-                function handleFileUpload(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => parseCSV(e.target.result);
-                    reader.readAsText(file);
-                }
+        // --- CSV PARSER ---
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => parseCSV(e.target.result);
+            reader.readAsText(file);
+        }
 
-                function parseCSV(csvText) {
-                    const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    if (lines.length < 2) return;
-                    const headers = lines[0].split(',').map(h => h.trim());
-                    let itemMap = {}; 
-                    
-                    for (let i = 1; i < lines.length; i++) {
-                        const rowData = lines[i].split(',');
-                        rowData.forEach((cellText, colIndex) => {
-                            const cleanText = cellText.trim();
-                            const category = headers[colIndex];
-                            if (cleanText !== "" && category) {
-                                if (itemMap[cleanText]) itemMap[cleanText].category += "|" + category;
-                                else itemMap[cleanText] = { text: cleanText, category: category };
-                            }
-                        });
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length < 2) return;
+            const headers = lines[0].split(',').map(h => h.trim());
+            let itemMap = {}; 
+            
+            for (let i = 1; i < lines.length; i++) {
+                const rowData = lines[i].split(',');
+                rowData.forEach((cellText, colIndex) => {
+                    const cleanText = cellText.trim();
+                    const category = headers[colIndex];
+                    if (cleanText !== "" && category) {
+                        if (itemMap[cleanText]) itemMap[cleanText].category += "|" + category;
+                        else itemMap[cleanText] = { text: cleanText, category: category };
                     }
+                });
+            }
 
-                    let items = [];
-                    let idCounter = 0;
-                    Object.values(itemMap).forEach(item => {
-                        items.push({ id: `csv-item-${idCounter++}`, text: item.text, category: item.category });
-                    });
-                    startGame(headers, items);
-                }
+            let items = [];
+            let idCounter = 0;
+            Object.values(itemMap).forEach(item => {
+                items.push({ id: `csv-item-${idCounter++}`, text: item.text, category: item.category });
+            });
+            startGame(headers, items);
+        }
+
+        // --- AUDIO FUNCTION ---
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-GB'; // British English default
+                window.speechSynthesis.speak(utterance);
+            }
+        }
 
         // --- GAME ENGINE ---
         function loadGameFromSet(set) {
@@ -337,7 +339,6 @@
             gameState.items = items;
             gameState.queue = [...items].sort(() => Math.random() - 0.5);
             
-            // Switch UI Views
             document.getElementById('view-menu').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
             document.getElementById('view-game').classList.add('flex');
@@ -353,7 +354,6 @@
             container.innerHTML = '';
             const colCount = gameState.categories.length;
             
-            // Layout Adjustments based on column count
             container.className = "grid gap-6 flex-1 items-start w-full max-w-6xl mx-auto";
             if(colCount === 2) container.classList.add('grid-cols-2');
             else if(colCount === 3) container.classList.add('grid-cols-1', 'md:grid-cols-3');
@@ -389,8 +389,22 @@
 
         function createCardDOM(item, parent) {
             const div = document.createElement('div');
-            div.className = "word-card bg-white border-2 border-gray-200 px-8 py-5 rounded-xl font-bold text-gray-800 shadow-md text-xl md:text-2xl w-full max-w-sm text-center";
-            div.innerText = item.text;
+            // Changed layout slightly to flex so the button and text align nicely
+            div.className = "word-card bg-white border-2 border-gray-200 px-8 py-5 rounded-xl font-bold text-gray-800 shadow-md text-xl md:text-2xl w-full max-w-sm flex justify-between items-center";
+            
+            // Adding the word text and the audio button
+            div.innerHTML = `
+                <span class="flex-1 text-center pl-6">${item.text}</span>
+                <button class="text-gray-400 hover:text-indigo-600 transition p-2 rounded-full hover:bg-gray-100 hover:scale-110 active:scale-95" title="Listen">🔊</button>
+            `;
+
+            // Attach the magic shield and play sound function to the button
+            const audioBtn = div.querySelector('button');
+            audioBtn.onclick = (e) => {
+                e.stopPropagation();
+                speakWord(item.text);
+            };
+
             div.id = item.id;
             div.draggable = true;
             div.dataset.category = item.category;
@@ -418,7 +432,8 @@
 
         function moveCardToColumn(cardEl, colEl) {
             colEl.appendChild(cardEl);
-            cardEl.className = "word-card bg-white border-2 border-gray-100 px-4 py-3 rounded-xl font-semibold text-gray-700 shadow-sm text-base w-full block hover:border-indigo-200"; 
+            // Updated class to maintain the flex layout for the button
+            cardEl.className = "word-card bg-white border-2 border-gray-100 px-4 py-3 rounded-xl font-semibold text-gray-700 shadow-sm text-base w-full flex justify-between items-center hover:border-indigo-200"; 
             cardEl.classList.remove('selected', 'correct', 'incorrect');
             gameState.selectedCard = null;
             clearColumnHighlights();
@@ -480,7 +495,8 @@
                              cardToPlace.id = card.id + "-clone-" + index;
                              cardToPlace.classList.add('clone-answer'); 
                         }
-                        cardToPlace.className = "word-card px-4 py-3 rounded-xl font-semibold shadow-sm text-base mb-2 w-full block " + styleClass;
+                        // Added flex layout here to match
+                        cardToPlace.className = "word-card px-4 py-3 rounded-xl font-semibold shadow-sm text-base mb-2 w-full flex justify-between items-center " + styleClass;
                         if(styleClass === "") cardToPlace.className += " bg-white border-2 border-gray-100 text-gray-700";
                         if(cardToPlace.parentElement !== col) col.appendChild(cardToPlace);
                     }
@@ -490,7 +506,11 @@
             while(gameState.queue.length > 0) {
                 const item = gameState.queue.pop();
                 const div = document.createElement('div');
-                div.innerText = item.text; div.dataset.category = item.category;
+                div.dataset.category = item.category;
+                div.innerHTML = `
+                    <span class="flex-1 text-center pl-6">${item.text}</span>
+                    <button class="text-gray-400 hover:text-indigo-600 transition p-2 rounded-full" onclick="event.stopPropagation(); speakWord('${item.text.replace(/'/g, "\\'")}')">🔊</button>
+                `;
                 placeInCorrectColumns(div);
             }
 

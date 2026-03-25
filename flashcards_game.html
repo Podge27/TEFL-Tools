@@ -95,6 +95,7 @@
         const _db = createClient("https://ehhkjhyanmovymjqlxwo.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk");
 
 
+
     const app = {
         data: [],
         isSupabaseMode: false,
@@ -318,27 +319,52 @@
 
         checkMCQ: function(btn, choice) {
             const correct = choice === this.currentPairs[this.currentIndex].a;
-            document.querySelectorAll('#mcq-options button').forEach(b => b.disabled = true);
-            btn.classList.add(correct ? 'mcq-correct' : 'mcq-wrong');
-            this.handleResult(correct, this.currentPairs[this.currentIndex].a);
+            const currentCard = this.currentPairs[this.currentIndex];
+
+            if (correct) {
+                // Disable all buttons once correct, highlight the right one green, and move on
+                document.querySelectorAll('#mcq-options button').forEach(b => b.disabled = true);
+                btn.classList.add('mcq-correct');
+                this.handleResult(true, currentCard.a);
+            } else {
+                // Turn the wrong button red and disable ONLY that button
+                btn.classList.add('mcq-wrong');
+                btn.disabled = true; 
+                document.getElementById('feedback').innerHTML = "<span class='text-red-500 font-bold'>Not quite. Try again!</span>";
+                
+                // Record the mistake for the final review screen (making sure we don't log it twice)
+                if (!this.mistakes.includes(currentCard)) {
+                    this.mistakes.push(currentCard);
+                }
+            }
         },
 
         handleResult: function(isCorrect, correctVal) {
             const feedback = document.getElementById('feedback');
+            const currentCard = this.currentPairs[this.currentIndex];
+
             if (isCorrect) {
-                this.score++;
+                // Only give them a point if they haven't made a mistake on this card yet
+                if (!this.mistakes.includes(currentCard)) {
+                    this.score++;
+                }
                 feedback.innerHTML = "<span class='text-green-600 font-black'>Correct! 🎉</span>";
                 document.getElementById('audio-yay').play();
             } else {
                 feedback.innerHTML = `<span class='text-red-500'>Incorrect. Answer: <span class="text-slate-900">${correctVal}</span></span>`;
-                this.mistakes.push(this.currentPairs[this.currentIndex]);
+                if (!this.mistakes.includes(currentCard)) {
+                    this.mistakes.push(currentCard);
+                }
             }
 
-            setTimeout(() => {
-                this.currentIndex++;
-                if (this.currentIndex < this.currentPairs.length) this.renderQuestion();
-                else this.showResults();
-            }, 1600);
+            // Always automatically advance if they get it right, or if they are in the typing test
+            if (isCorrect || this.style === 'typing') {
+                setTimeout(() => {
+                    this.currentIndex++;
+                    if (this.currentIndex < this.currentPairs.length) this.renderQuestion();
+                    else this.showResults();
+                }, 1600);
+            }
         },
 
         showResults: function() {

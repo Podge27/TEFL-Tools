@@ -96,6 +96,15 @@
                                 </label>
                              </div>
                         </div>
+
+                        <div class="mt-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Text Size</label>
+                            <select id="textSize" class="w-full p-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-cyan-500 font-bold text-slate-700 bg-white">
+                                <option value="standard">Standard</option>
+                                <option value="large">Large</option>
+                                <option value="xlarge">Extra Large</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -145,6 +154,7 @@
         const limitInput = document.getElementById('limit');
         const shuffleCheckbox = document.getElementById('shuffle');
         const doubleSidedCheckbox = document.getElementById('doubleSided');
+        const textSizeSelect = document.getElementById('textSize');
         const clearText = document.getElementById('clearText');
         const exampleBtn = document.getElementById('example');
         const status = document.getElementById('status');
@@ -256,7 +266,7 @@
         const CARD_H = PRINT_H / ROWS; 
         const CUT_LINE_WIDTH = 0.1; 
 
-        function createPdfAndDownload(cards){ // cards is array of {front, back}
+        function createPdfAndDownload(cards){ 
             if (!jsPDF) return;
             if (!cards || cards.length===0){
                 status.textContent = '⚠️ No data provided.';
@@ -272,7 +282,21 @@
             setTimeout(() => {
                 try {
                     const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
-                    const fontSize = Math.max(10, Math.min(20, CARD_H * 0.22)); 
+                    
+                    // NEW TEXT SIZE LOGIC
+                    let baseSizeMulti = 0.22;
+                    let maxFontSize = 20;
+                    
+                    if (textSizeSelect.value === 'large') {
+                        baseSizeMulti = 0.40;
+                        maxFontSize = 35;
+                    } else if (textSizeSelect.value === 'xlarge') {
+                        baseSizeMulti = 0.60;
+                        maxFontSize = 50;
+                    }
+
+                    const fontSize = Math.max(10, Math.min(maxFontSize, CARD_H * baseSizeMulti)); 
+                    
                     doc.setFont('helvetica', 'normal');
                     
                     const cardsPerPage = COLS * ROWS;
@@ -280,7 +304,6 @@
 
                     for (let p = 0; p < totalPages; p++){
                         // --- FRONT PAGE ---
-                        // FIX: Only add a new page if we are NOT on the very first loop (p=0)
                         if (p > 0) doc.addPage();
                         
                         // Draw Grid (Front)
@@ -292,7 +315,6 @@
                             if (globalIndex >= cards.length) break;
                             
                             const item = cards[globalIndex];
-                            // Standard layout: Row major
                             const col = i % COLS;
                             const row = Math.floor(i / COLS);
                             
@@ -301,7 +323,7 @@
 
                         // --- BACK PAGE (If Double Sided) ---
                         if (isDouble) {
-                            doc.addPage(); // Always add a new page for the back
+                            doc.addPage(); 
                             drawGrid(doc);
 
                             for (let i = 0; i < cardsPerPage; i++){
@@ -311,8 +333,6 @@
                                 const item = cards[globalIndex];
                                 
                                 // CALCULATE MIRRORED POSITION
-                                // Original: col 0 -> Mirrored: col 3
-                                // Original: col 1 -> Mirrored: col 2
                                 const origCol = i % COLS;
                                 const row = Math.floor(i / COLS);
                                 const mirrorCol = (COLS - 1) - origCol;
@@ -410,14 +430,12 @@
             const isDouble = doubleSidedCheckbox.checked;
             let data = raw.map(line => {
                 if (isDouble) {
-                    // 1. Try splitting by PIPE |
                     if (line.includes('|')) {
                         const parts = line.split('|');
                         const f = parts.shift().trim();
-                        const b = parts.join('|').trim(); // Join rest back
+                        const b = parts.join('|').trim(); 
                         return { front: f, back: b };
                     } 
-                    // 2. Fallback to COMMA ,
                     else if (line.includes(',')) {
                         const parts = line.split(',');
                         const f = parts.shift().trim();
