@@ -92,6 +92,9 @@
 
         <div id="screen-list" class="hidden flex-1 p-8 flex flex-col">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Select Text (<span id="list-badge"></span>)</h2>
+            
+            <input type="text" id="list-search" placeholder="Search by title..." onkeyup="app.filterList()" class="mb-4 p-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 outline-none">
+            
             <div id="titles-container" class="flex-1 overflow-y-auto space-y-3 pr-2 max-h-[500px]"></div>
             <button onclick="app.showDashboard()" class="mt-6 self-start px-6 py-2 bg-gray-200 font-bold rounded-lg hover:bg-gray-300">← Back</button>
         </div>
@@ -237,6 +240,9 @@
             },
 
             showList: function() {
+                            if(document.getElementById('list-search')) {
+                    document.getElementById('list-search').value = '';
+                }
                 this.filteredData = this.data.filter(i => i.level === this.state.level);
                 if (!this.filteredData.length) return alert("No texts found for this level.");
 
@@ -257,6 +263,21 @@
                     container.appendChild(btn);
                 });
                 this.switchScreen('screen-list');
+            },
+
+            filterList: function() {
+                const searchTerm = document.getElementById('list-search').value.toLowerCase();
+                const buttons = document.querySelectorAll('.list-item-btn');
+
+                buttons.forEach(btn => {
+                    const titleText = btn.querySelector('span').innerText.toLowerCase();
+                    // This looks for your search term anywhere in the title
+                    if (titleText.includes(searchTerm)) {
+                        btn.style.display = "flex";
+                    } else {
+                        btn.style.display = "none";
+                    }
+                });
             },
 
             startEngine: function() {

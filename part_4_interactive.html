@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Teacher Board</title>
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
+        #app-container { @apply w-full max-w-[95%] mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[850px] flex flex-col relative my-6; }
+
+        .btn-back-wrapper { @apply w-full max-w-[95%] mx-auto mb-2 mt-6 flex justify-start; }
+        .btn-back { display: inline-block; background: white; color: #4f46e5; padding: 10px 20px; border-radius: 12px; text-decoration: none; font-weight: 800; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #e0e7ff; }
+        .btn-back:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); background: #e0e7ff; }
+
+        .level-select-btn { font-size: 3rem; padding: 2rem; width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform border-4 opacity-70 grayscale cursor-pointer shadow-lg; }
+        .level-select-btn.active { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); z-index: 10; @apply ring-4 ring-offset-4 ring-indigo-500; }
+        
+        .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
+        .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
+        .btn-c2-style { background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); color: #333; border-color: #DCEDC8; }
+
+        .app-btn { @apply px-8 py-4 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95 cursor-pointer text-lg; }
+        
+        .p4-card { @apply p-8 border border-gray-200 rounded-xl mb-6 bg-gray-50 h-full flex flex-col justify-center; }
+        .key-word-small { @apply bg-amber-200 px-3 py-1 rounded font-bold text-gray-800 text-sm uppercase border border-amber-300 inline-block mb-4 w-fit; }
+        .gap-input-fake { @apply inline-block border-b-4 border-indigo-200 px-2 mx-1 font-bold text-indigo-900 text-center uppercase min-w-[150px] bg-white h-10 align-middle cursor-pointer hover:bg-indigo-50 transition; }
+        .gap-input-fake.revealed { @apply bg-green-100 border-green-500 text-green-800; }
+
+        .question-text-large { font-family: 'Inter', sans-serif; font-size: 2.5rem; line-height: 1.4; font-weight: 700; color: #1f2937; text-align: left; }
+        .key-word-large { background-color: #facc15; padding: 8px 30px; border-radius: 12px; font-weight: 900; font-size: 2.5rem; color: #1f2937; text-transform: uppercase; border: 3px solid #eab308; display: inline-block; margin-bottom: 2rem; width: fit-content; }
+        .gap-line-large { border-bottom: 5px solid #6366f1; min-width: 300px; display: inline-block; height: 60px; margin: 0 15px; cursor: pointer; transition: 0.2s; vertical-align: bottom; }
+        .gap-line-large.revealed { color: #166534; font-weight: 900; font-size: 2.5rem; border-bottom-color: #22c55e; text-align: center; }
+
+        .player-card { @apply p-2 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[110px] bg-white relative shadow-sm; }
+        .card-submitted { @apply bg-indigo-50 border-indigo-500 text-indigo-700 shadow-md; }
+        .card-grading { @apply bg-white border-gray-400 shadow-lg z-10; }
+        .grade-btn { @apply w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center border hover:scale-110 active:scale-95 transition; }
+        .grade-0 { @apply border-red-200 text-red-300 hover:bg-red-500 hover:text-white; }
+        .grade-1 { @apply border-yellow-200 text-yellow-300 hover:bg-yellow-400 hover:text-white; }
+        .grade-2 { @apply border-green-200 text-green-300 hover:bg-green-500 hover:text-white; }
+        .grade-0.selected { @apply bg-red-500 text-white border-red-600; }
+        .grade-1.selected { @apply bg-yellow-400 text-white border-yellow-500; }
+        .grade-2.selected { @apply bg-green-500 text-white border-green-600; }
+
+        /* Custom styling for Lobby Radio buttons */
+        .source-radio:checked + div { @apply border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200; }
+        .mode-btn.active { @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md ring-2 ring-indigo-200; }
+    </style>
+</head>
+<body class="p-4 flex flex-col items-center justify-center relative">
+
+    <div class="btn-back-wrapper">
+        <button id="nav-back-btn" onclick="teacher.handleBack()" class="btn-back">← Back to Menu</button>
+    </div>
+
+    <div id="app-container">
+        
+        <div class="flex justify-between items-center p-8 border-b bg-white flex-none">
+            <h1 class="text-4xl font-extrabold text-gray-900">Use of English <span class="text-indigo-600">Teacher Board</span></h1>
+            <div class="flex gap-4">
+                <div id="timer-display" class="hidden text-3xl font-mono font-black text-red-500 bg-red-50 px-4 py-2 rounded-lg border border-red-100">00:00</div>
+                <div id="session-info" class="hidden flex items-center gap-4 bg-gray-50 px-6 py-2 rounded-xl border border-gray-200">
+                    <span class="text-gray-400 font-bold text-sm tracking-widest uppercase">Room</span>
+                    <span id="pin-display" class="text-4xl font-black text-indigo-600 tracking-widest font-mono">----</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-setup" class="hidden flex-1 flex flex-col justify-center items-center gap-12 p-10">
+            <div class="w-full max-w-5xl text-center space-y-6">
+                <h2 class="text-3xl font-bold text-gray-700">Select Level to Launch Lobby</h2>
+                <div class="grid grid-cols-3 gap-8">
+                    <button onclick="teacher.selectLevel('B2')" id="btn-lvl-b2" class="level-select-btn btn-b2-style">B2</button>
+                    <button onclick="teacher.selectLevel('C1')" id="btn-lvl-c1" class="level-select-btn btn-c1-style">C1</button>
+                    <button onclick="teacher.selectLevel('C2')" id="btn-lvl-c2" class="level-select-btn btn-c2-style">C2</button>
+                </div>
+            </div>
+            <button onclick="teacher.createSession()" id="btn-create" disabled class="mt-8 app-btn bg-indigo-600 text-white text-3xl px-24 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700">Open Lobby →</button>
+            <p id="status-msg" class="text-gray-400 font-medium">Connecting...</p>
+        </div>
+
+        <div id="screen-lobby" class="hidden flex-1 flex flex-col lg:flex-row p-8 gap-8 bg-gray-50">
+            
+            <div class="flex-1 bg-white rounded-[2rem] p-8 border-2 border-indigo-50 shadow-sm flex flex-col">
+                <h3 class="text-2xl font-black text-gray-800 mb-8 border-b border-gray-100 pb-4">Waiting Room (<span id="lobby-level-display" class="text-indigo-600"></span>)</h3>
+                
+                <div class="flex flex-col md:flex-row gap-12 items-center justify-center mb-10 bg-indigo-50/50 p-8 rounded-3xl border border-indigo-100">
+                    <div class="flex flex-col items-center bg-white p-6 rounded-3xl shadow-md border border-gray-100">
+                        <div id="qrcode-container"></div>
+                        <p class="text-indigo-600 font-black mt-4 tracking-widest uppercase text-sm mb-1">Scan to Join</p>
+                        <p id="lobby-url" class="text-xs text-gray-400 font-mono break-all text-center">...</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-indigo-400 font-bold mb-3 uppercase tracking-wider text-sm">Or Enter Code</p>
+                        <div class="p-8 bg-white rounded-3xl border-2 border-indigo-100 shadow-sm">
+                            <span id="lobby-pin" class="text-7xl font-black text-indigo-900 tracking-widest font-mono">----</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-500 uppercase tracking-wider">Class Roster</h3>
+                        <span class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm" id="player-count">0 Players</span>
+                    </div>
+                    <div id="lobby-player-list" class="flex flex-wrap gap-3 overflow-y-auto content-start flex-1 p-4 bg-gray-50 rounded-2xl border border-gray-100 min-h-[150px]">
+                        </div>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-[450px] bg-white rounded-[2rem] p-8 border-4 border-indigo-100 shadow-xl flex flex-col">
+                <h3 class="text-2xl font-black text-indigo-900 mb-6 border-b border-gray-100 pb-4">Configure Lesson</h3>
+                
+                <div class="mb-8">
+                    <p class="font-bold text-gray-400 uppercase tracking-widest text-xs mb-3">1. Select Mode</p>
+                    <div class="flex gap-3">
+                        <button id="btn-mode-live" onclick="teacher.setDeliveryMode('LIVE')" class="mode-btn active flex-1 py-4 font-bold rounded-xl border-2 border-gray-200 text-gray-500 transition cursor-pointer">One by One</button>
+                        <button id="btn-mode-exam" onclick="teacher.setDeliveryMode('EXAM')" class="mode-btn flex-1 py-4 font-bold rounded-xl border-2 border-gray-200 text-gray-500 transition cursor-pointer">Exam Mode</button>
+                    </div>
+                </div>
+
+		<div class="mb-8 flex-1">
+                    <p class="font-bold text-gray-400 uppercase tracking-widest text-xs mb-3">2. Select Content</p>
+                    
+                    <label class="block relative cursor-pointer mb-4">
+                        <input type="radio" name="source" value="random" id="radio-random" checked onchange="teacher.toggleSourceUI()" class="source-radio sr-only">
+                        <div class="p-5 border-2 border-gray-200 rounded-xl transition">
+                            <span class="font-black text-gray-700 text-lg">Random Mix</span>
+                            <p class="text-sm text-gray-500 mt-1">6 random questions from the level.</p>
+                        </div>
+                    </label>
+                    
+                    <label class="block relative cursor-pointer mb-4">
+                        <input type="radio" name="source" value="set" id="radio-set" onchange="teacher.toggleSourceUI()" class="source-radio sr-only">
+                        <div class="p-5 border-2 border-gray-200 rounded-xl transition">
+                            <span class="font-black text-gray-700 text-lg block mb-3">Specific Exam Set</span>
+                            <select id="lobby-select-set" onclick="document.getElementById('radio-set').checked = true; teacher.toggleSourceUI();" class="w-full p-3 border-2 border-gray-300 rounded-lg bg-white text-gray-700 font-bold opacity-50 bg-gray-100 cursor-pointer outline-none focus:border-indigo-400 transition">
+                                <option value="">-- Choose Set --</option>
+                            </select>
+                        </div>
+                    </label>
+
+                    <label class="block relative cursor-pointer">
+                        <input type="radio" name="source" value="grammar" id="radio-grammar" onchange="teacher.toggleSourceUI()" class="source-radio sr-only">
+                        <div class="p-5 border-2 border-gray-200 rounded-xl transition">
+                            <span class="font-black text-gray-700 text-lg block mb-3">Grammar Drill</span>
+                            <select id="lobby-select-grammar" onclick="document.getElementById('radio-grammar').checked = true; teacher.toggleSourceUI();" class="w-full p-3 border-2 border-gray-300 rounded-lg bg-white text-gray-700 font-bold opacity-50 bg-gray-100 cursor-pointer outline-none focus:border-indigo-400 transition">
+                                <option value="">-- Choose Grammar --</option>
+                            </select>
+                        </div>
+                    </label>
+                </div>
+
+                <button onclick="teacher.startGame()" class="w-full app-btn bg-indigo-600 text-white text-2xl py-6 shadow-xl hover:bg-indigo-700">Start Lesson →</button>
+            </div>
+        </div>
+
+        <div id="screen-game" class="hidden flex-1 flex flex-col p-10 bg-gray-50">
+            <div class="bg-white border-4 border-indigo-50 rounded-[2.5rem] p-12 mb-8 relative shadow-sm text-left">
+                <span class="absolute top-8 right-8 bg-gray-100 text-gray-500 font-bold px-4 py-2 rounded-lg text-sm uppercase">Live Mode</span>
+                <p id="q-sentence1" class="question-text-large mb-10">Loading...</p>
+                <div><span id="q-keyword" class="key-word-large">KEY</span></div>
+                <div class="question-text-large flex flex-wrap items-baseline gap-4 mt-8"><span id="q-pre">...</span><span id="q-gap" class="gap-line-large" onclick="teacher.toggleCorrectAnswer(this)"></span><span id="q-post">...</span></div>
+            </div>
+            <div class="flex justify-between items-center mb-8 px-4 flex-none">
+                <div class="flex gap-6">
+                    <button id="btn-reveal" onclick="teacher.revealRound()" class="app-btn bg-amber-400 text-amber-900 hover:bg-amber-500 text-2xl px-10">👁 Reveal Answers</button>
+                    <button onclick="teacher.toggleLeaderboard()" class="app-btn bg-white border-2 border-gray-200 text-gray-600 hover:bg-gray-50 text-2xl">🏆 Leaderboard</button>
+                </div>
+                <div class="flex gap-4">
+                    <button id="btn-prev" onclick="teacher.prevAction()" class="app-btn bg-gray-500 text-white hover:bg-gray-600 text-2xl px-8" disabled>← Prev</button>
+                    <button onclick="teacher.nextAction()" class="app-btn bg-indigo-600 text-white hover:bg-indigo-700 text-2xl px-12">Next →</button>
+                </div>
+            </div>
+            <div id="player-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 overflow-y-auto flex-1 p-4 content-start"></div>
+        </div>
+
+        <div id="screen-exam" class="hidden flex-1 flex flex-col p-10 bg-white overflow-hidden">
+            <div class="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-6 flex-none">
+                <h2 class="text-4xl font-extrabold text-gray-800">Exam Mode</h2>
+                <div class="flex gap-4">
+                    <button id="btn-reveal-exam" onclick="teacher.revealRound()" class="app-btn bg-amber-500 text-white hover:bg-amber-600 text-xl px-8">👁 Reveal All Answers</button>
+                    <button onclick="teacher.toggleLeaderboard()" class="app-btn bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-xl px-8">🏆 Scores</button>
+                </div>
+            </div>
+            <div id="exam-container" class="flex-1 overflow-y-auto pr-6 pb-20 space-y-16 w-full"></div>
+        </div>
+
+        <div id="screen-leaderboard" class="hidden flex-1 flex flex-col p-12 bg-indigo-900 text-white items-center justify-center">
+            <h2 class="text-6xl font-black text-center mb-12">🏆 Final Rankings</h2>
+            <div id="leaderboard-list" class="w-full max-w-4xl flex-1 overflow-y-auto pr-4 space-y-6 content-start"></div>
+            <div class="text-center mt-10 flex-none"><button onclick="teacher.closeLeaderboard()" class="px-12 py-5 rounded-2xl border-4 border-white/20 hover:bg-white/10 font-bold text-2xl transition">Close Leaderboard</button></div>
+        </div>
+    </div>
+
+    <script>
+        // Use the exact same Supabase keys as your main app
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+
+        const STUDENT_FILE_NAME = "student-phone.html"; 
+
+        const teacher = {
+            supabase: null, 
+            sessionID: null,
+            config: { level: null, mode: 'LIVE' },
+            allQuestions: [], // Master pool downloaded on init
+            batch: [], // The 6 questions selected for the game
+            currentQIndex: -1,
+            players: {}, 
+            submissions: {}, 
+            isRevealed: false,
+            timer: null, 
+            timeLeft: 0,
+
+            init: async function() {
+                if (typeof supabase !== 'undefined') {
+                    this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
+                    document.getElementById('status-msg').innerText = "System Ready.";
+                    document.getElementById('status-msg').classList.add('text-green-500');
+                } else { 
+                    alert("Supabase library not loaded."); 
+                    return;
+                }
+
+                // URL Handoff Catch
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlLevel = urlParams.get('level');
+
+                if (urlLevel) {
+                    this.config.level = urlLevel;
+                    // Bypass the setup screen entirely and jump to lobby generation
+                    await this.createSession();
+                } else {
+                    // Fallback if opened directly without a level in the URL
+                    this.switchScreen('screen-setup');
+                }
+            },
+
+            handleBack: function() {
+                // If they are in the lobby or game, take them back to the main trainer index
+                window.location.href = 'Part 4 generator.html'; // Assuming this is your main menu file
+            },
+
+            selectLevel: function(lvl) {
+                this.config.level = lvl;
+                document.querySelectorAll('.level-select-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`btn-lvl-${lvl.toLowerCase()}`).classList.add('active');
+                document.getElementById('btn-create').disabled = false;
+            },
+
+            createSession: async function() {
+                if(document.getElementById('btn-create')) document.getElementById('btn-create').innerText = "Generating...";
+                
+                // 1. Download all questions for the chosen level (with clean text)
+                const { data, error } = await this.supabase
+                    .from('exam_part4') // Ensure this is the correct table
+                    .select('*')
+                    .eq('level', this.config.level)
+                    .limit(5000)
+                    .order('id', { ascending: true });
+                    
+                if(error || !data || data.length === 0) { 
+                    alert("Error: No questions found for this level."); 
+                    return; 
+                }
+
+                const fixText = (str) => {
+                    if (typeof str !== 'string') return str;
+                    return str.replace(/[麓’‘´`]/g, "'");
+                };
+
+                this.allQuestions = data.map(q => {
+                    q.sentence1 = fixText(q.sentence1);
+                    q.sentence2_pre = fixText(q.sentence2_pre);
+                    q.sentence2_post = fixText(q.sentence2_post);
+                    if (Array.isArray(q.answers)) q.answers = q.answers.map(a => fixText(a));
+                    else if (typeof q.answers === 'string') q.answers = fixText(q.answers);
+                    if (Array.isArray(q.answer)) q.answer = q.answer.map(a => fixText(a));
+                    else if (typeof q.answer === 'string') q.answer = fixText(q.answer);
+                    return q;
+                });
+
+                // 2. Populate the Teacher Dashboard Dropdowns
+                this.populateLobbyDropdowns();
+
+                // 3. Generate PIN and Create Room
+                const pin = Math.floor(1000 + Math.random() * 9000).toString();
+                const { data: sData, error: sErr } = await this.supabase.from('game_sessions').insert([{ 
+                    pin: pin, 
+                    status: 'LOBBY', 
+                    mode: 'LIVE', // Default temp
+                    question_queue: [] 
+                }]).select().single();
+                
+                if (sErr) { console.error("Session Error", sErr); return; }
+
+                this.sessionID = sData.id;
+                document.getElementById('pin-display').innerText = pin;
+                document.getElementById('lobby-pin').innerText = pin;
+                document.getElementById('lobby-level-display').innerText = this.config.level;
+                
+                this.generateQR(pin);
+                this.subscribeToPlayers();
+                this.switchScreen('screen-lobby');
+            },
+
+	    populateLobbyDropdowns: function() {
+                // Populate Sets
+                const uniqueSets = [...new Set(this.allQuestions.map(q => q.set_id).filter(id => id !== null))].sort((a,b) => a-b);
+                const selSet = document.getElementById('lobby-select-set');
+                selSet.innerHTML = '<option value="">-- Choose Set --</option>';
+                uniqueSets.forEach(id => { selSet.innerHTML += `<option value="${id}">Exam Set ${id}</option>`; });
+
+                // Populate Grammar (Now filtered to >= 6 questions)
+                const grammarCounts = {};
+                this.allQuestions.forEach(q => {
+                    if (q.grammar_points && Array.isArray(q.grammar_points)) {
+                        q.grammar_points.forEach(tag => { grammarCounts[tag] = (grammarCounts[tag] || 0) + 1; });
+                    }
+                });
+
+                const selGrammar = document.getElementById('lobby-select-grammar');
+                selGrammar.innerHTML = '<option value="">-- Choose Grammar --</option>';
+                Object.keys(grammarCounts)
+                    .filter(tag => grammarCounts[tag] >= 6) // Changed to 6
+                    .sort()
+                    .forEach(tag => {
+                        selGrammar.innerHTML += `<option value="${tag}">${tag} (${grammarCounts[tag]})</option>`;
+                    });
+            },
+
+            toggleSourceUI: function() {
+                const source = document.querySelector('input[name="source"]:checked').value;
+                const setSel = document.getElementById('lobby-select-set');
+                const gramSel = document.getElementById('lobby-select-grammar');
+                
+                // Visual toggle instead of native 'disabled' for the 1-click select
+                if(source === 'set') {
+                    setSel.classList.remove('opacity-50', 'bg-gray-100');
+                    gramSel.classList.add('opacity-50', 'bg-gray-100');
+                } else if(source === 'grammar') {
+                    gramSel.classList.remove('opacity-50', 'bg-gray-100');
+                    setSel.classList.add('opacity-50', 'bg-gray-100');
+                } else {
+                    setSel.classList.add('opacity-50', 'bg-gray-100');
+                    gramSel.classList.add('opacity-50', 'bg-gray-100');
+                }
+            },
+
+            generateQR: function(pin) {
+                const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                const joinUrl = `${currentPath}/${STUDENT_FILE_NAME}`;
+                document.getElementById('lobby-url').innerText = joinUrl.replace('https://','').replace('http://','');
+                document.getElementById("qrcode-container").innerHTML = "";
+                new QRCode(document.getElementById("qrcode-container"), { text: `${joinUrl}?pin=${pin}`, width: 180, height: 180, colorDark : "#3730a3", colorLight : "#ffffff" });
+            },
+
+            subscribeToPlayers: function() {
+                this.supabase.channel('players').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${this.sessionID}` }, 
+                    (payload) => { this.players[payload.new.id] = payload.new; this.renderLobby(); }).subscribe();
+            },
+
+            renderLobby: function() {
+                const list = document.getElementById('lobby-player-list');
+                list.innerHTML = '';
+                const pIds = Object.keys(this.players);
+                document.getElementById('player-count').innerText = `${pIds.length} Joined`;
+                pIds.forEach(id => { list.innerHTML += `<div class="px-5 py-2 bg-white rounded-xl shadow-sm text-indigo-900 font-bold border-2 border-indigo-100 text-lg animate-bounce">${this.players[id].nickname}</div>`; });
+            },
+
+            startGame: async function() {
+                // 1. Gather Configuration
+                const source = document.querySelector('input[name="source"]:checked').value;
+                let pool = [...this.allQuestions];
+
+                // 2. Filter based on Teacher Dashboard
+                if (source === 'set') {
+                    const sid = document.getElementById('lobby-select-set').value;
+                    if(!sid) return alert("Please choose an Exam Set from the dropdown.");
+                    pool = pool.filter(q => String(q.set_id) === String(sid));
+                } else if (source === 'grammar') {
+                    const gp = document.getElementById('lobby-select-grammar').value;
+                    if(!gp) return alert("Please choose a Grammar Point from the dropdown.");
+                    pool = pool.filter(q => q.grammar_points && q.grammar_points.includes(gp));
+                }
+
+                if(pool.length === 0) return alert("No questions found for this configuration.");
+
+                // 3. Shuffle and Slice (Limit to 6 questions max for clear pacing/timer)
+                pool.sort(() => Math.random() - 0.5);
+                this.batch = pool.slice(0, 6);
+
+                // 4. Start the Room
+                document.getElementById('session-info').classList.remove('hidden');
+                
+                await this.supabase.from('game_sessions').update({ 
+                    status: 'ACTIVE', 
+                    mode: this.config.mode,
+                    current_question_ids: this.batch.map(q => q.id) 
+                }).eq('id', this.sessionID);
+
+                if (this.config.mode === 'LIVE') { 
+                    this.currentQIndex = -1;
+                    this.nextAction(); // Loads first question
+                } else {
+                    this.renderExamMode();
+                    this.switchScreen('screen-exam');
+                    this.subscribeToBatchSubmissions();
+                    this.startTimer();
+                }
+            },
+
+            startTimer: function() {
+                document.getElementById('timer-display').classList.remove('hidden');
+                // Dynamic Timer: 60 seconds per question loaded
+                this.timeLeft = this.batch.length * 60; 
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    const m = Math.floor(this.timeLeft / 60);
+                    const s = this.timeLeft % 60;
+                    const display = document.getElementById('timer-display');
+                    display.innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                    if(this.timeLeft <= 60) display.classList.add('bg-red-500', 'text-white');
+                    if(this.timeLeft <= 0) { clearInterval(this.timer); display.innerText = "00:00"; }
+                }, 1000);
+            },
+
+            nextAction: function() {
+                this.currentQIndex++;
+                if(this.currentQIndex >= this.batch.length) { alert("End of questions"); return; }
+                this.loadQuestionToBoard(this.batch[this.currentQIndex]);
+            },
+
+            prevAction: function() {
+                if(this.currentQIndex <= 0) return;
+                this.currentQIndex--;
+                this.loadQuestionToBoard(this.batch[this.currentQIndex]);
+            },
+
+            loadQuestionToBoard: async function(q) {
+                this.submissions = {}; 
+                this.isRevealed = false; 
+                document.getElementById('q-sentence1').innerText = q.sentence1;
+                document.getElementById('q-keyword').innerText = q.key_word;
+                document.getElementById('q-pre').innerText = q.sentence2_pre;
+                document.getElementById('q-post').innerText = q.sentence2_post;
+                
+                const gap = document.getElementById('q-gap');
+                gap.innerText = ""; gap.className = "gap-line-large"; gap.dataset.answer = Array.isArray(q.answers) ? q.answers[0].replace(/\|/g, '') : q.answer; 
+                
+                const btn = document.getElementById('btn-reveal');
+                btn.innerHTML = "👁 Reveal Answers";
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                btn.classList.add('bg-amber-400');
+                btn.disabled = false;
+                
+                document.getElementById('btn-prev').disabled = this.currentQIndex === 0;
+                
+                this.renderGrid();
+                this.switchScreen('screen-game');
+                await this.supabase.from('game_sessions').update({ status: 'ACTIVE', current_question_ids: [q.id] }).eq('id', this.sessionID);
+                this.subscribeToSubmissions(q.id);
+            },
+
+            renderExamMode: function() {
+                const container = document.getElementById('exam-container');
+                container.innerHTML = '';
+                this.batch.forEach((q, idx) => {
+                    const cleanAns = Array.isArray(q.answers) ? q.answers[0].replace(/\|/g, '') : q.answer;
+                    const html = `
+                    <div class="flex flex-col xl:flex-row gap-8 w-full border-b-2 border-gray-100 pb-8">
+                        <div class="p4-card w-full xl:w-[45%] flex-none shadow-sm">
+                            <div class="mb-3 text-indigo-400 font-black tracking-widest text-sm uppercase border-b pb-2">Question ${idx+1}</div>
+                            <p class="mb-4 text-2xl font-bold text-gray-800 text-left leading-relaxed">${q.sentence1}</p>
+                            <span class="key-word-small text-lg w-fit shadow-sm">${q.key_word}</span>
+                            <div class="flex flex-wrap items-center gap-2 mt-4 text-2xl text-gray-700 font-bold">
+                                <span>${q.sentence2_pre}</span>
+                                <span class="gap-input-fake" onclick="teacher.toggleCorrectAnswer(this)" data-answer="${cleanAns}"></span>
+                                <span>${q.sentence2_post}</span>
+                            </div>
+                        </div>
+                        <div id="grid-q-${q.id}" class="w-full xl:w-[55%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start"></div>
+                    </div>`;
+                    container.innerHTML += html;
+                    setTimeout(() => this.renderExamGrid(q.id), 0);
+                });
+            },
+
+            toggleCorrectAnswer: function(el) {
+                if(el.classList.contains('revealed')) { el.innerText = ""; el.classList.remove('revealed'); } 
+                else { el.innerText = el.dataset.answer; el.classList.add('revealed'); }
+            },
+
+            subscribeToSubmissions: function(qId) {
+                if(this.subChannel) this.supabase.removeChannel(this.subChannel);
+                this.subChannel = this.supabase.channel('subs').on('postgres_changes', { event: '*', schema: 'public', table: 'submissions', filter: `question_id=eq.${qId}` }, 
+                    (payload) => { this.submissions[payload.new.player_id] = payload.new; this.renderGrid(); }).subscribe();
+            },
+
+            subscribeToBatchSubmissions: function() {
+                this.supabase.channel('exam_subs').on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, 
+                    (payload) => {
+                         const subKey = `${payload.new.player_id}_${payload.new.question_id}`;
+                         this.submissions[subKey] = payload.new;
+                         this.renderExamGrid(payload.new.question_id);
+                    }).subscribe();
+            },
+
+            revealRound: async function() {
+                this.isRevealed = true;
+                const isLive = !document.getElementById('screen-game').classList.contains('hidden');
+                if (isLive) {
+                     this.renderGrid();
+                     const btn = document.getElementById('btn-reveal');
+                     btn.innerHTML = "🔒 Revealed";
+                     btn.classList.add('bg-gray-400', 'cursor-not-allowed', 'text-white');
+                     btn.classList.remove('bg-amber-400', 'text-amber-900');
+                     btn.disabled = true;
+                } else {
+                     this.batch.forEach(q => this.renderExamGrid(q.id));
+                     const btn = document.getElementById('btn-reveal-exam');
+                     btn.innerText = "🔒 Revealed";
+                     btn.className = "app-btn bg-gray-400 text-white cursor-not-allowed text-xl px-8";
+                     btn.disabled = true;
+                     
+                     // Stop the timer
+                     if(this.timer) clearInterval(this.timer);
+                }
+                await this.supabase.from('game_sessions').update({ status: 'REVEAL' }).eq('id', this.sessionID);
+            },
+
+            grade: async function(playerId, qId, points) {
+                if (this.config.mode === 'LIVE') {
+                    if(this.submissions[playerId]) this.submissions[playerId].points = points;
+                    this.renderGrid();
+                } else {
+                    const key = `${playerId}_${qId}`;
+                    if(this.submissions[key]) this.submissions[key].points = points;
+                    this.renderExamGrid(qId);
+                }
+                await this.supabase.from('submissions').update({ points: points }).match({ player_id: playerId, question_id: qId });
+            },
+
+            renderGrid: function() {
+                const grid = document.getElementById('player-grid');
+                grid.innerHTML = '';
+                Object.values(this.players).forEach(p => {
+                    const sub = this.submissions[p.id];
+                    grid.appendChild(this.createCard(p, sub, null));
+                });
+            },
+
+            renderExamGrid: function(qId) {
+                const grid = document.getElementById(`grid-q-${qId}`);
+                if(!grid) return;
+                grid.innerHTML = '';
+                Object.values(this.players).forEach(p => {
+                    const sub = this.submissions[`${p.id}_${qId}`];
+                    grid.appendChild(this.createCard(p, sub, qId));
+                });
+            },
+
+            createCard: function(p, sub, qId) {
+                const card = document.createElement('div');
+                card.className = "player-card";
+                if (!this.isRevealed) {
+                    if (sub) {
+                        card.classList.add('card-submitted');
+                        card.innerHTML = `<div class="text-3xl mb-1">✅</div><div class="font-bold text-lg text-indigo-700">${p.nickname}</div>`;
+                    } else {
+                        card.innerHTML = `<div class="font-bold text-base text-gray-700">${p.nickname}</div><div class="text-[10px] uppercase mt-2 tracking-widest text-gray-400 font-bold animate-pulse">Thinking...</div>`;
+                    }
+                } else {
+                    card.classList.add('card-grading');
+                    const answerText = (sub && sub.answer_text) ? sub.answer_text.toUpperCase() : "-";
+                    const pts = sub ? sub.points : null;
+                    const qIdParam = qId ? `'${qId}'` : `'${this.batch[this.currentQIndex].id}'`;
+                    card.innerHTML = `
+                        <div class="w-full text-center border-b border-gray-100 pb-1 mb-2 font-bold text-gray-400 text-[10px] uppercase tracking-wider">${p.nickname}</div>
+                        <div class="text-lg font-black text-gray-800 mb-2 leading-tight px-2 text-center">${answerText}</div>
+                        <div class="flex gap-2 mt-auto pb-1">
+                            <button onclick="teacher.grade('${p.id}', ${qIdParam}, 0)" class="grade-btn grade-0 ${pts===0?'selected':''}">0</button>
+                            <button onclick="teacher.grade('${p.id}', ${qIdParam}, 1)" class="grade-btn grade-1 ${pts===1?'selected':''}">1</button>
+                            <button onclick="teacher.grade('${p.id}', ${qIdParam}, 2)" class="grade-btn grade-2 ${pts===2?'selected':''}">2</button>
+                        </div>`;
+                }
+                return card;
+            },
+
+            toggleLeaderboard: async function() {
+                const playerIds = Object.keys(this.players);
+                if (playerIds.length === 0) return;
+
+                const { data } = await this.supabase
+                    .from('submissions')
+                    .select('player_id, points')
+                    .in('player_id', playerIds);
+
+                const scores = {};
+                playerIds.forEach(pid => scores[pid] = 0);
+
+                if(data) {
+                    data.forEach(s => {
+                        if(s.points) scores[s.player_id] += s.points;
+                    });
+                }
+
+                const sortedPIDs = Object.keys(scores).sort((a,b) => scores[b] - scores[a]);
+                const list = document.getElementById('leaderboard-list');
+                list.innerHTML = '';
+                
+                sortedPIDs.forEach((pid, index) => {
+                    const p = this.players[pid];
+                    const medals = ['🥇','🥈','🥉'];
+                    const badge = index < 3 ? medals[index] : `<span class="font-bold text-indigo-400">#${index+1}</span>`;
+                    list.innerHTML += `
+                        <div class="flex items-center p-6 bg-white rounded-2xl shadow-md border-2 border-indigo-50 text-indigo-900">
+                            <div class="text-4xl mr-6 w-16 text-center">${badge}</div>
+                            <div class="flex-1 text-3xl font-black">${p.nickname}</div>
+                            <div class="text-5xl font-black text-indigo-600">${scores[pid]}</div>
+                        </div>`;
+                });
+                
+                // Keep the timer visible but paused if in exam mode
+                if (this.config.mode === 'EXAM') {
+                    document.getElementById('screen-leaderboard').appendChild(document.getElementById('timer-display'));
+                    document.getElementById('timer-display').classList.remove('hidden');
+                }
+                
+                this.switchScreen('screen-leaderboard');
+            },
+
+            closeLeaderboard: function() { 
+                // Put timer back where it belongs
+                if (this.config.mode === 'EXAM') {
+                    document.querySelector('#screen-exam .flex.justify-between').appendChild(document.getElementById('timer-display'));
+                }
+                this.switchScreen(this.config.mode === 'LIVE' ? 'screen-game' : 'screen-exam'); 
+            },
+
+            switchScreen: function(id) {
+                ['screen-setup','screen-lobby','screen-game','screen-exam','screen-leaderboard'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                window.scrollTo(0,0);
+            }
+        };
+
+        teacher.init();
+    </script>
+</body>
+</html>

@@ -3,37 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
     <title>Use of English Trainer (Part 4)</title>
+    <link rel="stylesheet" href="global.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="global.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style type="text/tailwindcss">
-        /* General Styles */
         body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
         #app-container { @apply w-full max-w-7xl; background-color: white; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border-radius: 16px; min-height: 700px; display: flex; flex-direction: column; }
 
-        /* --- TEXT SIZES --- */
         .question-text { font-size: 1.8rem; line-height: 1.4; font-weight: 700; color: #1f2937; }
         @media (min-width: 768px) { .question-text { font-size: 2.5rem; } }
         
-        .key-word { background-color: #facc15; padding: 8px 24px; border-radius: 12px; font-weight: 900; font-size: 2.5rem; color: #1f2937; text-transform: uppercase; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #eab308; display: inline-block; }
+        /* The requested Black text on Yellow background */
+        .key-word { background-color: #facc15; padding: 6px 20px; border-radius: 8px; font-weight: 900; font-size: 1.8rem; color: #1f2937; text-transform: uppercase; border: 2px solid #eab308; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
         .answer-gap { @apply p-2 border-b-4 border-amber-400 text-xl font-bold transition duration-150 flex-1; min-width: 250px; text-transform: uppercase; letter-spacing: 1px; text-align: center; line-height: 1.5; min-height: 45px; color: #facc15; display: inline-flex; justify-content: center; align-items: center; cursor: pointer; }
-        .answer-input { @apply p-2 border-4 border-indigo-300 rounded-lg text-xl font-bold text-indigo-700 placeholder-indigo-400 focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150; text-transform: uppercase; letter-spacing: 1px; min-width: 250px; }
+        
+        /* Cleaner Input Box */
+        .answer-input { @apply px-4 py-2 border-2 border-indigo-200 rounded-lg text-2xl font-bold text-indigo-800 bg-indigo-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition duration-150; text-transform: uppercase; letter-spacing: 1px; min-width: 280px; }
 
-        /* UI Elements */
         .key-word-small { background-color: #facc15; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 1rem; color: #1f2937; text-transform: uppercase; border: 1px solid #eab308; display: inline-block; vertical-align: middle; }
         .input-correct { @apply border-green-500 bg-green-50 text-green-800; }
         .input-partial { @apply border-yellow-500 bg-yellow-50 text-yellow-800; }
         .input-wrong { @apply border-red-500 bg-red-50 text-red-800; }
         .answer-gap.revealed { background-color: #d1fae5; color: #10b981; border-bottom-color: #10b981; cursor: pointer; }
 
-        /* Buttons (Consider moving these to global.css eventually) */
         .app-btn { @apply px-6 py-3 font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.02] active:scale-95; }
         
         .level-select-btn { font-size: 4.5rem; padding: 3rem 4rem; min-width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform; border-width: 4px; transform: scale(1); cursor: pointer; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; opacity: 0.7; filter: grayscale(0.5); }
@@ -55,7 +53,21 @@
         #timer-display { font-size: 2.5rem; font-weight: 900; color: #ef4444; }
         .time-alert { animation: pulse-red 1s infinite; }
         @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .exam-question-card { @apply p-4 border border-gray-300 rounded-xl mb-4 bg-gray-50; }
+        
+        /* The new spacious layout for questions to stop them crowding together */
+        .exam-question-card { @apply p-8 rounded-2xl mb-12 bg-white border-4 border-gray-200 shadow-md; }
+        
+        .custom-select { @apply w-full p-4 text-xl border-4 border-indigo-200 rounded-xl bg-white text-indigo-800 font-bold focus:ring-4 focus:ring-indigo-400 focus:border-indigo-500 transition cursor-pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.5em; }
+
+        /* TARGETED PRACTICE STYLES */
+        .divider { text-align: center; margin: 30px 0; position: relative; }
+        .divider::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 2px solid #e5e7eb; z-index: 1; }
+        .divider span { background: #ffffff; padding: 0 20px; color: #9ca3af; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; position: relative; z-index: 2; }
+
+        .grammar-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; justify-content: center; }
+        .grammar-card { padding: 12px 20px; background-color: #f3f4f6; color: #4b5563; border: 2px solid #e5e7eb; border-radius: 12px; cursor: pointer; user-select: none; transition: all 0.2s ease; font-size: 1.1rem; font-weight: 700; text-align: center; }
+        .grammar-card:hover { background-color: #e5e7eb; transform: translateY(-2px); }
+        .grammar-card.selected { background-color: #f59e0b; color: white; border-color: #d97706; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); transform: translateY(-2px); }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
@@ -79,7 +91,7 @@
             </div>
             <div>
                 <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">2. Select Mode</h3>
-                <div class="grid grid-cols-2 gap-6 w-full">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
                     <button onclick="app.selectMode('free')" id="mode-free" disabled class="mode-select-btn">
                         <span class="text-6xl mb-4">🏫</span>
                         <span class="text-3xl font-bold text-gray-800">Classroom Style</span>
@@ -90,16 +102,55 @@
                         <span class="text-3xl font-bold text-gray-800">Exam Style</span>
                         <span class="text-lg mt-2">Scored. 6 Questions. Timer.</span>
                     </button>
+                    <button onclick="app.launchInteractive()" id="mode-interactive" disabled class="mode-select-btn border-indigo-200">
+                        <span class="text-6xl mb-4">📱</span>
+                        <span class="text-3xl font-bold text-indigo-700">Interactive Style</span>
+                        <span class="text-lg mt-2 text-indigo-500 font-bold">Phones Required</span>
+                    </button>
                 </div>
             </div>
-            <div class="mt-4 flex justify-center">
-                <button onclick="app.startActivity()" id="start-btn" disabled class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105">Start Activity →</button>
+            
+            <div class="mt-4 flex flex-col items-center gap-4">
+                <button onclick="app.startActivity()" id="start-btn" disabled class="app-btn bg-indigo-600 text-white text-3xl px-16 py-6 shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition transform hover:scale-105 w-full max-w-lg">Start Random →</button>
+                
+                <p class="text-gray-500 font-bold uppercase tracking-widest text-sm">— OR —</p>
+                
+                <button onclick="app.openTargetedMenu()" id="targeted-btn" disabled class="app-btn bg-white border-4 border-indigo-200 text-indigo-600 text-xl px-8 py-4 shadow-md disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-50 transition w-full max-w-lg">Choose Targeted Practice</button>
             </div>
-            <p id="data-loading-status" class="text-center text-sm text-gray-500 mt-12 min-h-[20px]">Connecting to Database...</p>
+            <p id="data-loading-status" class="text-center text-sm text-gray-500 mt-8 min-h-[20px]">Connecting to Database...</p>
+        </div>
+
+        <div id="screen-targeted" class="hidden flex-1 p-8 flex flex-col items-center gap-8 max-w-4xl mx-auto w-full relative">
+            
+            <button onclick="app.showDashboard()" class="self-start flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold transition -mt-4 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Back to Menu
+            </button>
+
+            <h2 class="text-4xl font-extrabold text-indigo-600 text-center mb-2">Targeted Practice (<span id="target-level-display"></span>)</h2>
+            <p class="text-gray-600 text-lg mb-6 text-center">What would you like to focus on today?</p>
+            
+            <div class="w-full bg-white p-8 rounded-2xl border-4 border-indigo-100 mb-4 shadow-sm">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Complete a Specific Exam</h3>
+                <select id="select-exam-dropdown" class="custom-select mb-6 max-w-md mx-auto block">
+                    <option value="">-- Choose an Exam Set --</option>
+                </select>
+                <button onclick="app.startTargetedExam()" class="app-btn bg-indigo-600 text-white w-full max-w-md mx-auto block text-xl py-4 hover:bg-indigo-700">Start Set</button>
+            </div>
+
+            <div class="divider w-full max-w-2xl"><span>OR</span></div>
+
+            <div class="w-full bg-white p-8 rounded-2xl border-4 border-amber-100 shadow-sm">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Drill a Specific Grammar Point</h3>
+                <div id="grammar-grid" class="grammar-grid">
+                    </div>
+                <button id="btn-start-grammar" onclick="app.startTargetedGrammar()" disabled class="app-btn bg-amber-500 text-white w-full max-w-md mx-auto block text-xl py-4 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed">Start Drill</button>
+            </div>
         </div>
 
         <div id="screen-free" class="hidden flex-1 p-8 flex flex-col items-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Free Study Mode (<span id="fs-level-display"></span>)</h2>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2 text-center">Classroom Mode (<span id="fs-level-display"></span>)</h2>
+            <p id="fs-subtitle" class="text-indigo-600 font-bold mb-6 text-center uppercase tracking-widest text-sm"></p>
             
             <div id="fs-question-card" class="w-full max-w-6xl p-8 border-4 border-gray-200 rounded-xl space-y-4 bg-white shadow-sm">
                 <p id="fs-sentence1" class="question-text text-gray-600">Sentence 1...</p>
@@ -121,16 +172,21 @@
 
         <div id="screen-exam" class="hidden flex-1 flex flex-col">
             <div class="flex justify-between items-center mb-6 border-b pb-4 px-8 pt-4">
-                <h2 class="text-3xl font-bold text-gray-800">Exam Mode (<span id="exam-level-display"></span>)</h2>
-                <div class="flex flex-col items-end"><span id="timer-display">06:00</span><span class="text-sm text-gray-500">6 Questions (2 marks each)</span></div>
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Exam Mode (<span id="exam-level-display"></span>)</h2>
+                    <p id="exam-subtitle" class="text-indigo-600 font-bold uppercase tracking-widest text-sm mt-1"></p>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span id="timer-display">00:00</span>
+                    <span id="exam-question-count-display" class="text-sm text-gray-500 font-bold"></span>
+                </div>
             </div>
             <div id="exam-questions-container" class="flex-1 overflow-y-auto px-8 pb-4"></div>
             <div class="p-6 bg-white border-t border-gray-200 flex justify-between items-center">
-                 <button onclick="app.showDashboard()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-bold hover:bg-gray-600">Back</button>
-                 <div id="score-area" class="hidden text-3xl font-black text-gray-800">Score: <span id="score-val" class="text-indigo-600">0</span>/12</div>
+                 <button onclick="app.showDashboard()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-bold hover:bg-gray-600">Quit</button>
+                 <div id="score-area" class="hidden text-3xl font-black text-gray-800">Score: <span id="score-val" class="text-indigo-600">0</span></div>
                  <div class="flex gap-4">
                      <button onclick="app.submitExam()" id="submit-exam-button" class="app-btn btn-final w-full max-w-sm">Submit Exam & Get Score</button>
-                     <button onclick="app.startExam()" id="reset-exam-button" class="hidden px-8 py-3 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700">New Exam</button>
                  </div>
             </div>
         </div>
@@ -138,12 +194,16 @@
         <div id="screen-results" class="hidden flex-1 flex flex-col p-8">
             <h2 class="text-4xl font-extrabold text-indigo-600 text-center mb-6">Exam Results</h2>
             <div class="p-6 bg-gray-100 rounded-xl space-y-4 text-center">
-                <p class="text-3xl font-bold text-gray-700">Your Score: <span id="final-score" class="text-green-600">0/12</span></p>
-                <p id="results-time-taken" class="xl text-gray-600"></p>
+                <p class="text-3xl font-bold text-gray-700">Your Score: <span id="final-score" class="text-green-600">0</span></p>
+                <p id="results-time-taken" class="text-xl text-gray-600 font-bold"></p>
             </div>
             <h3 class="text-2xl font-bold mt-8 mb-4 border-b pb-2">Review Answers:</h3>
             <div id="review-answers-container" class="space-y-4 flex-1 overflow-y-auto"></div>
-            <button onclick="app.showDashboard()" class="app-btn btn-start mt-8 w-full max-w-sm mx-auto block">Start New Practice</button>
+            
+            <div class="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-xl mx-auto">
+                <button onclick="app.retryExam()" class="app-btn btn-secondary flex-1">Try Same Set Again</button>
+                <button onclick="app.showDashboard()" class="app-btn btn-start flex-1">Back to Menu</button>
+            </div>
         </div>
     </div>
 
@@ -152,25 +212,48 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
 
 
-
         const app = {
             supabase: null,
             data: [],
             filteredData: [],
-            state: { level: null, mode: null, currentIndex: 0, timer: null, timeRemaining: 360, totalTime: 360 },
+            state: { level: null, mode: null, currentIndex: 0, timer: null, timeRemaining: 0, totalTime: 0, currentSubtitle: "Random Mix", selectedGrammar: null },
             examQuestions: [],
 
             init: async function() {
                 const status = document.getElementById('data-loading-status');
-                
                 if (typeof supabase !== 'undefined') {
                     this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
                 } else {
                     status.innerText = "Error: Library not loaded.";
                     return;
                 }
-
                 await this.loadData();
+                
+                // URL Routing for sharing links
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlLevel = urlParams.get('level');
+                const urlSet = urlParams.get('set');
+                const urlGrammar = urlParams.get('grammar');
+
+                if (urlLevel && (urlSet || urlGrammar)) {
+                    this.state.level = urlLevel;
+                    this.state.mode = 'exam';
+                    
+                    let pool = [];
+                    if (urlSet) {
+                        pool = this.data.filter(q => q.level === urlLevel && String(q.set_id) === String(urlSet));
+                        this.state.currentSubtitle = `Exam Set ${urlSet}`;
+                    } else if (urlGrammar) {
+                        pool = this.data.filter(q => q.level === urlLevel && q.grammar_points && q.grammar_points.includes(urlGrammar));
+                        this.state.currentSubtitle = `Drill: ${urlGrammar}`;
+                    }
+
+                    if (pool.length > 0) {
+                        this.startExam(pool);
+                        return; // Bypass dashboard
+                    }
+                }
+                
                 this.switchScreen('screen-dashboard');
             },
 
@@ -179,14 +262,36 @@
                 try {
                     status.innerText = "Loading data from Supabase...";
                     
+                    // Grabs all rows properly and orders them
                     let { data, error } = await this.supabase
-                        .from('exam_part4') 
-                        .select('*');
-
+                        .from('exam_part4')
+                        .select('*')
+                        .limit(5000)
+                        .order('id', { ascending: true });
+                        
                     if (error) throw error;
                     
-                    this.data = data;
-                    status.innerText = `Ready. Loaded ${data.length} questions.`;
+                    // Clean up mangled characters (like '麓' or smart quotes)
+                    const fixText = (str) => {
+                        if (typeof str !== 'string') return str;
+                        return str.replace(/[麓’‘´`]/g, "'");
+                    };
+
+                    this.data = data.map(q => {
+                        q.sentence1 = fixText(q.sentence1);
+                        q.sentence2_pre = fixText(q.sentence2_pre);
+                        q.sentence2_post = fixText(q.sentence2_post);
+                        
+                        if (Array.isArray(q.answers)) q.answers = q.answers.map(a => fixText(a));
+                        else if (typeof q.answers === 'string') q.answers = fixText(q.answers);
+                        
+                        if (Array.isArray(q.answer)) q.answer = q.answer.map(a => fixText(a));
+                        else if (typeof q.answer === 'string') q.answer = fixText(q.answer);
+                        
+                        return q;
+                    });
+
+                    status.innerText = `Ready. Loaded ${this.data.length} questions.`;
                     status.className = "text-center text-sm text-green-500 mt-4 font-bold";
                 } catch (error) {
                     console.error("Connection Error:", error);
@@ -206,6 +311,13 @@
                 this.state.mode = m;
                 this.updateUI();
             },
+            
+            // NEW LAUNCHER FOR THE INTERACTIVE BOARD
+            launchInteractive: function() {
+                if (!this.state.level) return;
+                // Instantly routes you to the Teacher Board with the level pre-loaded in the URL
+                window.location.href = `part_4_interactive.html?level=${this.state.level}`;
+            },
 
             updateUI: function() {
                 ['b2','c1','c2'].forEach(l => {
@@ -218,9 +330,11 @@
                 
                 const btnFree = document.getElementById('mode-free');
                 const btnExam = document.getElementById('mode-exam');
+                const btnInteractive = document.getElementById('mode-interactive');
                 
                 btnFree.disabled = !this.state.level || pool.length === 0;
-                btnExam.disabled = !this.state.level || pool.length < 6;
+                btnExam.disabled = !this.state.level || pool.length === 0;
+                btnInteractive.disabled = !this.state.level;
 
                 ['free','exam'].forEach(m => {
                     const btn = document.getElementById(`mode-${m}`);
@@ -229,13 +343,94 @@
                 });
 
                 const canStart = this.state.level && this.state.mode;
-                const validExam = this.state.mode === 'exam' ? pool.length >= 6 : true;
+                document.getElementById('start-btn').disabled = !canStart;
+                document.getElementById('targeted-btn').disabled = !(this.state.level && this.state.mode);
+            },
+
+            openTargetedMenu: function() {
+                document.getElementById('target-level-display').innerText = this.state.level;
+                this.state.selectedGrammar = null;
+                document.getElementById('btn-start-grammar').disabled = true;
                 
-                document.getElementById('start-btn').disabled = !(canStart && validExam);
+                const pool = this.data.filter(q => q.level === this.state.level);
+                
+                const uniqueSets = [...new Set(pool.map(q => q.set_id).filter(id => id !== null))].sort((a,b) => a-b);
+                const selExam = document.getElementById('select-exam-dropdown');
+                selExam.innerHTML = '<option value="">-- Choose an Exam Set --</option>';
+                uniqueSets.forEach(setId => {
+                    selExam.innerHTML += `<option value="${setId}">Exam Set ${setId}</option>`;
+                });
+
+                const grammarCounts = {};
+                pool.forEach(q => {
+                    if (q.grammar_points && Array.isArray(q.grammar_points)) {
+                        q.grammar_points.forEach(tag => {
+                            grammarCounts[tag] = (grammarCounts[tag] || 0) + 1;
+                        });
+                    }
+                });
+
+                const grid = document.getElementById('grammar-grid');
+                grid.innerHTML = ''; 
+                
+                // Filter out tags with fewer than 3 questions
+                Object.keys(grammarCounts)
+                    .filter(tag => grammarCounts[tag] >= 3)
+                    .sort()
+                    .forEach(tag => {
+                        const count = grammarCounts[tag];
+                        const card = document.createElement('div');
+                        card.className = 'grammar-card';
+                        card.textContent = `${tag} (${count})`;
+                        
+                        card.onclick = () => {
+                            document.querySelectorAll('.grammar-card').forEach(c => c.classList.remove('selected'));
+                            card.classList.add('selected');
+                            this.state.selectedGrammar = tag;
+                            document.getElementById('btn-start-grammar').disabled = false;
+                        };
+                        grid.appendChild(card);
+                    });
+
+                this.switchScreen('screen-targeted');
+            },
+
+            startTargetedExam: function() {
+                const setId = document.getElementById('select-exam-dropdown').value;
+                if (!setId) return alert("Please select an exam set.");
+                
+                const pool = this.data.filter(q => q.level === this.state.level && String(q.set_id) === String(setId));
+                if (pool.length === 0) return alert("No questions found for this set.");
+                
+                this.state.currentSubtitle = `Exam Set ${setId}`;
+                window.history.pushState({}, '', '?level=' + this.state.level + '&set=' + setId);
+                this.launchActivityWithPool(pool);
+            },
+
+            startTargetedGrammar: function() {
+                const gp = this.state.selectedGrammar;
+                if (!gp) return alert("Please select a grammar point.");
+                
+                const pool = this.data.filter(q => 
+                    q.level === this.state.level && 
+                    q.grammar_points && 
+                    q.grammar_points.includes(gp)
+                );
+                
+                if (pool.length === 0) return alert("No questions found for this grammar point.");
+                
+                this.state.currentSubtitle = `Drill: ${gp}`;
+                window.history.pushState({}, '', '?level=' + this.state.level + '&grammar=' + encodeURIComponent(gp));
+                this.launchActivityWithPool(pool);
             },
 
             startActivity: function() {
+                this.state.currentSubtitle = "Random Mix";
                 const pool = this.data.filter(q => q.level === this.state.level);
+                this.launchActivityWithPool(pool);
+            },
+
+            launchActivityWithPool: function(pool) {
                 if(this.state.mode === 'free') {
                     pool.sort(() => Math.random() - 0.5);
                     this.filteredData = pool;
@@ -243,7 +438,7 @@
                     this.showFreeQuestion();
                     this.switchScreen('screen-free');
                 } else {
-                    this.startExam();
+                    this.startExam(pool);
                 }
             },
 
@@ -258,6 +453,7 @@
                 const q = this.filteredData[this.state.currentIndex];
 
                 document.getElementById('fs-level-display').innerText = this.state.level;
+                document.getElementById('fs-subtitle').innerText = this.state.currentSubtitle;
                 document.getElementById('fs-sentence1').innerText = `1. ${q.sentence1}`;
                 document.getElementById('fs-key-word').innerText = q.key_word;
                 document.getElementById('fs-sentence2-pre').innerText = `2. ${q.sentence2_pre}`;
@@ -307,38 +503,64 @@
                 this.showFreeQuestion();
             },
 
-            startExam: function() {
-                const pool = this.data.filter(q => q.level === this.state.level);
-                pool.sort(() => Math.random() - 0.5);
-                this.examQuestions = pool.slice(0, 6);
+            startExam: function(providedPool = null) {
+                let pool = providedPool || this.filteredData; 
                 
-                this.state.timeRemaining = 360; 
-                this.state.totalTime = 360;
+                if (!pool || pool.length === 0) {
+                     pool = this.data.filter(q => q.level === this.state.level);
+                }
+                
+                this.filteredData = pool; 
+                
+                // Shuffle and take up to 6
+                const finalPool = [...pool].sort(() => Math.random() - 0.5);
+                this.examQuestions = finalPool.slice(0, 6);
+                
+                // Dynamic scaling logic
+                const qCount = this.examQuestions.length;
+                const totalSeconds = qCount * 60; 
+                
+                this.state.timeRemaining = totalSeconds; 
+                this.state.totalTime = totalSeconds;
+                
+                document.getElementById('exam-question-count-display').innerText = `${qCount} Questions (${qCount * 2} marks)`;
+                
                 this.renderExam();
                 this.startTimer();
                 this.switchScreen('screen-exam');
+            },
+
+            retryExam: function() {
+                this.state.timeRemaining = this.state.totalTime; 
+                this.renderExam(); 
+                this.startTimer(); 
+                this.switchScreen('screen-exam'); 
             },
 
             renderExam: function() {
                 const container = document.getElementById('exam-questions-container');
                 container.innerHTML = '';
                 document.getElementById('exam-level-display').innerText = this.state.level;
+                document.getElementById('exam-subtitle').innerText = this.state.currentSubtitle;
                 
                 document.getElementById('submit-exam-button').classList.remove('hidden');
-                document.getElementById('reset-exam-button').classList.add('hidden');
                 document.getElementById('score-area').classList.add('hidden');
 
                 this.examQuestions.forEach((q, idx) => {
                     const div = document.createElement('div');
                     div.className = 'exam-question-card';
                     div.innerHTML = `
-                        <p class="text-xl font-bold mb-3 text-indigo-700">Question ${idx + 1} of 6</p>
-                        <p class="text-2xl font-bold text-gray-700 mb-2">A. ${q.sentence1}</p>
-                        <div class="flex flex-wrap justify-center items-center gap-4 mb-4"><span class="key-word">${q.key_word}</span></div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-2xl font-bold text-gray-700">${q.sentence2_pre}</span>
-                            <input type="text" id="input-${idx}" class="answer-input flex-1 p-2 border-2 border-indigo-400 rounded-md text-xl" placeholder="Type answer..." oninput="this.value = this.value.toUpperCase()">
-                            <span class="text-2xl font-bold text-gray-700">${q.sentence2_post}</span>
+                        <div class="border-b-2 border-gray-100 pb-3 mb-6">
+                            <p class="text-sm font-black uppercase tracking-widest text-indigo-400">Question ${idx + 1} of ${this.examQuestions.length}</p>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800 mb-6 leading-relaxed">${q.sentence1}</p>
+                        <div class="flex flex-wrap items-center gap-4 mb-6">
+                            <span class="key-word">${q.key_word}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-2xl font-bold text-gray-800">${q.sentence2_pre}</span>
+                            <input type="text" id="input-${idx}" class="answer-input text-2xl" placeholder="Type answer..." oninput="this.value = this.value.toUpperCase()">
+                            <span class="text-2xl font-bold text-gray-800">${q.sentence2_post}</span>
                         </div>`;
                     container.appendChild(div);
                 });
@@ -431,57 +653,98 @@
                         correct: validAnswers.map(a => String(a).replace(/\s*\|\s*/g, ' ')).join(' OR ') 
                     });
                 });
-
-                document.getElementById('score-val').innerText = totalScore;
+                
+                const maxScore = this.examQuestions.length * 2;
+                document.getElementById('score-val').innerText = `${totalScore}/${maxScore}`;
                 document.getElementById('score-area').classList.remove('hidden');
-                document.getElementById('reset-exam-button').classList.remove('hidden');
 
-                this.renderResults(totalScore, userAnswers);
+                this.renderResults(totalScore, userAnswers, maxScore);
                 this.switchScreen('screen-results');
             },
 
-            renderResults: function(score, answers) {
+            renderResults: function(score, answers, maxScore) {
                 const elScore = document.getElementById('final-score');
-                elScore.innerText = `${score}/12`;
-                elScore.className = `text-3xl font-bold ${score >= 10 ? 'text-green-600' : score >= 6 ? 'text-yellow-600' : 'text-red-600'}`;
+                elScore.innerText = `${score}/${maxScore}`;
+                
+                const percentage = score / maxScore;
+                elScore.className = `text-4xl font-black ${percentage >= 0.8 ? 'text-green-600' : percentage >= 0.5 ? 'text-yellow-600' : 'text-red-600'}`;
                 
                 const timeTaken = this.state.totalTime - this.state.timeRemaining;
                 const m = Math.floor(timeTaken / 60);
                 const s = timeTaken % 60;
-                document.getElementById('results-time-taken').innerText = `Time: ${m}:${String(s).padStart(2,'0')}`;
+                document.getElementById('results-time-taken').innerText = `Time Taken: ${m}:${String(s).padStart(2,'0')}`;
 
                 const container = document.getElementById('review-answers-container');
                 container.innerHTML = '';
                 
                 answers.forEach((item, idx) => {
                     const q = item.q;
-                    let color = 'bg-red-100 border-red-500';
-                    let icon = '✘ Incorrect (0 pts)';
-                    let hl = 'bg-red-300';
                     
-                    if(item.points === 2) { color = 'bg-green-100 border-green-500'; icon = '✔ Correct (2 pts)'; hl = 'bg-green-300'; }
-                    else if(item.points === 1) { color = 'bg-yellow-100 border-yellow-500'; icon = '⚠️ Partial (1 pt)'; hl = 'bg-yellow-300'; }
+                    // Base styling for the outer card
+                    let cardBorder = item.points === 2 ? 'border-green-300' : item.points === 1 ? 'border-yellow-300' : 'border-red-300';
+                    let icon = item.points === 2 ? '✔ 2/2 pts' : item.points === 1 ? '⚠️ 1/2 pts' : '✘ 0/2 pts';
+                    let iconColor = item.points === 2 ? 'text-green-600' : item.points === 1 ? 'text-yellow-600' : 'text-red-600';
 
+                    // Process correct answers (Take the first option to display in the sentence)
+                    let correctOptions = item.correct.split(' OR ');
+                    let mainCorrectAnswer = correctOptions.shift(); 
+                    let alternativeText = correctOptions.length > 0 ? `<p class="mt-3 text-sm font-bold text-indigo-500">Also accepted: ${correctOptions.join(', ')}</p>` : '';
+
+                    // Block 1: What the user wrote
+                    let userBg = item.points === 2 ? 'bg-green-50 border-green-200 text-green-900' : 'bg-red-50 border-red-200 text-red-900';
+                    let userHighlight = item.points === 2 ? 'bg-green-200' : 'bg-red-200 text-red-900 line-through opacity-80';
+                    let userDisplay = `
+                        <div class="p-5 rounded-xl border ${userBg} mb-3 shadow-sm">
+                            <span class="text-xs font-black uppercase tracking-wider opacity-60 block mb-2">Your Answer</span>
+                            <span class="text-lg font-bold leading-relaxed">
+                                ${q.sentence2_pre} 
+                                <span class="px-2 py-1 rounded ${userHighlight}">${item.userVal || '[Left Blank]'}</span> 
+                                ${q.sentence2_post}
+                            </span>
+                        </div>
+                    `;
+
+                    // Block 2: The Correct Answer (Only show if they didn't get perfect score)
+                    let correctDisplay = '';
+                    if (item.points < 2) {
+                        correctDisplay = `
+                            <div class="p-5 rounded-xl border bg-indigo-50 border-indigo-200 text-indigo-900 shadow-sm">
+                                <span class="text-xs font-black uppercase tracking-wider opacity-60 block mb-2">Correct Answer</span>
+                                <span class="text-lg font-bold leading-relaxed">
+                                    ${q.sentence2_pre} 
+                                    <span class="px-2 py-1 rounded bg-indigo-200">${mainCorrectAnswer}</span> 
+                                    ${q.sentence2_post}
+                                </span>
+                                ${alternativeText}
+                            </div>
+                        `;
+                    }
+
+                    // Build the final card
                     const div = document.createElement('div');
-                    div.className = `p-4 border-l-4 rounded-lg ${color}`;
+                    div.className = `p-6 mb-6 border-2 rounded-2xl bg-white shadow-sm ${cardBorder}`;
                     
                     div.innerHTML = `
-                        <p class="text-lg font-bold mb-2">Q${idx + 1}. ${icon}</p>
-                        <p class="text-xl font-bold text-gray-700 mb-2">A. ${q.sentence1}</p>
-                        <div class="flex flex-wrap items-center gap-2 text-xl font-bold text-gray-800 mb-2">
-                            <span>${q.sentence2_pre}</span> 
-                            <span class="font-extrabold p-1 rounded ${hl}">${item.userVal || '[No Answer]'}</span> 
-                            <span>${q.sentence2_post}</span> 
-                            (<span class="key-word-small">${q.key_word}</span>)
+                        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                            <h4 class="text-xl font-black text-gray-800">Question ${idx + 1}</h4>
+                            <span class="font-black text-lg px-3 py-1 rounded-full bg-gray-50 ${iconColor}">${icon}</span>
                         </div>
-                        ${item.points < 2 ? `<p class="mt-2 text-base text-green-800 font-medium">Correct: <span class="font-black">${item.correct}</span></p>` : ''}
+                        
+                        <div class="mb-5">
+                            <span class="text-sm font-black uppercase tracking-wider text-gray-400 block mb-1">Original Sentence</span>
+                            <span class="text-lg font-bold text-gray-700">${q.sentence1}</span>
+                            <span class="ml-3 inline-block bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-black border border-amber-300">KEY: ${q.key_word}</span>
+                        </div>
+                        
+                        ${userDisplay}
+                        ${correctDisplay}
                     `;
                     container.appendChild(div);
                 });
             },
 
             switchScreen: function(id) {
-                ['screen-dashboard','screen-free','screen-exam','screen-results'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                ['screen-dashboard','screen-targeted','screen-free','screen-exam','screen-results'].forEach(s => document.getElementById(s).classList.add('hidden'));
                 document.getElementById(id).classList.remove('hidden');
                 window.scrollTo(0,0);
                 
@@ -492,6 +755,10 @@
 
             showDashboard: function() { 
                 if(this.state.timer) clearInterval(this.state.timer);
+                
+                // Clear the URL when returning to the dashboard
+                window.history.pushState({}, '', window.location.pathname);
+                
                 this.switchScreen('screen-dashboard'); 
             }
         };

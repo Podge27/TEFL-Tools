@@ -169,17 +169,31 @@
         },
 
         processCSV: function(text) {
+            // 1. Split into lines and filter out empty ones
             const lines = text.split('\n').filter(l => l.trim() !== '');
-            const headers = lines[0].split(',').map(h => h.trim());
-            this.data = lines.slice(1).map(line => line.split(',').map(cell => cell.trim()));
             
+            // 2. Helper to split a line by commas only if they aren't inside double quotes
+            const splitCSVLine = (line) => {
+                const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                return matches ? matches.map(cell => cell.replace(/^"|"$/g, '').trim()) : [];
+            };
+
+            // 3. Process headers (line 0)
+            const headers = splitCSVLine(lines[0]);
+            
+            // 4. Process data rows
+            this.data = lines.slice(1).map(line => splitCSVLine(line));
+            
+            // 5. Update UI selectors
             const qSelect = document.getElementById('col-q');
             const aSelect = document.getElementById('col-a');
             qSelect.innerHTML = aSelect.innerHTML = '';
+            
             headers.forEach((h, i) => {
                 qSelect.innerHTML += `<option value="${i}">${h}</option>`;
                 aSelect.innerHTML += `<option value="${i}" ${i===1?'selected':''}>${h}</option>`;
             });
+            
             this.showView('setup');
         },
 
