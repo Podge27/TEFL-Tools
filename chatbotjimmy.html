@@ -149,12 +149,17 @@
         let conversationHistory = [];
         let currentLevel = 'starters';
 
+        // 1. CLEAR MEMORY WHEN LEVEL CHANGES
         levelBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 levelBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentLevel = btn.getAttribute('data-level');
-                addMessage(`Level changed to ${currentLevel.toUpperCase()}`, 'jimmy');
+                
+                // Reset the brain so he doesn't use old hard words
+                conversationHistory = []; 
+                
+                addMessage(`Level changed to ${currentLevel.toUpperCase()}. I'm ready!`, 'jimmy');
             });
         });
 
@@ -169,17 +174,24 @@
 
         async function sendMessage() {
             const text = userInput.value.trim();
-            if (!text) return;
+            
+            // 2. PREVENT DOUBLE-SENDING
+            if (!text || sendBtn.disabled) return;
 
             addMessage(text, 'user');
             userInput.value = '';
+            
+            // Lock the interface
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+            thinkingImg.classList.remove('hidden');
 
             const newUserMessage = { role: "user", parts: [{ text: text }] };
-            thinkingImg.classList.remove('hidden');
 
             try {
                 const response = await fetch('/.netlify/functions/talk-to-jimmy', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         history: conversationHistory, 
                         newMessage: text,
@@ -188,19 +200,27 @@
                 });
 
                 const data = await response.json();
-                thinkingImg.classList.add('hidden');
 
                 if (data.reply) {
                     addMessage(data.reply, 'jimmy');
                     conversationHistory.push(newUserMessage);
                     conversationHistory.push({ role: "model", parts: [{ text: data.reply }] });
+                    
+                    // Keep memory manageable
                     while (conversationHistory.length > 20) { conversationHistory.shift(); }
+                } else {
+                    addMessage("I'm a bit confused! Can you say that again?", 'jimmy');
                 }
 
             } catch (error) {
                 console.error("Error:", error);
+                addMessage("Oops! My brain fell out. Let's try again!", 'jimmy');
+            } finally {
+                // 3. RE-ENABLE INTERFACE
                 thinkingImg.classList.add('hidden');
-                addMessage("Oops! My brain fell out.", 'jimmy');
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
             }
         }
 

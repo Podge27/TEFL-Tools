@@ -174,8 +174,13 @@
             
             // 2. Helper to split a line by commas only if they aren't inside double quotes
             const splitCSVLine = (line) => {
-                const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                return matches ? matches.map(cell => cell.replace(/^"|"$/g, '').trim()) : [];
+                // Allows spaces, respects quotes, splits at commas
+                const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+                return matches ? matches.map(cell => {
+                    return cell.trim()
+                            .replace(/^"|"$/g, '')
+                            .trim();
+                }) : [];
             };
 
             // 3. Process headers (line 0)

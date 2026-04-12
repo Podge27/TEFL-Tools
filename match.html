@@ -295,22 +295,17 @@
                 const content = e.target.result;
                 cardContentPairs = [];
                 const lines = content.split('\n').filter(line => line.trim().length > 0);
+                            
+            lines.forEach(line => {
+                // The "Universal" Regex that allows spaces but stops at commas
+                const parts = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
                 
-                lines.forEach(line => {
-                    // This Regex handles commas inside quotes correctly
-                    const parts = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    
-                    if (parts) {
-                        // Clean up quotes from the resulting strings
-                        const cleanParts = parts.map(p => p.replace(/^"|"$/g, '').trim());
-                        
-                        if (cleanParts.length >= 2) {
-                            cardContentPairs.push([cleanParts[0], cleanParts[1]]);
-                        } else if (cleanParts.length === 1) {
-                            cardContentPairs.push([cleanParts[0], cleanParts[1] || cleanParts[0]]);
-                        }
-                    }
-                });
+                if (parts) {
+                    const cleanParts = parts.map(p => p.trim().replace(/^"|"$/g, '').trim());
+                    if (cleanParts.length >= 2) cardContentPairs.push([cleanParts[0], cleanParts[1]]);
+                    else if (cleanParts.length === 1) cardContentPairs.push([cleanParts[0], cleanParts[0]]);
+                }
+            });
 
                 if (cardContentPairs.length > 0) {
                     ui.fileStatus.innerHTML = `Loaded <span class="text-blue-600 font-bold">${cardContentPairs.length} pairs</span>. Ready!`;
