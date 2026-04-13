@@ -18,7 +18,6 @@ exports.handler = async (event) => {
         const { history = [], newMessage = "", level = "starters" } = body;
 
         // 3. THE HEAVY-DUTY CAMBRIDGE RULES
-        // These use both Positive ("Do this") and Negative ("Never do this") Fences.
         const levelRules = {
             starters: `
                 LEVEL: Pre A1 Starters. 
@@ -58,14 +57,18 @@ exports.handler = async (event) => {
                 
                 CRITICAL TEACHING BEHAVIOUR:
                 - Keep responses strictly to 1 or 2 short sentences.
-                - Correct grammar naturally by echoing it back. (Example: student says "it yummy" -> you say "It is yummy!")
+                - Correct grammar naturally by echoing it back.
                 - ALWAYS end your turn with a question to keep the conversation going.
-                - To maintain focus, regularly use 'Odd One Out' or 'Word Riddles' based on the allowed VOCAB THEMES.
+                - Regularly use 'Odd One Out' or 'Word Riddles' based on the allowed VOCAB THEMES.
+                
+                FORMATTING RULES (CRITICAL):
+                - Write your entire response on ONE continuous line. NEVER use line breaks (\\n) or paragraphs.
+                - NEVER play fill-in-the-blank style games. Finish your sentences completely.
                 `
             }]
         };
 
-        // 5. FORMAT HISTORY (Your original, working mapping)
+        // 5. FORMAT HISTORY
         const contents = history.map(msg => ({
             role: msg.role,
             parts: msg.parts
@@ -76,7 +79,7 @@ exports.handler = async (event) => {
             parts: [{ text: newMessage }]
         });
 
-        // 6. CALL GOOGLE (Locked to 2.5-flash)
+        // 6. CALL GOOGLE
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
@@ -87,14 +90,13 @@ exports.handler = async (event) => {
                 systemInstruction: systemInstruction,
                 generationConfig: {
                     maxOutputTokens: 350, 
-                    temperature: 0.6 // Slightly lowered to keep him more focused on the rules
+                    temperature: 0.6 
                 }
             })
         });
 
         const data = await response.json();
 
-        // 7. ERROR HANDLING
         if (!response.ok) {
             console.error("Gemini API Error:", JSON.stringify(data));
             return {
@@ -104,10 +106,12 @@ exports.handler = async (event) => {
             };
         }
 
-        // 8. ROBUST EXTRACTION
+        // 7. ROBUST EXTRACTION (The Basket Fix)
         const candidate = data.candidates?.[0];
-        const part = candidate?.content?.parts?.[0];
-        const replyText = part?.text;
+        const parts = candidate?.content?.parts || [];
+        
+        // This maps over ALL parts and glues them together, ignoring line breaks
+        const replyText = parts.map(p => p.text).join(" ").trim();
 
         if (!replyText) {
             return {

@@ -1,5 +1,3 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
 const characterTraits = {
     'Jimmy': 'brave but silly and a little bit clumsy',
     'Katy': 'very smart and loves animals, Jimmys best friend',
@@ -11,7 +9,7 @@ const characterTraits = {
 };
 
 exports.handler = async function(event, context) {
-    // 1. SETUP HEADERS (The Bouncer for the browser)
+    // 1. SETUP HEADERS (The Bouncer)
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -22,22 +20,29 @@ exports.handler = async function(event, context) {
     if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Method Not Allowed' };
 
     try {
+        const apiKey = process.env.GEMINI_API_KEY;
         const data = JSON.parse(event.body);
         const { level, characters, setting, problem, teacherNotes, history, currentTurn } = data;
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        
-        // 2. CONFIGURE AI (Keep it focused and give it enough room to speak)
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
-            generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
-        });
-
-        // 3. STRICT GRAMMAR FENCES
+        // 2. THE HEAVY-DUTY CAMBRIDGE RULES (Now with Vocab Themes)
         const levelRules = {
-            starters: `LEVEL: Pre A1 Starters. GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got). FORBIDDEN: NEVER use past tense, future 'will', or comparatives.`,
-            movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to. FORBIDDEN: NEVER use Present Perfect.`,
-            flyers: `LEVEL: A2 Flyers. GRAMMAR ALLOWED: Past continuous, Present perfect, Will, Might, Should. Use them naturally alongside simple tenses.`
+            starters: `
+                LEVEL: Pre A1 Starters. 
+                GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are. 
+                VOCAB THEMES TO USE: Animals, The body, Clothes, Colours, Family, Food, Home, School. 
+                NUMBERS: 1-20. 
+                FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
+            movers: `
+                LEVEL: A1 Movers. 
+                GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Could. 
+                VOCAB THEMES TO USE: Health, Weather, Town/City, Places & Directions, Transport, Sports. 
+                NUMBERS: 21-100 and Ordinals 1st-20th. 
+                FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
+            flyers: `
+                LEVEL: A2 Flyers. 
+                GRAMMAR ALLOWED: Past continuous, Present perfect, Be going to, Will, Might, May, Should, Tag questions. 
+                VOCAB THEMES TO USE: Environment, Space, Work/Jobs, Months, Materials. 
+                NUMBERS: 101-1,000 and Ordinals 21st-31st.`
         };
 
         const currentRules = levelRules[level?.toLowerCase()] || levelRules.starters;
@@ -46,7 +51,7 @@ exports.handler = async function(event, context) {
             `${name} (who is ${characterTraits[name] || 'a helpful friend'})`
         ).join(' and ');
 
-        // 4. THE 5-ACT NARRATIVE ARC (With Sequence Linkers)
+        // 3. THE 5-ACT NARRATIVE ARC
         let arcInstruction = "";
         let isFinalTurn = false;
 
@@ -76,7 +81,7 @@ exports.handler = async function(event, context) {
         CRITICAL RULES FOR OPTIONS: 
         - Provide exactly 3 options.
         - They must be IMMEDIATE, PHYSICAL ACTIONS taken by the characters.
-        - No passive events.
+        - Actively weave words from the allowed VOCAB THEMES into the story and the options.
         Leave the "vocabulary" array empty [].`;
 
         if (isFinalTurn) {
@@ -86,10 +91,10 @@ exports.handler = async function(event, context) {
             
             CRITICAL RULES FOR ENDING:
             - Set the "options" array to be completely empty []. Do NOT give choices.
-            - Review the entire story and extract 8 to 10 key English vocabulary words used. Put them in the "vocabulary" array.`;
+            - Review the entire story and extract 8 to 10 key English vocabulary words used (focusing on the VOCAB THEMES). Put them in the "vocabulary" array.`;
         }
 
-        const prompt = `
+        const promptText = `
         You are an expert ESOL teacher writing a choose-your-own-adventure story.
         Target Audience: Spanish students learning English (children).
         ${currentRules}
@@ -113,10 +118,30 @@ exports.handler = async function(event, context) {
             "vocabulary": ["word1", "word2"]
         }`;
 
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
+        // 4. CALL GOOGLE (Direct Fetch to avoid crashes)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: promptText }] }],
+                generationConfig: {
+                    maxOutputTokens: 500, 
+                    temperature: 0.4 // Slightly higher than 0.3 to allow for more creative vocabulary use
+                }
+            })
+        });
+
+        const apiData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(apiData.error?.message || "Google API rejected the request.");
+        }
+
+        const responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
         
-        // 5. THE SCISSORS (JSON Extractor Laser)
+        // 5. THE SCISSORS (JSON Extractor)
         let cleanJson = responseText;
         const firstBrace = cleanJson.indexOf('{');
         const lastBrace = cleanJson.lastIndexOf('}');
@@ -124,16 +149,15 @@ exports.handler = async function(event, context) {
         if (firstBrace !== -1 && lastBrace !== -1) {
             cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
         } else {
-            throw new Error("No JSON formatting detected.");
+            throw new Error("No JSON formatting detected from the AI.");
         }
 
         return { statusCode: 200, headers, body: cleanJson };
 
     } catch (error) {
-        // 6. SAFE FALLBACK (Prevents UI crash)
         console.error("Story Error:", error.message);
         const fallback = {
-            story: "Oh no! The story book closed. Let's try again!",
+            story: `Oh no! The story book closed. (Error: ${error.message})`,
             options: [],
             vocabulary: []
         };

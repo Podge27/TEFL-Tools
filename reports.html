@@ -31,8 +31,14 @@
         }
         .paste-btn:hover { background-color: #0056b3; }
         .input-group { display: flex; align-items: center; }
+        
+        .radio-group { display: flex; gap: 8px; font-size: 0.85em; align-items: center; margin-top: 5px; }
+        .radio-label { display: flex; align-items: center; cursor: pointer; gap: 3px; }
+        input[type="radio"], input[type="checkbox"] { margin: 0; cursor: pointer; }
+        
+        .toggle-label { font-weight: bold; cursor: pointer; font-size: 0.85em; display: flex; align-items: center; gap: 5px; color: white; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; margin-top: 4px;}
+        .disabled-group { opacity: 0.3; pointer-events: none; }
     </style>
-    <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
     <div class="container">
@@ -58,10 +64,16 @@
                             <button class="paste-btn" onclick="pasteExamResults()">Paste</button>
                         </div>
                     </th>
+                    <th style="width: 12%;">
+                        Recommendation
+                        <label class="toggle-label">
+                            <input type="checkbox" id="master-rec-toggle" onchange="toggleAllRecommendations(this)"> Turn On
+                        </label>
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                </tbody>
+            </tbody>
         </table>
 
         <div class="comment-area">
@@ -86,22 +98,17 @@
             <h2>Generated Reports</h2>
             <div id="reports-output"></div>
         </div>
-
     </div>
 
     <script>
-        // Note: CATEGORIES names must match keys in comments.json (in Spanish)
         const CATEGORIES = ["Trabajo en clase", "Trabajo en casa", "Esfuerzo", "Participación"];
         const NUM_STUDENTS = 12; 
         let commentsData = {};
 
-        // --- 1. Load Data ---
         async function loadComments() {
             try {
                 const response = await fetch('comments.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 commentsData = await response.json();
             } catch (e) {
                 console.error("Could not load comments.json:", e);
@@ -109,16 +116,30 @@
             }
         }
 
-        // --- 2. Build UI ---
+        function toggleAllRecommendations(masterCheckbox) {
+            const isChecked = masterCheckbox.checked;
+            for (let i = 0; i < NUM_STUDENTS; i++) {
+                const group = document.getElementById(`radio-group-${i}`);
+                if (group) {
+                    const radios = group.querySelectorAll('input[type="radio"]');
+                    if (isChecked) {
+                        group.classList.remove('disabled-group');
+                        radios.forEach(r => r.disabled = false);
+                    } else {
+                        group.classList.add('disabled-group');
+                        radios.forEach(r => r.disabled = true);
+                    }
+                }
+            }
+        }
+
         function buildStudentRows() {
             const tbody = document.querySelector('#input-table tbody');
             for (let i = 0; i < NUM_STUDENTS; i++) {
                 const row = tbody.insertRow();
                 
-                // 1. Student Name
                 row.insertCell().innerHTML = `<input type="text" class="student-name" placeholder="Student ${i + 1}">`;
                 
-                // 2. Ratings (4 columns)
                 CATEGORIES.forEach(category => {
                     row.insertCell().innerHTML = `
                         <select class="rating-select" data-category="${category}">
@@ -131,15 +152,18 @@
                         </select>`;
                 });
 
-                // 3. Individual Comment
                 row.insertCell().innerHTML = `<input type="text" class="individual-comment" placeholder="Student-specific comment">`;
-
-                // 4. Exam Result 
                 row.insertCell().innerHTML = `<input type="text" class="exam-result" placeholder="%">`;
+                
+                // I have removed the word 'checked' from the first option here. They are now both blank by default.
+                row.insertCell().innerHTML = `
+                    <div class="radio-group disabled-group" id="radio-group-${i}">
+                        <label class="radio-label"><input type="radio" name="rec-${i}" value="rec" disabled>Rec</label>
+                        <label class="radio-label"><input type="radio" name="rec-${i}" value="norec" disabled>No Rec</label>
+                    </div>`;
             }
         }
 
-        // --- 3. Core Logic ---
         function getCommentForRating(category, rating) {
             const categoryData = commentsData[category];
             if (categoryData && categoryData[rating]) {
@@ -149,38 +173,27 @@
             return "";
         }
 
-        function generateStudentReport(name, ratings, examResult, individualComment, classComment) {
+        function generateStudentReport(name, ratings, examResult, individualComment, classComment, recStatus) {
             let report = `${name}: `;
             let commentParts = [];
 
-            // 1. Generated Comments (based on ratings)
             ratings.forEach(item => {
-                const category = item.category;
-                const rating = item.rating;
-                if (rating && commentsData[category]) {
-                    const comment = getCommentForRating(category, rating);
-                    if (comment) {
-                        commentParts.push(comment);
-                    }
+                if (item.rating && commentsData[item.category]) {
+                    const comment = getCommentForRating(item.category, item.rating);
+                    if (comment) commentParts.push(comment);
                 }
             });
 
-            // Add generated comments
             report += commentParts.join(" ");
             
-            // 2. Add Individual Comment
-            if (individualComment) {
-                report += (report.endsWith(": ") ? "" : " ") + individualComment;
-            }
-            
-            // 3. Add Exam Result
-            if (examResult) {
-                report += (report.endsWith(": ") ? "" : " ") + `${examResult}% en el examen.`;
-            }
+            if (individualComment) report += (report.endsWith(": ") ? "" : " ") + individualComment;
+            if (examResult) report += (report.endsWith(": ") ? "" : " ") + `${examResult}% en el examen.`;
+            if (classComment) report += (report.endsWith(": ") ? "" : " ") + classComment;
 
-            // 4. Add Class Comment
-            if (classComment) {
-                report += (report.endsWith(": ") ? "" : " ") + classComment;
+            if (recStatus === "rec" && commentsData["Recommendation"] && commentsData["Recommendation"]["rec"]) {
+                report += (report.endsWith(": ") ? "" : " ") + commentsData["Recommendation"]["rec"][0];
+            } else if (recStatus === "norec" && commentsData["Recommendation"] && commentsData["Recommendation"]["norec"]) {
+                report += (report.endsWith(": ") ? "" : " ") + commentsData["Recommendation"]["norec"][0];
             }
 
             return report.trim();
@@ -195,6 +208,8 @@
             const examInputs = document.querySelectorAll('.exam-result');
             const individualCommentInputs = document.querySelectorAll('.individual-comment');
             const tableRows = document.querySelectorAll('#input-table tbody tr');
+            
+            const isMasterToggleOn = document.getElementById('master-rec-toggle').checked;
 
             let allReports = [];
 
@@ -211,113 +226,80 @@
                 const examResult = examInputs[index].value.trim();
                 const individualComment = individualCommentInputs[index].value.trim();
                 
-                const report = generateStudentReport(name, ratings, examResult, individualComment, classComment);
+                let recStatus = "na"; 
+                
+                if (isMasterToggleOn) {
+                    const checkedRadio = row.querySelector(`input[name="rec-${index}"]:checked`);
+                    recStatus = checkedRadio ? checkedRadio.value : "na";
+                }
+                
+                const report = generateStudentReport(name, ratings, examResult, individualComment, classComment, recStatus);
                 allReports.push(report);
             });
 
             reportsOutput.innerText = allReports.join('\n\n');
         }
 
-        // --- 4. Paste/Copy/Save Utilities ---
-
         async function getClipboardText() {
-            try {
-                return await navigator.clipboard.readText();
-            } catch (err) {
-                console.warn("Clipboard access failed. Falling back to prompt.");
-                return prompt("Paste the text here (Ctrl+V or Cmd+V):") || '';
-            }
+            try { return await navigator.clipboard.readText(); } 
+            catch (err) { return prompt("Paste the text here (Ctrl+V or Cmd+V):") || ''; }
         }
 
         async function pasteNames() {
             const namesText = await getClipboardText();
             const namesList = namesText.split('\n').map(s => s.trim()).filter(s => s);
-            const nameInputs = document.querySelectorAll('.student-name');
-
-            nameInputs.forEach((input, i) => {
-                if (i < namesList.length) {
-                    input.value = namesList[i];
-                }
+            document.querySelectorAll('.student-name').forEach((input, i) => {
+                if (i < namesList.length) input.value = namesList[i];
             });
         }
 
         async function pasteExamResults() {
             const resultsText = await getClipboardText();
             const resultsList = resultsText.split('\n').map(s => s.trim()).filter(s => s); 
-            const examInputs = document.querySelectorAll('.exam-result');
-
-            examInputs.forEach((input, i) => {
-                if (i < resultsList.length) {
-                    input.value = resultsList[i];
-                }
+            document.querySelectorAll('.exam-result').forEach((input, i) => {
+                if (i < resultsList.length) input.value = resultsList[i];
             });
         }
         
         function copyReports() {
             const reportsText = document.getElementById('reports-output').innerText;
             if (reportsText) {
-                navigator.clipboard.writeText(reportsText).then(() => {
-                    alert('Reports copied to clipboard.');
-                }).catch(err => {
-                    console.error('Copy error: ', err);
-                    alert('Error copying reports.');
-                });
-            } else {
-                alert('No reports to copy.');
-            }
+                navigator.clipboard.writeText(reportsText).then(() => alert('Reports copied to clipboard.'))
+                .catch(err => alert('Error copying reports.'));
+            } else alert('No reports to copy.');
         }
         
-        // UPDATED: Saves as Word-compatible HTML file (.doc) using a custom filename
         function saveReports() {
             const reportsText = document.getElementById('reports-output').innerText;
-            if (!reportsText) {
-                alert('No reports to save.');
-                return;
-            }
+            if (!reportsText) return alert('No reports to save.');
             
-            // Get user-defined filename prefix
-            let filename = document.getElementById('filename-prefix').value.trim();
-            if (!filename) {
-                filename = 'student_reports'; // Default name if field is empty
-            }
+            let filename = document.getElementById('filename-prefix').value.trim() || 'student_reports';
             
-            // Format the text content into a simple, Word-friendly HTML structure
-            const htmlContent = `
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>${filename}</title>
-                </head>
-                <body>
-                    ${reportsText.split('\n\n').map(p => 
-                        `<p style="margin-bottom: 1em;">${p.replace(/\n/g, '<br>')}</p>`).join('')}
-                </body>
-                </html>
-            `;
-            
-            // This triggers the browser's "Save As" dialog, allowing the user to 
-            // set the save location and confirm the filename.
+            const htmlContent = `<html><head><meta charset="UTF-8"><title>${filename}</title></head><body>${reportsText.split('\n\n').map(p => `<p style="margin-bottom: 1em;">${p.replace(/\n/g, '<br>')}</p>`).join('')}</body></html>`;
             const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const downloadLink = document.getElementById('download-link');
             
             downloadLink.href = url;
-            // Set the suggested filename using the user's prefix
             downloadLink.download = `${filename}.doc`; 
             downloadLink.click();
-            
             URL.revokeObjectURL(url);
         }
 
         function clearAll() {
-            document.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
-            document.querySelectorAll('select').forEach(select => select.value = '');
+            document.querySelectorAll('input[type="text"], select').forEach(el => el.value = '');
+            
+            const masterToggle = document.getElementById('master-rec-toggle');
+            masterToggle.checked = false;
+            toggleAllRecommendations(masterToggle);
+            
+            // This now makes sure every single dot is fully unchecked when you clear the board.
+            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+            
             document.getElementById('class-comment-box').value = '';
             document.getElementById('reports-output').innerText = '';
-            document.getElementById('filename-prefix').value = ''; // Clear filename too
         }
 
-        // --- 5. Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
             await loadComments();
             buildStudentRows();

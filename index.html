@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEFL Tools</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -21,10 +20,18 @@
             font-weight: 600;
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s ease, filter 0.3s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(0, 0, 0, 0.2);
             font-family: 'Inter', sans-serif;
             text-decoration: none;
+        }
+
+        /* The Ghost Effect: Fades out non-matching buttons */
+        .ghost-button {
+            opacity: 0.1; 
+            pointer-events: none; /* Makes them unclickable */
+            filter: grayscale(90%) blur(1px);
+            box-shadow: none;
         }
 
         /* The reflective sheen effect */
@@ -48,7 +55,6 @@
             pointer-events: none;
         }
 
-        /* Hover effect: makes the sheen appear to move across */
         .tool-button:hover::after {
             transform: translate(0%, 0%) rotate(45deg);
         }
@@ -58,15 +64,14 @@
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15), 0 12px 20px rgba(0, 0, 0, 0.3);
         }
 
-        /* --- Individual Button Styles (Background Gradients) --- */
-
+        /* --- Individual Button Styles --- */
         .btn-blue-purple { background: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%); }
         .btn-orange-red { background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%); }
         .btn-green-lime { background: linear-gradient(135deg, #A8E063 0%, #56AB2F 100%); }
         .btn-cyan-blue { background: linear-gradient(135deg, #4DD0E1 0%, #00BCD4 100%); }
         .btn-magenta-pink { background: linear-gradient(135deg, #FF00FF 0%, #FF6B8B 100%); }
         .btn-dark-teal { background: linear-gradient(135deg, #0093E9 0%, #00C4AA 100%); }
-        .btn-red-white { background: linear-gradient(135deg, #f00 0%, #dc3545 100%); } /* Standard Red */
+        .btn-red-white { background: linear-gradient(135deg, #f00 0%, #dc3545 100%); }
         .btn-gold-yellow { background: linear-gradient(135deg, #FDBB2D 0%, #22C55E 100%); }
         .btn-deep-violet { background: linear-gradient(135deg, #3A1C71 0%, #D76D77 50%, #FFAF7B 100%); }
         .btn-coral-peach { background: linear-gradient(135deg, #F47C66 0%, #FFCC99 100%); }
@@ -75,64 +80,44 @@
         .btn-sun-gold { background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%); }
         .btn-forest-gold { background: linear-gradient(135deg, #004d40 0%, #ffeb3b 100%); }
         .btn-sunset-pink { background: linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%); }
-	    .btn-aqua-purple     { background: linear-gradient(135deg, #00F5A0 0%, #7F00FF 100%); }
-	    .btn-midnight-cyan   { background: linear-gradient(135deg, #001F54 0%, #00C6FF 100%); }
-	    .btn-ruby-gold       { background: linear-gradient(135deg, #8A001A 0%, #FFB300 100%); }
-	.btn-ice-mint        { background: linear-gradient(135deg, #A1C4FD 0%, #C2FFD8 100%); }
-	.btn-steel-magenta   { background: linear-gradient(135deg, #434343 0%, #FF007F 100%); }
-        .btn-royal-azure   { background: linear-gradient(135deg, #24C6DC 0%, #514A9D 100%); } /* Bright Blue to Purple */
-        .btn-midnight-gold { background: linear-gradient(135deg, #141E30 0%, #CB9B51 100%); } /* Dark Blue to Bronze */
-        .btn-honey-bronze  { background: linear-gradient(135deg, #D38312 0%, #A83279 100%); } /* Deep Gold to Purple */
-        .btn-burnt-amber   { background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); } /* Orange-Gold to Red */
-        .btn-deep-ocean    { background: linear-gradient(135deg, #005C97 0%, #363795 100%); } /* Rich Blue */
-        .btn-electric-sky  { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); } /* Bright Blue */
+        .btn-aqua-purple { background: linear-gradient(135deg, #00F5A0 0%, #7F00FF 100%); }
+        .btn-midnight-cyan { background: linear-gradient(135deg, #001F54 0%, #00C6FF 100%); }
+        .btn-ruby-gold { background: linear-gradient(135deg, #8A001A 0%, #FFB300 100%); }
+        .btn-ice-mint { background: linear-gradient(135deg, #A1C4FD 0%, #C2FFD8 100%); }
+        .btn-steel-magenta { background: linear-gradient(135deg, #434343 0%, #FF007F 100%); }
+        .btn-royal-azure { background: linear-gradient(135deg, #24C6DC 0%, #514A9D 100%); }
+        .btn-midnight-gold { background: linear-gradient(135deg, #141E30 0%, #CB9B51 100%); }
+        .btn-honey-bronze { background: linear-gradient(135deg, #D38312 0%, #A83279 100%); }
+        .btn-burnt-amber { background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); }
         .btn-feedback-black { background: linear-gradient(135deg, #434343 0%, #000000 100%); }
-        .btn-lavender-blue   { background: linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%); } /* Soft Purple to Blue */
-        .btn-berry-fusion    { background: linear-gradient(135deg, #C33764 0%, #1D2671 100%); } /* Crimson to Dark Blue */
-        .btn-mango-punch     { background: linear-gradient(135deg, #F09819 0%, #EDDE5D 100%); } /* Orange to Bright Yellow */
-        .btn-emerald-mist    { background: linear-gradient(135deg, #134E5E 0%, #71B280 100%); } /* Deep Green to Seafoam */
-        .btn-indigo-flare    { background: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%); } /* Royal Blue to Violet */
-         .btn-crimson-night   { background: linear-gradient(135deg, #870000 0%, #190A05 100%); } /* Deep Dark Red */
-    .btn-toxic-green     { background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%); } /* Neon Green to Teal */
-         .btn-cosmic-fusion   { background: linear-gradient(135deg, #ff00cc 0%, #333399 100%); } /* Magenta to Deep Blue */
-    .btn-azure-pop       { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); } /* Bright Electric Blue */
-         .btn-sweet-morning   { background: linear-gradient(135deg, #FF5F6D 0%, #FFC371 100%); } /* Salmon Pink to Gold */
-         .btn-amber-glow { background: linear-gradient(135deg, #B87333 0%, #F1B440 100%); }
+        .btn-lavender-blue { background: linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%); }
+        .btn-berry-fusion { background: linear-gradient(135deg, #C33764 0%, #1D2671 100%); }
+        .btn-mango-punch { background: linear-gradient(135deg, #F09819 0%, #EDDE5D 100%); }
+        .btn-emerald-mist { background: linear-gradient(135deg, #134E5E 0%, #71B280 100%); }
+        .btn-crimson-night { background: linear-gradient(135deg, #870000 0%, #190A05 100%); }
+        .btn-cosmic-fusion { background: linear-gradient(135deg, #ff00cc 0%, #333399 100%); }
+        .btn-sweet-morning { background: linear-gradient(135deg, #FF5F6D 0%, #FFC371 100%); }
         .btn-harvest-gold { background: linear-gradient(135deg, #916013 0%, #D4AF37 100%); }
         .btn-autumn-flare { background: linear-gradient(135deg, #E67E22 0%, #F1C40F 100%); }
         .btn-brass-metal { background: linear-gradient(135deg, #7B4B12 0%, #C49B06 100%); }
-    .btn-antique-gold { background: linear-gradient(135deg, #808000 0%, #BEB32B 100%); }
-    .btn-jungle-vine { background: linear-gradient(135deg, #134E5E 0%, #2ECC71 100%); }
-    .btn-mossy-bank { background: linear-gradient(135deg, #3D550C 0%, #81B622 100%); }
-    .btn-emerald-depth { background: linear-gradient(135deg, #064E3B 0%, #059669 100%); }
-    .btn-evergreen-pop { background: linear-gradient(135deg, #002A22 0%, #009688 100%); }
-    .btn-woodland-leaf { background: linear-gradient(135deg, #1E3932 0%, #43A047 100%); }
-    .btn-deep-sapphire { background: linear-gradient(135deg, #051937 0%, #004d7a 100%); }
-    .btn-electric-indigo { background: linear-gradient(135deg, #3f2b96 0%, #a8c0ff 100%); }
-    .btn-ocean-night { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
-    .btn-cobalt-flare { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
-    .btn-ultra-marine { background: linear-gradient(135deg, #000c40 0%, #607d8b 100%); }
-    .btn-dusk-royal { background: linear-gradient(135deg, #141e30 0%, #243b55 100%); }
-    .btn-honey-amber { background: linear-gradient(135deg, #d9a7c7 0%, #fffcdc 100%); background: linear-gradient(135deg, #b48a04 0%, #e1b32d 100%); }
-    .btn-desert-gold { background: linear-gradient(135deg, #9a7802 0%, #f1c40f 100%); }
-    .btn-magenta-crush { background: linear-gradient(135deg, #7b1e7a 0%, #b336a1 100%); }
-    .btn-velvet-rose { background: linear-gradient(135deg, #880e4f 0%, #d81b60 100%); }
-        /* General Setup */
+        .btn-antique-gold { background: linear-gradient(135deg, #808000 0%, #BEB32B 100%); }
+        .btn-deep-sapphire { background: linear-gradient(135deg, #051937 0%, #004d7a 100%); }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FFF8DC; /* Cornsilk (a slightly deeper pale yellow) */
+            background-color: #FFF8DC; 
             min-height: 100vh;
         }
+
+        
     </style>
-<script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body class="p-4 sm:p-8">
 
-    <!-- Main Container -->
     <div class="max-w-7xl mx-auto py-10">
 
-        <!-- Header Section -->
-        <header class="text-center mb-12">
+        <header class="text-center mb-8">
             <h1 class="text-6xl font-extrabold text-gray-900 leading-tight tracking-tighter">
                 TEFL <span class="text-indigo-600">Tools</span>
             </h1>
@@ -140,228 +125,84 @@
                 Your Digital Toolkit for Everyday Classroom Use
             </p>
         </header>
-<!-- Tools Grid -->
-<main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
 
-    <!-- 1. CSV Files Explained -->
-    <a href="./CSV explained.html" class="tool-button btn-blue-purple" target="_blank">
-        CSV Files Explained
-    </a>
+    <div class="max-w-xs mx-auto mb-12">
+        <input type="text" id="toolSearch" placeholder="Search Tools" 
+            class="w-full p-3 rounded-xl border-2 border-indigo-100 bg-white/50 focus:bg-white focus:border-indigo-500 focus:outline-none shadow-inner text-base text-center transition-all placeholder:text-gray-400">
+    </div>
 
-    <!-- 2. Classroom Management -->
-    <a href="./Classroom Management.html" class="tool-button btn-orange-red" target="_blank">
-        Classroom Management
-    </a>
+        <main id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
 
-    <!-- 3. Vocab Trainer -->
-    <a href="./Vocab.html" class="tool-button btn-green-lime" target="_blank">
-        Vocab Trainer
-    </a>
+            <a href="./CSV explained.html" class="tool-button btn-blue-purple" target="_blank">CSV Files Explained</a>
+            <a href="./Classroom Management.html" class="tool-button btn-orange-red" target="_blank">Classroom Management</a>
+            <a href="./Vocab.html" class="tool-button btn-green-lime" target="_blank">Vocab Trainer</a>
+            <a href="./Speed Reader.html" class="tool-button btn-cyan-blue" target="_blank">Speed Reader</a>
+            <a href="./Word Cloud Generator.html" class="tool-button btn-magenta-pink" target="_blank">Word Cloud Generator</a>
+            <a href="./flashcards.html" class="tool-button btn-dark-teal" target="_blank">Flashcard Generator</a>
+            <a href="./xandos.html" class="tool-button btn-red-white" target="_blank">Noughts & Crosses</a>
+            <a href="./dice.html" class="tool-button btn-gold-yellow" target="_blank">Dice</a>
+            <a href="./anagram.html" class="tool-button btn-deep-violet" target="_blank">Anagram</a>
+            <a href="./Speaking.html" class="tool-button btn-coral-peach" target="_blank">Speaking Exam Generator</a>
+            <a href="./Random number generator.html" class="tool-button btn-new-teal" target="_blank">Random Number Generator</a>
+            <a href="./hangman.html" class="tool-button btn-cyan-green" target="_blank">Hangman</a>
+            <a href="./timer.html" class="tool-button btn-sun-gold" target="_blank">Classroom Timer</a>
+            <a href="./Pelmanism.html" class="tool-button btn-forest-gold" target="_blank">Pelmanism</a>
+            <a href="./match.html" class="tool-button btn-sunset-pink" target="_blank">Match</a>
+            <a href="./wheelspin.html" class="tool-button btn-aqua-purple" target="_blank">Spinner</a>
+            <a href="./scoreboard.html" class="tool-button btn-midnight-cyan" target="_blank">Scoreboard</a>
+            <a href="./reports.html" class="tool-button btn-ruby-gold" target="_blank">Reports Generator</a>
+            <a href="./exam_index.html" class="tool-button btn-steel-magenta" target="_blank">Use of English</a>
+            <a href="./pchart.html" class="tool-button btn-green-lime" target="_blank">Phonetic Chart</a>
+            <a href="./teacher.html" class="tool-button btn-burnt-amber" target="_blank">Note Board</a>
+            <a href="./quiz.html" class="tool-button btn-royal-azure" target="_blank">Quiz*</a>
+            <a href="./sentence.html" class="tool-button btn-honey-bronze" target="_blank">Sentence Scramble</a>
+            <a href="./reading_index.html" class="tool-button btn-midnight-gold" target="_blank">Reading</a>
+            <a href="./whiteboard.html" class="tool-button btn-ice-mint" target="_blank">Whiteboard</a>
+            <a href="./boardgame.html" class="tool-button btn-gold-yellow" target="_blank">Board Game</a>
+            <a href="./guesswho.html" class="tool-button btn-midnight-cyan" target="_blank">Guess Who</a>
+            <a href="./sorter.html" class="tool-button btn-lavender-blue" target="_blank">Sorter</a>
+            <a href="./crossword.html" class="tool-button btn-berry-fusion" target="_blank">Crossword</a>
+            <a href="./wordsearch.html" class="tool-button btn-mango-punch" target="_blank">Wordsearch</a>
+            <a href="./writing_index.html" class="tool-button btn-emerald-mist" target="_blank">Writing*</a>
+            <a href="./chatbotjimmy.html" class="tool-button btn-crimson-night" target="_blank">Chat with Jimmy*</a>
+            <a href="./phrasalverbs.html" class="tool-button btn-cosmic-fusion" target="_blank">Phrasal Verbs</a>
+            <a href="./choose_adventure.html" class="tool-button btn-sweet-morning" target="_blank">Story Time (CYOA)*</a>
+            <a href="./gapfill.html" class="tool-button btn-harvest-gold" target="_blank">Gapfill*</a>
+            <a href="./flashcards_game.html" class="tool-button btn-autumn-flare" target="_blank">Flashcards Game</a>
+            <a href="./collocations.html" class="tool-button btn-brass-metal" target="_blank">Collocations</a>
+            <a href="./reading_kids_index.html" class="tool-button btn-deep-sapphire" target="_blank">Kids Reading</a>
+            <a href="./feedback.html" class="tool-button btn-feedback-black" target="_blank">Feedback</a>
+            <a href="https://ko-fi.com/Tefltools" class="tool-button btn-antique-gold" target="_blank">Tip Jar</a>
 
-    <!-- 4. Speed Reader -->
-    <a href="./Speed Reader.html" class="tool-button btn-cyan-blue" target="_blank">
-        Speed Reader
-    </a>
+        </main>
 
-    <!-- 5. Word Cloud Generator -->
-    <a href="./Word Cloud Generator.html" class="tool-button btn-magenta-pink" target="_blank">
-        Word Cloud Generator
-    </a>
-
-    <!-- 6. Flashcard Generator -->
-    <a href="./flashcards.html" class="tool-button btn-dark-teal" target="_blank">
-        Flashcard Generator
-    </a>
-
-    <!-- 7. Noughts & Crosses (Tic-Tac-Toe) -->
-    <a href="./xandos.html" class="tool-button btn-red-white" target="_blank">
-        Noughts & Crosses
-    </a>
-
-    <!-- 8. Dice -->
-    <a href="./dice.html" class="tool-button btn-gold-yellow" target="_blank">
-        Dice
-    </a>
-
-    <!-- 9. Anagram -->
-    <a href="./anagram.html" class="tool-button btn-deep-violet" target="_blank">
-        Anagram
-    </a>
-
-    <!-- 10. Speaking Exam Generator -->
-    <a href="./Speaking.html" class="tool-button btn-coral-peach" target="_blank">
-        Speaking Exam Generator
-    </a>
-
-    <!-- 11. Random Number Generator -->
-    <a href="./Random number generator.html" class="tool-button btn-new-teal" target="_blank">
-        Random Number Generator
-    </a>
-    
-    <!-- 12. Hangman -->
-    <a href="./hangman.html" class="tool-button btn-cyan-green" target="_blank">
-        Hangman 
-    </a>
-
-    <!-- 13. Classroom Timer -->
-    <a href="./timer.html" class="tool-button btn-sun-gold" target="_blank">
-        Classroom Timer
-    </a>
-
-    <!-- 14. Pelmanism -->
-    <a href="./Pelmanism.html" class="tool-button btn-forest-gold" target="_blank">
-        Pelmanism
-    </a>
-
-    <!-- 15. Match Race -->
-    <a href="./match.html" class="tool-button btn-sunset-pink" target="_blank">
-        Match
-    </a>
-
-    <!-- 16. Spinner -->
-    <a href="./wheelspin.html" class="tool-button btn-aqua-purple" target="_blank">
-        Spinner
-    </a>
-    
-    <!-- 17. Scoreboard -->
-    <a href="./scoreboard.html" class="tool-button btn-midnight-cyan" target="_blank">
-        Scoreboard
-    </a>
-
-    <!-- 17. Report Generator -->
-    <a href="./reports.html" class="tool-button btn-ruby-gold" target="_blank">
-        Reports Generator
-    </a>
-
-    <!-- 18. Use -->
-    <a href="./exam_index.html" class="tool-button btn-steel-magenta" target="_blank">
-        Use of English
-    </a>
-
-    <!-- 19. Phonetic Chart -->
-    <a href="./pchart.html" class="tool-button btn-green-lime" target="_blank">
-        Phonetic Chart
-    </a>
-
-    <!-- 20. Note Board -->
-    <a href="./teacher.html" class="tool-button btn-burnt-amber" target="_blank">
-        Note Board
-    </a>
-
-        <!-- 21. Quiz -->
-    <a href="./quiz.html" class="tool-button btn-royal-azure" target="_blank">
-        Quiz*
-    </a>
-
-            <!-- 22. Sentence Scramble -->
-    <a href="./sentence.html" class="tool-button btn-honey-bronze" target="_blank">
-        Sentence Scramble
-    </a>
-
-            <!-- 23. Reading -->
-    <a href="./reading_index.html" class="tool-button btn-midnight-gold" target="_blank">
-        Reading
-    </a>
-
-                <!-- 24. Whiteboard -->
-    <a href="./whiteboard.html" class="tool-button btn-ice-mint" target="_blank">
-        Whiteboard
-    </a>
-
-        <!-- 25. Board Games-->
-    <a href="./boardgame.html" class="tool-button btn-gold-yellow" target="_blank">
-        Board Game
-    </a>
-
-            <!-- 26. Guess Who-->
-    <a href="./guesswho.html" class="tool-button btn-midnight-cyan" target="_blank">
-        Guess Who
-    </a>
-
-                <!-- 26. Sorter-->
-    <a href="./sorter.html" class="tool-button btn-lavender-blue" target="_blank">
-        Sorter
-    </a>
-
-                    <!-- 27. Crossword-->
-    <a href="./crossword.html" class="tool-button btn-berry-fusion" target="_blank">
-        Crossword
-    </a>
-
-                    <!-- 28. Wordsearch-->
-    <a href="./wordsearch.html" class="tool-button btn-mango-punch" target="_blank">
-        Wordsearch
-    </a>
-
-                        <!-- 29. Writing-->
-    <a href="./writing_index.html" class="tool-button btn-emerald-mist" target="_blank">
-        Writing*
-    </a>
-
-
-            <!-- 31. Jimmy Chat Bot -->
-    <a href="./chatbotjimmy.html" class="tool-button btn-crimson-night" target="_blank">
-        Chat with Jimmy*
-    </a>
-
-                <!-- 32. Phrasal Verbs -->
-    <a href="./phrasalverbs.html" class="tool-button btn-cosmic-fusion" target="_blank">
-        Phrasal Verbs
-    </a>
-
-                    <!-- 33. Choose Your Own Adventure -->
-    <a href="./choose_adventure.html" class="tool-button btn-sweet-morning" target="_blank">
-        Story Time (CYOA)*
-    </a>
-
-                        <!-- 34. Gapfill -->
-    <a href="./gapfill.html" class="tool-button btn-harvest-gold" target="_blank">
-        Gapfill*
-    </a>
-
-                            <!-- 35. Flashcards Game -->
-    <a href="./flashcards_game.html" class="tool-button btn-autumn-flare" target="_blank">
-        Flashcards Game
-    </a>
-
-                                <!-- 36. Collocations -->
-    <a href="./collocations.html" class="tool-button btn-brass-metal" target="_blank">
-        Collocations
-    </a>
-
-                                    <!-- 37. Kids Reading -->
-    <a href="./reading_kids_index.html" class="tool-button btn-deep-sapphire" target="_blank">
-        Kids Reading
-    </a>
-
-    <!-- 33. Feedback -->
-    <a href="./feedback.html" class="tool-button btn-feedback-black" target="_blank">
-        Feedback
-    </a>
-
-        <!-- 33. Tip Jar -->
-    <a href="https://ko-fi.com/Tefltools" class="tool-button btn-antique-gold" target="_blank">
-        Tip Jar
-    </a>
-
-</main>
-
-
-        <!-- Footer / Instructions -->
         <footer class="mt-16 text-center text-gray-400 text-sm">
-            <p>
-                Power to the Teacher 
-            </p>
+            <p>Power to the Teacher</p>
         </footer>
     </div>
-    
+
+    <script>
+        const searchInput = document.getElementById('toolSearch');
+        const buttons = document.querySelectorAll('.tool-button');
+
+        searchInput.addEventListener('input', () => {
+            const filter = searchInput.value.toLowerCase();
+            
+            buttons.forEach(button => {
+                const text = button.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    button.classList.remove('ghost-button');
+                } else {
+                    button.classList.add('ghost-button');
+                }
+            });
+        });
+    </script>
+
     <script type="module">
-        // --- Firebase Setup (Mandatory for the collaborative environment) ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Not used here, but kept in module context
         
-        // Use window['__variable'] access pattern for robustness in module context
         const firebaseConfig = JSON.parse(typeof window['__firebase_config'] !== 'undefined' ? window['__firebase_config'] : '{}');
         const initialAuthToken = typeof window['__initial_auth_token'] !== 'undefined' ? window['__initial_auth_token'] : undefined;
         
@@ -369,7 +210,6 @@
             const app = initializeApp(firebaseConfig);
             const auth = getAuth(app);
             
-            // Authentication for the current user
             const authenticate = async () => {
                 try {
                     if (initialAuthToken) {
@@ -377,14 +217,11 @@
                     } else {
                         await signInAnonymously(auth);
                     }
-                    console.log("Firebase initialized and user authenticated.");
                 } catch (error) {
                     console.error("Firebase authentication failed:", error);
                 }
             };
             authenticate();
-        } else {
-            console.warn("Firebase configuration not found. Skipping initialization.");
         }
     </script>
 </body>

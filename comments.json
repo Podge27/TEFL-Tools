@@ -146,5 +146,9 @@
       "Su participación oral es muy escasa en este momento. Trataremos de crear un entorno de confianza para que se sienta seguro al compartir sus ideas.",
       "Actualmente prefiere mantener un perfil bajo en clase y rara vez interviene. Seguiremos motivándole para que descubra y comparta su voz con el grupo."
     ]
+  },
+  "Recommendation": {
+    "rec": ["Highly recommended to continue next year."],
+    "norec": ["Not recommended to continue at this level."]
   }
 }
