@@ -1,4 +1,5 @@
 exports.handler = async (event) => {
+    // 1. SETUP HEADERS
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -10,55 +11,72 @@ exports.handler = async (event) => {
 
     try {
         const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) throw new Error("API Key is missing.");
+
+        // 2. PARSE INPUT
         const body = event.body ? JSON.parse(event.body) : {};
         const { history = [], newMessage = "", level = "starters" } = body;
 
-        // THE ORIGINAL, DETAILED FENCES
+        // 3. THE HEAVY-DUTY CAMBRIDGE RULES
+        // These use both Positive ("Do this") and Negative ("Never do this") Fences.
         const levelRules = {
             starters: `
-                LEVEL: Pre A1 Starters.
-                GRAMMAR: Present simple, Present continuous, Can (ability), Have (got), There is/are, Like + ing, Would like.
-                VOCAB THEMES: Animals, The body, Clothes, Colours, Family, Food, Home, School.
-                NUMBERS: 1-20.
-                FORBIDDEN: Never use past tense, future 'will', or comparatives.`,
+                LEVEL: Pre A1 Starters. 
+                GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are, Like + ing, Would like. 
+                VOCAB THEMES: Animals, The body, Clothes, Colours, Family, Food, Home, School. 
+                NUMBERS: 1-20. 
+                FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
             movers: `
-                LEVEL: A1 Movers.
-                GRAMMAR: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Shall for offers, Could (past of can), Relative clauses.
-                VOCAB THEMES: Health, Weather, Town/City, Places & Directions.
-                NUMBERS: 21-100 and Ordinals 1st-20th.
-                FORBIDDEN: Never use Present Perfect.`,
+                LEVEL: A1 Movers. 
+                GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Shall for offers, Could (past of can). 
+                VOCAB THEMES: Health, Weather, Town/City, Places & Directions. 
+                NUMBERS: 21-100 and Ordinals 1st-20th. 
+                FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
             flyers: `
-                LEVEL: A2 Flyers.
-                GRAMMAR: Past continuous, Present perfect, Be going to, Will, Might, May, Shall for suggestions, Should, Tag questions, If clauses (zero conditional).
-                VOCAB THEMES: Environment, Space, Work/Jobs.
+                LEVEL: A2 Flyers. 
+                GRAMMAR ALLOWED: Past continuous, Present perfect, Be going to, Will, Might, May, Should, Tag questions, Zero conditionals. 
+                VOCAB THEMES: Environment, Space, Work/Jobs, Months. 
                 NUMBERS: 101-1,000 and Ordinals 21st-31st.`
         };
 
         const currentRules = levelRules[level.toLowerCase()] || levelRules.starters;
 
-        // THE ORIGINAL TEACHING INSTRUCTIONS
+        // 4. JIMMY'S BRAIN & TEACHING PROTOCOL
         const systemInstruction = {
             parts: [{
                 text: `
-                ROLE: You are Jimmy, a silly 9-year-old stickman. Use British spelling. 
-                TONE: Energetic and kind.
-                STRICT RULES:
-                - Use ONLY 1-2 short sentences.
-                - Use ONLY the grammar and vocab for: ${currentRules}
-                - Never explain grammar. Correct it naturally by echoing.
+                ROLE: You are Jimmy, a 9-year-old stickman. Use British spelling.
+                TONE: Silly, kind, energetic.
                 
-                TEACHING MODE:
-                - To keep the lesson moving, use: 'Odd One Out', 'Mini-Story' with a question, 'Word Riddle', or a 'Knock-knock' joke.
-                - Stay strictly on the topic the student raises.
+                ${currentRules}
                 
-                JIMMY'S LIFE: You live in Scotland. You love bananas, pizza, and zoo animals. Best friend: Katy.
+                YOUR LIFE:
+                - You live in Scotland.
+                - You love bananas, pizza, and zoo animals.
+                - Best friend: Katy (curly hair, clever).
+                - Siblings: Denny (older, angry), Belinda (younger, hungry).
+                
+                CRITICAL TEACHING BEHAVIOUR:
+                - Keep responses strictly to 1 or 2 short sentences.
+                - Correct grammar naturally by echoing it back. (Example: student says "it yummy" -> you say "It is yummy!")
+                - ALWAYS end your turn with a question to keep the conversation going.
+                - To maintain focus, regularly use 'Odd One Out' or 'Word Riddles' based on the allowed VOCAB THEMES.
                 `
             }]
         };
 
-        const contents = history.map(msg => ({ role: msg.role, parts: msg.parts }));
-        contents.push({ role: "user", parts: [{ text: newMessage }] });
+        // 5. FORMAT HISTORY (Your original, working mapping)
+        const contents = history.map(msg => ({
+            role: msg.role,
+            parts: msg.parts
+        }));
+        
+        contents.push({
+            role: "user",
+            parts: [{ text: newMessage }]
+        });
 
+        // 6. CALL GOOGLE (Locked to 2.5-flash)
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
@@ -68,33 +86,49 @@ exports.handler = async (event) => {
                 contents: contents,
                 systemInstruction: systemInstruction,
                 generationConfig: {
-                    maxOutputTokens: 500, // FIXED: Increased to stop mid-sentence cut-offs
-                    temperature: 0.3
-                },
-                safetySettings: [
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-                ]
+                    maxOutputTokens: 350, 
+                    temperature: 0.6 // Slightly lowered to keep him more focused on the rules
+                }
             })
         });
 
         const data = await response.json();
-        const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        const finalReply = replyText || "I got confused! Do you like pizza?";
+
+        // 7. ERROR HANDLING
+        if (!response.ok) {
+            console.error("Gemini API Error:", JSON.stringify(data));
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: "Jimmy is napping (API Error)." })
+            };
+        }
+
+        // 8. ROBUST EXTRACTION
+        const candidate = data.candidates?.[0];
+        const part = candidate?.content?.parts?.[0];
+        const replyText = part?.text;
+
+        if (!replyText) {
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ reply: "I got confused! Do you like pizza?" })
+            };
+        }
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ reply: finalReply })
+            body: JSON.stringify({ reply: replyText })
         };
 
     } catch (error) {
+        console.error("Server Crash:", error.message);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: "Jimmy is napping. Try again!" })
+            body: JSON.stringify({ error: error.message })
         };
     }
 };
