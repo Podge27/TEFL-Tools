@@ -78,44 +78,65 @@ exports.handler = async function(event, context) {
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: "user", parts: [{ text: promptText }] }],
-                generationConfig: {
-                    maxOutputTokens: 500, 
-                    temperature: 0.4,
-                    // THE ULTIMATE LOCK: The exact blueprint
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            story: { type: "STRING" },
-                            options: { type: "ARRAY", items: { type: "STRING" } },
-                            vocabulary: { type: "ARRAY", items: { type: "STRING" } }
-                        },
-                        required: ["story", "options", "vocabulary"]
+        let responseText = "";
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        // THE FIX: The Retry Loop. It will silently try 3 times before ever showing an error.
+        while (attempts < maxAttempts) {
+            attempts++;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ role: "user", parts: [{ text: promptText }] }],
+                        generationConfig: {
+                            maxOutputTokens: 500, 
+                            temperature: 0.4,
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    story: { type: "STRING" },
+                                    options: { type: "ARRAY", items: { type: "STRING" } },
+                                    vocabulary: { type: "ARRAY", items: { type: "STRING" } }
+                                },
+                                required: ["story", "options", "vocabulary"]
+                            }
+                        }
+                    })
+                });
+
+                const apiData = await response.json();
+
+                if (!response.ok) {
+                    if (attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 2000)); 
+                        continue; 
                     }
+                    throw new Error(apiData.error?.message || "Google API rejected the request.");
                 }
-            })
-        });
 
-        const apiData = await response.json();
+                responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                
+                if (!responseText) {
+                    if (attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        continue;
+                    }
+                    throw new Error("Google sent back a blank page.");
+                }
 
-        if (!response.ok) {
-            throw new Error(apiData.error?.message || "Google API rejected the request.");
+                break; // If we made it here, it worked perfectly! Break the loop.
+
+            } catch (error) {
+                if (attempts >= maxAttempts) throw error;
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
         }
 
-        let responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        
-        if (!responseText) {
-            throw new Error("Google sent back a blank page.");
-        }
-
-        // Just in case there are invisible rogue line breaks hiding in the text
         responseText = responseText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-
         const parsedData = JSON.parse(responseText);
 
         return { statusCode: 200, headers, body: JSON.stringify(parsedData) };

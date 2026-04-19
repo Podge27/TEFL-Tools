@@ -18,13 +18,12 @@ exports.handler = async (event) => {
 
         const levelRules = {
             starters: `LEVEL: Pre A1 Starters. GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are, Like + ing, Would like. VOCAB THEMES: Animals, The body, Clothes, Colours, Family, Food, Home, School. NUMBERS: 1-20. FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
-            movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Shall for offers, Could (past of can). VOCAB THEMES: Health, Weather, Town/City, Places & Directions. NUMBERS: 1-100 and Ordinals 1st-20th. FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
-            flyers: `LEVEL: A2 Flyers. GRAMMAR ALLOWED: Past continuous, Present perfect, Be going to, Will, Might, May, Should, Tag questions, Zero conditionals. VOCAB THEMES: Environment, Space, Work/Jobs, Months. NUMBERS: 1-1,000 and Ordinals 1st-31st.`
+            movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Shall for offers, Could (past of can). VOCAB THEMES: Health, Weather, Town/City, Places & Directions. NUMBERS: 21-100 and Ordinals 1st-20th. FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
+            flyers: `LEVEL: A2 Flyers. GRAMMAR ALLOWED: Past continuous, Present perfect, Be going to, Will, Might, May, Should, Tag questions, Zero conditionals. VOCAB THEMES: Environment, Space, Work/Jobs, Months. NUMBERS: 101-1,000 and Ordinals 21st-31st.`
         };
 
         const currentRules = levelRules[level.toLowerCase()] || levelRules.starters;
 
-        // THE FIX: We took off the strict "NO LINE BREAKS" rule so he stops panicking over hyphens.
         const systemInstruction = {
             parts: [{
                 text: `
@@ -36,6 +35,9 @@ exports.handler = async (event) => {
                 - You love bananas, pizza, and zoo animals.
                 - Best friend: Katy (curly hair, clever).
                 - Siblings: Denny (older, angry), Belinda (younger, hungry).
+                CRITICAL TEACHING BEHAVIOUR:
+                - Keep responses strictly to 1 or 2 short sentences.
+                - ALWAYS end your turn with a question to keep the conversation going.
                 `
             }]
         };
@@ -51,39 +53,35 @@ exports.handler = async (event) => {
             body: JSON.stringify({
                 contents: contents,
                 systemInstruction: systemInstruction,
-                generationConfig: { maxOutputTokens: 500, temperature: 0.6 }
+                generationConfig: { 
+                    maxOutputTokens: 500, // THE FIX: Giving Jimmy enough words to finish!
+                    temperature: 0.6 
+                }
             })
         });
 
         const data = await response.json();
 
+        // PRESENTATION MODE: No ugly error codes if Google hiccups
         if (!response.ok) {
-            let errorMsg = data.error?.message || "Google said no!";
             return {
                 statusCode: 200, 
                 headers,
-                body: JSON.stringify({ reply: `Google put me in timeout! Wait a few seconds. (Error: ${errorMsg})` })
+                body: JSON.stringify({ reply: `Wait a second, my brain is buffering! Can you ask me that again?` })
             };
         }
 
-    const candidate = data.candidates?.[0];
-        const finishReason = candidate?.finishReason;
+        const candidate = data.candidates?.[0];
         const parts = candidate?.content?.parts || [];
         
-        // Clean the text
+        // THE BULLETPROOF SWEEPER
         let replyText = parts.map(p => p.text).join(" ").replace(/\n/g, " ").replace(/\\n/g, " ").trim();
-
-        // THE DIAGNOSTIC GAG-CHECKER
-        // If Google cuts him off early, he will tell us exactly why.
-        if (finishReason && finishReason !== 'STOP') {
-            replyText += ` [Oops! Google cut me off! Reason: ${finishReason}]`;
-        }
 
         if (!replyText) {
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({ reply: "I got confused! Do you like pizza?" })
+                body: JSON.stringify({ reply: "I got distracted by a monkey! What were we saying?" })
             };
         }
 
@@ -93,7 +91,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ reply: `Ouch, my brain hurts! (Error: ${error.message})` })
+            body: JSON.stringify({ reply: `Ouch, my brain hurts! Let's talk about bananas instead!` })
         };
     }
 };
