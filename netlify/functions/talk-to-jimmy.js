@@ -66,11 +66,18 @@ exports.handler = async (event) => {
             };
         }
 
-        const candidate = data.candidates?.[0];
+    const candidate = data.candidates?.[0];
+        const finishReason = candidate?.finishReason;
         const parts = candidate?.content?.parts || [];
         
-        // THE BULLETPROOF SWEEPER: Maps all text and forcibly removes any invisible newlines
-        const replyText = parts.map(p => p.text).join(" ").replace(/\n/g, " ").replace(/\\n/g, " ").trim();
+        // Clean the text
+        let replyText = parts.map(p => p.text).join(" ").replace(/\n/g, " ").replace(/\\n/g, " ").trim();
+
+        // THE DIAGNOSTIC GAG-CHECKER
+        // If Google cuts him off early, he will tell us exactly why.
+        if (finishReason && finishReason !== 'STOP') {
+            replyText += ` [Oops! Google cut me off! Reason: ${finishReason}]`;
+        }
 
         if (!replyText) {
             return {

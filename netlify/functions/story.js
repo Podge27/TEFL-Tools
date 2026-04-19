@@ -86,8 +86,17 @@ exports.handler = async function(event, context) {
                 generationConfig: {
                     maxOutputTokens: 500, 
                     temperature: 0.4,
-                    // THE MAGIC LOCK: Forces Google to ONLY output pure JSON
-                    responseMimeType: "application/json" 
+                    // THE ULTIMATE LOCK: The exact blueprint
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            story: { type: "STRING" },
+                            options: { type: "ARRAY", items: { type: "STRING" } },
+                            vocabulary: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["story", "options", "vocabulary"]
+                    }
                 }
             })
         });
@@ -98,14 +107,15 @@ exports.handler = async function(event, context) {
             throw new Error(apiData.error?.message || "Google API rejected the request.");
         }
 
-        const responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        let responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
         
         if (!responseText) {
-            throw new Error("Google sent back a blank page. The safety filter might have blocked the story.");
+            throw new Error("Google sent back a blank page.");
         }
 
-        // Because of the Magic Lock, responseText is guaranteed to be pure JSON.
-        // We parse it to ensure it's valid before sending it back.
+        // Just in case there are invisible rogue line breaks hiding in the text
+        responseText = responseText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+
         const parsedData = JSON.parse(responseText);
 
         return { statusCode: 200, headers, body: JSON.stringify(parsedData) };
