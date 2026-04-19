@@ -23,6 +23,7 @@ exports.handler = async function(event, context) {
         const data = JSON.parse(event.body);
         const { level, characters, setting, problem, teacherNotes, history, currentTurn } = data;
 
+        // THE BRAIN IS BACK
         const levelRules = {
             starters: `LEVEL: Pre A1 Starters. GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are. VOCAB THEMES TO USE: Animals, The body, Clothes, Colours, Family, Food, Home, School. NUMBERS: 1-20. FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
             movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Could. VOCAB THEMES TO USE: Health, Weather, Town/City, Places & Directions, Transport, Sports. NUMBERS: 21-100 and Ordinals 1st-20th. FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
@@ -30,35 +31,7 @@ exports.handler = async function(event, context) {
         };
 
         const currentRules = levelRules[level?.toLowerCase()] || levelRules.starters;
-
-        const charactersWithTraits = characters.map(name => 
-            `${name} (who is ${characterTraits[name] || 'a helpful friend'})`
-        ).join(' and ');
-
-        let arcInstruction = "";
-        let isFinalTurn = false;
-
-        switch (currentTurn) {
-            case 1: arcInstruction = `Act 1: Introduction. Introduce characters and ${setting}. Problem ('${problem}') MUST happen. Choices: How they react.`; break;
-            case 2: arcInstruction = `Act 2: Exploration. They try to fix it, but discover a new complication. Choices: How they handle this new obstacle.`; break;
-            case 3: arcInstruction = `Act 3: Rising Action. Things get more difficult or silly. Choices: Their next big idea.`; break;
-            case 4: arcInstruction = `Act 4: Climax. The final hurdle to fixing ('${problem}'). Choices: The final action they take.`; break;
-            default: isFinalTurn = true; arcInstruction = `Act 5: Resolution. They successfully solve ('${problem}'). Everyone is happy.`; break;
-        }
-
-        let taskInstruction = `
-        Task: Write the next short paragraph (max 3 simple sentences). 
-        Narrative Stage: ${arcInstruction}
-        CRITICAL RULES FOR OPTIONS: Provide exactly 3 options (Immediate physical actions).
-        Leave the "vocabulary" array empty [].`;
-
-        if (isFinalTurn) {
-            taskInstruction = `
-            Task: Write the final concluding paragraph (max 4 simple sentences).
-            Narrative Stage: ${arcInstruction}
-            CRITICAL RULES FOR ENDING: Set the "options" array to be completely empty []. 
-            Review the story and extract 8 to 10 key English vocabulary words used. Put them in the "vocabulary" array.`;
-        }
+        const chars = characters.map(name => `${name} (${characterTraits[name] || 'a friend'})`).join(' and ');
 
         const promptText = `
         You are an expert ESOL teacher writing a choose-your-own-adventure story.
@@ -66,23 +39,30 @@ exports.handler = async function(event, context) {
         ${currentRules}
         Language: British English spelling and phrasing only.
         
-        Story Elements:
-        - Characters: ${charactersWithTraits}
-        - Setting: A ${setting}. 
-        - Core Problem: ${problem}.
-        - Teacher Instructions: ${teacherNotes || 'None'}
+        Characters: ${chars}
+        Setting: A ${setting}. 
+        Core Problem: ${problem}.
+        Teacher Instructions: ${teacherNotes || 'None'}
         
-        Previous History: ${history || 'Start of the story.'}
+        History: ${history || 'Start of the story.'}
         
-        ${taskInstruction}`;
+        You MUST reply in plain text exactly matching this format:
+        [STORY]
+        (Write 2-3 short sentences advancing the story here.)
+        [OPTIONS]
+        - (Option 1)
+        - (Option 2)
+        - (Option 3)
+        [VOCABULARY]
+        (If this is turn 5, list 8 English vocabulary words used, separated by commas. Otherwise, write NONE)
+        `;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         let attempts = 0;
-        const maxAttempts = 3;
+        let rawAiText = "";
 
-        // THE FIX: The Indestructible Retry Loop
-        while (attempts < maxAttempts) {
+        while (attempts < 3) {
             attempts++;
             try {
                 const response = await fetch(url, {
@@ -90,80 +70,67 @@ exports.handler = async function(event, context) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ role: "user", parts: [{ text: promptText }] }],
-                        generationConfig: {
-                            maxOutputTokens: 500, 
-                            temperature: 0.4,
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: "OBJECT",
-                                properties: {
-                                    story: { type: "STRING" },
-                                    options: { type: "ARRAY", items: { type: "STRING" } },
-                                    vocabulary: { type: "ARRAY", items: { type: "STRING" } }
-                                },
-                                required: ["story", "options", "vocabulary"]
-                            }
-                        }
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ],
+                        generationConfig: { maxOutputTokens: 1000, temperature: 0.5 }
                     })
                 });
 
                 const apiData = await response.json();
-
-                if (!response.ok) {
-                    if (attempts < maxAttempts) {
-                        await new Promise(r => setTimeout(r, 2000)); 
-                        continue; 
-                    }
-                    throw new Error(apiData.error?.message || "Google API rejected the request.");
-                }
-
-                let responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                if (!response.ok) throw new Error(apiData.error?.message || "Google blocked it");
                 
-                if (!responseText) {
-                    if (attempts < maxAttempts) {
-                        await new Promise(r => setTimeout(r, 2000));
-                        continue;
-                    }
-                    throw new Error("Google sent back a blank page.");
-                }
-
-                // BULLETPROOF SCRUBBER
-                // 1. Strip markdown if the AI forgot the rules
-                responseText = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
-                
-                // 2. Extract ONLY the JSON object (ignore any conversational text)
-                const firstBrace = responseText.indexOf('{');
-                const lastBrace = responseText.lastIndexOf('}');
-                if (firstBrace !== -1 && lastBrace !== -1) {
-                    responseText = responseText.substring(firstBrace, lastBrace + 1);
-                }
-
-                // 3. Remove invisible line breaks that shatter the parser
-                responseText = responseText.replace(/[\n\r\t]+/g, " ");
-
-                // 4. Test opening the box. If it fails, the catch block triggers a retry!
-                const parsedData = JSON.parse(responseText);
-                
-                // If we reach here, it parsed perfectly! Send it to the website.
-                return { statusCode: 200, headers, body: JSON.stringify(parsedData) };
+                rawAiText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                if (rawAiText) break;
 
             } catch (error) {
-                // If opening the box fails, and it's our last attempt, show the error.
-                if (attempts >= maxAttempts) {
-                    throw error;
-                }
-                // Otherwise, wait 2 seconds and silently try again.
+                if (attempts >= 3) throw error;
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
 
-    } catch (error) {
-        console.error("Story Error:", error.message);
-        const fallback = {
-            story: `Oh no! The story book closed. (Error: ${error.message})`,
-            options: [],
-            vocabulary: []
+        let finalStory = "They looked around, unsure of what to do next!";
+        let finalOptions = ["Look carefully", "Wait a minute", "Try something else"];
+        let finalVocab = [];
+
+        const storyMatch = rawAiText.match(/\[STORY\]([\s\S]*?)\[OPTIONS\]/i);
+        if (storyMatch) finalStory = storyMatch[1].trim();
+
+        const optionsMatch = rawAiText.match(/\[OPTIONS\]([\s\S]*?)(?:\[VOCABULARY\]|$)/i);
+        if (optionsMatch) {
+            let rawOpts = optionsMatch[1].trim().split('\n');
+            let cleanedOpts = rawOpts.map(o => o.replace(/^[-*1-9.)\s]+/, '').trim()).filter(o => o !== '');
+            if (cleanedOpts.length > 0) finalOptions = cleanedOpts.slice(0, 3);
+        }
+
+        const vocabMatch = rawAiText.match(/\[VOCABULARY\]([\s\S]*)/i);
+        if (vocabMatch) {
+            let rawVocab = vocabMatch[1].trim();
+            if (rawVocab && !rawVocab.toLowerCase().includes('none')) {
+                finalVocab = rawVocab.split(',').map(v => v.trim()).filter(v => v !== '');
+            }
+        }
+
+        const safeData = {
+            story: finalStory,
+            options: currentTurn >= 5 ? [] : finalOptions,
+            vocabulary: finalVocab
         };
-        return { statusCode: 200, headers, body: JSON.stringify(fallback) };
+
+        return { statusCode: 200, headers, body: JSON.stringify(safeData) };
+
+    } catch (error) {
+        return { 
+            statusCode: 200, 
+            headers, 
+            body: JSON.stringify({ 
+                story: `The connection dropped! Let's try that again. (Error: ${error.message})`, 
+                options: ["Try again"], 
+                vocabulary: [] 
+            }) 
+        };
     }
 };
