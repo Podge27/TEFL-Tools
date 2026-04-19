@@ -78,11 +78,10 @@ exports.handler = async function(event, context) {
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-        let responseText = "";
         let attempts = 0;
         const maxAttempts = 3;
 
-        // THE FIX: The Retry Loop. It will silently try 3 times before ever showing an error.
+        // THE FIX: The Indestructible Retry Loop
         while (attempts < maxAttempts) {
             attempts++;
             try {
@@ -112,34 +111,51 @@ exports.handler = async function(event, context) {
 
                 if (!response.ok) {
                     if (attempts < maxAttempts) {
-                        await new Promise(resolve => setTimeout(resolve, 2000)); 
+                        await new Promise(r => setTimeout(r, 2000)); 
                         continue; 
                     }
                     throw new Error(apiData.error?.message || "Google API rejected the request.");
                 }
 
-                responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                let responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
                 
                 if (!responseText) {
                     if (attempts < maxAttempts) {
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        await new Promise(r => setTimeout(r, 2000));
                         continue;
                     }
                     throw new Error("Google sent back a blank page.");
                 }
 
-                break; // If we made it here, it worked perfectly! Break the loop.
+                // BULLETPROOF SCRUBBER
+                // 1. Strip markdown if the AI forgot the rules
+                responseText = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
+                
+                // 2. Extract ONLY the JSON object (ignore any conversational text)
+                const firstBrace = responseText.indexOf('{');
+                const lastBrace = responseText.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace !== -1) {
+                    responseText = responseText.substring(firstBrace, lastBrace + 1);
+                }
+
+                // 3. Remove invisible line breaks that shatter the parser
+                responseText = responseText.replace(/[\n\r\t]+/g, " ");
+
+                // 4. Test opening the box. If it fails, the catch block triggers a retry!
+                const parsedData = JSON.parse(responseText);
+                
+                // If we reach here, it parsed perfectly! Send it to the website.
+                return { statusCode: 200, headers, body: JSON.stringify(parsedData) };
 
             } catch (error) {
-                if (attempts >= maxAttempts) throw error;
+                // If opening the box fails, and it's our last attempt, show the error.
+                if (attempts >= maxAttempts) {
+                    throw error;
+                }
+                // Otherwise, wait 2 seconds and silently try again.
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
-
-        responseText = responseText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-        const parsedData = JSON.parse(responseText);
-
-        return { statusCode: 200, headers, body: JSON.stringify(parsedData) };
 
     } catch (error) {
         console.error("Story Error:", error.message);
