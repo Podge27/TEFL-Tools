@@ -148,7 +148,7 @@
     ]
   },
   "Recommendation": {
-    "rec": ["Highly recommended to continue next year."],
-    "norec": ["Not recommended to continue at this level."]
+    "rec": ["Recomendado. ¡Enhorabuena! Te vemos preparado para el examen de Cambridge. Encontrarás toda la información para matricularte en la pestaña de comentarios de Teach n Go."],
+    "norec": ["La nota del simulacro aconseja esperar a la próxima convocatoria para poder conseguir mejores resultados."]
   }
 }
