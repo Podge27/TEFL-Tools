@@ -485,6 +485,11 @@
             if (savedData) {
                 try {
                     const parsed = JSON.parse(savedData);
+                    const shuffledPaths = [...AVATAR_POOL].sort(() => Math.random() - 0.5);
+                    let pathIndex = 0;
+                    parsed.students.forEach(student => {
+                    student.avatarPath = shuffledPaths[pathIndex++ % shuffledPaths.length];
+                    });
                     students = parsed.students;
                     currentFilename = filename;
                     ui.classNameLabel.textContent = `${currentFilename}`;
@@ -789,6 +794,11 @@
             if (savedData) {
                 try {
                     const parsed = JSON.parse(savedData);
+                    const shuffledPaths = [...AVATAR_POOL].sort(() => Math.random() - 0.5);
+                    let pathIndex = 0;
+                    parsed.students.forEach(student => {
+                    student.avatarPath = shuffledPaths[pathIndex++ % shuffledPaths.length];
+                    });
                     students = parsed.students;
                     currentFilename = filename;
                     ui.classNameLabel.textContent = `${currentFilename} (Resumed)`;

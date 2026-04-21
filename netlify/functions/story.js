@@ -23,7 +23,7 @@ exports.handler = async function(event, context) {
         const data = JSON.parse(event.body);
         const { level, characters, setting, problem, teacherNotes, history, currentTurn } = data;
 
-        // THE BRAIN IS BACK
+        // 1. THE ESOL BRAIN
         const levelRules = {
             starters: `LEVEL: Pre A1 Starters. GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are. VOCAB THEMES TO USE: Animals, The body, Clothes, Colours, Family, Food, Home, School. NUMBERS: 1-20. FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
             movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Could. VOCAB THEMES TO USE: Health, Weather, Town/City, Places & Directions, Transport, Sports. NUMBERS: 21-100 and Ordinals 1st-20th. FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
@@ -32,6 +32,18 @@ exports.handler = async function(event, context) {
 
         const currentRules = levelRules[level?.toLowerCase()] || levelRules.starters;
         const chars = characters.map(name => `${name} (${characterTraits[name] || 'a friend'})`).join(' and ');
+
+        // 2. THE NARRATIVE ARC
+        let arcInstruction = "";
+        let isFinalTurn = false;
+
+        switch (currentTurn) {
+            case 1: arcInstruction = `Act 1: Introduction. Introduce characters and ${setting}. Problem ('${problem}') MUST happen.`; break;
+            case 2: arcInstruction = `Act 2: Exploration. They try to fix it, but discover a new complication.`; break;
+            case 3: arcInstruction = `Act 3: Rising Action. Things get more difficult or silly.`; break;
+            case 4: arcInstruction = `Act 4: Climax. The final hurdle to fixing ('${problem}').`; break;
+            default: isFinalTurn = true; arcInstruction = `Act 5: Resolution. They successfully solve ('${problem}'). Everyone is happy.`; break;
+        }
 
         const promptText = `
         You are an expert ESOL teacher writing a choose-your-own-adventure story.
@@ -43,18 +55,17 @@ exports.handler = async function(event, context) {
         Setting: A ${setting}. 
         Core Problem: ${problem}.
         Teacher Instructions: ${teacherNotes || 'None'}
+        Previous History: ${history || 'Start of the story.'}
         
-        History: ${history || 'Start of the story.'}
+        Narrative Stage: ${arcInstruction}
         
         You MUST reply in plain text exactly matching this format:
         [STORY]
         (Write 2-3 short sentences advancing the story here.)
         [OPTIONS]
-        - (Option 1)
-        - (Option 2)
-        - (Option 3)
+        ${isFinalTurn ? "NONE" : "- (Option 1)\n- (Option 2)\n- (Option 3)"}
         [VOCABULARY]
-        (If this is turn 5, list 8 English vocabulary words used, separated by commas. Otherwise, write NONE)
+        ${isFinalTurn ? "(List 8 English vocabulary words used, separated by commas)" : "NONE"}
         `;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
@@ -62,6 +73,7 @@ exports.handler = async function(event, context) {
         let attempts = 0;
         let rawAiText = "";
 
+        // 3. THE RETRY LOOP (Safety Net)
         while (attempts < 3) {
             attempts++;
             try {
@@ -92,6 +104,7 @@ exports.handler = async function(event, context) {
             }
         }
 
+        // 4. THE PLAIN TEXT EXTRACTOR
         let finalStory = "They looked around, unsure of what to do next!";
         let finalOptions = ["Look carefully", "Wait a minute", "Try something else"];
         let finalVocab = [];
@@ -102,7 +115,7 @@ exports.handler = async function(event, context) {
         const optionsMatch = rawAiText.match(/\[OPTIONS\]([\s\S]*?)(?:\[VOCABULARY\]|$)/i);
         if (optionsMatch) {
             let rawOpts = optionsMatch[1].trim().split('\n');
-            let cleanedOpts = rawOpts.map(o => o.replace(/^[-*1-9.)\s]+/, '').trim()).filter(o => o !== '');
+            let cleanedOpts = rawOpts.map(o => o.replace(/^[-*1-9.)\s]+/, '').trim()).filter(o => o !== '' && o.toUpperCase() !== 'NONE');
             if (cleanedOpts.length > 0) finalOptions = cleanedOpts.slice(0, 3);
         }
 
@@ -116,7 +129,7 @@ exports.handler = async function(event, context) {
 
         const safeData = {
             story: finalStory,
-            options: currentTurn >= 5 ? [] : finalOptions,
+            options: isFinalTurn ? [] : finalOptions,
             vocabulary: finalVocab
         };
 
