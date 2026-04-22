@@ -1,3 +1,5 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 exports.handler = async (event) => {
     // 1. SETUP HEADERS
     const headers = {
@@ -24,9 +26,8 @@ exports.handler = async (event) => {
 
         const currentRules = levelRules[level.toLowerCase()] || levelRules.starters;
 
-        const systemInstruction = {
-            parts: [{
-                text: `
+        // The Official Library handles the System Instructions a bit more cleanly
+        const systemInstructionText = `
                 ROLE: You are Jimmy, a 9-year-old stickman. Use British spelling.
                 TONE: Silly, kind, energetic.
                 ${currentRules}
@@ -38,44 +39,28 @@ exports.handler = async (event) => {
                 CRITICAL TEACHING BEHAVIOUR:
                 - Keep responses strictly to 1 or 2 short sentences.
                 - ALWAYS end your turn with a question to keep the conversation going.
-                `
-            }]
-        };
+        `;
 
         const contents = history.map(msg => ({ role: msg.role, parts: msg.parts }));
         contents.push({ role: "user", parts: [{ text: newMessage }] });
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: contents,
-                systemInstruction: systemInstruction,
-                generationConfig: { 
-                    maxOutputTokens: 500, // THE FIX: Giving Jimmy enough words to finish!
-                    temperature: 0.6 
-                }
-            })
+        // Use the Official Google Library instead of "fetch"
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.5-flash",
+            systemInstruction: systemInstructionText,
+            generationConfig: { 
+                maxOutputTokens: 500, // Jimmy still gets his 500 words
+                temperature: 0.6 
+            }
         });
 
-        const data = await response.json();
-
-        // PRESENTATION MODE: No ugly error codes if Google hiccups
-        if (!response.ok) {
-            return {
-                statusCode: 200, 
-                headers,
-                body: JSON.stringify({ reply: `Wait a second, my brain is buffering! Can you ask me that again?` })
-            };
-        }
-
-        const candidate = data.candidates?.[0];
-        const parts = candidate?.content?.parts || [];
+        const result = await model.generateContent({ contents });
+        const response = await result.response;
+        const rawText = response.text();
         
         // THE BULLETPROOF SWEEPER
-        let replyText = parts.map(p => p.text).join(" ").replace(/\n/g, " ").replace(/\\n/g, " ").trim();
+        let replyText = rawText.replace(/\n/g, " ").replace(/\\n/g, " ").trim();
 
         if (!replyText) {
             return {
@@ -88,8 +73,9 @@ exports.handler = async (event) => {
         return { statusCode: 200, headers, body: JSON.stringify({ reply: replyText }) };
 
     } catch (error) {
+        console.error("Jimmy's Brain Error:", error);
         return {
-            statusCode: 200,
+            statusCode: 200, // Keeping this 200 so the user sees the joke instead of a broken page
             headers,
             body: JSON.stringify({ reply: `Ouch, my brain hurts! Let's talk about bananas instead!` })
         };

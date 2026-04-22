@@ -1,3 +1,5 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 const characterTraits = {
     'Jimmy': 'brave but silly and a little bit clumsy',
     'Katy': 'very smart and loves animals, Jimmys best friend',
@@ -20,10 +22,12 @@ exports.handler = async function(event, context) {
 
     try {
         const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) throw new Error("API Key is missing.");
+
         const data = JSON.parse(event.body);
         const { level, characters, setting, problem, teacherNotes, history, currentTurn } = data;
 
-        // 1. THE ESOL BRAIN
+        // 1. THE ESOL BRAIN (Unchanged)
         const levelRules = {
             starters: `LEVEL: Pre A1 Starters. GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are. VOCAB THEMES TO USE: Animals, The body, Clothes, Colours, Family, Food, Home, School. NUMBERS: 1-20. FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
             movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Could. VOCAB THEMES TO USE: Health, Weather, Town/City, Places & Directions, Transport, Sports. NUMBERS: 21-100 and Ordinals 1st-20th. FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
@@ -33,7 +37,7 @@ exports.handler = async function(event, context) {
         const currentRules = levelRules[level?.toLowerCase()] || levelRules.starters;
         const chars = characters.map(name => `${name} (${characterTraits[name] || 'a friend'})`).join(' and ');
 
-        // 2. THE NARRATIVE ARC
+        // 2. THE NARRATIVE ARC (Unchanged)
         let arcInstruction = "";
         let isFinalTurn = false;
 
@@ -68,43 +72,41 @@ exports.handler = async function(event, context) {
         ${isFinalTurn ? "(List 8 English vocabulary words used, separated by commas)" : "NONE"}
         `;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        // 3. THE UPGRADED CONNECTION ENGINE
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.5-flash",
+            // Keeping your safety overrides exactly as you had them
+            safetySettings: [
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+            ],
+            generationConfig: { maxOutputTokens: 1000, temperature: 0.5 }
+        });
 
         let attempts = 0;
         let rawAiText = "";
 
-        // 3. THE RETRY LOOP (Safety Net)
+        // The Retry Loop (Safety Net) remains active
         while (attempts < 3) {
             attempts++;
             try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ role: "user", parts: [{ text: promptText }] }],
-                        safetySettings: [
-                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                        ],
-                        generationConfig: { maxOutputTokens: 1000, temperature: 0.5 }
-                    })
-                });
-
-                const apiData = await response.json();
-                if (!response.ok) throw new Error(apiData.error?.message || "Google blocked it");
+                const result = await model.generateContent(promptText);
+                const response = await result.response;
+                rawAiText = response.text();
                 
-                rawAiText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                if (rawAiText) break;
+                if (rawAiText) break; // If we got text, escape the loop!
 
             } catch (error) {
+                console.error(`Attempt ${attempts} failed:`, error);
                 if (attempts >= 3) throw error;
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retrying
             }
         }
 
-        // 4. THE PLAIN TEXT EXTRACTOR
+        // 4. THE PLAIN TEXT EXTRACTOR (Unchanged)
         let finalStory = "They looked around, unsure of what to do next!";
         let finalOptions = ["Look carefully", "Wait a minute", "Try something else"];
         let finalVocab = [];

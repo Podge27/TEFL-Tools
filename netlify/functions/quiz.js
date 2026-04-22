@@ -1,14 +1,35 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 exports.handler = async function(event, context) {
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+    // 1. The Polite Doorway (CORS)
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json'
+    };
+
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+
+    // 2. The Empty Envelope Safety Net
+    let bodyData;
+    try {
+        bodyData = JSON.parse(event.body);
+    } catch (e) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'No data sent from the website.' }) };
     }
 
-    const { level, history } = JSON.parse(event.body);
+    // Give them default values just in case they are missing!
+    const level = bodyData.level || "B2";
+    const history = bodyData.history || "No story provided.";
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    // 3. The Strict JSON Rule
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash",
+        generationConfig: { responseMimeType: "application/json" } 
+    });
 
     const prompt = `
         You are an ESOL teacher evaluating Spanish students.
@@ -27,9 +48,11 @@ exports.handler = async function(event, context) {
 
     try {
         const result = await model.generateContent(prompt);
-        const cleanText = (await result.response).text().replace(/```json/g, '').replace(/```/g, '').trim();
-        return { statusCode: 200, body: cleanText };
+        // The cleaner regex
+        const cleanText = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        return { statusCode: 200, headers, body: cleanText };
     } catch (error) {
-        return { statusCode: 500, body: JSON.stringify({ error: 'Failed to generate questions' }) };
+        console.error("Quiz Generator Error:", error);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Failed to generate questions' }) };
     }
 };
