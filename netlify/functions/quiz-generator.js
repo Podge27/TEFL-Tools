@@ -1,32 +1,21 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const https = require('https');
 
 exports.handler = async function(event, context) {
-    // 1. The Polite Doorway (CORS)
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Content-Type': 'application/json'
-    };
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
 
-    if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-
-    // 2. The Empty Envelope Safety Net
     let inputData;
     try {
         inputData = JSON.parse(event.body);
     } catch (e) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid JSON body or empty request." }) };
+        return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }) };
     }
 
-    const { topic = "General English", level = "B2", type = "Grammar" } = inputData;
+    const { topic, level, type } = inputData;
     const API_KEY = process.env.GEMINI_API_KEY;
 
-    if (!API_KEY) {
-        return { statusCode: 500, headers, body: JSON.stringify({ error: "API Key is missing." }) };
-    }
-
-    // --- CEFR NUANCE (Unchanged) ---
+    // --- CEFR NUANCE ---
     let toneInstruction = "";
     switch (level) {
         case 'kids':
@@ -52,16 +41,15 @@ exports.handler = async function(event, context) {
             toneInstruction = "TARGET: Intermediate English Learners.";
     }
 
-    // --- SYSTEM PROMPT (Unchanged) ---
+    // --- SYSTEM PROMPT ---
     const systemPrompt = `
     You are an expert ESL/EFL Teacher creating a quiz for Spanish students.
     Create a ${type} quiz for level ${level} about: "${topic}".
-    Write in British English.
     
     INSTRUCTIONS: ${toneInstruction}
     
     JSON RULES:
-    1. Output ONLY valid JSON.
+    1. Output ONLY valid JSON. No Markdown, no backticks.
     2. "answer" must be the NUMBER index of the correct option (0, 1, 2, or 3).
     3. "questions" must have exactly 6 items.
     4. "title" must be DESCRIPTIVE and ACADEMIC (e.g. "Present Perfect vs Past Simple"). Do NOT use puns or "fun" titles.
@@ -83,25 +71,64 @@ exports.handler = async function(event, context) {
     }
     `;
 
-    // 3. THE UPGRADED CONNECTION ENGINE
-    try {
-        const genAI = new GoogleGenerativeAI(API_KEY);
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash", 
-            generationConfig: { 
-                responseMimeType: "application/json" // The strict JSON lock
-            } 
+    // --- CALL GEMINI (gemini-flash-latest) ---
+    const requestBody = JSON.stringify({
+        contents: [{ parts: [{ text: systemPrompt }] }]
+    });
+
+    const options = {
+        hostname: 'generativelanguage.googleapis.com',
+        // REVERTED TO YOUR SPECIFIC MODEL STRING
+        path: `/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(requestBody)
+        }
+    };
+
+    return new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+            let responseBody = '';
+            res.on('data', (chunk) => responseBody += chunk);
+            
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    try {
+                        const apiResponse = JSON.parse(responseBody);
+                        
+                        if (!apiResponse.candidates || apiResponse.candidates.length === 0) {
+                            return resolve({ statusCode: 500, body: JSON.stringify({ error: "Gemini replied but gave no text." }) });
+                        }
+
+                        let rawText = apiResponse.candidates[0].content.parts[0].text;
+                        rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+                        
+                        resolve({
+                            statusCode: 200,
+                            body: rawText
+                        });
+
+                    } catch (error) {
+                        resolve({
+                            statusCode: 500,
+                            body: JSON.stringify({ error: "Failed to parse Gemini response", details: error.message })
+                        });
+                    }
+                } else {
+                    resolve({
+                        statusCode: res.statusCode,
+                        body: JSON.stringify({ error: "Gemini API Error", details: responseBody })
+                    });
+                }
+            });
         });
 
-        const result = await model.generateContent(systemPrompt);
-        
-        // Final cleanup just in case
-        const cleanText = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-        
-        return { statusCode: 200, headers, body: cleanText };
+        req.on('error', (e) => {
+            resolve({ statusCode: 500, body: JSON.stringify({ error: "Network Error", details: e.message }) });
+        });
 
-    } catch (error) {
-        console.error("Quiz Generator Error:", error);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: "Failed to generate the quiz. Please try again." }) };
-    }
+        req.write(requestBody);
+        req.end();
+    });
 };

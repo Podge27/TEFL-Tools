@@ -9,23 +9,13 @@ exports.handler = async function(event, context) {
     };
 
     if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Method Not Allowed' };
 
-    // 2. The Empty Envelope Safety Net
-    let bodyData;
-    try {
-        bodyData = JSON.parse(event.body);
-    } catch (e) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: 'No data sent from the website.' }) };
-    }
-
-    // Give them default values just in case they are missing!
-    const level = bodyData.level || "B2";
-    const history = bodyData.history || "No story provided.";
+    const { level, history } = JSON.parse(event.body);
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     
-    // 3. The Strict JSON Rule
+    // 2. The Strict JSON Rule
     const model = genAI.getGenerativeModel({ 
         model: "gemini-2.5-flash",
         generationConfig: { responseMimeType: "application/json" } 
@@ -48,11 +38,10 @@ exports.handler = async function(event, context) {
 
     try {
         const result = await model.generateContent(prompt);
-        // The cleaner regex
+        // We can still keep your regex cleanup just in case, but it's much safer now!
         const cleanText = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         return { statusCode: 200, headers, body: cleanText };
     } catch (error) {
-        console.error("Quiz Generator Error:", error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'Failed to generate questions' }) };
     }
 };

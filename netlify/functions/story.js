@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const https = require('https');
 
 const characterTraits = {
     'Jimmy': 'brave but silly and a little bit clumsy',
@@ -22,12 +22,12 @@ exports.handler = async function(event, context) {
 
     try {
         const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) throw new Error("API Key is missing.");
+        if (!apiKey) throw new Error("API Key missing.");
 
         const data = JSON.parse(event.body);
         const { level, characters, setting, problem, teacherNotes, history, currentTurn } = data;
 
-        // 1. THE ESOL BRAIN (Unchanged)
+        // 1. THE ESOL BRAIN
         const levelRules = {
             starters: `LEVEL: Pre A1 Starters. GRAMMAR ALLOWED: Present simple, Present continuous, Can (ability), Have (got), There is/are. VOCAB THEMES TO USE: Animals, The body, Clothes, Colours, Family, Food, Home, School. NUMBERS: 1-20. FORBIDDEN: NEVER use past tense, future 'will', or comparative adjectives.`,
             movers: `LEVEL: A1 Movers. GRAMMAR ALLOWED: Past simple (regular/irregular), Comparative/Superlative adjectives, Must, Have (got) to, Could. VOCAB THEMES TO USE: Health, Weather, Town/City, Places & Directions, Transport, Sports. NUMBERS: 21-100 and Ordinals 1st-20th. FORBIDDEN: NEVER use Present Perfect or complex 'If' conditionals.`,
@@ -37,7 +37,7 @@ exports.handler = async function(event, context) {
         const currentRules = levelRules[level?.toLowerCase()] || levelRules.starters;
         const chars = characters.map(name => `${name} (${characterTraits[name] || 'a friend'})`).join(' and ');
 
-        // 2. THE NARRATIVE ARC (Unchanged)
+        // 2. THE NARRATIVE ARC
         let arcInstruction = "";
         let isFinalTurn = false;
 
@@ -72,11 +72,9 @@ exports.handler = async function(event, context) {
         ${isFinalTurn ? "(List 8 English vocabulary words used, separated by commas)" : "NONE"}
         `;
 
-        // 3. THE UPGRADED CONNECTION ENGINE
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
-            // Keeping your safety overrides exactly as you had them
+        // 3. THE HTTPS RETRY LOOP
+        const requestBody = JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: promptText }] }],
             safetySettings: [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                 { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -86,29 +84,52 @@ exports.handler = async function(event, context) {
             generationConfig: { maxOutputTokens: 1000, temperature: 0.5 }
         });
 
+        const options = {
+            hostname: 'generativelanguage.googleapis.com',
+            path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(requestBody)
+            }
+        };
+
         let attempts = 0;
         let rawAiText = "";
 
-        // The Retry Loop (Safety Net) remains active
         while (attempts < 3) {
             attempts++;
             try {
-                const result = await model.generateContent(promptText);
-                const response = await result.response;
-                rawAiText = response.text();
-                
-                if (rawAiText) break; // If we got text, escape the loop!
+                const apiData = await new Promise((resolve, reject) => {
+                    const req = https.request(options, (res) => {
+                        let body = '';
+                        res.on('data', chunk => body += chunk);
+                        res.on('end', () => {
+                            if (res.statusCode >= 200 && res.statusCode < 300) {
+                                try { resolve(JSON.parse(body)); } 
+                                catch (e) { reject(e); }
+                            } else {
+                                reject(new Error(`API Error: ${res.statusCode}`));
+                            }
+                        });
+                    });
+                    req.on('error', reject);
+                    req.write(requestBody);
+                    req.end();
+                });
+
+                rawAiText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                if (rawAiText) break;
 
             } catch (error) {
-                console.error(`Attempt ${attempts} failed:`, error);
                 if (attempts >= 3) throw error;
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retrying
+                await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
 
-        // 4. THE PLAIN TEXT EXTRACTOR (Unchanged)
-        let finalStory = "They looked around, unsure of what to do next!";
-        let finalOptions = ["Look carefully", "Wait a minute", "Try something else"];
+        // 4. THE PLAIN TEXT EXTRACTOR (Hardcoded defaults removed)
+        let finalStory = ""; 
+        let finalOptions = []; 
         let finalVocab = [];
 
         const storyMatch = rawAiText.match(/\[STORY\]([\s\S]*?)\[OPTIONS\]/i);
@@ -130,8 +151,8 @@ exports.handler = async function(event, context) {
         }
 
         const safeData = {
-            story: finalStory,
-            options: isFinalTurn ? [] : finalOptions,
+            story: finalStory || "Oh no, the story paused! Let's try to continue.",
+            options: isFinalTurn ? [] : (finalOptions.length > 0 ? finalOptions : ["Try continuing the story"]),
             vocabulary: finalVocab
         };
 
@@ -142,7 +163,7 @@ exports.handler = async function(event, context) {
             statusCode: 200, 
             headers, 
             body: JSON.stringify({ 
-                story: `The connection dropped! Let's try that again. (Error: ${error.message})`, 
+                story: `The connection dropped! Let's try that again.`, 
                 options: ["Try again"], 
                 vocabulary: [] 
             }) 
