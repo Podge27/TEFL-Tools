@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global.css">
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1rem; }
+        
+        #app-container { @apply w-full max-w-5xl bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[85vh] flex flex-col relative mt-6 mb-12 border border-slate-100 p-8; }
+
+        .btn-action { @apply px-8 py-4 font-bold rounded-xl shadow-lg transition transform hover:scale-[1.02] active:scale-95 text-white bg-indigo-600 hover:bg-indigo-700 text-xl cursor-pointer text-center w-full; }
+        .btn-secondary { @apply px-4 py-2 font-bold rounded-lg shadow-sm transition transform hover:scale-[1.02] active:scale-95 text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 text-sm cursor-pointer; }
+
+        .input-field { @apply w-full p-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition text-lg disabled:opacity-50 disabled:cursor-not-allowed; }
+        .label-text { @apply block text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6; }
+
+        /* Whited-out text mechanics */
+        .question-tile { @apply w-full p-8 mb-4 rounded-xl border-2 text-center cursor-pointer transition-all text-2xl font-bold select-none; }
+        .question-hidden { @apply bg-slate-50 text-transparent border-dashed border-slate-300 hover:bg-slate-100 hover:border-slate-400; }
+        .question-revealed { @apply bg-white text-indigo-900 border-solid border-indigo-500 shadow-md; }
+    </style>
+</head>
+<body>
+
+    <div class="absolute top-6 left-6 z-50">
+        <a href="index.html" class="btn-back">← Exit Tool</a>
+    </div>
+
+    <div id="app-container">
+        
+        <div id="setup-screen" class="flex-1 flex flex-col max-w-3xl mx-auto w-full">
+            <h2 class="text-3xl font-black text-slate-800 mb-2 text-center">Generator Setup</h2>
+            <p class="text-slate-500 text-center mb-8">Define your parameters or upload an existing file.</p>
+            
+            <div class="bg-white p-8 rounded-2xl border-2 border-slate-100 shadow-sm mb-8">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="label-text mt-0">Age Group</label>
+                        <select id="input-age" class="input-field" onchange="updateLevelOptions()">
+                            <option value="" disabled selected>Select age first...</option>
+                            <option value="Kids">Kids</option>
+                            <option value="Teenagers">Teenagers</option>
+                            <option value="Adults">Adults</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="label-text mt-0">Level</label>
+                        <select id="input-level" class="input-field" disabled>
+                            <option value="">Waiting for age...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label class="label-text">Topic</label>
+                <input type="text" id="input-topic" class="input-field" placeholder="e.g. Travel, Technology, Food...">
+
+                <label class="label-text">Specific Grammar & Vocabulary</label>
+                <textarea id="input-grammar" class="input-field resize-y" rows="4" placeholder="e.g. Present perfect, phrasal verbs related to travel, idioms..."></textarea>
+                
+                <div class="flex gap-6 items-end mt-8">
+                    <div class="w-32">
+                        <label class="label-text mt-0">Quantity</label>
+                        <input type="number" id="input-count" class="input-field mb-0" value="5" min="1" max="20">
+                    </div>
+                    <div class="flex-1">
+                        <button onclick="generateQuestions()" class="btn-action">Generate Questions →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <p class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-3">Or use existing questions</p>
+                <label class="btn-secondary inline-block cursor-pointer px-6 py-3">
+                    <span>📤 Upload CSV File</span>
+                    <input type="file" accept=".csv" class="hidden" onchange="importCSV(event)">
+                </label>
+            </div>
+        </div>
+
+        <div id="classroom-screen" class="hidden flex-1 flex flex-col w-full">
+            
+            <div class="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <button onclick="showSetupScreen()" class="btn-secondary border-none bg-slate-100 hover:bg-slate-200">← Back to Setup</button>
+                
+                <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                    <span id="timer-display" class="font-mono text-2xl font-black text-slate-700 w-20 text-center">00:00</span>
+                    
+                    <button id="timer-play-btn" onclick="toggleTimer()" class="btn-secondary bg-indigo-50 text-indigo-700 border-indigo-200 m-0 py-1 w-10">▶</button>
+                    <button onclick="resetTimer()" class="btn-secondary m-0 py-1 px-2 text-slate-500">↺</button>
+                    
+                    <div class="flex items-center gap-1 border-l border-slate-300 pl-3 ml-1">
+                        <button onclick="setTimer(2)" class="btn-secondary m-0 py-1 px-2">2m</button>
+                        <button onclick="setTimer(3)" class="btn-secondary m-0 py-1 px-2">3m</button>
+                        <button onclick="setTimer(4)" class="btn-secondary m-0 py-1 px-2">4m</button>
+                        
+                        <div class="flex items-center ml-2 bg-white border-2 border-slate-200 rounded-lg overflow-hidden">
+                            <input type="number" id="custom-time-input" class="w-14 p-1 text-sm outline-none text-center" placeholder="Min" min="1">
+                            <button onclick="setCustomTimer()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-2 py-1 text-xs border-l border-slate-200">Set</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-100 px-3 py-2 rounded-lg font-bold text-slate-600 text-xs uppercase tracking-wider">
+                        <input type="checkbox" id="preview-toggle" onchange="renderQuestions()" class="w-4 h-4 text-indigo-600">
+                        Preview All
+                    </label>
+                    <button onclick="exportCSV()" class="btn-secondary m-0">📥 Save CSV</button>
+                </div>
+            </div>
+
+            <div id="questions-container" class="space-y-4 pb-12 flex-1 overflow-y-auto">
+                </div>
+            
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. THE DATA ---
+        let currentQuestions = [];
+
+        // --- 2. SCREEN NAVIGATION ---
+        function showSetupScreen() {
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('classroom-screen').classList.add('hidden');
+            if (isTimerRunning) toggleTimer(); // Pause timer if leaving classroom
+        }
+
+        function showClassroomScreen() {
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('classroom-screen').classList.remove('hidden');
+            document.getElementById('preview-toggle').checked = false; 
+            renderQuestions();
+        }
+
+        // --- 3. DROPDOWN LOGIC ---
+        function updateLevelOptions() {
+            const ageSelect = document.getElementById('input-age');
+            const levelSelect = document.getElementById('input-level');
+            
+            // Clear out the old options
+            levelSelect.innerHTML = ''; 
+            
+            // Unlock the level box now that age is chosen
+            levelSelect.disabled = false;
+
+            let options = [];
+            
+            // Check what age was picked and build the list
+            if (ageSelect.value === 'Kids') {
+                options = ['Starters', 'Movers', 'Flyers'];
+            } else if (ageSelect.value === 'Teenagers' || ageSelect.value === 'Adults') {
+                options = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+            }
+
+            // Put the new list into the level box
+            options.forEach(opt => {
+                const newOption = document.createElement('option');
+                newOption.value = opt;
+                newOption.innerText = opt;
+                levelSelect.appendChild(newOption);
+            });
+        }
+
+        // --- 4. THE BRAIN ---
+// --- 4. THE REAL BRAIN CONNECTION ---
+        async function generateQuestions() {
+            // 1. Gather all the inputs from the setup screen
+            const levelSelect = document.getElementById('input-level');
+            const ageSelect = document.getElementById('input-age');
+            const topic = document.getElementById('input-topic').value || "General Conversation";
+            const grammarVocab = document.getElementById('input-grammar').value || "None";
+            const quantity = document.getElementById('input-count').value;
+
+            // Make sure they actually picked an age and level before continuing
+            if (!ageSelect.value || !levelSelect.value) {
+                return alert("Please select an Age Group and Level first!");
+            }
+
+            // 2. Change the button to show it's loading
+            const generateBtn = document.querySelector('.btn-action');
+            const originalBtnText = generateBtn.innerText;
+            generateBtn.innerText = "Generating... 🧠";
+            generateBtn.disabled = true; // Lock the button
+            generateBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            try {
+                // 3. Send the data to your Netlify function
+                const response = await fetch('/.netlify/functions/generate_discussion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        level: levelSelect.value,
+                        ageGroup: ageSelect.value,
+                        topic: topic,
+                        grammarVocab: grammarVocab,
+                        quantity: parseInt(quantity)
+                    })
+                });
+
+                if (!response.ok) throw new Error("Server responded with an error.");
+
+                // 4. Unpack the JSON response from the AI
+                const aiData = await response.json();
+
+                // 5. Check if we got the 'questions' array back properly
+                if (aiData.questions && Array.isArray(aiData.questions)) {
+                    currentQuestions = aiData.questions;
+                    showClassroomScreen(); // Jump to the classroom view!
+                } else {
+                    throw new Error("AI did not return the expected list format.");
+                }
+
+            } catch (error) {
+                console.error("Generation Error:", error);
+                alert("Oops! There was a problem generating the questions. Check the developer console for details.");
+            } finally {
+                // 6. Reset the button back to normal, win or lose
+                generateBtn.innerText = originalBtnText;
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        // --- 5. THE DISPLAY ---
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            
+            const isPreview = document.getElementById('preview-toggle').checked;
+
+            currentQuestions.forEach(qText => {
+                const box = document.createElement('div');
+                box.className = isPreview ? 'question-tile question-revealed' : 'question-tile question-hidden';
+                box.innerText = qText;
+                
+                box.onclick = () => {
+                    box.classList.remove('question-hidden');
+                    box.classList.add('question-revealed');
+                };
+                
+                container.appendChild(box);
+            });
+        }
+
+        // --- 6. THE TIMER ---
+        let timerInterval;
+        let remainingSeconds = 0;
+        let originalSeconds = 0; 
+        let isTimerRunning = false;
+
+        function setTimer(minutes) {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            remainingSeconds = minutes * 60;
+            originalSeconds = remainingSeconds; // Remember this for the reset button
+            updateTimerDisplay();
+            document.getElementById('timer-play-btn').innerText = "▶";
+        }
+
+        function setCustomTimer() {
+            const mins = document.getElementById('custom-time-input').value;
+            if(mins && !isNaN(mins)) {
+                setTimer(parseFloat(mins));
+            }
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-play-btn');
+            
+            if (isTimerRunning) {
+                // If it's running, pause it and change the symbol to Play
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.innerText = "▶";
+            } else {
+                // If it's paused, start it and change the symbol to Pause
+                if(remainingSeconds <= 0) return;
+                isTimerRunning = true;
+                btn.innerText = "⏸";
+                
+                timerInterval = setInterval(() => {
+                    remainingSeconds--;
+                    updateTimerDisplay();
+                    
+                    if (remainingSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        btn.innerText = "▶";
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            remainingSeconds = originalSeconds; // Go back to the starting time
+            updateTimerDisplay();
+            document.getElementById('timer-play-btn').innerText = "▶";
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(remainingSeconds / 60);
+            const s = remainingSeconds % 60;
+            document.getElementById('timer-display').innerText = 
+                `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        // --- 7. SAVING & LOADING (CSV) ---
+        function exportCSV() {
+            if (currentQuestions.length === 0) return alert("No questions to save.");
+            const csvContent = "Question\n" + currentQuestions.map(q => `"${q}"`).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "conversation_questions.csv";
+            link.click();
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1); 
+                currentQuestions = rows.map(row => row.replace(/^"|"$/g, '').trim()).filter(row => row !== "");
+                showClassroomScreen();
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
