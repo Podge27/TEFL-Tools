@@ -148,7 +148,8 @@
             // New memory slots for the active question
             activeButtonId: null,
             activePoints: 0,
-            activeQuestion: null
+            activeQuestion: null,
+            askedQuestionIds: []
         };
 
         const adjectives = ['Red', 'Blue', 'Flying', 'Electric', 'Brave', 'Clever', 'Mighty', 'Sneaky', 'Golden'];
@@ -307,24 +308,37 @@
             gameState.activePoints = points;
             
             const btn = document.getElementById(btnId);
-            btn.innerHTML = "⏳"; // Show a tiny hourglass while fetching
+            btn.innerHTML = "⏳"; 
 
-            // Fetch all questions matching level and category
+            // Fetch all questions as normal
             const { data, error } = await supabaseClient
                 .from('jeopardy_questions')
                 .select('*')
                 .eq('level', gameState.level)
                 .eq('category', category);
 
-            btn.innerHTML = points; // Put points back
+            btn.innerHTML = points; 
 
             if (error || !data || data.length === 0) {
-                alert("No questions found for this category and level. Did you add them to Supabase?");
+                alert("No questions found for this category and level.");
                 return;
             }
 
-            // Pick a random question from the list
-            const randomQuestion = data[Math.floor(Math.random() * data.length)];
+            // NEW: Remove any questions that are already in our discard pile
+            const availableQuestions = data.filter(q => !gameState.askedQuestionIds.includes(q.id));
+
+            // NEW: Check if we have run out
+            if (availableQuestions.length === 0) {
+                alert("You have run out of new questions for this category!");
+                return;
+            }
+
+            // Pick from the remaining unasked questions
+            const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+            
+            // NEW: Add this specific question's ID to the discard pile so it won't be picked again
+            gameState.askedQuestionIds.push(randomQuestion.id);
+            
             gameState.activeQuestion = randomQuestion;
 
             openModal(category, points, randomQuestion);

@@ -253,6 +253,11 @@
             startActivity: function(isRandom = true) {
                 if (isRandom) this.state.currentIdx = Math.floor(Math.random() * this.data.length);
                 const item = this.data[this.state.currentIdx];
+
+                // --- THE NEW SHUFFLE TRICK ---
+                // This flips a coin to randomly mix up the order of the words in the bank
+                item.word_bank.sort(() => Math.random() - 0.5);
+                // -----------------------------
                 
                 // Reset State
                 this.state.selectedTitle = null;
@@ -314,6 +319,8 @@
                     document.getElementById('score-tally').classList.add('hidden');
                 }
             },
+
+
 
             renderWordBank: function() {
                 const item = this.data[this.state.currentIdx];

@@ -39,9 +39,9 @@ exports.handler = async function(event, context) {
     - Number of questions: ${QUANTITY}
     
     INSTRUCTIONS:
-    1. Create exactly ${QUANTITY} engaging, age-appropriate conversation questions.
-    2. The language and complexity must strictly match the ${LEVEL} level.
-    3. Ensure the questions feel natural, but avoid phrasing that translates too perfectly from Spanish. Force the students to use distinctly English structures to answer.
+    1. Create exactly ${QUANTITY} engaging, age-appropriate conversation questions. 
+    2. The language and complexity must strictly match the ${LEVEL} level. 
+    3. Ensure the questions feel natural. Keep it simple, providing no more than 1 question per item with the occasional 'why?' as a follow up. 
     4. Incorporate the requested grammar/vocabulary naturally into the questions if provided.
     
     JSON OUTPUT RULES:
