@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story Cloze</title>
+    
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <style type="text/tailwindcss">
+        body { background-color: #f0f4f8; }
+        #app-container { @apply w-full max-w-4xl mx-auto mt-8 bg-white shadow-xl rounded-xl border border-slate-200 flex flex-col overflow-hidden; min-height: 80vh; }
+        .text-content { font-size: 1.15rem; line-height: 2.2; color: #334155; white-space: pre-wrap; }
+        .classroom-gap { @apply inline-block font-bold cursor-pointer border-b-4 border-slate-300 px-2 mx-1 hover:border-slate-400 bg-slate-100 rounded-t transition-all select-none text-transparent; }
+        .classroom-gap.revealed { @apply text-indigo-900 border-indigo-500 bg-indigo-50 rounded px-2 border-b-2; }
+        .btn-action { @apply px-4 py-2 font-bold text-white rounded-lg shadow hover:opacity-90 transition; }
+    </style>
+</head>
+<body>
+
+    <div class="brand-center p-4">
+        <div id="app-container">
+            
+            <div class="bg-white border-b border-slate-100 p-4 md:p-6 flex justify-between items-center z-10 shadow-sm">
+                <a href="index.html" class="btn-back">← Back to Tools</a>
+                <h1 class="text-2xl font-extrabold text-slate-900">Interactive <span class="text-indigo-600">Cloze</span></h1>
+                
+                <div id="story-controls" class="hidden flex gap-3">
+                    <button onclick="hideAll()" class="btn-action bg-slate-500">Hide All</button>
+                    <button onclick="showAll()" class="btn-action bg-indigo-500">Show All</button>
+                    <button onclick="showSetup()" class="text-slate-400 font-bold hover:text-slate-600 px-2">Menu</button>
+                </div>
+            </div>
+
+            <!-- SETUP MENU -->
+            <div id="setup-area" class="flex-1 p-6 md:p-10 overflow-y-auto bg-slate-50">
+                <div class="max-w-2xl mx-auto space-y-6">
+                    
+                    <!-- Section 1: File Upload -->
+                    <div class="bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm text-left">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Option 1: Upload a Text File</h3>
+                        <p class="text-sm text-slate-500 mb-5">Instantly load a saved <b>.txt</b> file. The activity will start automatically.</p>
+                        <input type="file" id="file-uploader" accept=".txt" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition cursor-pointer">
+                    </div>
+
+                    <!-- Section 2: Google Sheets -->
+                    <div class="bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm text-left">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Option 2: Connect a Google Sheet</h3>
+                        <p class="text-sm text-slate-500 mb-5">Link a published Google Sheet (.csv) to load your personal dropdown menu.</p>
+                        
+                        <div id="link-input-group" class="flex flex-col md:flex-row gap-3 mb-2">
+                            <input type="text" id="sheet-url-input" placeholder="Paste your Google Sheet link here..." class="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                            <button onclick="connectSheet()" class="btn-action bg-indigo-600 w-full md:w-auto">Connect</button>
+                        </div>
+
+                        <div id="dropdown-group" class="hidden mt-4">
+                            <select id="story-dropdown" class="w-full p-4 mb-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-lg font-medium text-slate-700 bg-slate-50 cursor-pointer">
+                            </select>
+                            <button onclick="loadSelectedStory()" class="btn-action bg-green-600 text-lg px-8 py-3 w-full shadow hover:scale-105">
+                                Start Activity ✨
+                            </button>
+                            <div class="text-right mt-3">
+                                <button onclick="disconnectSheet()" class="text-xs font-bold text-slate-400 hover:text-red-500 transition">Disconnect & clear link</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Quick Paste -->
+                    <div class="bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm text-left">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Option 3: Quick Paste</h3>
+                        <p class="text-sm text-slate-500 mb-5">Paste or type your text directly. Use [brackets] to hide words.</p>
+                        <textarea id="manual-text" rows="4" class="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700 mb-4" placeholder="Example: Yesterday, I went to the [beach]..."></textarea>
+                        <div class="text-right">
+                            <button onclick="createStory(document.getElementById('manual-text').value)" class="btn-action bg-slate-700 text-base px-6 py-2 w-full md:w-auto">
+                                Generate from Text
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- STORY BOARD -->
+            <div id="story-area" class="hidden flex-1 p-8 md:p-12 overflow-y-auto bg-white">
+                <h2 id="display-title" class="text-3xl font-black text-slate-800 mb-8 uppercase text-center hidden"></h2>
+                <div id="story-display" class="text-content max-w-3xl mx-auto pb-10"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPT (No changes to logic, just styling layout above) -->
+    <script>
+        let storiesDatabase = {};
+
+        // 1. File Upload
+        document.getElementById('file-uploader').addEventListener('change', function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('display-title').classList.add('hidden'); 
+                    createStory(e.target.result);
+                    event.target.value = ""; 
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // 2. Google Sheets
+        window.onload = function() {
+            let savedUrl = localStorage.getItem('teacherClozeSheetUrl');
+            if (savedUrl) {
+                document.getElementById('sheet-url-input').value = savedUrl;
+                fetchSheetData(savedUrl);
+            }
+        };
+
+        function connectSheet() {
+            let url = document.getElementById('sheet-url-input').value;
+            if (!url) return;
+            localStorage.setItem('teacherClozeSheetUrl', url);
+            fetchSheetData(url);
+        }
+
+        function disconnectSheet() {
+            localStorage.removeItem('teacherClozeSheetUrl');
+            document.getElementById('sheet-url-input').value = "";
+            document.getElementById('dropdown-group').classList.add('hidden');
+            document.getElementById('link-input-group').classList.remove('hidden');
+            storiesDatabase = {};
+        }
+
+        function fetchSheetData(url) {
+            Papa.parse(url, {
+                download: true,
+                header: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    let dropdown = document.getElementById('story-dropdown');
+                    dropdown.innerHTML = '<option value="">-- Choose a story --</option>'; 
+                    
+                    results.data.forEach(function(row, index) {
+                        let title = row[0]; 
+                        let content = row[1]; 
+                        
+                        if (title && content) {
+                            storiesDatabase[index] = { title: title, text: content };
+                            let option = document.createElement('option');
+                            option.value = index;
+                            option.text = title;
+                            dropdown.appendChild(option);
+                        }
+                    });
+
+                    document.getElementById('link-input-group').classList.add('hidden');
+                    document.getElementById('dropdown-group').classList.remove('hidden');
+                },
+                error: function() {
+                    alert("Could not load the Google Sheet. Please check the link.");
+                    disconnectSheet();
+                }
+            });
+        }
+
+        function loadSelectedStory() {
+            let selectedId = document.getElementById('story-dropdown').value;
+            if (selectedId === "") return;
+            
+            let storyData = storiesDatabase[selectedId];
+            
+            let titleEl = document.getElementById('display-title');
+            titleEl.innerText = storyData.title;
+            titleEl.classList.remove('hidden');
+
+            createStory(storyData.text);
+        }
+
+        // 3. Core Activity Builder
+        function createStory(text) {
+            if (text.trim() === "") return;
+            
+            let formattedText = text.replace(/\[(.*?)\]/g, function(match, word) {
+                return `<span class="classroom-gap text-transparent" onclick="toggleWord(this)">${word}</span>`;
+            });
+            
+            formattedText = formattedText.replace(/\n/g, '<br><br>');
+            
+            document.getElementById('story-display').innerHTML = formattedText;
+            document.getElementById('setup-area').classList.add('hidden');
+            document.getElementById('story-area').classList.remove('hidden');
+            document.getElementById('story-controls').classList.remove('hidden');
+        }
+
+        function toggleWord(element) {
+            if (element.classList.contains('revealed')) {
+                element.classList.remove('revealed');
+                element.classList.add('text-transparent');
+            } else {
+                element.classList.add('revealed');
+                element.classList.remove('text-transparent');
+            }
+        }
+
+        function hideAll() {
+            let words = document.getElementById('story-display').getElementsByTagName('span');
+            for (let i = 0; i < words.length; i++) {
+                words[i].classList.remove('revealed');
+                words[i].classList.add('text-transparent');
+            }
+        }
+
+        function showAll() {
+            let words = document.getElementById('story-display').getElementsByTagName('span');
+            for (let i = 0; i < words.length; i++) {
+                words[i].classList.add('revealed');
+                words[i].classList.remove('text-transparent');
+            }
+        }
+
+        function showSetup() {
+            document.getElementById('setup-area').classList.remove('hidden');
+            document.getElementById('story-area').classList.add('hidden');
+            document.getElementById('story-controls').classList.add('hidden');
+            document.getElementById('display-title').classList.add('hidden');
+            
+            // Clear inputs for neatness
+            document.getElementById('story-dropdown').value = "";
+            document.getElementById('manual-text').value = "";
+            document.getElementById('file-uploader').value = "";
+        }
+    </script>
+</body>
+</html>
