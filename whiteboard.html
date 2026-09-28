@@ -135,7 +135,7 @@
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: #333; color: white; border: none; padding: 10px 20px;
             border-radius: 20px; cursor: pointer; font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100;
             transition: transform 0.1s;
         }
         #btn-extend-float:hover { transform: translateX(-50%) scale(1.05); }
@@ -187,6 +187,7 @@
                 <button class="tool-btn" onclick="redo()" title="Redo">↪</button>
                 <div class="sep"></div>
                 
+                <button class="tool-btn" onclick="setTool('select', this)">🖐 Move</button>
                 <button class="tool-btn active" id="btn-pen" onclick="setTool('pen', this)">🖊 Pen</button>
                 <button class="tool-btn" id="btn-marker" onclick="setTool('marker', this)">🖍 Marker</button>
                 <button class="tool-btn" onclick="setTool('rubber', this)">⬜ Rubber</button>
@@ -261,8 +262,9 @@
 
             <div class="canvas-frame">
                 <canvas id="c"></canvas>
-                <button id="btn-extend-float" onclick="extendPage()">⬇ Extend Page</button>
+                
             </div>
+            <button id="btn-extend-float" onclick="extendPage()">⬇ Extend Page</button>
         </div>
     </div>
 
@@ -317,7 +319,7 @@
             canvas.on('object:modified', onCanvasChange);
             canvas.on('object:added', (e) => { if(!isHistoryProcessing && !e.target.isCurtain) onCanvasChange(); });
 
-            const saved = localStorage.getItem('proWb_data');
+            const saved = sessionStorage.getItem('proWb_data');
             
             if (saved) { 
                 const data = JSON.parse(saved);
@@ -330,7 +332,7 @@
                 }
                 loadPage(0);
             } else { 
-                wbPages = [JSON.stringify(canvas)]; 
+                wbPages = [JSON.stringify(canvas.toJSON(['name']))]; 
                 wbBackgrounds = ['blank'];
                 wbThumbnails = [null];
                 saveHistory(); 
@@ -463,7 +465,7 @@
             resizeCanvas(); // Reset size
             canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
             
-            wbPages.push(JSON.stringify(canvas));
+            wbPages.push(JSON.stringify(canvas.toJSON(['name'])));
             wbBackgrounds.push('blank');
             wbThumbnails.push(null); // No thumbnail yet
             
@@ -482,7 +484,7 @@
         }
 
         function saveCurrentState() {
-            wbPages[currentPageIndex] = JSON.stringify(canvas);
+            wbPages[currentPageIndex] = JSON.stringify(canvas.toJSON(['name']));
             saveToStorage();
         }
 
@@ -492,7 +494,7 @@
                 bgs: wbBackgrounds,
                 thumbs: wbThumbnails 
             };
-            localStorage.setItem('proWb_data', JSON.stringify(data));
+            sessionStorage.setItem('proWb_data', JSON.stringify(data));
         }
 
         function prevPage() {
@@ -564,9 +566,12 @@
         }
 
         function addShape(type) {
-            let shape; const opts = { left: 150, top: 150, fill: 'transparent', stroke: currentColor, strokeWidth: 3 };
+            const center = canvas.getVpCenter();
+            let shape; 
+            const opts = { left: center.x, top: center.y, originX: 'center', originY: 'center', fill: 'transparent', stroke: currentColor, strokeWidth: 3 };
+            
             switch(type) {
-                case 'line': shape = new fabric.Line([50, 100, 200, 100], { ...opts, fill: currentColor }); break;
+                case 'line': shape = new fabric.Line([-75, 0, 75, 0], { ...opts, fill: currentColor }); break;
                 case 'rect': shape = new fabric.Rect({ ...opts, width: 100, height: 100 }); break;
                 case 'circle': shape = new fabric.Circle({ ...opts, radius: 50 }); break;
                 case 'triangle': shape = new fabric.Triangle({ ...opts, width: 100, height: 100 }); break;
@@ -611,15 +616,28 @@
         function flipObject(d) { const o = canvas.getActiveObject(); if(!o) return; d==='h'?o.toggle('flipX'):o.toggle('flipY'); canvas.renderAll(); saveHistory(); }
         function groupObjects() { const o = canvas.getActiveObject(); if(o && o.type==='activeSelection') { o.toGroup(); canvas.requestRenderAll(); saveHistory(); } }
         function ungroupObjects() { const o = canvas.getActiveObject(); if(o && o.type==='group') { o.toActiveSelection(); canvas.requestRenderAll(); saveHistory(); } }
+        
         function toggleCurtain() { 
-            const cur = canvas.getObjects().find(o => o.isCurtain);
-            if(cur) { canvas.remove(cur); document.getElementById('btn-curtain').classList.remove('active'); }
-            else { const c = new fabric.Rect({left:0,top:0,width:canvas.getWidth(),height:canvas.getHeight(),fill:'rgba(100,100,100,0.95)',selectable:true,hasControls:false,isCurtain:true}); canvas.add(c); canvas.setActiveObject(c); setTool('select'); document.getElementById('btn-curtain').classList.add('active'); }
+            const cur = canvas.getObjects().find(o => o.name === 'curtain');
+            if(cur) { 
+                canvas.remove(cur); 
+                document.getElementById('btn-curtain').classList.remove('active'); 
+            } else { 
+                const c = new fabric.Rect({
+                    left: 0, top: 0, 
+                    width: canvas.getWidth(), height: canvas.getHeight(),
+                    fill: '#646464', 
+                    selectable: true, hasControls: false, 
+                    name: 'curtain' 
+                }); 
+                canvas.add(c); canvas.setActiveObject(c); setTool('select'); 
+                document.getElementById('btn-curtain').classList.add('active'); 
+            }
         }
 
         function undo() { if (historyStep > 0) { isHistoryProcessing = true; historyStep--; canvas.loadFromJSON(history[historyStep], () => { canvas.renderAll(); isHistoryProcessing = false; applyToolSettings(); }); }}
         function redo() { if (historyStep < history.length - 1) { isHistoryProcessing = true; historyStep++; canvas.loadFromJSON(history[historyStep], () => { canvas.renderAll(); isHistoryProcessing = false; applyToolSettings(); }); }}
-        function saveHistory() { if (isHistoryProcessing) return; if (historyStep < history.length - 1) history = history.slice(0, historyStep + 1); history.push(JSON.stringify(canvas)); historyStep++; }
+        function saveHistory() { if (isHistoryProcessing) return; if (historyStep < history.length - 1) history = history.slice(0, historyStep + 1); history.push(JSON.stringify(canvas.toJSON(['name']))); historyStep++; }
         function clearPage() { canvas.clear(); setPaper(wbBackgrounds[currentPageIndex]); saveHistory(); }
         function updateUI() { document.getElementById('page-indicator').innerText = `${currentPageIndex + 1} / ${wbPages.length}`; document.getElementById('btn-curtain').classList.remove('active'); }
 
@@ -631,17 +649,23 @@
             a.download = name + ".json"; document.body.appendChild(a); a.click(); a.remove();
         }
         function triggerLoad() { document.getElementById('file-upload').click(); }
+        
         function loadBackup(input) {
             const f = input.files[0]; if(!f) return;
             const r = new FileReader();
             r.onload = (e) => {
                 try {
                     const d = JSON.parse(e.target.result);
-                    wbPages = d.pages || d; wbBackgrounds = d.bgs || new Array(wbPages.length).fill('blank'); wbThumbnails = d.thumbs || new Array(wbPages.length).fill(null);
+                    wbPages = d.pages || d; 
+                    wbBackgrounds = d.bgs || new Array(wbPages.length).fill('blank'); 
+                    wbThumbnails = d.thumbs || new Array(wbPages.length).fill(null);
                     currentPageIndex = 0; loadPage(0); renderSidebar(); alert("Loaded!");
                 } catch(err) { alert("Error loading."); }
+                
+                input.value = '';
             }; r.readAsText(f);
         }
+        
         async function exportPDF() {
             saveCurrentState(); const { jsPDF } = window.jspdf; const pdf = new jsPDF('l', 'px', [canvas.width, canvas.height]);
             const tC = document.createElement('canvas'); const hF = new fabric.Canvas(tC);

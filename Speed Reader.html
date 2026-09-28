@@ -161,11 +161,15 @@
                     <button onclick="stopReader()" class="btn-secondary">Edit</button>
                 </div>
 
-                <div class="flex flex-col items-center order-1 md:order-2">
+                <div class="flex flex-col items-center order-1 md:order-2 w-full">
                     <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                         Speed: <span id="wpm-display" class="text-cyan-600">300</span> WPM
                     </label>
-                    <input type="range" id="speed-slider" min="60" max="1000" step="10" value="300">
+                    <div class="flex items-center gap-2 w-full">
+                        <button id="decrease-speed" class="btn-secondary px-4 py-2 text-xl font-black rounded-lg shadow-sm">-</button>
+                        <input type="range" id="speed-slider" min="60" max="1000" step="10" value="300" class="flex-grow">
+                        <button id="increase-speed" class="btn-secondary px-4 py-2 text-xl font-black rounded-lg shadow-sm">+</button>
+                    </div>
                 </div>
 
                 <div class="flex justify-center md:justify-end gap-4 order-3 text-sm">
@@ -324,6 +328,26 @@
                 toggleBtn.classList.add('bg-cyan-500');
                 clearTimeout(timer);
             }
+        });
+
+        // Grab the new buttons from the HTML
+        const decreaseBtn = document.getElementById('decrease-speed');
+        const increaseBtn = document.getElementById('increase-speed');
+
+        // When the minus button is clicked...
+        decreaseBtn.addEventListener('click', () => {
+            // Take the current speed, subtract 10, but don't let it go below 60
+            wpm = Math.max(60, wpm - 10);
+            speedSlider.value = wpm;       // Move the visual slider 
+            wpmDisplay.innerText = wpm;    // Update the text number
+        });
+
+        // When the plus button is clicked...
+        increaseBtn.addEventListener('click', () => {
+            // Take the current speed, add 10, but don't let it go above 1000
+            wpm = Math.min(1000, wpm + 10);
+            speedSlider.value = wpm;       // Move the visual slider
+            wpmDisplay.innerText = wpm;    // Update the text number
         });
 
         // 7. Settings Listeners

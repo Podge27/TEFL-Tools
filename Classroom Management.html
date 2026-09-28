@@ -250,6 +250,10 @@
                     <select id="saved-classes-select" onchange="window.loadSelectedClass()" class="text-sm border-2 border-indigo-100 rounded-lg px-2 py-1 text-indigo-600 font-bold focus:outline-none focus:border-indigo-500 cursor-pointer">
                         <option value="">Select a class...</option>
                     </select>
+                    <!-- NEW: Delete from Dropdown Button -->
+                    <button onclick="window.deleteSelectedClass()" class="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition" title="Delete selected class from memory">
+                        🗑️
+                    </button>
                 </div>
             </div>
 
@@ -297,9 +301,9 @@
                         -1 All
                     </button>
 
-                    <p id="current-pick-label" class="text-2xl font-semibold text-gray-800 hidden sm:block ml-2 border-l-2 border-gray-300 pl-4">
-                        Ready!
-                    </p>
+                    <!-- UPDATED: Picked student label, changed to flex to hold buttons -->
+                    <div id="current-pick-label" class="hidden sm:flex items-center ml-2 border-l-2 border-gray-300 pl-4 gap-2 text-xl font-semibold text-gray-800">
+                    </div>
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
@@ -312,9 +316,10 @@
                         &#128101; Teams!
                     </button>
                     
-                    <button id="clear-button" onclick="window.clearAllPoints()" disabled
+                    <!-- UPDATED: Now Reset Class button -->
+                    <button id="clear-button" onclick="window.resetClass()" disabled
                             class="px-4 py-2 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition duration-150 disabled:opacity-50">
-                        Clear Points
+                        Reset Class
                     </button>
                 </div>
             </div>
@@ -403,10 +408,11 @@
         let cardWidgets = {};
         let pickedStudents = [];
         let currentFilename = ""; 
-        let toneReady = false; // Initialize Tone flag at the top scope
+        let groupHistory = {}; // NEW: Stores who has worked with whom
+        let toneReady = false; 
         const STORAGE_PREFIX = "cls_mgr_"; 
         
-        // --- UI References (Defined early so they are available) ---
+        // --- UI References ---
         const ui = {
             grid: document.getElementById('student-grid'),
             classNameLabel: document.getElementById('class-name-label'),
@@ -449,6 +455,7 @@
             if (!currentFilename) return;
             const data = {
                 students: students,
+                history: groupHistory, // NEW: Save team history
                 timestamp: Date.now()
             };
             localStorage.setItem(STORAGE_PREFIX + currentFilename, JSON.stringify(data));
@@ -488,16 +495,43 @@
                     const shuffledPaths = [...AVATAR_POOL].sort(() => Math.random() - 0.5);
                     let pathIndex = 0;
                     parsed.students.forEach(student => {
-                    student.avatarPath = shuffledPaths[pathIndex++ % shuffledPaths.length];
+                        student.avatarPath = shuffledPaths[pathIndex++ % shuffledPaths.length];
                     });
                     students = parsed.students;
+                    groupHistory = parsed.history || {}; // NEW: Load history
                     currentFilename = filename;
                     ui.classNameLabel.textContent = `${currentFilename}`;
                     pickedStudents = [];
+                    ui.currentPickLabel.classList.add('hidden'); // Clear pick label
                     drawStudents();
                     showToast(`Resumed ${filename}!`, "success");
                 } catch (e) {
                     console.error("Save corrupted", e);
+                }
+            }
+        };
+
+        // NEW: Delete from Dropdown Button function
+        window.deleteSelectedClass = function() {
+            const select = document.getElementById('saved-classes-select');
+            const filename = select.value;
+            if (!filename) {
+                showToast("Please select a class to delete first.", "warning");
+                return;
+            }
+            if(confirm(`Are you sure you want to permanently delete "${filename}" from the list?`)) {
+                localStorage.removeItem(STORAGE_PREFIX + filename);
+                updateSavedClassesList();
+                showToast(`Deleted ${filename}`, "info");
+                
+                // If they deleted the one they are currently looking at, wipe the screen too.
+                if (currentFilename === filename) {
+                    currentFilename = "";
+                    students = [];
+                    groupHistory = {};
+                    ui.classNameLabel.textContent = "No Class Loaded";
+                    ui.currentPickLabel.classList.add('hidden');
+                    drawStudents();
                 }
             }
         };
@@ -511,7 +545,6 @@
         };
 
         // --- Sound Effects Setup ---
-        // Global listener to start audio context on first click
         document.addEventListener('click', async () => {
             if (!toneReady && window.Tone) {
                 await Tone.start();
@@ -520,13 +553,19 @@
             }
         }, { once: true });
 
+        // UPDATED: Softer, happier positive sound
         const POSITIVE_SOUND = () => {
             if (!toneReady) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
-                const synth = new Tone.MembraneSynth().toDestination();
-                synth.triggerAttackRelease("G6", "16n", Tone.now(), 0.8);
-                synth.triggerAttackRelease("C7", "16n", Tone.now() + 0.1, 0.8);
+                // We use a PolySynth with a softer triangle wave instead of a drum sound
+                const synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 1.5 }
+                }).toDestination();
+                synth.volume.value = -8; 
+                synth.triggerAttackRelease(["C5", "E5"], "8n", Tone.now());
+                synth.triggerAttackRelease(["G5", "C6"], "8n", Tone.now() + 0.15);
             } catch (e) {}
         };
 
@@ -544,7 +583,6 @@
             if (!toneReady) return;
             try {
                 if (Tone.context.state !== 'running') Tone.context.resume();
-                // Simple bell-like synth
                 const bell = new Tone.MetalSynth({
                     harmonicity: 12,
                     resonance: 800,
@@ -567,7 +605,6 @@
         
         window.openTimerModal = function() {
             openModal('timer-modal');
-            // Default reset view
             if (!timerInterval && timerSeconds === 0) resetTimer();
         };
         
@@ -750,6 +787,7 @@
         // --- LOADING LOGIC (Modified for Resume) ---
         function loadClassFromContent(filename, content) {
             students = [];
+            groupHistory = {}; // Reset history on new class load
             const lines = content.split('\n').filter(line => line.trim().length > 0);
             const shuffledPaths = [...AVATAR_POOL].sort(() => Math.random() - 0.5);
             let pathIndex = 0;
@@ -774,9 +812,10 @@
                 currentFilename = filename;
                 ui.classNameLabel.textContent = `${filename}`;
                 pickedStudents = [];
+                ui.currentPickLabel.classList.add('hidden'); // Clear pick label
                 drawStudents();
                 showToast(`Loaded ${students.length} students.`, 'success');
-                autoSave(); // Save this as a new slot immediately
+                autoSave(); 
             } else {
                 ui.classNameLabel.textContent = "No Class Loaded";
                 showToast("No valid students found.", 'error');
@@ -788,7 +827,6 @@
             if (!file) return;
             
             const filename = file.name;
-            // Check if we have a save file for this specific filename
             const savedData = localStorage.getItem(STORAGE_PREFIX + filename);
             
             if (savedData) {
@@ -797,16 +835,18 @@
                     const shuffledPaths = [...AVATAR_POOL].sort(() => Math.random() - 0.5);
                     let pathIndex = 0;
                     parsed.students.forEach(student => {
-                    student.avatarPath = shuffledPaths[pathIndex++ % shuffledPaths.length];
+                        student.avatarPath = shuffledPaths[pathIndex++ % shuffledPaths.length];
                     });
                     students = parsed.students;
+                    groupHistory = parsed.history || {};
                     currentFilename = filename;
                     ui.classNameLabel.textContent = `${currentFilename} (Resumed)`;
                     pickedStudents = [];
+                    ui.currentPickLabel.classList.add('hidden'); // Clear pick label
                     drawStudents();
-                    updateSavedClassesList(); // Refresh dropdown
+                    updateSavedClassesList(); 
                     showToast("Resumed previous session!", 'success');
-                    return; // Stop here, don't parse the file
+                    return; 
                 } catch(e) { }
             }
 
@@ -845,11 +885,19 @@
             autoSave();
         };
 
-        window.clearAllPoints = function() {
-            showConfirmationModal("Clear All Points", "Are you sure? This cannot be undone.", (confirmed) => {
+        // UPDATED: Reset Class function (formerly clearAllPoints)
+        window.resetClass = function() {
+            showConfirmationModal("Reset Class", "Are you sure? This will clear all points, absences, and highlights.", (confirmed) => {
                 if (confirmed) {
-                    students.forEach(s => { s.points = 0; updateStudentCardUI(s.name); });
-                    showToast("All points cleared!", 'info');
+                    students.forEach(s => { 
+                        s.points = 0; 
+                        s.absent = false;
+                        s.highlighted = false;
+                        updateStudentCardUI(s.name); 
+                    });
+                    pickedStudents = [];
+                    ui.currentPickLabel.classList.add('hidden', 'sm:hidden');
+                    showToast("Class completely reset!", 'info');
                     autoSave();
                 }
             });
@@ -874,6 +922,7 @@
             }
         };
 
+        // UPDATED: Quick +1/-1 buttons on random pick
         window.pickRandomStudent = function() {
             const activeStudents = students.filter(s => !s.absent);
             if (activeStudents.length === 0) return;
@@ -892,7 +941,13 @@
             });
             chosen.highlighted = true;
             updateStudentCardUI(chosen.name);
-            ui.currentPickLabel.textContent = `Picked: ${chosen.name}`;
+            
+            // Insert name and quick buttons
+            ui.currentPickLabel.innerHTML = `
+                <span>Picked: <strong>${chosen.name}</strong></span>
+                <button onclick="window.adjustIndividualPoints('${chosen.name}', 1)" class="ml-2 px-2 py-1 bg-green-500 text-white text-sm rounded shadow hover:bg-green-600 transition">+1</button>
+                <button onclick="window.adjustIndividualPoints('${chosen.name}', -1)" class="px-2 py-1 bg-red-500 text-white text-sm rounded shadow hover:bg-red-600 transition">-1</button>
+            `;
             ui.currentPickLabel.classList.remove('hidden', 'sm:hidden');
         };
         
@@ -914,15 +969,61 @@
             }
         };
 
+        // UPDATED: Smart Teams with Memory
         window.createRandomGroups = function(groupSize) {
             let activeStudents = students.filter(s => !s.absent);
-            activeStudents.sort(() => Math.random() - 0.5);
-            const groups = [];
-            for (let i = 0; i < activeStudents.length; i += groupSize) {
-                groups.push(activeStudents.slice(i, i + groupSize));
+            let bestGroups = [];
+            let bestScore = -9999;
+
+            // Try 50 different shuffles to find the one with the fewest repeated partners
+            for (let attempt = 0; attempt < 50; attempt++) {
+                let shuffled = [...activeStudents].sort(() => Math.random() - 0.5);
+                let currentGroups = [];
+                let score = 0;
+                
+                // Deal them into groups
+                for (let i = 0; i < shuffled.length; i += groupSize) {
+                    let group = shuffled.slice(i, i + groupSize);
+                    currentGroups.push(group);
+                    
+                    // Check if anyone in this group has been partnered before
+                    for (let j = 0; j < group.length; j++) {
+                        for (let k = j + 1; k < group.length; k++) {
+                            let name1 = group[j].name;
+                            let name2 = group[k].name;
+                            if (groupHistory[name1] && groupHistory[name1].includes(name2)) {
+                                score -= 1; // Penalty point for a repeated pairing
+                            }
+                        }
+                    }
+                }
+                
+                // Keep this shuffle if it's better than the previous ones
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestGroups = currentGroups;
+                    if (bestScore === 0) break; // Perfect score (0 repeats), stop searching early
+                }
             }
+
+            // Save the newly found partners into the memory diary
+            bestGroups.forEach(group => {
+                for (let j = 0; j < group.length; j++) {
+                    let name1 = group[j].name;
+                    if (!groupHistory[name1]) groupHistory[name1] = [];
+                    for (let k = j + 1; k < group.length; k++) {
+                        let name2 = group[k].name;
+                        if (!groupHistory[name1].includes(name2)) groupHistory[name1].push(name2);
+                        if (!groupHistory[name2]) groupHistory[name2] = [];
+                        if (!groupHistory[name2].includes(name1)) groupHistory[name2].push(name1);
+                    }
+                }
+            });
+            autoSave();
+
+            // Draw the groups on the screen
             let groupHtml = '';
-            groups.forEach((group, i) => {
+            bestGroups.forEach((group, i) => {
                 const names = group.map(s => s.name);
                 const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
                 groupHtml += `
@@ -936,7 +1037,7 @@
 
         window.onload = function() { 
             drawStudents();
-            updateSavedClassesList(); // Init Dropdown
+            updateSavedClassesList(); 
         };
     </script>
 </body>
