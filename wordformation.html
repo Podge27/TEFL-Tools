@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Formation</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; min-height: 100vh; }
+        #app-container { @apply w-full max-w-7xl; background-color: white; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border-radius: 16px; min-height: 750px; display: flex; flex-direction: column; }
+        
+        /* Level Buttons */
+        .level-select-btn { font-size: 4.5rem; padding: 3rem 4rem; min-width: 100%; @apply font-black rounded-[2rem] transition duration-300 transform; border-width: 4px; transform: scale(1); cursor: pointer; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.4) inset; opacity: 0.7; filter: grayscale(0.5); }
+        .level-select-btn.active { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); z-index: 10; @apply ring-4 ring-offset-4 ring-indigo-500; }
+        .level-select-btn:hover { transform: scale(1.05) translateY(-5px); opacity: 1; filter: grayscale(0); }
+        .btn-b2-style { background: linear-gradient(145deg, #4F46E5 0%, #818CF8 100%); color: white; border-color: #C7D2FE; }
+        .btn-c1-style { background: linear-gradient(145deg, #FF9800 0%, #FFC107 100%); color: #333; border-color: #FFECB3; }
+        .btn-c2-style { background: linear-gradient(145deg, #8BC34A 0%, #CDDC39 100%); color: #333; border-color: #DCEDC8; }
+
+        /* Action & Word List Buttons */
+        .btn-action { @apply px-5 py-2.5 font-bold text-white rounded-lg shadow-md transition hover:opacity-90 active:scale-95; }
+        .word-card-btn { @apply p-6 bg-white hover:bg-indigo-50 border-2 border-gray-200 hover:border-indigo-400 rounded-2xl transition duration-200 font-black text-2xl text-gray-800 hover:text-indigo-700 flex items-center justify-center shadow-sm hover:shadow-md cursor-pointer transform hover:-translate-y-1; }
+
+        /* Spidergram Styles */
+        .root-node { @apply min-w-[11rem] w-auto h-36 px-8 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-800 text-white flex items-center justify-center shadow-2xl border-8 border-indigo-200 z-20 cursor-pointer transition transform hover:scale-105 select-none; }
+        .category-node { @apply px-6 py-4 rounded-2xl font-extrabold text-xl shadow-md border-2 cursor-pointer transition-all duration-200 flex items-center justify-between select-none transform hover:scale-[1.02]; }
+        .word-leaf { @apply px-4 py-3 rounded-xl font-bold text-lg shadow-sm border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:border-indigo-300 select-none; animation: popIn 0.2s ease-out forwards; }
+        
+        /* Quiz Input Styles */
+        .gap-input { @apply inline-block border-b-2 border-indigo-400 px-2 mx-1 font-bold text-indigo-900 focus:outline-none focus:border-indigo-600 focus:bg-indigo-50 transition-colors; background-color: transparent; width: 170px; text-align: center; text-transform: uppercase; }
+        .input-correct { @apply border-green-500 bg-green-100 text-green-800 rounded px-2; }
+        .input-wrong { @apply border-red-500 bg-red-100 text-red-800 line-through decoration-2 rounded px-2; }
+        .correction-badge { @apply inline-block ml-2 px-2.5 py-0.5 rounded bg-green-600 text-white text-sm font-bold shadow-sm uppercase; }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(-6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center justify-center relative">
+
+    <a id="main-menu-btn" href="exam_index.html" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 font-bold transition z-50 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        <span>Back to Menu</span>
+    </a>
+
+    <div id="app-container">
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center my-8">Word <span class="text-indigo-600">Formation</span></h1>
+
+        <!-- SCREEN 1: LEVEL DASHBOARD -->
+        <div id="screen-dashboard" class="flex-1 p-8 flex flex-col justify-center gap-8 max-w-5xl mx-auto w-full">
+            <div>
+                <h3 class="text-2xl font-bold mb-6 text-center text-gray-700">Select Level</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                    <button onclick="app.selectLevel('B2')" id="btn-b2" class="level-select-btn btn-b2-style">B2</button>
+                    <button onclick="app.selectLevel('C1')" id="btn-c1" class="level-select-btn btn-c1-style">C1</button>
+                    <button onclick="app.selectLevel('C2')" id="btn-c2" class="level-select-btn btn-c2-style">C2</button>
+                </div>
+            </div>
+            <p id="data-loading-status" class="text-center text-sm text-gray-400 mt-4">Connecting to Database...</p>
+        </div>
+
+        <!-- SCREEN 2: BROWSE & SEARCH LIST -->
+        <div id="screen-list" class="hidden flex-1 p-8 flex flex-col max-w-6xl mx-auto w-full">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                <button onclick="app.showDashboard()" class="px-4 py-2 bg-gray-200 font-bold rounded-lg hover:bg-gray-300 transition">← Levels</button>
+                
+                <!-- Browse Mode Toggle: Root Words vs Affix Patterns -->
+                <div class="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
+                    <button onclick="app.setBrowseMode('roots')" id="tab-roots" class="px-5 py-2 rounded-lg font-bold text-sm transition">Root Words</button>
+                    <button onclick="app.setBrowseMode('patterns')" id="tab-patterns" class="px-5 py-2 rounded-lg font-bold text-sm transition">Affix Patterns</button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="flex gap-1.5">
+                        <button onclick="app.selectLevel('B2')" class="px-4 py-1.5 rounded-lg font-bold text-sm border-2 transition" id="pill-b2">B2</button>
+                        <button onclick="app.selectLevel('C1')" class="px-4 py-1.5 rounded-lg font-bold text-sm border-2 transition" id="pill-c1">C1</button>
+                        <button onclick="app.selectLevel('C2')" class="px-4 py-1.5 rounded-lg font-bold text-sm border-2 transition" id="pill-c2">C2</button>
+                    </div>
+                    <button onclick="app.startLevelTest()" class="btn-action bg-emerald-600 text-sm">Test Level →</button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative mb-6">
+                <input type="text" id="list-search" placeholder="Search word or pattern..." onkeyup="app.filterList()" class="w-full p-4 pl-12 border-2 border-gray-200 rounded-xl text-lg focus:border-indigo-500 outline-none shadow-sm">
+                <span class="absolute left-4 top-4 text-gray-400 text-xl">🔍</span>
+            </div>
+    
+            <!-- Grid of Root Words or Patterns -->
+            <div id="words-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto pt-2 pb-4 px-1 max-h-[500px]"></div>
+        </div> 
+
+        <!-- SCREEN 3: SPIDERGRAM VISUALISATION -->
+        <div id="screen-spidergram" class="hidden flex-1 flex flex-col bg-slate-50 rounded-b-2xl">
+            <div class="p-6 bg-white border-b border-gray-200 flex flex-wrap justify-between items-center gap-4">
+                <button onclick="app.showList()" class="px-4 py-2 bg-gray-200 font-bold rounded-lg hover:bg-gray-300 transition">← Back</button>
+
+                <div class="flex items-center gap-1.5 bg-gray-100 p-1.5 rounded-xl">
+                    <button onclick="app.changeLevelInSpidergram('B2')" id="spider-lvl-b2" class="px-3 py-1 rounded-lg font-bold text-sm transition">B2</button>
+                    <button onclick="app.changeLevelInSpidergram('C1')" id="spider-lvl-c1" class="px-3 py-1 rounded-lg font-bold text-sm transition">C1</button>
+                    <button onclick="app.changeLevelInSpidergram('C2')" id="spider-lvl-c2" class="px-3 py-1 rounded-lg font-bold text-sm transition">C2</button>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="app.startCurrentItemTest()" class="btn-action bg-emerald-600 text-sm">Test</button>
+                    <button onclick="app.toggleAllBranches(true)" class="btn-action bg-indigo-600 text-sm">Open All</button>
+                    <button onclick="app.toggleAllBranches(false)" class="btn-action bg-gray-500 text-sm">Close All</button>
+                </div>
+            </div>
+
+            <!-- Spidergram Canvas Area -->
+            <div class="flex-1 p-6 md:p-10 flex flex-col items-center justify-center">
+                <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                    
+                    <div class="flex flex-col gap-8 order-2 lg:order-1">
+                        <div id="branch-noun" class="flex flex-col"></div>
+                        <div id="branch-verb" class="flex flex-col"></div>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center order-1 lg:order-2 my-4 lg:my-0">
+                        <div onclick="app.toggleAllFromRoot()" class="root-node">
+                            <span id="spider-root-title" class="text-2xl sm:text-3xl font-black tracking-wide whitespace-nowrap">ABLE</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-8 order-3">
+                        <div id="branch-adjective" class="flex flex-col"></div>
+                        <div id="branch-adverb" class="flex flex-col"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t border-gray-200 rounded-b-2xl flex justify-between items-center px-8">
+                <button onclick="app.prevWord()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">← Previous</button>
+                <button onclick="app.nextWord()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">Next →</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: TEST MODE -->
+        <div id="screen-test" class="hidden flex-1 flex flex-col bg-amber-50/40 rounded-b-2xl">
+            <div class="p-6 bg-white border-b border-gray-200 flex justify-between items-center">
+                <button onclick="app.exitTest()" class="px-4 py-2 bg-gray-200 font-bold rounded-lg hover:bg-gray-300 transition">← Back</button>
+                <h2 id="test-title" class="text-xl font-black text-gray-800 uppercase tracking-wide">Test</h2>
+                <div class="w-20"></div>
+            </div>
+
+            <!-- Numerical & Percentage Feedback Banner -->
+            <div id="test-result-banner" class="hidden mx-6 md:mx-10 mt-6 p-5 rounded-2xl border-2 text-center shadow-sm transition-all">
+                <div id="test-feedback-msg" class="text-2xl font-black mb-1"></div>
+                <div id="test-score-details" class="text-lg font-bold text-gray-700"></div>
+            </div>
+
+            <div id="test-questions-container" class="flex-1 p-6 md:p-10 max-w-4xl mx-auto w-full space-y-4 overflow-y-auto max-h-[550px]"></div>
+
+            <div class="p-6 bg-white border-t border-gray-200 rounded-b-2xl flex justify-end gap-3 px-8">
+                <button id="btn-check-test" onclick="app.checkTest()" class="btn-action bg-green-600 text-lg px-8">Check Answers</button>
+                <button id="btn-retry-test" onclick="app.retryTest()" class="hidden btn-action bg-amber-500 text-lg px-8">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 👇 PASTE YOUR SUPABASE KEYS HERE
+        // ============================================================
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk";
+
+
+        const LEVEL_RANK = { 'B2': 1, 'C1': 2, 'C2': 3 };
+        const PATTERN_ORDER = ['en-', '-en', 'over-', '-over', 'under-', 'out-', '-out', 'up-', '-up', 'down-', '-down'];
+
+        const app = {
+            supabase: null,
+            data: [],
+            activeList: [], // Holds either the filtered Root Words or the compiled Affix Patterns
+            state: { 
+                level: 'B2', 
+                browseMode: 'roots', // 'roots' or 'patterns'
+                currentIndex: 0,
+                openBranches: { noun: false, verb: false, adjective: false, adverb: false },
+                openExamples: {},
+                testMode: null, // 'item' or 'level'
+                testQuestions: []
+            },
+
+            init: async function() {
+                const status = document.getElementById('data-loading-status');
+                if (!SUPABASE_URL || !SUPABASE_KEY || typeof supabase === 'undefined') {
+                    status.innerText = "Error: Please add your Supabase URL and Key in the code.";
+                    status.className = "text-center text-sm text-red-500 mt-4 font-bold";
+                    return;
+                }
+                this.supabase = supabase.createClient(String(SUPABASE_URL).trim(), String(SUPABASE_KEY).trim());
+                await this.loadData();
+            },
+
+            loadData: async function() {
+                const status = document.getElementById('data-loading-status');
+                try {
+                    status.innerText = "Loading database...";
+                    let { data, error } = await this.supabase
+                        .from('word_formation')
+                        .select('*')
+                        .order('root_word', { ascending: true });
+
+                    if (error) throw error;
+                    this.data = data || [];
+                    status.innerText = "Ready.";
+                    status.className = "text-center text-sm text-green-500 mt-4 font-bold";
+                } catch (e) {
+                    console.error("Connection Error:", e);
+                    this.data = [];
+                    status.innerText = "Error loading data from Supabase.";
+                    status.className = "text-center text-sm text-red-500 mt-4 font-bold";
+                }
+            },
+
+            // Safe level rank helper (handles accidental lowercase in database)
+            getRank: function(lvlStr) {
+                if (!lvlStr) return 1;
+                return LEVEL_RANK[String(lvlStr).trim().toUpperCase()] || 1;
+            },
+
+            selectLevel: function(lvl) {
+                this.state.level = lvl;
+                this.showList();
+            },
+
+            setBrowseMode: function(mode) {
+                this.state.browseMode = mode;
+                this.showList();
+            },
+
+            getFormsForLevel: function(wordObj, targetLevel) {
+                const maxRank = this.getRank(targetLevel);
+                return (wordObj.forms || []).filter(f => this.getRank(f.level) <= maxRank);
+            },
+
+            // Dynamically builds virtual Spidergram cards for each affix pattern (en-, -en, over-, -over, etc.)
+            buildPatternList: function() {
+                const maxRank = this.getRank(this.state.level);
+                const patternMap = {};
+
+                this.data.forEach(rootItem => {
+                    (rootItem.forms || []).forEach(f => {
+                        if (f.pattern && this.getRank(f.level) <= maxRank) {
+                            const patKey = f.pattern.trim();
+                            if (!patternMap[patKey]) {
+                                patternMap[patKey] = {
+                                    id: `pat-${patKey}`,
+                                    root_word: patKey,
+                                    isPattern: true,
+                                    forms: []
+                                };
+                            }
+                            patternMap[patKey].forms.push({
+                                ...f,
+                                origin_root: rootItem.root_word
+                            });
+                        }
+                    });
+                });
+
+                return Object.values(patternMap).sort((a, b) => {
+                    const idxA = PATTERN_ORDER.indexOf(a.root_word);
+                    const idxB = PATTERN_ORDER.indexOf(b.root_word);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    if (idxA !== -1) return -1;
+                    if (idxB !== -1) return 1;
+                    return a.root_word.localeCompare(b.root_word);
+                });
+            },
+
+            showList: function() {
+                document.getElementById('list-search').value = '';
+                const maxRank = this.getRank(this.state.level);
+
+                // Update Browse Mode Tabs
+                const tabRoots = document.getElementById('tab-roots');
+                const tabPatterns = document.getElementById('tab-patterns');
+                if (this.state.browseMode === 'roots') {
+                    tabRoots.className = "px-5 py-2 rounded-lg font-bold text-sm bg-white text-indigo-700 shadow-sm transition";
+                    tabPatterns.className = "px-5 py-2 rounded-lg font-bold text-sm text-gray-500 hover:text-gray-800 transition";
+                    this.activeList = this.data.filter(item => this.getRank(item.min_level) <= maxRank);
+                } else {
+                    tabPatterns.className = "px-5 py-2 rounded-lg font-bold text-sm bg-white text-indigo-700 shadow-sm transition";
+                    tabRoots.className = "px-5 py-2 rounded-lg font-bold text-sm text-gray-500 hover:text-gray-800 transition";
+                    this.activeList = this.buildPatternList();
+                }
+
+                // Update Level Pills
+                ['B2', 'C1', 'C2'].forEach(lvl => {
+                    const pill = document.getElementById(`pill-${lvl.toLowerCase()}`);
+                    if (lvl === this.state.level) {
+                        pill.className = "px-4 py-1.5 rounded-lg font-bold text-sm border-2 bg-indigo-600 text-white border-indigo-600";
+                    } else {
+                        pill.className = "px-4 py-1.5 rounded-lg font-bold text-sm border-2 bg-white text-gray-600 border-gray-200 hover:border-indigo-300";
+                    }
+                });
+
+                this.renderWordGrid(this.activeList);
+                this.switchScreen('screen-list');
+            },
+
+            renderWordGrid: function(listToRender) {
+                const container = document.getElementById('words-container');
+                container.innerHTML = '';
+
+                if (!listToRender.length) {
+                    container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-12 font-semibold">No items found for ${this.state.level}.</p>`;
+                    return;
+                }
+
+                listToRender.forEach((item) => {
+                    const realIndex = this.activeList.findIndex(d => d.id === item.id);
+                    const btn = document.createElement('div');
+                    btn.className = 'word-card-btn';
+                    btn.innerHTML = `<span>${item.root_word}</span>`;
+                    btn.onclick = () => {
+                        this.state.currentIndex = realIndex;
+                        this.state.openBranches = { noun: false, verb: false, adjective: false, adverb: false };
+                        this.state.openExamples = {};
+                        this.openSpidergram();
+                    };
+                    container.appendChild(btn);
+                });
+            },
+
+            filterList: function() {
+                const searchTerm = document.getElementById('list-search').value.toLowerCase().trim();
+                if (!searchTerm) {
+                    this.renderWordGrid(this.activeList);
+                    return;
+                }
+
+                // Strictly only searches forms allowed at the current level
+                const matched = this.activeList.filter(item => {
+                    const rootMatch = item.root_word.toLowerCase().includes(searchTerm);
+                    const allowedForms = this.getFormsForLevel(item, this.state.level);
+                    const formMatch = allowedForms.some(f => f.word.toLowerCase().includes(searchTerm));
+                    return rootMatch || formMatch;
+                });
+
+                this.renderWordGrid(matched);
+            },
+
+            // --- SPIDERGRAM LOGIC ---
+            openSpidergram: function() {
+                this.renderSpidergram();
+                this.switchScreen('screen-spidergram');
+            },
+
+            changeLevelInSpidergram: function(newLvl) {
+                const currentItemTitle = this.activeList[this.state.currentIndex]?.root_word;
+                this.state.level = newLvl;
+                const maxRank = this.getRank(newLvl);
+
+                // Rebuild activeList so patterns/words update to the new level
+                if (this.state.browseMode === 'roots') {
+                    this.activeList = this.data.filter(item => this.getRank(item.min_level) <= maxRank);
+                } else {
+                    this.activeList = this.buildPatternList();
+                }
+
+                const newIdx = this.activeList.findIndex(i => i.root_word === currentItemTitle);
+                this.state.currentIndex = newIdx !== -1 ? newIdx : 0;
+                this.renderSpidergram();
+            },
+
+            toggleBranch: function(type) {
+                this.state.openBranches[type] = !this.state.openBranches[type];
+                this.renderSpidergram();
+            },
+
+            toggleExample: function(wordStr) {
+                this.state.openExamples[wordStr] = !this.state.openExamples[wordStr];
+                this.renderSpidergram();
+            },
+
+            toggleAllBranches: function(openState) {
+                this.state.openBranches = { noun: openState, verb: openState, adjective: openState, adverb: openState };
+                if (!openState) this.state.openExamples = {};
+                this.renderSpidergram();
+            },
+
+            toggleAllFromRoot: function() {
+                const anyOpen = Object.values(this.state.openBranches).some(v => v === true);
+                this.toggleAllBranches(!anyOpen);
+            },
+
+            formatSentence: function(sentence, targetWord) {
+                if (!sentence) return "";
+                const regex = new RegExp(`(\\b${targetWord}\\b)`, 'gi');
+                return sentence.replace(regex, `<strong class="text-indigo-700 underline decoration-indigo-300">$1</strong>`);
+            },
+
+            renderSpidergram: function() {
+                const item = this.activeList[this.state.currentIndex];
+                if (!item) return;
+
+                document.getElementById('spider-root-title').innerText = item.root_word;
+
+                ['B2', 'C1', 'C2'].forEach(lvl => {
+                    const btn = document.getElementById(`spider-lvl-${lvl.toLowerCase()}`);
+                    if (lvl === this.state.level) {
+                        btn.className = "px-3 py-1 rounded-lg font-bold text-sm bg-indigo-600 text-white shadow";
+                    } else {
+                        btn.className = "px-3 py-1 rounded-lg font-bold text-sm text-gray-600 hover:bg-gray-200";
+                    }
+                });
+
+                const activeForms = this.getFormsForLevel(item, this.state.level);
+
+                const categories = [
+                    { key: 'noun', label: 'Nouns', bg: 'bg-blue-50 border-blue-200 text-blue-900' },
+                    { key: 'verb', label: 'Verbs', bg: 'bg-emerald-50 border-emerald-200 text-emerald-900' },
+                    { key: 'adjective', label: 'Adjectives', bg: 'bg-amber-50 border-amber-200 text-amber-900' },
+                    { key: 'adverb', label: 'Adverbs', bg: 'bg-purple-50 border-purple-200 text-purple-900' }
+                ];
+
+                categories.forEach(cat => {
+                    const container = document.getElementById(`branch-${cat.key}`);
+                    const catForms = activeForms.filter(f => f.type === cat.key);
+                    const isOpen = this.state.openBranches[cat.key];
+
+                    let html = `
+                        <div onclick="app.toggleBranch('${cat.key}')" class="category-node ${cat.bg}">
+                            <span>${cat.label} (${catForms.length})</span>
+                            <span class="text-sm font-bold opacity-50">${isOpen ? '−' : '+'}</span>
+                        </div>
+                    `;
+
+                    if (isOpen) {
+                        html += `<div class="mt-3 pl-4 border-l-2 border-gray-200 space-y-2">`;
+                        if (catForms.length === 0) {
+                            html += `<div class="text-sm text-gray-400 py-2">—</div>`;
+                        } else {
+                            catForms.forEach(f => {
+                                const isNeg = f.polarity === 'negative';
+                                const borderAccent = isNeg ? 'border-l-4 border-l-rose-400' : 'border-l-4 border-l-emerald-400';
+                                const isExOpen = !!this.state.openExamples[f.word];
+                                const safeWord = f.word.replace(/'/g, "\\'");
+
+                                html += `
+                                    <div onclick="app.toggleExample('${safeWord}')" class="word-leaf ${borderAccent}">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-gray-800">${f.word}</span>
+                                        </div>
+                                        ${isExOpen && f.example ? `
+                                            <div class="mt-2 pt-2 border-t border-gray-100 text-sm font-normal text-gray-600 leading-relaxed">
+                                                ${this.formatSentence(f.example, f.word)}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            });
+                        }
+                        html += `</div>`;
+                    }
+
+                    container.innerHTML = html;
+                });
+            },
+
+            // --- TESTING ENGINE ---
+            startCurrentItemTest: function() {
+                const item = this.activeList[this.state.currentIndex];
+                if (!item) return;
+                this.state.testMode = 'item';
+                
+                const forms = this.getFormsForLevel(item, this.state.level).filter(f => f.example);
+                const pool = forms.map(f => ({
+                    root: f.origin_root || item.root_word,
+                    answer: f.word,
+                    sentence: f.example
+                }));
+
+                this.buildTestScreen(`${item.root_word} (${this.state.level})`, pool);
+            },
+
+            startLevelTest: function() {
+                this.state.testMode = 'level';
+                let pool = [];
+
+                this.activeList.forEach(item => {
+                    const forms = this.getFormsForLevel(item, this.state.level).filter(f => f.example);
+                    forms.forEach(f => {
+                        pool.push({
+                            root: f.origin_root || item.root_word,
+                            answer: f.word,
+                            sentence: f.example
+                        });
+                    });
+                });
+
+                const modeTitle = this.state.browseMode === 'patterns' ? `Patterns (${this.state.level})` : `Level ${this.state.level}`;
+                this.buildTestScreen(modeTitle, pool, 10);
+            },
+
+            buildTestScreen: function(titleText, pool, limit = null) {
+                if (!pool.length) return alert("No example sentences found for this selection.");
+                
+                pool.sort(() => Math.random() - 0.5);
+                if (limit) pool = pool.slice(0, limit);
+                this.state.testQuestions = pool;
+
+                document.getElementById('test-title').innerText = titleText;
+                document.getElementById('test-result-banner').classList.add('hidden');
+                document.getElementById('btn-check-test').classList.remove('hidden');
+                document.getElementById('btn-retry-test').classList.add('hidden');
+
+                const container = document.getElementById('test-questions-container');
+                container.innerHTML = '';
+
+                pool.forEach((q, idx) => {
+                    const regex = new RegExp(`\\b${q.answer}\\b`, 'i');
+                    const inputHtml = `<input id="test-input-${idx}" type="text" autocomplete="off" class="gap-input">`;
+                    const blankedSentence = q.sentence.replace(regex, inputHtml);
+
+                    const card = document.createElement('div');
+                    card.className = "p-5 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-lg text-gray-800 leading-relaxed";
+                    card.innerHTML = `
+                        <div><span class="font-bold text-gray-400 mr-2">${idx + 1}.</span> ${blankedSentence}</div>
+                        <span class="self-end sm:self-center px-3 py-1 bg-indigo-50 text-indigo-800 font-black rounded-lg text-sm tracking-wider uppercase border border-indigo-200 shrink-0">${q.root}</span>
+                    `;
+                    container.appendChild(card);
+                });
+
+                this.switchScreen('screen-test');
+            },
+
+            checkTest: function() {
+                let score = 0;
+                const total = this.state.testQuestions.length;
+
+                this.state.testQuestions.forEach((q, idx) => {
+                    const input = document.getElementById(`test-input-${idx}`);
+                    if (!input) return;
+
+                    const userVal = input.value.trim().toUpperCase();
+                    const correctVal = q.answer.trim().toUpperCase();
+                    input.disabled = true;
+
+                    if (userVal === correctVal) {
+                        score++;
+                        input.classList.add('input-correct');
+                    } else {
+                        input.classList.add('input-wrong');
+                        const badge = document.createElement('span');
+                        badge.className = 'correction-badge';
+                        badge.innerText = correctVal;
+                        input.parentNode.insertBefore(badge, input.nextSibling);
+                    }
+                });
+
+                // Calculate Percentage & Message
+                const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+                const banner = document.getElementById('test-result-banner');
+                const msgEl = document.getElementById('test-feedback-msg');
+                const detailsEl = document.getElementById('test-score-details');
+
+                let feedback = "Try again!";
+                let bannerStyle = "bg-amber-50 border-amber-300 text-amber-800";
+
+                if (percentage === 100) {
+                    feedback = "Perfect score!";
+                    bannerStyle = "bg-indigo-50 border-indigo-300 text-indigo-800";
+                } else if (percentage >= 60) {
+                    feedback = "Well done!";
+                    bannerStyle = "bg-emerald-50 border-emerald-300 text-emerald-800";
+                }
+
+                banner.className = `mx-6 md:mx-10 mt-6 p-5 rounded-2xl border-2 text-center shadow-sm transition-all ${bannerStyle}`;
+                msgEl.innerText = feedback;
+                detailsEl.innerText = `${score} / ${total} (${percentage}%)`;
+                banner.classList.remove('hidden');
+
+                document.getElementById('btn-check-test').classList.add('hidden');
+                document.getElementById('btn-retry-test').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+
+            retryTest: function() {
+                if (this.state.testMode === 'item') this.startCurrentItemTest();
+                else this.startLevelTest();
+            },
+
+            exitTest: function() {
+                if (this.state.testMode === 'item') this.switchScreen('screen-spidergram');
+                else this.switchScreen('screen-list');
+            },
+
+            prevWord: function() {
+                this.state.currentIndex = (this.state.currentIndex > 0) 
+                    ? this.state.currentIndex - 1 
+                    : this.activeList.length - 1;
+                this.state.openExamples = {};
+                this.renderSpidergram();
+            },
+
+            nextWord: function() {
+                this.state.currentIndex = (this.state.currentIndex + 1) % this.activeList.length;
+                this.state.openExamples = {};
+                this.renderSpidergram();
+            },
+
+            switchScreen: function(id) {
+                ['screen-dashboard', 'screen-list', 'screen-spidergram', 'screen-test'].forEach(s => document.getElementById(s).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                window.scrollTo(0,0);
+                const menuBtn = document.getElementById('main-menu-btn');
+                if (id === 'screen-dashboard') menuBtn.classList.remove('hidden');
+                else menuBtn.classList.add('hidden');
+            },
+
+            showDashboard: function() {
+                this.switchScreen('screen-dashboard');
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

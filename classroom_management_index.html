@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Management</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Light grey background */
+        }
+
+        /* Reusing your Universal Back Button styles */
+        .btn-back {
+            display: inline-block;
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1);
+            color: black;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Smooth lift effect for the big cards */
+        .hub-card {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+        }
+        
+        .hub-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Main White Container -->
+    <div class="w-full max-w-4xl bg-white rounded-3xl shadow-xl p-6 sm:p-10 border border-slate-100">
+        
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-10 pb-6 border-b border-slate-100">
+            <a href="index.html" class="btn-back flex-shrink-0">
+                &larr; Back
+            </a>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight">
+                Classroom Management
+            </h1>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            
+            <!-- Card 1: VYLs (Links to new drag-and-drop board) -->
+            <a href="classroom_board.html" class="hub-card block p-8 sm:p-10 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 text-white cursor-pointer group outline-none focus:ring-4 focus:ring-yellow-300">
+                <div class="flex flex-col h-full justify-between min-h-[160px]">
+                    <div>
+                        <h2 class="text-4xl sm:text-5xl font-black mb-3 group-hover:scale-105 transform origin-left transition-transform duration-300">VYLs</h2>
+                        <p class="text-yellow-50 text-lg sm:text-xl font-medium leading-snug">Very Young Learners (Ages 3-5)</p>
+                    </div>
+                    <div class="mt-8 flex justify-end">
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                            <span class="text-2xl">&rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Card 2: YLs / Teens (Links to existing points system) -->
+            <a href="Classroom Management.html" class="hub-card block p-8 sm:p-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white cursor-pointer group outline-none focus:ring-4 focus:ring-blue-300">
+                <div class="flex flex-col h-full justify-between min-h-[160px]">
+                    <div>
+                        <h2 class="text-4xl sm:text-5xl font-black mb-3 group-hover:scale-105 transform origin-left transition-transform duration-300">YLs & Teens</h2>
+                        <p class="text-blue-50 text-lg sm:text-xl font-medium leading-snug">Older Students</p>
+                    </div>
+                    <div class="mt-8 flex justify-end">
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                            <span class="text-2xl">&rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

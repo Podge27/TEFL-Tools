@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>VYLs Classroom Management</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 1. Global Setup */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            overscroll-behavior: none; /* Prevent mobile pull-to-refresh */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 2. Brand Buttons */
+        .btn-custom {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            border: none;
+        }
+        .btn-custom:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .btn-custom:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-back { background: linear-gradient(135deg, #00BCD4, #4DD0E1); color: black; border: 1px solid white; text-decoration: none; }
+        .btn-primary { background-color: #4f46e5; color: white; }
+        .btn-success { background-color: #10b981; color: white; }
+        .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-danger { background-color: #ef4444; color: white; }
+
+        /* 3. Main Canvas */
+        #board-canvas {
+            flex-grow: 1;
+            position: relative;
+            background-color: white;
+            border-top: 2px solid #e2e8f0;
+            overflow: hidden; 
+            touch-action: none; /* Crucial for mobile drag */
+        }
+
+        /* 4. Background Zones (Watermarks) */
+        .zone-bg {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* Let clicks pass through to cards */
+            opacity: 0.12;
+            font-size: clamp(8rem, 20vw, 15rem);
+            user-select: none;
+        }
+        .zone-top { top: 2%; }
+        .zone-mid { top: 50%; transform: translateY(-50%); }
+        .zone-bottom { bottom: 2%; }
+
+        /* 5. Absent Corner */
+        #absent-zone {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 180px;
+            height: 120px;
+            border: 3px dashed #cbd5e1;
+            border-radius: 16px;
+            background-color: rgba(241, 245, 249, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            pointer-events: none; /* Let cards drop inside it */
+            z-index: 1; /* Below cards */
+        }
+
+        /* 6. Draggable Cards */
+        .student-card {
+            position: absolute;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-weight: 700;
+            color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            width: 150px; /* Fixed width for grid math */
+            height: 50px; /* Fixed height for grid math */
+            box-sizing: border-box;
+            z-index: 10;
+        }
+        .student-card.dragging {
+            cursor: grabbing;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            border-color: #00BCD4;
+            z-index: 9999 !important; /* Always on top while dragging */
+        }
+        .avatar-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .card-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 7. Toast & Modal */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            background-color: #334155;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            from { transform: translateY(100%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(2px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; opacity: 0; pointer-events: none; transition: 0.2s;
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: white; padding: 24px; border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 400px; width: 90%; transform: scale(0.95); transition: 0.2s;
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="bg-white p-3 md:p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm z-20">
+        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+            <a href="classroom_management_index.html" class="btn-custom btn-back">← Back</a>
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800">Behaviour Board</h1>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 md:gap-3 w-full md:w-auto">
+            
+            <!-- Resume Saved Classes Dropdown -->
+            <div id="saved-classes-container" class="hidden flex items-center gap-1 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200">
+                <span class="text-xs font-bold text-slate-400 uppercase hidden sm:inline">Resume:</span>
+                <select id="saved-classes-select" onchange="loadSelectedClass()" class="bg-transparent text-sm font-bold text-indigo-600 focus:outline-none cursor-pointer max-w-[120px] md:max-w-[150px]">
+                    <option value="">Select class...</option>
+                </select>
+                <button onclick="deleteSelectedClass()" class="text-slate-400 hover:text-red-500 p-1 transition rounded" title="Delete Class">
+                    🗑️
+                </button>
+            </div>
+
+            <button onclick="document.getElementById('file-upload').click()" class="btn-custom btn-primary text-sm shadow-sm">
+                Load New
+            </button>
+            <input type="file" id="file-upload" accept=".csv, .txt" class="hidden" onchange="handleFileUpload(event)">
+
+            <button id="save-btn" onclick="saveCSVFile()" disabled class="btn-custom btn-success text-sm shadow-sm">
+                Save File
+            </button>
+
+            <button id="reset-btn" onclick="promptResetPositions()" disabled class="btn-custom btn-warning text-sm shadow-sm">
+                Reset Board
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Canvas -->
+    <div id="board-canvas">
+        <!-- Emojis -->
+        <div class="zone-bg zone-top">😀</div>
+        <div class="zone-bg zone-mid">😐</div>
+        <div class="zone-bg zone-bottom">☹️</div>
+        
+        <!-- Absent Zone -->
+        <div id="absent-zone">ABSENT</div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal-backdrop">
+        <div class="modal-content text-center">
+            <h3 class="text-xl font-bold mb-2 text-slate-800">Reset Board?</h3>
+            <p class="text-slate-600 mb-6">This will move all students back to the middle of the screen. Are you sure?</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeModal('confirm-modal')" class="btn-custom bg-slate-200 text-slate-700 hover:bg-slate-300">Cancel</button>
+                <button id="confirm-yes-btn" class="btn-custom btn-warning">Yes, Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const STORAGE_PREFIX = "drag_board_";
+        const AVATAR_COLORS = ['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899'];
+        
+        let currentFilename = "";
+        let students = []; 
+        let highestZIndex = 10; 
+
+        // Dragging state
+        let activeCard = null;
+        let activeStudent = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        const canvas = document.getElementById('board-canvas');
+
+        window.onload = () => updateSavedClassesList();
+
+        // --- File Handling ---
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const filename = file.name.replace('.csv', '').replace('.txt', '');
+            
+            // Auto-resume if it already exists in memory
+            if (localStorage.getItem(STORAGE_PREFIX + filename)) {
+                document.getElementById('saved-classes-select').value = filename;
+                loadSelectedClass();
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                parseAndDistributeCSV(filename, e.target.result);
+                event.target.value = ''; 
+            };
+            reader.readAsText(file);
+        }
+
+        function parseAndDistributeCSV(filename, content) {
+            students = [];
+            const lines = content.split('\n').filter(line => line.trim().length > 0);
+            
+            // Extract names and create base objects
+            lines.forEach((line, i) => {
+                let name = line.split(',')[0].trim();
+                if(name.includes('\t')) name = name.split('\t')[0].trim(); // Handle TSV just in case
+                
+                if (name && name.toLowerCase() !== 'name') { // Skip header if present
+                    students.push({
+                        id: 'stu_' + i + '_' + Date.now(),
+                        name: name,
+                        color: AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length],
+                        x: 0, 
+                        y: 0
+                    });
+                }
+            });
+
+            if (students.length === 0) {
+                showToast("No valid names found in file.", 'bg-red-500');
+                return;
+            }
+
+            currentFilename = filename;
+            
+            // Calculate grid positions for the middle of the board
+            const positions = calculateMiddleGrid(canvas.clientWidth, canvas.clientHeight, students.length);
+            
+            // Apply calculated positions
+            students.forEach((s, i) => {
+                s.x = positions[i].x;
+                s.y = positions[i].y;
+            });
+
+            renderBoard();
+            saveState();
+            updateSavedClassesList();
+            showToast(`Loaded ${students.length} students.`, 'bg-green-500');
+        }
+
+        // --- Grid Math (The Spreading Logic) ---
+        function calculateMiddleGrid(containerW, containerH, numCards) {
+            // Card dimensions matching CSS
+            const cardW = 150;
+            const cardH = 50;
+            const gap = 15; // Space between cards
+
+            // Protect against zero-width (e.g., hidden display)
+            const safeW = Math.max(containerW, 300);
+            const safeH = Math.max(containerH, 300);
+
+            // How many columns fit in 90% of the screen width?
+            const usableWidth = safeW * 0.9;
+            let cols = Math.floor((usableWidth + gap) / (cardW + gap));
+            if (cols < 1) cols = 1; // Minimum 1 column
+            if (cols > numCards) cols = numCards;
+
+            const rows = Math.ceil(numCards / cols);
+
+            // Calculate total block size
+            const blockW = (cols * cardW) + ((cols - 1) * gap);
+            const blockH = (rows * cardH) + ((rows - 1) * gap);
+
+            // Find top-left starting coordinate to perfectly center the block
+            const startX = (safeW - blockW) / 2;
+            const startY = (safeH - blockH) / 2;
+
+            const positions = [];
+            for (let i = 0; i < numCards; i++) {
+                const c = i % cols;
+                const r = Math.floor(i / cols);
+                positions.push({
+                    x: startX + (c * (cardW + gap)),
+                    y: startY + (r * (cardH + gap))
+                });
+            }
+            return positions;
+        }
+
+        // --- Rendering ---
+        function renderBoard() {
+            // Remove existing cards
+            document.querySelectorAll('.student-card').forEach(c => c.remove());
+
+            const hasStudents = students.length > 0;
+            document.getElementById('reset-btn').disabled = !hasStudents;
+            document.getElementById('save-btn').disabled = !hasStudents;
+
+            if (!hasStudents) return;
+
+            // Render DOM nodes
+            students.forEach(student => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.id = student.id;
+                
+                // Force X/Y using direct style transforms or left/top
+                card.style.left = `${student.x}px`;
+                card.style.top = `${student.y}px`;
+                card.style.zIndex = highestZIndex;
+                
+                const initial = student.name.charAt(0).toUpperCase();
+                card.innerHTML = `
+                    <div class="avatar-circle" style="background-color: ${student.color};">${initial}</div>
+                    <span class="card-name">${student.name}</span>
+                `;
+
+                // Unified pointer events for touch & mouse
+                card.addEventListener('pointerdown', handleDragStart);
+                canvas.appendChild(card);
+            });
+        }
+
+        // --- Drag Logic ---
+        function handleDragStart(e) {
+            e.preventDefault(); 
+            activeCard = e.currentTarget;
+            activeStudent = students.find(s => s.id === activeCard.id);
+            if (!activeStudent) return;
+
+            highestZIndex++;
+            activeCard.style.zIndex = highestZIndex;
+            activeCard.classList.add('dragging');
+
+            const rect = activeCard.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            document.addEventListener('pointermove', handleDragMove);
+            document.addEventListener('pointerup', handleDragEnd);
+            document.addEventListener('pointercancel', handleDragEnd);
+        }
+
+        function handleDragMove(e) {
+            if (!activeCard) return;
+            e.preventDefault();
+
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            // Calculate relative to canvas bounds
+            let newX = e.clientX - canvasRect.left - offsetX;
+            let newY = e.clientY - canvasRect.top - offsetY;
+
+            // Keep mostly within bounds, allow dropping slightly over edges
+            const maxX = canvasRect.width - 50;
+            const maxY = canvasRect.height - 20;
+            
+            if (newX < -50) newX = -50;
+            if (newX > maxX) newX = maxX;
+            if (newY < 0) newY = 0;
+            if (newY > maxY) newY = maxY;
+
+            activeCard.style.left = `${newX}px`;
+            activeCard.style.top = `${newY}px`;
+        }
+
+        function handleDragEnd() {
+            if (!activeCard || !activeStudent) return;
+
+            activeCard.classList.remove('dragging');
+            
+            // Save new position
+            activeStudent.x = parseFloat(activeCard.style.left);
+            activeStudent.y = parseFloat(activeCard.style.top);
+            saveState();
+
+            activeCard = null;
+            activeStudent = null;
+            document.removeEventListener('pointermove', handleDragMove);
+            document.removeEventListener('pointerup', handleDragEnd);
+            document.removeEventListener('pointercancel', handleDragEnd);
+        }
+
+        // --- Save / Load / Memory ---
+        function saveState() {
+            if (!currentFilename || students.length === 0) return;
+            localStorage.setItem(STORAGE_PREFIX + currentFilename, JSON.stringify(students));
+        }
+
+        function updateSavedClassesList() {
+            const select = document.getElementById('saved-classes-select');
+            const container = document.getElementById('saved-classes-container');
+            
+            select.innerHTML = '<option value="">Select class...</option>';
+            
+            let hasSaves = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(STORAGE_PREFIX)) {
+                    const filename = key.replace(STORAGE_PREFIX, '');
+                    const opt = document.createElement('option');
+                    opt.value = filename;
+                    opt.textContent = filename;
+                    select.appendChild(opt);
+                    hasSaves = true;
+                }
+            }
+            
+            container.classList.toggle('hidden', !hasSaves);
+            if (currentFilename && hasSaves) select.value = currentFilename;
+        }
+
+        function loadSelectedClass() {
+            const filename = document.getElementById('saved-classes-select').value;
+            if (!filename) return;
+            
+            const savedData = localStorage.getItem(STORAGE_PREFIX + filename);
+            if (savedData) {
+                try {
+                    students = JSON.parse(savedData);
+                    currentFilename = filename;
+                    renderBoard();
+                    showToast(`Resumed ${filename}`, 'bg-indigo-500');
+                } catch(e) {
+                    showToast("Error loading saved data.", 'bg-red-500');
+                }
+            }
+        }
+
+        function deleteSelectedClass() {
+            const filename = document.getElementById('saved-classes-select').value;
+            if (!filename) {
+                showToast("Select a class to delete first.", "bg-amber-500");
+                return;
+            }
+            if(confirm(`Permanently delete "${filename}" from memory?`)) {
+                localStorage.removeItem(STORAGE_PREFIX + filename);
+                updateSavedClassesList();
+                showToast(`Deleted ${filename}`, "bg-slate-600");
+                
+                if (currentFilename === filename) {
+                    currentFilename = "";
+                    students = [];
+                    renderBoard();
+                }
+            }
+        }
+
+        function saveCSVFile() {
+            if (students.length === 0 || !currentFilename) return;
+            // Create a CSV of Name, X, Y so layout can be externally backed up if needed
+            let csvContent = "Name,X,Y\n";
+            students.forEach(s => {
+                csvContent += `${s.name},${Math.round(s.x)},${Math.round(s.y)}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${currentFilename}_backup.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("File downloaded!", "bg-green-500");
+        }
+
+        // --- Reset Logic ---
+        function promptResetPositions() {
+            if (students.length === 0) return;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('active');
+            
+            document.getElementById('confirm-yes-btn').onclick = () => {
+                modal.classList.remove('active');
+                
+                // Recalculate center grid based on current screen size
+                const positions = calculateMiddleGrid(canvas.clientWidth, canvas.clientHeight, students.length);
+
+                students.forEach((s, i) => {
+                    s.x = positions[i].x;
+                    s.y = positions[i].y;
+                    
+                    const card = document.getElementById(s.id);
+                    if(card) {
+                        // Smoothly animate to center
+                        card.style.transition = 'left 0.4s ease-out, top 0.4s ease-out';
+                        card.style.left = `${s.x}px`;
+                        card.style.top = `${s.y}px`;
+                        
+                        // Remove transition so instant-drag works again
+                        setTimeout(() => {
+                            card.style.transition = 'box-shadow 0.2s, border-color 0.2s';
+                        }, 400);
+                    }
+                });
+
+                saveState();
+                showToast("Board Reset to center!", 'bg-blue-500');
+            };
+        }
+
+        // --- Utilities ---
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function showToast(msg, bgClass) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${bgClass}`;
+            t.textContent = msg;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateY(100%) scale(0.9)';
+                setTimeout(() => t.remove(), 300);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
