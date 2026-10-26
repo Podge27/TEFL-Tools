@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Response — Student</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; touch-action: manipulation; }
+        .big-input { @apply w-full p-4 text-2xl font-bold border-4 border-gray-200 rounded-2xl text-center focus:border-indigo-500 outline-none transition-all uppercase bg-white; }
+        .btn-main { @apply w-full py-5 rounded-2xl font-black text-2xl text-white shadow-lg active:scale-95 transition-transform bg-indigo-600 disabled:opacity-50; }
+    </style>
+    <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body class="min-h-screen flex flex-col p-5 max-w-md mx-auto">
+
+    <!-- PLAYER HEADER (Hidden until joined) -->
+    <header id="player-header" class="hidden items-center justify-between bg-white p-3 px-4 rounded-2xl shadow-sm border border-gray-200 mb-4 flex-none">
+        <div class="flex items-center gap-3">
+            <img id="my-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-500 bg-indigo-50">
+            <div>
+                <div id="my-name" class="font-black text-lg text-gray-900 leading-none">---</div>
+                <div class="text-xs font-bold text-green-600 mt-1">● Connected</div>
+            </div>
+        </div>
+        <button onclick="student.leaveRoom()" class="text-xs font-bold text-gray-400 underline">Leave</button>
+    </header>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="screen-login" class="flex-1 flex flex-col justify-center gap-6">
+        <h1 class="text-4xl font-black text-indigo-600 text-center tracking-tight">CLASS<br>BUZZER</h1>
+        
+        <div id="pin-box">
+            <label class="block font-bold text-gray-500 mb-2 ml-1 text-sm">ROOM PIN</label>
+            <input type="number" id="input-pin" class="big-input tracking-widest" placeholder="0000">
+        </div>
+
+        <div>
+            <label class="block font-bold text-gray-500 mb-2 ml-1 text-sm">YOUR NAME</label>
+            <input type="text" id="input-nick" class="big-input" placeholder="MARIA" maxlength="12">
+        </div>
+
+        <button id="btn-join" onclick="student.joinGame()" class="btn-main">JOIN GAME</button>
+        <p id="login-error" class="text-red-500 text-center font-bold hidden"></p>
+    </div>
+
+    <!-- 2. LOCKED / WAITING SCREEN -->
+    <div id="screen-wait" class="hidden flex-1 flex-col justify-center items-center text-center px-4">
+        <div id="wait-icon" class="text-7xl mb-6 animate-bounce">🔒</div>
+        <h2 id="wait-title" class="text-3xl font-black text-gray-800">Eyes on the Board!</h2>
+        <p id="wait-sub" class="text-gray-500 font-semibold mt-2 text-lg">Your screen will unlock as soon as the teacher taps GO.</p>
+    </div>
+
+    <!-- 3. SINGLE INPUT SCREEN (When Questions = 1 in Basic or Speed mode) -->
+    <div id="screen-go" class="hidden flex-1 flex-col justify-between py-2">
+        <div class="bg-green-100 border-2 border-green-300 text-green-900 font-black py-3 px-4 rounded-2xl text-center text-lg uppercase tracking-wider">
+            🟢 Type Your Answer!
+        </div>
+
+        <div class="my-auto py-6">
+            <textarea id="answer-input" rows="3" class="w-full p-5 text-3xl font-black border-4 border-indigo-400 rounded-3xl text-center focus:border-indigo-600 outline-none uppercase bg-white shadow-inner" placeholder="TYPE HERE..."></textarea>
+        </div>
+
+        <button id="btn-submit" onclick="student.submitSingleAnswer()" class="btn-main bg-green-500 hover:bg-green-600 text-3xl py-6">
+            SEND ANSWER 🚀
+        </button>
+    </div>
+
+    <!-- 4. MULTI-BOX SCREEN (When Questions > 1 in Basic mode) -->
+    <div id="screen-multi" class="hidden flex-1 flex-col overflow-hidden">
+        <div class="bg-indigo-100 border-2 border-indigo-300 text-indigo-900 font-black py-2.5 px-4 rounded-2xl text-center text-sm uppercase tracking-wider mb-3 flex-none">
+            📝 Fill in your answers & tap Save!
+        </div>
+
+        <div id="multi-inputs-list" class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4"></div>
+
+        <div class="pt-3 flex-none">
+            <button id="btn-submit-multi" onclick="student.submitMultiAnswers()" class="btn-main bg-green-500 hover:bg-green-600 text-2xl py-4">
+                SAVE ALL ANSWERS 🚀
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk"; // <-- Paste your key here
+        const TOTAL_AVATARS = 13;
+
+        const student = {
+            supabase: null,
+            sessionID: null,
+            playerID: null,
+            roundStartQ: 0,
+            boxCount: 1,
+            hasSubmittedThisRound: false,
+
+            init: async function() {
+                this.supabase = supabase.createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
+
+                const params = new URLSearchParams(window.location.search);
+                const urlPin = params.get('pin');
+                if (urlPin) {
+                    document.getElementById('input-pin').value = urlPin;
+                    document.getElementById('pin-box').classList.add('hidden');
+                }
+
+                const saved = localStorage.getItem('live_buzzer_student');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (!urlPin || urlPin === data.pin) {
+                        const valid = await this.verifyAndRestore(data);
+                        if (valid) return;
+                    }
+                    localStorage.removeItem('live_buzzer_student');
+                }
+            },
+
+            verifyAndRestore: async function(savedData) {
+                const { data: sess } = await this.supabase.from('live_sessions').select('*').eq('id', savedData.sId).single();
+                if (!sess) return false;
+
+                this.sessionID = sess.id;
+                this.playerID = savedData.pId;
+                this.showHeader(savedData.nick, savedData.avatar);
+                this.handleSessionState(sess);
+                this.listenToRoom();
+                return true;
+            },
+
+            joinGame: async function() {
+                const pin = document.getElementById('input-pin').value.trim();
+                const nick = document.getElementById('input-nick').value.trim().toUpperCase();
+                const errEl = document.getElementById('login-error');
+
+                if (!pin || !nick) return;
+                errEl.classList.add('hidden');
+
+                const btn = document.getElementById('btn-join');
+                btn.disabled = true;
+                btn.innerText = "JOINING...";
+
+                const { data: sess, error: sErr } = await this.supabase
+                    .from('live_sessions')
+                    .select('*')
+                    .eq('pin', pin)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (sErr || !sess) {
+                    errEl.innerText = "Room not found! Check the PIN.";
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "JOIN GAME";
+                    return;
+                }
+
+                const randomAvatar = Math.floor(Math.random() * TOTAL_AVATARS) + 1;
+
+                const { data: player, error: pErr } = await this.supabase
+                    .from('live_players')
+                    .insert([{ session_id: sess.id, nickname: nick, avatar_num: randomAvatar }])
+                    .select()
+                    .single();
+
+                if (pErr) {
+                    errEl.innerText = "Could not join. Try again.";
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "JOIN GAME";
+                    return;
+                }
+
+                this.sessionID = sess.id;
+                this.playerID = player.id;
+
+                localStorage.setItem('live_buzzer_student', JSON.stringify({
+                    sId: sess.id, pId: player.id, pin: pin, nick: nick, avatar: randomAvatar
+                }));
+
+                this.showHeader(nick, randomAvatar);
+                this.handleSessionState(sess);
+                this.listenToRoom();
+            },
+
+            showHeader: function(nick, avatarNum) {
+                const hdr = document.getElementById('player-header');
+                hdr.classList.remove('hidden');
+                hdr.classList.add('flex');
+                document.getElementById('my-name').innerText = nick;
+                const img = document.getElementById('my-avatar');
+                img.src = `avatars/img_${avatarNum}.png`;
+                img.onerror = () => { img.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${nick}`; };
+            },
+
+            listenToRoom: function() {
+                this.supabase.channel('student-room-listener')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_sessions', filter: `id=eq.${this.sessionID}` },
+                    (payload) => {
+                        this.handleSessionState(payload.new);
+                    }).subscribe();
+            },
+
+            handleSessionState: async function(sess) {
+                // Parse how many boxes this round has (e.g. 'BASIC_8' -> 8, 'BASIC_1' -> 1, 'SPEED' -> 1)
+                let parsedBoxes = 1;
+                if (sess.mode && sess.mode.startsWith('BASIC_')) {
+                    parsedBoxes = parseInt(sess.mode.split('_')[1], 10) || 1;
+                }
+
+                const isNewRound = (sess.current_round !== this.roundStartQ) || (parsedBoxes !== this.boxCount);
+                this.roundStartQ = sess.current_round;
+                this.boxCount = parsedBoxes;
+
+                if (sess.status === 'GO') {
+                    // Multi-Box Basic Mode (2+ Questions)
+                    if (this.boxCount > 1) {
+                        this.buildMultiBoxes(this.boxCount, isNewRound);
+                        this.switchScreen('screen-multi');
+                        return;
+                    }
+
+                    // Single-Box Mode (Basic with 1 Question, or Speed Mode)
+                    if (isNewRound) {
+                        this.hasSubmittedThisRound = false;
+                        document.getElementById('answer-input').value = '';
+                    }
+
+                    if (this.hasSubmittedThisRound) {
+                        this.showSubmittedWait();
+                    } else {
+                        const btn = document.getElementById('btn-submit');
+                        btn.disabled = false;
+                        btn.innerText = "SEND ANSWER 🚀";
+                        this.switchScreen('screen-go');
+                        document.getElementById('answer-input').focus();
+                    }
+                } else {
+                    document.getElementById('wait-icon').innerText = "🔒";
+                    document.getElementById('wait-title').innerText = "Phones Locked";
+                    document.getElementById('wait-sub').innerText = "Look at the board! Waiting for the teacher to tap GO...";
+                    this.switchScreen('screen-wait');
+                }
+            },
+
+            buildMultiBoxes: function(count, forceRebuild) {
+                const list = document.getElementById('multi-inputs-list');
+                if (!forceRebuild && list.children.length === count) return;
+
+                let html = '';
+                for (let i = 1; i <= count; i++) {
+                    html += `
+                        <div class="flex items-center gap-3 bg-white p-2.5 rounded-2xl border-2 border-gray-200 shadow-sm">
+                            <span class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 font-black flex items-center justify-center text-lg flex-none">${i}</span>
+                            <input type="text" id="multi-box-${i}" class="w-full p-2 text-xl font-black uppercase outline-none text-gray-800 border-b-2 border-transparent focus:border-indigo-500" placeholder="Answer ${i}...">
+                        </div>`;
+                }
+                list.innerHTML = html;
+
+                const btn = document.getElementById('btn-submit-multi');
+                btn.disabled = false;
+                btn.innerText = "SAVE ALL ANSWERS 🚀";
+                btn.className = "btn-main bg-green-500 hover:bg-green-600 text-2xl py-4";
+            },
+
+            submitSingleAnswer: async function() {
+                const input = document.getElementById('answer-input');
+                const text = input.value.trim().toUpperCase();
+                if (!text) return;
+
+                const btn = document.getElementById('btn-submit');
+                btn.disabled = true;
+                btn.innerText = "SENDING...";
+
+                const { error } = await this.supabase
+                    .from('live_submissions')
+                    .upsert([{
+                        session_id: this.sessionID,
+                        player_id: this.playerID,
+                        round_num: this.roundStartQ,
+                        answer_text: text
+                    }], { onConflict: 'player_id,round_num' });
+
+                if (error) {
+                    btn.disabled = false;
+                    btn.innerText = "TRY AGAIN";
+                    return;
+                }
+
+                this.hasSubmittedThisRound = true;
+                this.showSubmittedWait();
+            },
+
+            submitMultiAnswers: async function() {
+                const btn = document.getElementById('btn-submit-multi');
+                btn.disabled = true;
+                btn.innerText = "SAVING...";
+
+                const rowsToUpsert = [];
+                for (let i = 0; i < this.boxCount; i++) {
+                    const el = document.getElementById(`multi-box-${i + 1}`);
+                    const val = el ? el.value.trim().toUpperCase() : '';
+                    if (val !== '') {
+                        rowsToUpsert.push({
+                            session_id: this.sessionID,
+                            player_id: this.playerID,
+                            round_num: this.roundStartQ + i,
+                            answer_text: val
+                        });
+                    }
+                }
+
+                if (rowsToUpsert.length > 0) {
+                    const { error } = await this.supabase
+                        .from('live_submissions')
+                        .upsert(rowsToUpsert, { onConflict: 'player_id,round_num' });
+
+                    if (error) {
+                        btn.disabled = false;
+                        btn.innerText = "ERROR — TAP TO RETRY";
+                        btn.className = "btn-main bg-red-500 text-2xl py-4";
+                        return;
+                    }
+                }
+
+                btn.disabled = false;
+                btn.innerText = "SAVED! ✓ (YOU CAN STILL EDIT)";
+                btn.className = "btn-main bg-indigo-600 text-xl py-4";
+            },
+
+            showSubmittedWait: function() {
+                document.getElementById('wait-icon').innerText = "✅";
+                document.getElementById('wait-title').innerText = "Answer Sent!";
+                document.getElementById('wait-sub').innerText = "Fingers crossed! Waiting for the teacher to reveal...";
+                this.switchScreen('screen-wait');
+            },
+
+            leaveRoom: function() {
+                localStorage.removeItem('live_buzzer_student');
+                window.location.reload();
+            },
+
+            switchScreen: function(screenId) {
+                ['screen-login', 'screen-wait', 'screen-go', 'screen-multi'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                });
+                const target = document.getElementById(screenId);
+                target.classList.remove('hidden');
+                target.classList.add('flex');
+            }
+        };
+
+        student.init();
+    </script>
+</body>
+</html>

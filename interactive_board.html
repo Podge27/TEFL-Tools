@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Response — Teacher Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global.css">
+
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; height: 100vh; overflow: hidden; user-select: none; }
+
+        /* EXTRA-WIDE TOUCHSCREEN SCROLLBAR */
+        .touch-scroll::-webkit-scrollbar { width: 28px; }
+        .touch-scroll::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 14px; margin: 8px 0; }
+        .touch-scroll::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 14px; border: 4px solid #e2e8f0; min-height: 60px; }
+        .touch-scroll::-webkit-scrollbar-thumb:active { background: #3730a3; }
+
+        .mode-btn { @apply px-5 py-2 rounded-xl font-black text-sm transition border-2 cursor-pointer; }
+        .mode-active { @apply bg-indigo-600 text-white border-indigo-600 shadow-md; }
+        .mode-inactive { @apply bg-white text-gray-500 border-gray-200 hover:bg-gray-50; }
+
+        .big-action-btn { @apply py-4 px-6 rounded-2xl font-black text-2xl text-white shadow-xl transition transform active:scale-95 cursor-pointer flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed; }
+        
+        /* Big touch-friendly grading buttons */
+        .grade-touch-btn { @apply flex-1 py-5 rounded-xl font-black text-2xl border-4 transition transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-sm; }
+        .btn-wrong { @apply border-red-200 bg-red-50 text-red-600 hover:bg-red-100; }
+        .btn-wrong.selected { @apply bg-red-600 text-white border-red-700 shadow-inner; }
+        .btn-right { @apply border-green-200 bg-green-50 text-green-600 hover:bg-green-100; }
+        .btn-right.selected { @apply bg-green-600 text-white border-green-700 shadow-inner; }
+
+        /* Question Tabs when Questions > 1 */
+        .q-tab { @apply px-6 py-4 rounded-2xl font-black text-xl border-2 transition transform active:scale-95 cursor-pointer shadow-sm; }
+        .q-tab-active { @apply bg-indigo-600 text-white border-indigo-700 ring-4 ring-indigo-200; }
+        .q-tab-inactive { @apply bg-white text-gray-700 border-gray-200 hover:bg-gray-50; }
+
+        /* Compact Guide Timer Buttons */
+        .timer-preset-btn { @apply px-2.5 py-1.5 bg-gray-100 hover:bg-indigo-100 hover:text-indigo-700 text-gray-700 font-bold text-xs rounded-lg border border-gray-200 transition active:scale-95 cursor-pointer; }
+    </style>
+    <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body class="flex flex-col p-3 gap-3">
+
+    <!-- TOP BAR (Compact for Split-Screen) -->
+    <header class="bg-white rounded-2xl p-2.5 px-4 shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-2 flex-none">
+        
+        <!-- Left: Back, PIN, QR -->
+        <div class="flex items-center gap-2">
+            <a href="index.html" class="btn-back">← Back</a>
+            <div class="bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 flex items-center gap-2">
+                <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">PIN</span>
+                <span id="header-pin" class="text-xl font-black text-indigo-700 font-mono tracking-widest">----</span>
+            </div>
+            <button onclick="board.toggleQRModal()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition cursor-pointer">
+                📱 QR (<span id="roster-count">0</span>)
+            </button>
+        </div>
+
+        <!-- Centre: 2-Mode Selector (Basic vs Speed) -->
+        <div class="flex items-center bg-gray-100 p-1 rounded-2xl gap-1">
+            <button id="mode-basic" onclick="board.setMode('BASIC')" class="mode-btn mode-active">👥 Basic</button>
+            <button id="mode-speed" onclick="board.setMode('SPEED')" class="mode-btn mode-inactive">⚡ Speed</button>
+        </div>
+
+        <!-- Right: Guide Timer + Scoreboard -->
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
+                <button onclick="board.setTimer(10)" class="timer-preset-btn">10s</button>
+                <button onclick="board.setTimer(30)" class="timer-preset-btn">30s</button>
+                <button onclick="board.setTimer(60)" class="timer-preset-btn">1m</button>
+                <input type="number" id="custom-seconds" placeholder="Sec" min="1" max="999" onchange="board.setTimer(this.value)" class="w-14 px-2 py-1 text-xs font-bold border border-gray-300 rounded-lg text-center outline-none focus:border-indigo-500 bg-white">
+                <div id="timer-display" class="font-mono font-black text-lg text-gray-800 px-2 min-w-[64px] text-center rounded-lg transition-colors">00:30</div>
+                <button id="btn-timer-toggle" onclick="board.toggleTimer()" class="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center justify-center cursor-pointer active:scale-95">▶</button>
+            </div>
+
+            <button id="btn-scoreboard" onclick="board.toggleScoreboard()" class="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black rounded-xl text-sm shadow-md transition transform active:scale-95 cursor-pointer">
+                🏆 Scores
+            </button>
+        </div>
+    </header>
+
+    <!-- ROUND CONTROLS BAR -->
+    <div class="bg-white rounded-2xl p-3 px-5 shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-4 flex-none">
+        
+        <div class="flex flex-wrap items-center gap-4">
+            <span class="text-2xl font-black text-gray-800">Round <span id="round-display" class="text-indigo-600">0</span></span>
+
+            <!-- Question / Box Counter (Visible in Basic Mode; 1 = single box, 2+ = multi-box) -->
+            <div id="basic-box-config" class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
+                <span class="text-xs font-black uppercase tracking-wider text-gray-500">Questions:</span>
+                <button onclick="board.adjustBoxCount(-1)" class="w-9 h-9 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 font-black text-xl flex items-center justify-center active:scale-95 cursor-pointer">−</button>
+                <span id="box-count-display" class="text-2xl font-black text-indigo-600 w-8 text-center">1</span>
+                <button onclick="board.adjustBoxCount(1)" class="w-9 h-9 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 font-black text-xl flex items-center justify-center active:scale-95 cursor-pointer">+</button>
+            </div>
+
+            <span id="status-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gray-100 text-gray-600">Lobby Open</span>
+            <span id="sub-counter" class="text-base font-bold text-gray-500"></span>
+        </div>
+
+        <!-- SINGLE UNIFIED GO / STOP TOGGLE BUTTON -->
+        <div class="flex-1 max-w-sm ml-auto">
+            <button id="btn-round-toggle" onclick="board.toggleRound()" class="big-action-btn bg-green-500 hover:bg-green-600 w-full">
+                🚀 GO (Open Phones)
+            </button>
+        </div>
+    </div>
+
+    <!-- QUESTION TABS BAR (Only appears when grading Basic Mode with 2+ Questions) -->
+    <div id="multi-tabs-bar" class="hidden bg-indigo-50/80 rounded-2xl p-3 border-2 border-indigo-100 flex-wrap gap-2 items-center flex-none"></div>
+
+    <!-- MAIN STAGE (Scrollable Area with Wide Touch Scrollbar) -->
+    <main id="main-stage" class="flex-1 bg-white rounded-3xl shadow-inner border border-gray-200 p-6 overflow-y-auto touch-scroll relative">
+        
+        <!-- 1. BASIC GRID (Handles both 1-question and multi-question) -->
+        <div id="view-basic" class="grid grid-cols-1 md:grid-cols-2 gap-5 content-start pb-12"></div>
+
+        <!-- 2. SPEED SPOTLIGHT -->
+        <div id="view-speed" class="hidden h-full flex-col justify-center items-center"></div>
+
+        <!-- 3. SCOREBOARD OVERLAY -->
+        <div id="view-scoreboard" class="hidden space-y-4 max-w-3xl mx-auto pb-12">
+            <div class="flex justify-between items-center border-b-2 border-gray-100 pb-4 mb-6">
+                <h2 class="text-4xl font-black text-indigo-950">🏆 Session Standings</h2>
+                <button onclick="board.toggleScoreboard()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black rounded-xl text-lg cursor-pointer">✕ Back to Game</button>
+            </div>
+            
+            <div id="scoreboard-list" class="space-y-3"></div>
+
+            <!-- Subtle Reset Button tucked at the bottom -->
+            <div class="pt-10 mt-10 border-t border-gray-100 flex justify-end">
+                <button onclick="board.resetScores()" class="text-xs font-semibold text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer">
+                    Reset all scores to 0
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- QR & ROSTER MODAL -->
+    <div id="qr-modal" class="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl flex flex-col gap-6 max-h-[90vh]">
+            <div class="flex justify-between items-center border-b pb-4">
+                <div>
+                    <h2 class="text-3xl font-black text-gray-900">Join the Game</h2>
+                    <p id="join-url-display" class="text-sm text-gray-400 font-mono mt-1">...</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-bold text-gray-400 uppercase block">Room PIN</span>
+                    <span id="modal-pin" class="text-5xl font-black text-indigo-600 font-mono tracking-widest">----</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-8 bg-indigo-50/60 p-6 rounded-2xl border border-indigo-100">
+                <div id="qrcode" class="bg-white p-4 rounded-2xl shadow-sm border"></div>
+                <div class="flex-1 w-full">
+                    <h3 class="font-bold text-gray-500 uppercase text-xs tracking-wider mb-3">Connected Students (Can join anytime)</h3>
+                    <div id="modal-roster" class="flex flex-wrap gap-3 max-h-48 overflow-y-auto touch-scroll p-2">
+                        <p class="text-gray-400 italic">Waiting for students to scan...</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="board.toggleQRModal()" class="big-action-btn bg-indigo-600 hover:bg-indigo-700 w-full">
+                Ready to Play →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk"; // <-- Paste your key here
+        const STUDENT_FILE = "interactive_student.html";
+
+        const board = {
+            supabase: null,
+            sessionID: null,
+            pin: null,
+            status: 'WAITING',   // 'WAITING', 'GO', 'STOP'
+            mode: 'BASIC',       // 'BASIC' or 'SPEED'
+            displayRound: 0,     // Round number shown to teacher (1, 2, 3...)
+            questionCursor: 0,   // Continuous unique question ID counter so scores never collide
+            roundStartQ: 0,      // First question ID of the active round
+            roundBoxCount: 1,    // How many boxes were launched in the active round
+            boxCount: 1,         // Selected number of boxes for the NEXT Basic round (1 = single, 2+ = multi)
+            activeTabOffset: 0,  // Which tab (0 to roundBoxCount-1) the teacher is viewing
+            players: {},
+            allSubmissions: [],  // Holds all answers across the whole session for the scoreboard
+            showScoreboard: false,
+            isTransitioning: false,
+
+            // Guide Timer State
+            timerSeconds: 30,
+            timerRemaining: 30,
+            timerInterval: null,
+
+            init: async function() {
+                this.supabase = supabase.createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
+                
+                this.pin = Math.floor(1000 + Math.random() * 9000).toString();
+                const { data, error } = await this.supabase
+                    .from('live_sessions')
+                    .insert([{ pin: this.pin, status: 'WAITING', mode: 'BASIC_1', current_round: 0 }])
+                    .select()
+                    .single();
+
+                if (error) {
+                    alert("Database error: Check your SUPABASE_KEY.");
+                    console.error(error);
+                    return;
+                }
+
+                this.sessionID = data.id;
+                document.getElementById('header-pin').innerText = this.pin;
+                document.getElementById('modal-pin').innerText = this.pin;
+
+                this.generateQR();
+                this.subscribeToChanges();
+                this.renderStage();
+            },
+
+            // --- GUIDE TIMER & SYNTHESISED BEEP ---
+            setTimer: function(sec) {
+                const parsed = parseInt(sec, 10);
+                if (isNaN(parsed) || parsed <= 0) return;
+                this.stopTimerInterval();
+                this.timerSeconds = parsed;
+                this.timerRemaining = parsed;
+                this.updateTimerDisplay();
+            },
+
+            toggleTimer: function() {
+                if (this.timerInterval) {
+                    this.stopTimerInterval();
+                    this.timerRemaining = this.timerSeconds;
+                    this.updateTimerDisplay();
+                } else {
+                    if (this.timerRemaining <= 0) this.timerRemaining = this.timerSeconds;
+                    document.getElementById('btn-timer-toggle').innerText = "⏹";
+                    document.getElementById('btn-timer-toggle').classList.replace('bg-indigo-600', 'bg-red-500');
+                    
+                    this.timerInterval = setInterval(() => {
+                        this.timerRemaining--;
+                        this.updateTimerDisplay();
+                        if (this.timerRemaining <= 0) {
+                            this.stopTimerInterval();
+                            this.playBeep();
+                            const disp = document.getElementById('timer-display');
+                            disp.classList.add('bg-red-500', 'text-white', 'animate-bounce');
+                            setTimeout(() => disp.classList.remove('animate-bounce'), 3000);
+                        }
+                    }, 1000);
+                }
+            },
+
+            stopTimerInterval: function() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                const btn = document.getElementById('btn-timer-toggle');
+                btn.innerText = "▶";
+                btn.classList.replace('bg-red-500', 'bg-indigo-600');
+                document.getElementById('timer-display').classList.remove('bg-red-500', 'text-white', 'animate-bounce');
+            },
+
+            updateTimerDisplay: function() {
+                const m = Math.floor(this.timerRemaining / 60);
+                const s = this.timerRemaining % 60;
+                document.getElementById('timer-display').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            },
+
+            playBeep: function() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    [0, 0.22].forEach(delay => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(880, ctx.currentTime + delay);
+                        gain.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.16);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + delay);
+                        osc.stop(ctx.currentTime + delay + 0.16);
+                    });
+                } catch (e) {
+                    console.log("Audio not permitted:", e);
+                }
+            },
+
+            generateQR: function() {
+                const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                const joinUrl = `${basePath}/${STUDENT_FILE}?pin=${this.pin}`;
+                document.getElementById('join-url-display').innerText = joinUrl.replace(/^https?:\/\//, '');
+                new QRCode(document.getElementById("qrcode"), {
+                    text: joinUrl,
+                    width: 170,
+                    height: 170,
+                    colorDark: "#312e81",
+                    colorLight: "#ffffff"
+                });
+            },
+
+            subscribeToChanges: function() {
+                this.supabase.channel('players-channel')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_players', filter: `session_id=eq.${this.sessionID}` }, 
+                    (payload) => {
+                        this.players[payload.new.id] = payload.new;
+                        this.renderRoster();
+                        this.renderStage();
+                    }).subscribe();
+
+                this.supabase.channel('subs-channel')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'live_submissions', filter: `session_id=eq.${this.sessionID}` }, 
+                    (payload) => {
+                        if (payload.eventType === 'DELETE') {
+                            this.allSubmissions = this.allSubmissions.filter(s => s.id !== payload.old.id);
+                        } else {
+                            const idx = this.allSubmissions.findIndex(s => s.id === payload.new.id);
+                            if (idx > -1) this.allSubmissions[idx] = payload.new;
+                            else this.allSubmissions.push(payload.new);
+                        }
+                        this.renderStage();
+                    }).subscribe();
+            },
+
+            renderRoster: function() {
+                const pList = Object.values(this.players);
+                document.getElementById('roster-count').innerText = pList.length;
+                const container = document.getElementById('modal-roster');
+                if (pList.length === 0) return;
+                
+                container.innerHTML = pList.map(p => `
+                    <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm border border-indigo-100">
+                        <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-8 h-8 rounded-full object-cover border">
+                        <span class="font-black text-indigo-950 text-sm">${p.nickname}</span>
+                    </div>
+                `).join('');
+            },
+
+            toggleQRModal: function() {
+                document.getElementById('qr-modal').classList.toggle('hidden');
+            },
+
+            adjustBoxCount: function(delta) {
+                if (this.status === 'GO') return; // Lock box count while phones are open
+                this.boxCount = Math.max(1, Math.min(20, this.boxCount + delta));
+                document.getElementById('box-count-display').innerText = this.boxCount;
+            },
+
+            setMode: function(newMode) {
+                if (this.status === 'GO') {
+                    alert("Please tap STOP & REVEAL to finish the current round before switching modes.");
+                    return;
+                }
+                this.mode = newMode;
+                document.getElementById('mode-basic').className = newMode === 'BASIC' ? 'mode-btn mode-active' : 'mode-btn mode-inactive';
+                document.getElementById('mode-speed').className = newMode === 'SPEED' ? 'mode-btn mode-active' : 'mode-btn mode-inactive';
+                
+                const boxConfig = document.getElementById('basic-box-config');
+                if (newMode === 'BASIC') {
+                    boxConfig.classList.remove('hidden');
+                    boxConfig.classList.add('flex');
+                } else {
+                    boxConfig.classList.add('hidden');
+                    boxConfig.classList.remove('flex');
+                }
+
+                this.renderStage();
+            },
+
+            // --- SINGLE UNIFIED GO / STOP TOGGLE ---
+            toggleRound: async function() {
+                if (this.isTransitioning) return;
+                this.isTransitioning = true;
+                
+                const btn = document.getElementById('btn-round-toggle');
+                btn.disabled = true;
+
+                try {
+                    if (this.status === 'GO') {
+                        await this.stopRound();
+                    } else {
+                        await this.startRound();
+                    }
+                } finally {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        this.isTransitioning = false;
+                    }, 350);
+                }
+            },
+
+            startRound: async function() {
+                this.status = 'GO';
+                this.showScoreboard = false;
+                this.displayRound++;
+                this.activeTabOffset = 0;
+
+                // Determine how many questions this round uses, and advance the unique cursor without wiping history!
+                this.roundBoxCount = (this.mode === 'BASIC') ? this.boxCount : 1;
+                this.roundStartQ = this.questionCursor + 1;
+                this.questionCursor += this.roundBoxCount;
+
+                document.getElementById('round-display').innerText = this.displayRound;
+
+                const btn = document.getElementById('btn-round-toggle');
+                btn.innerHTML = "🛑 STOP & REVEAL";
+                btn.className = "big-action-btn bg-red-500 hover:bg-red-600 w-full animate-pulse";
+
+                const badge = document.getElementById('status-badge');
+                badge.innerText = "🟢 Phones Unlocked";
+                badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-green-100 text-green-700";
+
+                this.renderStage();
+
+                // Encode mode + box count so phones know both the start ID and how many boxes to draw
+                const dbMode = (this.mode === 'SPEED') ? 'SPEED' : `BASIC_${this.roundBoxCount}`;
+                if (this.sessionID) {
+                    await this.supabase
+                        .from('live_sessions')
+                        .update({ status: 'GO', mode: dbMode, current_round: this.roundStartQ })
+                        .eq('id', this.sessionID);
+                }
+            },
+
+            stopRound: async function() {
+                this.status = 'STOP';
+
+                const btn = document.getElementById('btn-round-toggle');
+                btn.innerHTML = "🚀 GO (Next Round)";
+                btn.className = "big-action-btn bg-green-500 hover:bg-green-600 w-full";
+
+                const badge = document.getElementById('status-badge');
+                badge.innerText = this.roundBoxCount > 1 
+                    ? `🔴 Locked — Tap Q1–Q${this.roundBoxCount}` 
+                    : "🔴 Phones Locked — Grading";
+                badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800";
+
+                this.renderStage();
+
+                if (this.sessionID) {
+                    await this.supabase
+                        .from('live_sessions')
+                        .update({ status: 'STOP' })
+                        .eq('id', this.sessionID);
+                }
+            },
+
+            selectTabOffset: function(offset) {
+                this.activeTabOffset = offset;
+                this.renderStage();
+            },
+
+            gradeSubmission: async function(subId, isCorrect) {
+                const targetSub = this.allSubmissions.find(s => s.id === subId);
+                if (!targetSub) return;
+
+                // In Speed mode (or when undoing), only grade the single card
+                if (this.mode === 'SPEED' || isCorrect === null) {
+                    targetSub.is_correct = isCorrect;
+                    this.renderStage();
+                    if (this.sessionID) {
+                        await this.supabase.from('live_submissions').update({ is_correct: isCorrect }).eq('id', subId);
+                    }
+                    return;
+                }
+
+                // In Basic mode: find ALL submissions in this same question with the exact same answer!
+                const cleanAnswer = targetSub.answer_text.trim().toUpperCase();
+                const matchingIds = [];
+
+                this.allSubmissions.forEach(s => {
+                    if (s.round_num === targetSub.round_num && s.answer_text.trim().toUpperCase() === cleanAnswer) {
+                        s.is_correct = isCorrect;
+                        matchingIds.push(s.id);
+                    }
+                });
+
+                this.renderStage();
+
+                // Update all matching answers in Supabase in one go
+                if (this.sessionID && matchingIds.length > 0) {
+                    await this.supabase
+                        .from('live_submissions')
+                        .update({ is_correct: isCorrect })
+                        .in('id', matchingIds);
+                }
+            },
+
+            resetScores: async function() {
+                if (!confirm("Reset all scores to 0 for everyone?")) return;
+                
+                // Clear all points in memory and in Supabase
+                this.allSubmissions.forEach(s => s.is_correct = null);
+                this.renderStage();
+
+                if (this.sessionID) {
+                    await this.supabase
+                        .from('live_submissions')
+                        .update({ is_correct: null })
+                        .eq('session_id', this.sessionID);
+                }
+            },
+
+            toggleScoreboard: function() {
+                this.showScoreboard = !this.showScoreboard;
+                this.renderStage();
+            },
+
+            // --- MAIN RENDER CONTROLLER ---
+            renderStage: function() {
+                const viewBasic = document.getElementById('view-basic');
+                const viewSpeed = document.getElementById('view-speed');
+                const viewScoreboard = document.getElementById('view-scoreboard');
+                const tabsBar = document.getElementById('multi-tabs-bar');
+
+                viewBasic.classList.add('hidden');
+                viewSpeed.classList.add('hidden');
+                viewSpeed.classList.remove('flex');
+                viewScoreboard.classList.add('hidden');
+                tabsBar.classList.add('hidden');
+                tabsBar.classList.remove('flex');
+
+                if (this.showScoreboard) {
+                    viewScoreboard.classList.remove('hidden');
+                    this.renderScoreboard();
+                    return;
+                }
+
+                if (this.mode === 'BASIC') {
+                    viewBasic.classList.remove('hidden');
+                    this.renderBasicMode();
+                } else {
+                    viewSpeed.classList.remove('hidden');
+                    viewSpeed.classList.add('flex');
+                    this.renderSpeedMode();
+                }
+            },
+
+            // --- RENDER: BASIC MODE (Handles both 1 box and multiple boxes) ---
+            renderBasicMode: function() {
+                const container = document.getElementById('view-basic');
+                const tabsBar = document.getElementById('multi-tabs-bar');
+                const pList = Object.values(this.players);
+                const totalPlayers = pList.length;
+
+                if (totalPlayers === 0) {
+                    document.getElementById('sub-counter').innerText = '';
+                    container.innerHTML = `<p class="col-span-full text-center text-gray-400 text-xl py-20 font-bold">No students joined yet. Tap "QR" above.</p>`;
+                    return;
+                }
+
+                if (this.displayRound === 0) {
+                    document.getElementById('sub-counter').innerText = '';
+                    container.innerHTML = `<p class="col-span-full text-center text-indigo-400 text-2xl py-20 font-black">Set Questions above (${this.boxCount}), then tap 🚀 GO!</p>`;
+                    return;
+                }
+
+                // Multi-Box Live Progress while Status === 'GO' and roundBoxCount > 1
+                if (this.status === 'GO' && this.roundBoxCount > 1) {
+                    const minQ = this.roundStartQ;
+                    const maxQ = this.roundStartQ + this.roundBoxCount - 1;
+                    let completedStudents = 0;
+
+                    container.innerHTML = pList.map(p => {
+                        const filledCount = this.allSubmissions.filter(
+                            s => s.player_id === p.id && s.round_num >= minQ && s.round_num <= maxQ && s.answer_text.trim() !== ''
+                        ).length;
+                        const isDone = filledCount >= this.roundBoxCount;
+                        if (filledCount > 0) completedStudents++;
+
+                        return `
+                            <div class="p-5 rounded-2xl border-4 ${isDone ? 'border-green-500 bg-green-50' : 'border-indigo-200 bg-white'} flex items-center gap-4 shadow-sm">
+                                <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-14 h-14 rounded-full object-cover border-2 border-indigo-300 bg-white">
+                                <div class="flex-1">
+                                    <div class="font-black text-xl text-indigo-950">${p.nickname}</div>
+                                    <div class="font-bold text-sm ${isDone ? 'text-green-700' : 'text-indigo-600'}">
+                                        ${filledCount > 0 ? `✅ Saved ${filledCount} / ${this.roundBoxCount} boxes` : '✏️ Typing...'}
+                                    </div>
+                                </div>
+                            </div>`;
+                    }).join('');
+
+                    document.getElementById('sub-counter').innerText = `${completedStudents} / ${totalPlayers} saved`;
+                    return;
+                }
+
+                // If Stopped and roundBoxCount > 1, show the Q1..QN grading tabs
+                if (this.status === 'STOP' && this.roundBoxCount > 1) {
+                    tabsBar.classList.remove('hidden');
+                    tabsBar.classList.add('flex');
+                    let tabsHTML = '';
+                    for (let i = 0; i < this.roundBoxCount; i++) {
+                        const isActive = this.activeTabOffset === i;
+                        tabsHTML += `
+                            <button onclick="board.selectTabOffset(${i})" class="q-tab ${isActive ? 'q-tab-active' : 'q-tab-inactive'}">
+                                Q${i + 1}
+                            </button>`;
+                    }
+                    tabsBar.innerHTML = tabsHTML;
+                }
+
+                const targetQNum = this.roundStartQ + this.activeTabOffset;
+                const roundSubs = this.allSubmissions.filter(s => s.round_num === targetQNum);
+                document.getElementById('sub-counter').innerText = `${roundSubs.length} / ${totalPlayers} answered`;
+
+                container.innerHTML = pList.map(p => {
+                    const sub = roundSubs.find(s => s.player_id === p.id);
+
+                    // 1. WHILE ROUND IS LIVE ('GO' with 1 question): Hide answers so students cannot copy!
+                    if (this.status === 'GO') {
+                        if (sub) {
+                            return `
+                                <div class="p-5 rounded-2xl border-4 border-indigo-500 bg-indigo-50 flex items-center gap-4 shadow-sm">
+                                    <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-14 h-14 rounded-full object-cover border-2 border-indigo-300 bg-white">
+                                    <div class="flex-1">
+                                        <div class="font-black text-xl text-indigo-950">${p.nickname}</div>
+                                        <div class="text-indigo-600 font-bold text-sm">✅ Answer locked in!</div>
+                                    </div>
+                                </div>`;
+                        } else {
+                            return `
+                                <div class="p-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center gap-4 opacity-70">
+                                    <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-14 h-14 rounded-full object-cover grayscale bg-white">
+                                    <div>
+                                        <div class="font-bold text-lg text-gray-600">${p.nickname}</div>
+                                        <div class="text-xs font-bold uppercase tracking-widest text-gray-400 animate-pulse">Typing...</div>
+                                    </div>
+                                </div>`;
+                        }
+                    }
+
+                    // 2. AFTER TEACHER TAPS STOP ('STOP'): Show big answer & huge touch buttons
+                    const answerText = (sub && sub.answer_text) ? sub.answer_text : "— No Answer —";
+                    const isRight = sub && sub.is_correct === true;
+                    const isWrong = sub && sub.is_correct === false;
+
+                    return `
+                        <div class="p-5 rounded-2xl border-2 ${isRight ? 'border-green-500 bg-green-50/40' : isWrong ? 'border-red-400 bg-red-50/40' : 'border-gray-300 bg-white'} shadow-md flex flex-col justify-between gap-4">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div class="flex items-center gap-3">
+                                    <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-12 h-12 rounded-full object-cover border bg-white">
+                                    <span class="font-black text-lg text-gray-700">${p.nickname}</span>
+                                </div>
+                                ${this.roundBoxCount > 1 ? `<span class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700">Q${this.activeTabOffset + 1}</span>` : ''}
+                            </div>
+
+                            <div class="text-3xl font-black text-gray-900 break-words py-2 text-center bg-gray-50 rounded-xl px-3 border border-gray-100">
+                                ${answerText}
+                            </div>
+
+                            ${sub ? `
+                                <div class="flex gap-3 pt-1">
+                                    <button onclick="board.gradeSubmission('${sub.id}', false)" class="grade-touch-btn btn-wrong ${isWrong ? 'selected' : ''}">
+                                        ✕ WRONG
+                                    </button>
+                                    <button onclick="board.gradeSubmission('${sub.id}', true)" class="grade-touch-btn btn-right ${isRight ? 'selected' : ''}">
+                                        ✓ RIGHT
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="text-center py-4 text-sm font-bold text-gray-400 uppercase tracking-wider">Did not submit</div>
+                            `}
+                        </div>`;
+                }).join('');
+            },
+
+            // --- RENDER: SPEED (CASCADE) MODE ---
+            renderSpeedMode: function() {
+                const container = document.getElementById('view-speed');
+                const roundSubs = this.allSubmissions
+                    .filter(s => s.round_num === this.roundStartQ)
+                    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                const totalPlayers = Object.keys(this.players).length;
+                document.getElementById('sub-counter').innerText = this.displayRound > 0 
+                    ? `${roundSubs.length} / ${totalPlayers} answered` 
+                    : '';
+
+                if (this.displayRound === 0) {
+                    container.innerHTML = `<p class="text-center text-indigo-400 text-2xl font-black">⚡ Speed Mode Ready.<br>Tap 🚀 GO to start!</p>`;
+                    return;
+                }
+
+                if (this.status === 'GO') {
+                    const firstSub = roundSubs[0];
+                    const firstPlayer = firstSub ? this.players[firstSub.player_id] : null;
+
+                    container.innerHTML = `
+                        <div class="text-center space-y-6 max-w-lg">
+                            <div class="text-7xl animate-bounce">${roundSubs.length > 0 ? '🔔' : '⚡'}</div>
+                            <h3 class="text-3xl font-black text-gray-800">
+                                ${firstPlayer ? `${firstPlayer.nickname} buzzed in 1st!` : 'Waiting for fastest answer...'}
+                            </h3>
+                            <p class="text-xl font-bold text-indigo-600 bg-indigo-50 py-3 px-6 rounded-full inline-block">
+                                ${roundSubs.length} student(s) in queue
+                            </p>
+                            <p class="text-gray-400 text-sm">Tap 🛑 STOP & REVEAL when ready to judge!</p>
+                        </div>`;
+                    return;
+                }
+
+                if (roundSubs.length === 0) {
+                    container.innerHTML = `<p class="text-2xl font-bold text-gray-400">Nobody submitted an answer this round!</p>`;
+                    return;
+                }
+
+                const winnerSub = roundSubs.find(s => s.is_correct === true);
+                if (winnerSub) {
+                    const winner = this.players[winnerSub.player_id];
+                    const rank = roundSubs.indexOf(winnerSub) + 1;
+                    container.innerHTML = `
+                        <div class="bg-green-50 border-4 border-green-500 rounded-3xl p-8 max-w-xl w-full text-center space-y-5 shadow-xl">
+                            <div class="text-5xl">🎉</div>
+                            <img src="avatars/img_${winner.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${winner.nickname}'" class="w-24 h-24 rounded-full mx-auto object-cover border-4 border-green-500 bg-white">
+                            <div class="text-sm font-black uppercase tracking-widest text-green-700">Round Winner (#${rank} Fastest)</div>
+                            <h3 class="text-4xl font-black text-gray-900">${winner.nickname}</h3>
+                            <div class="text-3xl font-black text-green-900 bg-white py-4 px-6 rounded-2xl border-2 border-green-200">${winnerSub.answer_text}</div>
+                            <button onclick="board.gradeSubmission('${winnerSub.id}', null)" class="text-sm text-gray-500 underline font-bold pt-2 cursor-pointer">Undo decision</button>
+                        </div>`;
+                    return;
+                }
+
+                const currentCandidateSub = roundSubs.find(s => s.is_correct === null);
+
+                if (!currentCandidateSub) {
+                    container.innerHTML = `
+                        <div class="text-center space-y-4">
+                            <div class="text-6xl">❌</div>
+                            <h3 class="text-3xl font-black text-gray-800">All ${roundSubs.length} submitted answers were incorrect!</h3>
+                            <p class="text-gray-500 font-bold">Tap 🚀 GO to start the next round.</p>
+                        </div>`;
+                    return;
+                }
+
+                const candidate = this.players[currentCandidateSub.player_id];
+                const position = roundSubs.indexOf(currentCandidateSub) + 1;
+
+                container.innerHTML = `
+                    <div class="bg-white border-4 border-indigo-600 rounded-3xl p-8 max-w-xl w-full text-center space-y-6 shadow-2xl">
+                        <div class="flex justify-between items-center border-b pb-4">
+                            <span class="bg-indigo-600 text-white font-black px-4 py-1.5 rounded-full text-sm uppercase tracking-wider">
+                                ⚡ #${position} Fastest
+                            </span>
+                            <span class="text-sm font-bold text-gray-400">${roundSubs.length - position} waiting behind</span>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-4">
+                            <img src="avatars/img_${candidate.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${candidate.nickname}'" class="w-20 h-20 rounded-full object-cover border-4 border-indigo-100 bg-white">
+                            <h3 class="text-4xl font-black text-gray-900">${candidate.nickname}</h3>
+                        </div>
+
+                        <div class="text-4xl font-black text-indigo-950 bg-indigo-50 py-6 px-4 rounded-2xl border-2 border-indigo-100 break-words">
+                            ${currentCandidateSub.answer_text}
+                        </div>
+
+                        <div class="flex gap-4 pt-2">
+                            <button onclick="board.gradeSubmission('${currentCandidateSub.id}', false)" class="grade-touch-btn btn-wrong text-2xl py-6">
+                                ✕ WRONG (Show Next)
+                            </button>
+                            <button onclick="board.gradeSubmission('${currentCandidateSub.id}', true)" class="grade-touch-btn btn-right text-2xl py-6">
+                                ✓ CORRECT (+1 Pt)
+                            </button>
+                        </div>
+                    </div>`;
+            },
+
+            // --- RENDER: UNIFIED SESSION SCOREBOARD ---
+            renderScoreboard: function() {
+                const list = document.getElementById('scoreboard-list');
+                const scores = {};
+
+                Object.keys(this.players).forEach(pid => scores[pid] = 0);
+                this.allSubmissions.forEach(s => {
+                    if (s.is_correct === true && scores[s.player_id] !== undefined) {
+                        scores[s.player_id] += 1;
+                    }
+                });
+
+                const sortedIds = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+
+                if (sortedIds.length === 0) {
+                    list.innerHTML = `<p class="text-center text-gray-400 py-12 font-bold">No students connected yet.</p>`;
+                    return;
+                }
+
+                list.innerHTML = sortedIds.map((pid, idx) => {
+                    const p = this.players[pid];
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const rankDisplay = idx < 3 ? medals[idx] : `#${idx + 1}`;
+
+                    return `
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border-2 border-gray-200">
+                            <div class="flex items-center gap-4">
+                                <span class="text-3xl font-black w-12 text-center text-gray-500">${rankDisplay}</span>
+                                <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow">
+                                <span class="text-2xl font-black text-gray-900">${p.nickname}</span>
+                            </div>
+                            <div class="text-4xl font-black text-indigo-600 px-4">
+                                ${scores[pid]} <span class="text-sm font-bold text-gray-400 uppercase">pts</span>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+        };
+
+        board.init();
+    </script>
+</body>
+</html>
