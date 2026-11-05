@@ -26,25 +26,34 @@
         .big-action-btn { @apply py-4 px-6 rounded-2xl font-black text-2xl text-white shadow-xl transition transform active:scale-95 cursor-pointer flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed; }
         
         /* Big touch-friendly grading buttons */
-        .grade-touch-btn { @apply flex-1 py-5 rounded-xl font-black text-2xl border-4 transition transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-sm; }
+        .grade-touch-btn { @apply flex-1 py-4 rounded-xl font-black text-xl border-4 transition transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-sm; }
         .btn-wrong { @apply border-red-200 bg-red-50 text-red-600 hover:bg-red-100; }
         .btn-wrong.selected { @apply bg-red-600 text-white border-red-700 shadow-inner; }
+        .btn-partial { @apply border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100; }
+        .btn-partial.selected { @apply bg-amber-500 text-white border-amber-600 shadow-inner; }
         .btn-right { @apply border-green-200 bg-green-50 text-green-600 hover:bg-green-100; }
         .btn-right.selected { @apply bg-green-600 text-white border-green-700 shadow-inner; }
 
         /* Question Tabs when Questions > 1 */
-        .q-tab { @apply px-6 py-4 rounded-2xl font-black text-xl border-2 transition transform active:scale-95 cursor-pointer shadow-sm; }
+        .q-tab { @apply px-5 py-3 rounded-2xl font-black text-lg border-2 transition transform active:scale-95 cursor-pointer shadow-sm; }
         .q-tab-active { @apply bg-indigo-600 text-white border-indigo-700 ring-4 ring-indigo-200; }
         .q-tab-inactive { @apply bg-white text-gray-700 border-gray-200 hover:bg-gray-50; }
 
         /* Compact Guide Timer Buttons */
         .timer-preset-btn { @apply px-2.5 py-1.5 bg-gray-100 hover:bg-indigo-100 hover:text-indigo-700 text-gray-700 font-bold text-xs rounded-lg border border-gray-200 transition active:scale-95 cursor-pointer; }
+
+        /* Exam Text Display Styles */
+        .exam-reading-text { font-size: 1.35rem; line-height: 2.3; color: #1f2937; text-align: justify; }
+        .board-gap-pill { @apply inline-flex items-center justify-center px-3 py-0.5 mx-1 rounded-lg font-black border-2 transition cursor-pointer select-none align-baseline; }
+        .board-gap-pill.active-gap { @apply ring-4 ring-indigo-300 border-indigo-600 bg-indigo-50 text-indigo-900; }
+        .board-gap-pill.revealed { @apply bg-green-100 border-green-500 text-green-800; }
+        .root-badge { @apply font-black text-indigo-700 text-xs ml-1 mr-2 px-2 py-0.5 bg-indigo-100 rounded uppercase tracking-wider align-middle border border-indigo-200; }
     </style>
     <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body class="flex flex-col p-3 gap-3">
 
-    <!-- TOP BAR (Compact for Split-Screen) -->
+    <!-- TOP BAR -->
     <header class="bg-white rounded-2xl p-2.5 px-4 shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-2 flex-none">
         
         <!-- Left: Back, PIN, QR -->
@@ -59,19 +68,21 @@
             </button>
         </div>
 
-        <!-- Centre: 2-Mode Selector (Basic vs Speed) -->
+        <!-- Centre: 3-Mode Selector (Basic vs Speed vs Exam) -->
         <div class="flex items-center bg-gray-100 p-1 rounded-2xl gap-1">
             <button id="mode-basic" onclick="board.setMode('BASIC')" class="mode-btn mode-active">👥 Basic</button>
             <button id="mode-speed" onclick="board.setMode('SPEED')" class="mode-btn mode-inactive">⚡ Speed</button>
+            <button id="mode-exam" onclick="board.setMode('EXAM')" class="mode-btn mode-inactive">📚 Exam</button>
         </div>
 
         <!-- Right: Guide Timer + Scoreboard -->
         <div class="flex items-center gap-2">
             <div class="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
-                <button onclick="board.setTimer(10)" class="timer-preset-btn">10s</button>
                 <button onclick="board.setTimer(30)" class="timer-preset-btn">30s</button>
                 <button onclick="board.setTimer(60)" class="timer-preset-btn">1m</button>
-                <input type="number" id="custom-seconds" placeholder="Sec" min="1" max="999" onchange="board.setTimer(this.value)" class="w-14 px-2 py-1 text-xs font-bold border border-gray-300 rounded-lg text-center outline-none focus:border-indigo-500 bg-white">
+                <button onclick="board.setTimer(300)" class="timer-preset-btn">5m</button>
+                <button onclick="board.setTimer(600)" class="timer-preset-btn">10m</button>
+                <input type="number" id="custom-seconds" placeholder="Sec" min="1" max="3600" onchange="board.setTimer(this.value)" class="w-16 px-2 py-1 text-xs font-bold border border-gray-300 rounded-lg text-center outline-none focus:border-indigo-500 bg-white">
                 <div id="timer-display" class="font-mono font-black text-lg text-gray-800 px-2 min-w-[64px] text-center rounded-lg transition-colors">00:30</div>
                 <button id="btn-timer-toggle" onclick="board.toggleTimer()" class="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center justify-center cursor-pointer active:scale-95">▶</button>
             </div>
@@ -88,12 +99,24 @@
         <div class="flex flex-wrap items-center gap-4">
             <span class="text-2xl font-black text-gray-800">Round <span id="round-display" class="text-indigo-600">0</span></span>
 
-            <!-- Question / Box Counter (Visible in Basic Mode; 1 = single box, 2+ = multi-box) -->
+            <!-- Question / Box Counter (Visible in Basic Mode) -->
             <div id="basic-box-config" class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
                 <span class="text-xs font-black uppercase tracking-wider text-gray-500">Questions:</span>
                 <button onclick="board.adjustBoxCount(-1)" class="w-9 h-9 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 font-black text-xl flex items-center justify-center active:scale-95 cursor-pointer">−</button>
                 <span id="box-count-display" class="text-2xl font-black text-indigo-600 w-8 text-center">1</span>
                 <button onclick="board.adjustBoxCount(1)" class="w-9 h-9 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 font-black text-xl flex items-center justify-center active:scale-95 cursor-pointer">+</button>
+            </div>
+
+            <!-- Exam Controls (Visible in Exam Mode) -->
+            <div id="exam-round-config" class="hidden items-center gap-2">
+                <button onclick="board.openExamSetup()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black rounded-xl text-sm border-2 border-indigo-200 transition cursor-pointer">
+                    ⚙️ Configure Exam
+                </button>
+                <div id="full-exam-pacer" class="hidden items-center bg-gray-100 p-1 rounded-xl gap-1 border border-gray-200">
+                    <button id="pace-btn-2" onclick="board.paceFullExam(2)" class="px-3 py-1.5 rounded-lg font-black text-xs cursor-pointer transition">1. Part 2</button>
+                    <button id="pace-btn-3" onclick="board.paceFullExam(3)" class="px-3 py-1.5 rounded-lg font-black text-xs cursor-pointer transition">2. Part 3</button>
+                    <button id="pace-btn-4" onclick="board.paceFullExam(4)" class="px-3 py-1.5 rounded-lg font-black text-xs cursor-pointer transition">3. Part 4</button>
+                </div>
             </div>
 
             <span id="status-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gray-100 text-gray-600">Lobby Open</span>
@@ -108,19 +131,96 @@
         </div>
     </div>
 
-    <!-- QUESTION TABS BAR (Only appears when grading Basic Mode with 2+ Questions) -->
-    <div id="multi-tabs-bar" class="hidden bg-indigo-50/80 rounded-2xl p-3 border-2 border-indigo-100 flex-wrap gap-2 items-center flex-none"></div>
+    <!-- QUESTION TABS BAR (Appears when grading Basic Mode 2+ Questions OR Exam Mode) -->
+    <div id="multi-tabs-bar" class="hidden bg-indigo-50/80 rounded-2xl p-3 border-2 border-indigo-100 flex-wrap gap-2 items-center justify-between flex-none"></div>
 
-    <!-- MAIN STAGE (Scrollable Area with Wide Touch Scrollbar) -->
+    <!-- MAIN STAGE -->
     <main id="main-stage" class="flex-1 bg-white rounded-3xl shadow-inner border border-gray-200 p-6 overflow-y-auto touch-scroll relative">
         
-        <!-- 1. BASIC GRID (Handles both 1-question and multi-question) -->
+        <!-- 1. BASIC GRID -->
         <div id="view-basic" class="grid grid-cols-1 md:grid-cols-2 gap-5 content-start pb-12"></div>
 
         <!-- 2. SPEED SPOTLIGHT -->
         <div id="view-speed" class="hidden h-full flex-col justify-center items-center"></div>
 
-        <!-- 3. SCOREBOARD OVERLAY -->
+        <!-- 3. EXAM STAGE -->
+        <div id="view-exam" class="hidden flex-col gap-6 pb-12">
+            
+            <!-- 3A. EXAM CONFIG DRAWER -->
+            <div id="exam-setup-panel" class="max-w-4xl mx-auto w-full bg-gray-50 p-6 rounded-3xl border-2 border-indigo-100 space-y-6">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-indigo-950">📚 Configure Exam Activity</h2>
+                        <p id="exam-db-status" class="text-xs font-bold text-gray-400 mt-0.5">Loading question bank...</p>
+                    </div>
+                    <button onclick="board.randomiseExamSelection()" class="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-xl text-sm shadow transition active:scale-95 cursor-pointer">
+                        🎲 Randomise Selection
+                    </button>
+                </div>
+
+                <!-- Step 1 & 2: Level & Scope -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">1. Select Level</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="board.setExamLevel('B2')" id="ex-lvl-B2" class="py-3 rounded-xl font-black text-xl border-2 transition cursor-pointer">B2</button>
+                            <button onclick="board.setExamLevel('C1')" id="ex-lvl-C1" class="py-3 rounded-xl font-black text-xl border-2 transition cursor-pointer">C1</button>
+                            <button onclick="board.setExamLevel('C2')" id="ex-lvl-C2" class="py-3 rounded-xl font-black text-xl border-2 transition cursor-pointer">C2</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">2. Select Exam Part</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="board.setExamScope('2')" id="ex-scope-2" class="py-3 rounded-xl font-black text-sm border-2 transition cursor-pointer">Part 2</button>
+                            <button onclick="board.setExamScope('3')" id="ex-scope-3" class="py-3 rounded-xl font-black text-sm border-2 transition cursor-pointer">Part 3</button>
+                            <button onclick="board.setExamScope('4')" id="ex-scope-4" class="py-3 rounded-xl font-black text-sm border-2 transition cursor-pointer">Part 4</button>
+                            <button onclick="board.setExamScope('FULL')" id="ex-scope-FULL" class="py-3 rounded-xl font-black text-sm border-2 transition cursor-pointer">Full Exam</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Granular Dropdowns -->
+                <div class="space-y-4 bg-white p-5 rounded-2xl border border-gray-200">
+                    <div id="picker-p2" class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="font-black text-sm text-indigo-950 min-w-[180px]">Part 2 (Open Cloze):</label>
+                        <select id="select-p2" onchange="board.examConfig.p2Id = this.value" class="flex-1 p-3 border-2 border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500"></select>
+                    </div>
+
+                    <div id="picker-p3" class="hidden flex-col sm:flex-row sm:items-center justify-between gap-2 border-t pt-4">
+                        <label class="font-black text-sm text-purple-950 min-w-[180px]">Part 3 (Word Form):</label>
+                        <select id="select-p3" onchange="board.examConfig.p3Id = this.value" class="flex-1 p-3 border-2 border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500"></select>
+                    </div>
+
+                    <div id="picker-p4" class="hidden flex-col gap-3 border-t pt-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <label class="font-black text-sm text-teal-950">Part 4 (Transformations):</label>
+                            <div class="flex gap-2 bg-gray-100 p-1 rounded-xl">
+                                <button onclick="board.setP4Source('RANDOM')" id="p4-src-RANDOM" class="px-3 py-1 rounded-lg font-bold text-xs cursor-pointer">Random 6</button>
+                                <button onclick="board.setP4Source('SET')" id="p4-src-SET" class="px-3 py-1 rounded-lg font-bold text-xs cursor-pointer">By Exam Set</button>
+                                <button onclick="board.setP4Source('GRAMMAR')" id="p4-src-GRAMMAR" class="px-3 py-1 rounded-lg font-bold text-xs cursor-pointer">By Grammar</button>
+                            </div>
+                        </div>
+                        <select id="select-p4-set" onchange="board.examConfig.p4Set = this.value" class="hidden w-full p-3 border-2 border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500"></select>
+                        <select id="select-p4-grammar" onchange="board.examConfig.p4Grammar = this.value" class="hidden w-full p-3 border-2 border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500"></select>
+                    </div>
+                </div>
+
+                <div class="text-center pt-2">
+                    <p class="text-sm font-bold text-indigo-600">👉 Tap <span class="bg-green-500 text-white px-2.5 py-1 rounded-lg font-black">🚀 GO (Open Phones)</span> above when ready to launch!</p>
+                </div>
+            </div>
+
+            <!-- 3B. ACTIVE EXAM BOARD (Context Card + Student Progress / Grading Cards) -->
+            <div id="exam-live-stage" class="hidden flex-col gap-6">
+                <!-- Context Card (Shows Text or Current Part 4 Transformation) -->
+                <div id="exam-context-card" class="bg-amber-50/40 border-2 border-amber-200/80 rounded-3xl p-6 shadow-sm"></div>
+                
+                <!-- Student Cards Grid -->
+                <div id="exam-students-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 content-start"></div>
+            </div>
+        </div>
+
+        <!-- 4. SCOREBOARD OVERLAY -->
         <div id="view-scoreboard" class="hidden space-y-4 max-w-3xl mx-auto pb-12">
             <div class="flex justify-between items-center border-b-2 border-gray-100 pb-4 mb-6">
                 <h2 class="text-4xl font-black text-indigo-950">🏆 Session Standings</h2>
@@ -129,7 +229,6 @@
             
             <div id="scoreboard-list" class="space-y-3"></div>
 
-            <!-- Subtle Reset Button tucked at the bottom -->
             <div class="pt-10 mt-10 border-t border-gray-100 flex justify-end">
                 <button onclick="board.resetScores()" class="text-xs font-semibold text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer">
                     Reset all scores to 0
@@ -175,27 +274,46 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk"; // <-- Paste your key here
         const STUDENT_FILE = "interactive_student.html";
 
-        const board = {
+const board = {
             supabase: null,
             sessionID: null,
             pin: null,
-            status: 'WAITING',   // 'WAITING', 'GO', 'STOP'
-            mode: 'BASIC',       // 'BASIC' or 'SPEED'
-            displayRound: 0,     // Round number shown to teacher (1, 2, 3...)
-            questionCursor: 0,   // Continuous unique question ID counter so scores never collide
-            roundStartQ: 0,      // First question ID of the active round
-            roundBoxCount: 1,    // How many boxes were launched in the active round
-            boxCount: 1,         // Selected number of boxes for the NEXT Basic round (1 = single, 2+ = multi)
-            activeTabOffset: 0,  // Which tab (0 to roundBoxCount-1) the teacher is viewing
+            status: 'WAITING',   
+            mode: 'BASIC',       
+            displayRound: 0,
+            questionCursor: 0,
+            roundStartQ: 0,
+            roundBoxCount: 1,
+            boxCount: 1,
+            activeTabOffset: 0,
             players: {},
-            allSubmissions: [],  // Holds all answers across the whole session for the scoreboard
+            allSubmissions: [],
             showScoreboard: false,
             isTransitioning: false,
 
-            // Guide Timer State
             timerSeconds: 30,
             timerRemaining: 30,
             timerInterval: null,
+
+            examDB: { part2: [], part3: [], part4: [], loaded: false },
+            examConfig: {
+                level: 'B2',
+                scope: '2',        
+                p2Id: 'RANDOM',
+                p3Id: 'RANDOM',
+                p4Source: 'RANDOM', 
+                p4Set: '',
+                p4Grammar: ''
+            },
+            examRun: {
+                showSetup: true,
+                activePart: null,   
+                p2Item: null,
+                p3Item: null,
+                p4Items: [],
+                partStartQ: { 2: null, 3: null, 4: null },
+                revealedGaps: {}
+            },
 
             init: async function() {
                 this.supabase = supabase.createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
@@ -209,7 +327,6 @@
 
                 if (error) {
                     alert("Database error: Check your SUPABASE_KEY.");
-                    console.error(error);
                     return;
                 }
 
@@ -219,10 +336,43 @@
 
                 this.generateQR();
                 this.subscribeToChanges();
+                this.loadExamBanks();
                 this.renderStage();
             },
 
-            // --- GUIDE TIMER & SYNTHESISED BEEP ---
+            loadExamBanks: async function() {
+                try {
+                    const fixText = (str) => typeof str === 'string' ? str.replace(/[麓’‘´`]/g, "'") : str;
+                    const [r2, r3, r4] = await Promise.all([
+                        this.supabase.from('exam_part2').select('*'),
+                        this.supabase.from('exam_part3').select('*'),
+                        this.supabase.from('exam_part4').select('*').limit(5000).order('id', { ascending: true })
+                    ]);
+
+                    this.examDB.part2 = r2.data || [];
+                    this.examDB.part3 = r3.data || [];
+                    this.examDB.part4 = (r4.data || []).map(q => {
+                        q.sentence1 = fixText(q.sentence1);
+                        q.sentence2_pre = fixText(q.sentence2_pre);
+                        q.sentence2_post = fixText(q.sentence2_post);
+                        if (Array.isArray(q.answers)) q.answers = q.answers.map(fixText);
+                        else if (typeof q.answers === 'string') q.answers = fixText(q.answers);
+                        if (Array.isArray(q.answer)) q.answer = q.answer.map(fixText);
+                        else if (typeof q.answer === 'string') q.answer = fixText(q.answer);
+                        return q;
+                    });
+                    this.examDB.loaded = true;
+                    const st = document.getElementById('exam-db-status');
+                    if (st) {
+                        st.innerText = `Ready (${this.examDB.part2.length} P2, ${this.examDB.part3.length} P3, ${this.examDB.part4.length} P4 loaded)`;
+                        st.className = "text-xs font-bold text-green-600 mt-0.5";
+                    }
+                    this.refreshExamConfigUI();
+                } catch (e) {
+                    console.error("Exam load error:", e);
+                }
+            },
+
             setTimer: function(sec) {
                 const parsed = parseInt(sec, 10);
                 if (isNaN(parsed) || parsed <= 0) return;
@@ -288,9 +438,7 @@
                         osc.start(ctx.currentTime + delay);
                         osc.stop(ctx.currentTime + delay + 0.16);
                     });
-                } catch (e) {
-                    console.log("Audio not permitted:", e);
-                }
+                } catch (e) {}
             },
 
             generateQR: function() {
@@ -308,9 +456,9 @@
 
             subscribeToChanges: function() {
                 this.supabase.channel('players-channel')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_players', filter: `session_id=eq.${this.sessionID}` }, 
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'live_players', filter: `session_id=eq.${this.sessionID}` }, 
                     (payload) => {
-                        this.players[payload.new.id] = payload.new;
+                        if (payload.new) this.players[payload.new.id] = payload.new;
                         this.renderRoster();
                         this.renderStage();
                     }).subscribe();
@@ -324,9 +472,77 @@
                             const idx = this.allSubmissions.findIndex(s => s.id === payload.new.id);
                             if (idx > -1) this.allSubmissions[idx] = payload.new;
                             else this.allSubmissions.push(payload.new);
+
+                            if (this.mode === 'EXAM' && payload.new.is_correct === null) {
+                                this.autoGradeExamSubmission(payload.new);
+                            }
                         }
                         this.renderStage();
                     }).subscribe();
+            },
+
+            cleanAnswerString: function(str) {
+                return String(str || '').toUpperCase().replace(/[.,;!]/g, '').replace(/\s\s+/g, ' ').trim();
+            },
+
+            getExamValidOptions: function(partNum, gapIndexZeroBased) {
+                if (partNum === 2 && this.examRun.p2Item && this.examRun.p2Item.answers) {
+                    const raw = this.examRun.p2Item.answers[gapIndexZeroBased];
+                    if (!raw) return [];
+                    return (Array.isArray(raw) ? raw : String(raw).split('/')).map(s => this.cleanAnswerString(s));
+                }
+                if (partNum === 3 && this.examRun.p3Item && this.examRun.p3Item.answers) {
+                    const ansObj = this.examRun.p3Item.answers[gapIndexZeroBased + 1] || this.examRun.p3Item.answers[gapIndexZeroBased];
+                    if (!ansObj) return [];
+                    const raw = ansObj.answer || ansObj;
+                    return (Array.isArray(raw) ? raw : String(raw).split('/')).map(s => this.cleanAnswerString(s));
+                }
+                return [];
+            },
+
+            autoGradeExamSubmission: async function(sub) {
+                const offset = sub.round_num - this.roundStartQ;
+                if (offset < 0 || offset >= this.roundBoxCount) return;
+
+                const partNum = this.examRun.activePart;
+                if (partNum === 2 || partNum === 3) {
+                    const validOptions = this.getExamValidOptions(partNum, offset);
+                    if (validOptions.length === 0) return;
+
+                    const studentClean = this.cleanAnswerString(sub.answer_text);
+                    const isRight = validOptions.includes(studentClean);
+                    sub.is_correct = isRight;
+
+                    await this.supabase
+                        .from('live_submissions')
+                        .update({ is_correct: isRight })
+                        .eq('id', sub.id);
+                }
+            },
+
+            // NEW: Background grader for when STOP EXAM is clicked
+            autoGradeAllPending: function() {
+                [2, 3].forEach(partNum => {
+                    if (this.examRun.partStartQ[partNum] !== null) {
+                        const startQ = this.examRun.partStartQ[partNum];
+                        const maxQ = startQ + 7;
+                        this.allSubmissions.forEach(s => {
+                            if (s.round_num >= startQ && s.round_num <= maxQ && s.is_correct === null) {
+                                const offset = s.round_num - startQ;
+                                const validOptions = this.getExamValidOptions(partNum, offset);
+                                if (validOptions.length > 0) {
+                                    const studentClean = this.cleanAnswerString(s.answer_text);
+                                    s.is_correct = validOptions.includes(studentClean);
+                                    if (this.sessionID) {
+                                        this.supabase.from('live_submissions')
+                                            .update({ is_correct: s.is_correct })
+                                            .eq('id', s.id).then();
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
             },
 
             renderRoster: function() {
@@ -348,7 +564,7 @@
             },
 
             adjustBoxCount: function(delta) {
-                if (this.status === 'GO') return; // Lock box count while phones are open
+                if (this.status === 'GO') return;
                 this.boxCount = Math.max(1, Math.min(20, this.boxCount + delta));
                 document.getElementById('box-count-display').innerText = this.boxCount;
             },
@@ -361,20 +577,218 @@
                 this.mode = newMode;
                 document.getElementById('mode-basic').className = newMode === 'BASIC' ? 'mode-btn mode-active' : 'mode-btn mode-inactive';
                 document.getElementById('mode-speed').className = newMode === 'SPEED' ? 'mode-btn mode-active' : 'mode-btn mode-inactive';
+                document.getElementById('mode-exam').className = newMode === 'EXAM' ? 'mode-btn mode-active' : 'mode-btn mode-inactive';
                 
                 const boxConfig = document.getElementById('basic-box-config');
+                const examConfig = document.getElementById('exam-round-config');
+
+                boxConfig.classList.add('hidden');
+                boxConfig.classList.remove('flex');
+                examConfig.classList.add('hidden');
+                examConfig.classList.remove('flex');
+
                 if (newMode === 'BASIC') {
                     boxConfig.classList.remove('hidden');
                     boxConfig.classList.add('flex');
-                } else {
-                    boxConfig.classList.add('hidden');
-                    boxConfig.classList.remove('flex');
+                } else if (newMode === 'EXAM') {
+                    examConfig.classList.remove('hidden');
+                    examConfig.classList.add('flex');
+                    this.refreshExamConfigUI();
                 }
 
                 this.renderStage();
             },
 
-            // --- SINGLE UNIFIED GO / STOP TOGGLE ---
+            openExamSetup: function() {
+                if (this.status === 'GO') {
+                    alert("Please tap STOP EXAM before changing the exam configuration.");
+                    return;
+                }
+                this.examRun.showSetup = true;
+                this.renderStage();
+            },
+
+            setExamLevel: function(lvl) {
+                this.examConfig.level = lvl;
+                this.examConfig.p2Id = 'RANDOM';
+                this.examConfig.p3Id = 'RANDOM';
+                this.examConfig.p4Set = '';
+                this.examConfig.p4Grammar = '';
+                this.refreshExamConfigUI();
+            },
+
+            setExamScope: function(sc) {
+                this.examConfig.scope = sc;
+                this.refreshExamConfigUI();
+            },
+
+            setP4Source: function(src) {
+                this.examConfig.p4Source = src;
+                this.refreshExamConfigUI();
+            },
+
+            refreshExamConfigUI: function() {
+                const cfg = this.examConfig;
+                ['B2', 'C1', 'C2'].forEach(l => {
+                    const btn = document.getElementById(`ex-lvl-${l}`);
+                    if (btn) btn.className = cfg.level === l 
+                        ? "py-3 rounded-xl font-black text-xl border-2 transition cursor-pointer bg-indigo-600 text-white border-indigo-700 shadow-md"
+                        : "py-3 rounded-xl font-black text-xl border-2 transition cursor-pointer bg-white text-gray-600 border-gray-200 hover:bg-gray-50";
+                });
+
+                ['2', '3', '4', 'FULL'].forEach(s => {
+                    const btn = document.getElementById(`ex-scope-${s}`);
+                    if (btn) btn.className = cfg.scope === s
+                        ? "py-3 rounded-xl font-black text-sm border-2 transition cursor-pointer bg-indigo-600 text-white border-indigo-700 shadow-md"
+                        : "py-3 rounded-xl font-black text-sm border-2 transition cursor-pointer bg-white text-gray-600 border-gray-200 hover:bg-gray-50";
+                });
+
+                const showP2 = (cfg.scope === '2' || cfg.scope === 'FULL');
+                const showP3 = (cfg.scope === '3' || cfg.scope === 'FULL');
+                const showP4 = (cfg.scope === '4' || cfg.scope === 'FULL');
+
+                document.getElementById('picker-p2').className = showP2 ? 'flex flex-col sm:flex-row sm:items-center justify-between gap-2' : 'hidden';
+                document.getElementById('picker-p3').className = showP3 ? 'flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t pt-4' : 'hidden';
+                document.getElementById('picker-p4').className = showP4 ? 'flex flex-col gap-3 border-t pt-4' : 'hidden';
+
+                const p2List = this.examDB.part2.filter(i => i.level === cfg.level);
+                const sel2 = document.getElementById('select-p2');
+                if (sel2) {
+                    sel2.innerHTML = `<option value="RANDOM">🎲 Random Part 2 Text (${p2List.length} available)</option>` +
+                        p2List.map((item, idx) => `<option value="${item.id}">#${idx + 1} — ${item.title}</option>`).join('');
+                    sel2.value = cfg.p2Id;
+                }
+
+                const p3List = this.examDB.part3.filter(i => i.level === cfg.level);
+                const sel3 = document.getElementById('select-p3');
+                if (sel3) {
+                    sel3.innerHTML = `<option value="RANDOM">🎲 Random Part 3 Text (${p3List.length} available)</option>` +
+                        p3List.map((item, idx) => `<option value="${item.id}">#${idx + 1} — ${item.title}</option>`).join('');
+                    sel3.value = cfg.p3Id;
+                }
+
+                ['RANDOM', 'SET', 'GRAMMAR'].forEach(src => {
+                    const b = document.getElementById(`p4-src-${src}`);
+                    if (b) b.className = cfg.p4Source === src
+                        ? "px-3 py-1 rounded-lg font-black text-xs cursor-pointer bg-indigo-600 text-white shadow"
+                        : "px-3 py-1 rounded-lg font-bold text-xs cursor-pointer text-gray-600 hover:bg-gray-200";
+                });
+
+                const p4List = this.examDB.part4.filter(i => i.level === cfg.level);
+                const sel4Set = document.getElementById('select-p4-set');
+                const sel4Gram = document.getElementById('select-p4-grammar');
+
+                sel4Set.classList.toggle('hidden', cfg.p4Source !== 'SET');
+                sel4Gram.classList.toggle('hidden', cfg.p4Source !== 'GRAMMAR');
+
+                const uniqueSets = [...new Set(p4List.map(q => q.set_id).filter(id => id !== null))].sort((a,b) => a - b);
+                sel4Set.innerHTML = `<option value="">-- Choose Exam Set --</option>` +
+                    uniqueSets.map(sid => `<option value="${sid}">Exam Set ${sid}</option>`).join('');
+                if (cfg.p4Set) sel4Set.value = cfg.p4Set;
+
+                const gramCounts = {};
+                p4List.forEach(q => {
+                    if (Array.isArray(q.grammar_points)) {
+                        q.grammar_points.forEach(g => gramCounts[g] = (gramCounts[g] || 0) + 1);
+                    }
+                });
+                sel4Gram.innerHTML = `<option value="">-- Choose Grammar Point --</option>` +
+                    Object.keys(gramCounts).filter(g => gramCounts[g] >= 6).sort()
+                        .map(g => `<option value="${g}">${g} (${gramCounts[g]} Qs)</option>`).join('');
+                if (cfg.p4Grammar) sel4Gram.value = cfg.p4Grammar;
+            },
+
+            randomiseExamSelection: function() {
+                const cfg = this.examConfig;
+                const p2List = this.examDB.part2.filter(i => i.level === cfg.level);
+                const p3List = this.examDB.part3.filter(i => i.level === cfg.level);
+                if (p2List.length > 0) cfg.p2Id = String(p2List[Math.floor(Math.random() * p2List.length)].id);
+                if (p3List.length > 0) cfg.p3Id = String(p3List[Math.floor(Math.random() * p3List.length)].id);
+                cfg.p4Source = 'RANDOM';
+                this.refreshExamConfigUI();
+            },
+
+            prepareExamItems: function() {
+                const cfg = this.examConfig;
+                const p2Pool = this.examDB.part2.filter(i => i.level === cfg.level);
+                const p3Pool = this.examDB.part3.filter(i => i.level === cfg.level);
+                let p4Pool = this.examDB.part4.filter(i => i.level === cfg.level);
+
+                if (cfg.scope === '2' || cfg.scope === 'FULL') {
+                    if (cfg.p2Id === 'RANDOM') {
+                        this.examRun.p2Item = p2Pool[Math.floor(Math.random() * p2Pool.length)];
+                    } else {
+                        this.examRun.p2Item = p2Pool.find(i => String(i.id) === String(cfg.p2Id)) || p2Pool[0];
+                    }
+                    if (!this.examRun.p2Item) { alert("No Part 2 texts found for this level!"); return false; }
+                }
+
+                if (cfg.scope === '3' || cfg.scope === 'FULL') {
+                    if (cfg.p3Id === 'RANDOM') {
+                        this.examRun.p3Item = p3Pool[Math.floor(Math.random() * p3Pool.length)];
+                    } else {
+                        this.examRun.p3Item = p3Pool.find(i => String(i.id) === String(cfg.p3Id)) || p3Pool[0];
+                    }
+                    if (!this.examRun.p3Item) { alert("No Part 3 texts found for this level!"); return false; }
+                }
+
+                if (cfg.scope === '4' || cfg.scope === 'FULL') {
+                    if (cfg.p4Source === 'SET' && cfg.p4Set) {
+                        p4Pool = p4Pool.filter(q => String(q.set_id) === String(cfg.p4Set));
+                    } else if (cfg.p4Source === 'GRAMMAR' && cfg.p4Grammar) {
+                        p4Pool = p4Pool.filter(q => Array.isArray(q.grammar_points) && q.grammar_points.includes(cfg.p4Grammar));
+                    }
+                    if (p4Pool.length === 0) { alert("No Part 4 questions match your filter!"); return false; }
+                    this.examRun.p4Items = [...p4Pool].sort(() => Math.random() - 0.5).slice(0, 6);
+                }
+
+                this.examRun.partStartQ = { 2: null, 3: null, 4: null };
+                this.examRun.revealedGaps = {};
+                return true;
+            },
+
+            // NEW: Split pacing logic to allow safe review
+            paceFullExam: async function(partNum) {
+                if (this.examConfig.scope !== 'FULL') return;
+
+                if (this.status === 'STOP') {
+                    // Just change the teacher's local view without reopening the exam
+                    this.examRun.activePart = partNum;
+                    this.activeTabOffset = 0;
+                    this.roundBoxCount = (partNum === 4) ? this.examRun.p4Items.length : 8;
+                    if (this.examRun.partStartQ[partNum] !== null) {
+                        this.roundStartQ = this.examRun.partStartQ[partNum];
+                    }
+                    this.updatePacerButtonsUI();
+                    this.renderStage();
+                } else {
+                    // Exam is LIVE, so push the new part to the students' phones
+                    await this.launchExamPart(partNum);
+                }
+            },
+
+            updatePacerButtonsUI: function() {
+                const pacer = document.getElementById('full-exam-pacer');
+                if (this.mode === 'EXAM' && this.examConfig.scope === 'FULL' && !this.examRun.showSetup) {
+                    pacer.classList.remove('hidden');
+                    pacer.classList.add('flex');
+                    [2, 3, 4].forEach(num => {
+                        const b = document.getElementById(`pace-btn-${num}`);
+                        const hasRun = this.examRun.partStartQ[num] !== null;
+                        if (this.examRun.activePart === num) {
+                            b.className = "px-3 py-1.5 rounded-lg font-black text-xs cursor-pointer transition bg-indigo-600 text-white shadow";
+                        } else if (hasRun) {
+                            b.className = "px-3 py-1.5 rounded-lg font-black text-xs cursor-pointer transition bg-green-100 text-green-800 border border-green-300";
+                        } else {
+                            b.className = "px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition bg-white text-gray-600 hover:bg-gray-200";
+                        }
+                    });
+                } else {
+                    pacer.classList.add('hidden');
+                    pacer.classList.remove('flex');
+                }
+            },
+
             toggleRound: async function() {
                 if (this.isTransitioning) return;
                 this.isTransitioning = true;
@@ -397,12 +811,29 @@
             },
 
             startRound: async function() {
+                if (this.mode === 'EXAM') {
+                    if (this.examRun.showSetup || !this.examRun.activePart) {
+                        const ok = this.prepareExamItems();
+                        if (!ok) return;
+                        this.examRun.showSetup = false;
+                        const firstPart = this.examConfig.scope === 'FULL' ? 2 : parseInt(this.examConfig.scope, 10);
+                        await this.launchExamPart(firstPart);
+                        return;
+                    } else {
+                        // User clicked "New Exam Activity" after STOP
+                        this.examRun.showSetup = true;
+                        this.examRun.activePart = null;
+                        this.renderStage();
+                        return;
+                    }
+                }
+
+                // Standard Basic / Speed Mode Launch
                 this.status = 'GO';
                 this.showScoreboard = false;
                 this.displayRound++;
                 this.activeTabOffset = 0;
 
-                // Determine how many questions this round uses, and advance the unique cursor without wiping history!
                 this.roundBoxCount = (this.mode === 'BASIC') ? this.boxCount : 1;
                 this.roundStartQ = this.questionCursor + 1;
                 this.questionCursor += this.roundBoxCount;
@@ -419,8 +850,52 @@
 
                 this.renderStage();
 
-                // Encode mode + box count so phones know both the start ID and how many boxes to draw
                 const dbMode = (this.mode === 'SPEED') ? 'SPEED' : `BASIC_${this.roundBoxCount}`;
+                if (this.sessionID) {
+                    await this.supabase
+                        .from('live_sessions')
+                        .update({ status: 'GO', mode: dbMode, current_round: this.roundStartQ })
+                        .eq('id', this.sessionID);
+                }
+            },
+
+            launchExamPart: async function(partNum) {
+                this.status = 'GO';
+                this.showScoreboard = false;
+                this.examRun.activePart = partNum;
+                this.activeTabOffset = 0;
+
+                const count = (partNum === 4) ? this.examRun.p4Items.length : 8;
+                this.roundBoxCount = count;
+
+                if (this.examRun.partStartQ[partNum] !== null) {
+                    this.roundStartQ = this.examRun.partStartQ[partNum];
+                } else {
+                    this.displayRound++;
+                    this.roundStartQ = this.questionCursor + 1;
+                    this.questionCursor += count;
+                    this.examRun.partStartQ[partNum] = this.roundStartQ;
+                }
+
+                document.getElementById('round-display').innerText = this.displayRound;
+
+                const btn = document.getElementById('btn-round-toggle');
+                btn.innerHTML = "🛑 STOP EXAM"; // The all-or-nothing stop button
+                btn.className = "big-action-btn bg-red-500 hover:bg-red-600 w-full animate-pulse";
+
+                const badge = document.getElementById('status-badge');
+                badge.innerText = `🟢 Exam Part ${partNum} Live`;
+                badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-green-100 text-green-700";
+
+                this.updatePacerButtonsUI();
+                this.renderStage();
+
+                let payloadIds = '';
+                if (partNum === 2) payloadIds = this.examRun.p2Item.id;
+                else if (partNum === 3) payloadIds = this.examRun.p3Item.id;
+                else if (partNum === 4) payloadIds = this.examRun.p4Items.map(q => q.id).join(',');
+
+                const dbMode = `EX|${this.examConfig.level}|${partNum}|${payloadIds}`;
                 if (this.sessionID) {
                     await this.supabase
                         .from('live_sessions')
@@ -431,15 +906,20 @@
 
             stopRound: async function() {
                 this.status = 'STOP';
-
                 const btn = document.getElementById('btn-round-toggle');
-                btn.innerHTML = "🚀 GO (Next Round)";
-                btn.className = "big-action-btn bg-green-500 hover:bg-green-600 w-full";
+
+                if (this.mode === 'EXAM') {
+                    // NEW: Stop now ends the exam entirely, auto-grades the backlog, and offers a reset
+                    btn.innerHTML = "📚 New Exam Activity";
+                    btn.className = "big-action-btn bg-indigo-500 hover:bg-indigo-600 w-full";
+                    this.autoGradeAllPending();
+                } else {
+                    btn.innerHTML = "🚀 GO (Next Round)";
+                    btn.className = "big-action-btn bg-green-500 hover:bg-green-600 w-full";
+                }
 
                 const badge = document.getElementById('status-badge');
-                badge.innerText = this.roundBoxCount > 1 
-                    ? `🔴 Locked — Tap Q1–Q${this.roundBoxCount}` 
-                    : "🔴 Phones Locked — Grading";
+                badge.innerText = "🔴 Phones Locked — Grading";
                 badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800";
 
                 this.renderStage();
@@ -461,7 +941,6 @@
                 const targetSub = this.allSubmissions.find(s => s.id === subId);
                 if (!targetSub) return;
 
-                // In Speed mode (or when undoing), only grade the single card
                 if (this.mode === 'SPEED' || isCorrect === null) {
                     targetSub.is_correct = isCorrect;
                     this.renderStage();
@@ -471,7 +950,6 @@
                     return;
                 }
 
-                // In Basic mode: find ALL submissions in this same question with the exact same answer!
                 const cleanAnswer = targetSub.answer_text.trim().toUpperCase();
                 const matchingIds = [];
 
@@ -484,7 +962,6 @@
 
                 this.renderStage();
 
-                // Update all matching answers in Supabase in one go
                 if (this.sessionID && matchingIds.length > 0) {
                     await this.supabase
                         .from('live_submissions')
@@ -493,10 +970,36 @@
                 }
             },
 
+            gradePart4Submission: async function(subId, points) {
+                const targetSub = this.allSubmissions.find(s => s.id === subId);
+                if (!targetSub) return;
+
+                const rawClean = targetSub.answer_text.replace(/\s*\[2PT\]$/i, '').trim().toUpperCase();
+                const newText = (points === 2) ? `${rawClean} [2PT]` : rawClean;
+                const isCorrect = (points > 0);
+
+                const matchingIds = [];
+                this.allSubmissions.forEach(s => {
+                    const sClean = s.answer_text.replace(/\s*\[2PT\]$/i, '').trim().toUpperCase();
+                    if (s.round_num === targetSub.round_num && sClean === rawClean) {
+                        s.is_correct = isCorrect;
+                        s.answer_text = newText;
+                        matchingIds.push(s.id);
+                    }
+                });
+
+                this.renderStage();
+
+                if (this.sessionID && matchingIds.length > 0) {
+                    await this.supabase
+                        .from('live_submissions')
+                        .update({ is_correct: isCorrect, answer_text: newText })
+                        .in('id', matchingIds);
+                }
+            },
+
             resetScores: async function() {
                 if (!confirm("Reset all scores to 0 for everyone?")) return;
-                
-                // Clear all points in memory and in Supabase
                 this.allSubmissions.forEach(s => s.is_correct = null);
                 this.renderStage();
 
@@ -513,16 +1016,18 @@
                 this.renderStage();
             },
 
-            // --- MAIN RENDER CONTROLLER ---
             renderStage: function() {
                 const viewBasic = document.getElementById('view-basic');
                 const viewSpeed = document.getElementById('view-speed');
+                const viewExam = document.getElementById('view-exam');
                 const viewScoreboard = document.getElementById('view-scoreboard');
                 const tabsBar = document.getElementById('multi-tabs-bar');
 
                 viewBasic.classList.add('hidden');
                 viewSpeed.classList.add('hidden');
                 viewSpeed.classList.remove('flex');
+                viewExam.classList.add('hidden');
+                viewExam.classList.remove('flex');
                 viewScoreboard.classList.add('hidden');
                 tabsBar.classList.add('hidden');
                 tabsBar.classList.remove('flex');
@@ -536,14 +1041,255 @@
                 if (this.mode === 'BASIC') {
                     viewBasic.classList.remove('hidden');
                     this.renderBasicMode();
-                } else {
+                } else if (this.mode === 'SPEED') {
                     viewSpeed.classList.remove('hidden');
                     viewSpeed.classList.add('flex');
                     this.renderSpeedMode();
+                } else if (this.mode === 'EXAM') {
+                    viewExam.classList.remove('hidden');
+                    viewExam.classList.add('flex');
+                    this.renderExamMode();
                 }
             },
 
-            // --- RENDER: BASIC MODE (Handles both 1 box and multiple boxes) ---
+            renderExamMode: function() {
+                const setupPanel = document.getElementById('exam-setup-panel');
+                const liveStage = document.getElementById('exam-live-stage');
+                const tabsBar = document.getElementById('multi-tabs-bar');
+
+                this.updatePacerButtonsUI();
+
+                if (this.examRun.showSetup || !this.examRun.activePart) {
+                    setupPanel.classList.remove('hidden');
+                    liveStage.classList.add('hidden');
+                    liveStage.classList.remove('flex');
+                    document.getElementById('sub-counter').innerText = '';
+                    return;
+                }
+
+                setupPanel.classList.add('hidden');
+                liveStage.classList.remove('hidden');
+                liveStage.classList.add('flex');
+
+                const pList = Object.values(this.players);
+                const totalPlayers = pList.length;
+                const partNum = this.examRun.activePart;
+
+                if (this.status === 'STOP' || partNum === 4) {
+                    tabsBar.classList.remove('hidden');
+                    tabsBar.classList.add('flex');
+                    let tabsHTML = `<div class="flex flex-wrap gap-2 items-center">`;
+                    for (let i = 0; i < this.roundBoxCount; i++) {
+                        const isActive = this.activeTabOffset === i;
+                        tabsHTML += `
+                            <button onclick="board.selectTabOffset(${i})" class="q-tab ${isActive ? 'q-tab-active' : 'q-tab-inactive'}">
+                                Q${i + 1}
+                            </button>`;
+                    }
+                    tabsHTML += `</div>`;
+
+                    if (partNum === 2 || partNum === 3) {
+                        tabsHTML += `
+                            <button onclick="board.revealAllExamGaps()" class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-sm shadow cursor-pointer">
+                                👁 Reveal All Gaps in Text
+                            </button>`;
+                    }
+                    tabsBar.innerHTML = tabsHTML;
+                }
+
+                this.renderExamContextCard();
+
+                const grid = document.getElementById('exam-students-grid');
+                if (totalPlayers === 0) {
+                    grid.innerHTML = `<p class="col-span-full text-center text-gray-400 text-xl py-12 font-bold">No students joined yet. Tap "QR" above.</p>`;
+                    return;
+                }
+
+                if (this.status === 'GO') {
+                    const minQ = this.roundStartQ;
+                    const maxQ = this.roundStartQ + this.roundBoxCount - 1;
+                    let activeStudents = 0;
+
+                    grid.innerHTML = pList.map(p => {
+                        const filledCount = this.allSubmissions.filter(
+                            s => s.player_id === p.id && s.round_num >= minQ && s.round_num <= maxQ && s.answer_text.trim() !== ''
+                        ).length;
+                        const isDone = filledCount >= this.roundBoxCount;
+                        if (filledCount > 0) activeStudents++;
+
+                        return `
+                            <div class="p-5 rounded-2xl border-4 ${isDone ? 'border-green-500 bg-green-50' : 'border-indigo-200 bg-white'} flex items-center gap-4 shadow-sm">
+                                <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-14 h-14 rounded-full object-cover border-2 border-indigo-300 bg-white">
+                                <div class="flex-1">
+                                    <div class="font-black text-xl text-indigo-950">${p.nickname}</div>
+                                    <div class="font-bold text-sm ${isDone ? 'text-green-700' : 'text-indigo-600'}">
+                                        ${filledCount > 0 ? `✅ Saved ${filledCount} / ${this.roundBoxCount} answers` : '✏️ Working...'}
+                                    </div>
+                                </div>
+                            </div>`;
+                    }).join('');
+
+                    document.getElementById('sub-counter').innerText = `${activeStudents} / ${totalPlayers} saving`;
+                    return;
+                }
+
+                const targetQNum = this.roundStartQ + this.activeTabOffset;
+                const roundSubs = this.allSubmissions.filter(s => s.round_num === targetQNum);
+                document.getElementById('sub-counter').innerText = `Q${this.activeTabOffset + 1}: ${roundSubs.length} / ${totalPlayers} answered`;
+
+                grid.innerHTML = pList.map(p => {
+                    const sub = roundSubs.find(s => s.player_id === p.id);
+                    const rawText = (sub && sub.answer_text) ? sub.answer_text : "— No Answer —";
+                    const displayAns = rawText.replace(/\s*\[2PT\]$/i, '');
+
+                    if (partNum === 4) {
+                        const isTwoPts = sub && sub.is_correct === true && /\s*\[2PT\]$/i.test(sub.answer_text);
+                        const isOnePt = sub && sub.is_correct === true && !isTwoPts;
+                        const isZeroPts = sub && sub.is_correct === false;
+
+                        return `
+                            <div class="p-5 rounded-2xl border-2 ${isTwoPts ? 'border-green-500 bg-green-50/40' : isOnePt ? 'border-amber-400 bg-amber-50/40' : isZeroPts ? 'border-red-400 bg-red-50/40' : 'border-gray-300 bg-white'} shadow-md flex flex-col justify-between gap-4">
+                                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-12 h-12 rounded-full object-cover border bg-white">
+                                        <span class="font-black text-lg text-gray-700">${p.nickname}</span>
+                                    </div>
+                                    <span class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-teal-100 text-teal-800">Part 4 • Q${this.activeTabOffset + 1}</span>
+                                </div>
+                                <div class="text-2xl font-black text-gray-900 break-words py-3 text-center bg-gray-50 rounded-xl px-3 border border-gray-100">
+                                    ${displayAns}
+                                </div>
+                                ${sub ? `
+                                    <div class="flex gap-2 pt-1">
+                                        <button onclick="board.gradePart4Submission('${sub.id}', 0)" class="grade-touch-btn btn-wrong ${isZeroPts ? 'selected' : ''}">0 PTS</button>
+                                        <button onclick="board.gradePart4Submission('${sub.id}', 1)" class="grade-touch-btn btn-partial ${isOnePt ? 'selected' : ''}">1 PT</button>
+                                        <button onclick="board.gradePart4Submission('${sub.id}', 2)" class="grade-touch-btn btn-right ${isTwoPts ? 'selected' : ''}">2 PTS</button>
+                                    </div>
+                                ` : `<div class="text-center py-4 text-sm font-bold text-gray-400 uppercase tracking-wider">Did not submit</div>`}
+                            </div>`;
+                    }
+
+                    const isRight = sub && sub.is_correct === true;
+                    const isWrong = sub && sub.is_correct === false;
+
+                    return `
+                        <div class="p-5 rounded-2xl border-2 ${isRight ? 'border-green-500 bg-green-50/40' : isWrong ? 'border-red-400 bg-red-50/40' : 'border-gray-300 bg-white'} shadow-md flex flex-col justify-between gap-4">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div class="flex items-center gap-3">
+                                    <img src="avatars/img_${p.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${p.nickname}'" class="w-12 h-12 rounded-full object-cover border bg-white">
+                                    <span class="font-black text-lg text-gray-700">${p.nickname}</span>
+                                </div>
+                                <span class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700">Gap ${this.activeTabOffset + 1}</span>
+                            </div>
+                            <div class="text-3xl font-black text-gray-900 break-words py-2 text-center bg-gray-50 rounded-xl px-3 border border-gray-100">
+                                ${displayAns}
+                            </div>
+                            ${sub ? `
+                                <div class="flex gap-3 pt-1">
+                                    <button onclick="board.gradeSubmission('${sub.id}', false)" class="grade-touch-btn btn-wrong ${isWrong ? 'selected' : ''}">✕ WRONG</button>
+                                    <button onclick="board.gradeSubmission('${sub.id}', true)" class="grade-touch-btn btn-right ${isRight ? 'selected' : ''}">✓ RIGHT</button>
+                                </div>
+                            ` : `<div class="text-center py-4 text-sm font-bold text-gray-400 uppercase tracking-wider">Did not submit</div>`}
+                        </div>`;
+                }).join('');
+            },
+
+            renderExamContextCard: function() {
+                const card = document.getElementById('exam-context-card');
+                const partNum = this.examRun.activePart;
+
+                if (partNum === 2 || partNum === 3) {
+                    const item = (partNum === 2) ? this.examRun.p2Item : this.examRun.p3Item;
+                    if (!item) return;
+
+                    let htmlContent = item.content;
+                    for (let i = 1; i <= 8; i++) {
+                        const validOpts = this.getExamValidOptions(partNum, i - 1);
+                        const ansString = validOpts.join(' / ') || '?';
+                        const isActiveGap = (this.activeTabOffset === i - 1);
+                        const isRevealed = !!this.examRun.revealedGaps[`${partNum}_${i}`];
+
+                        let rootBadge = '';
+                        if (partNum === 3 && item.answers) {
+                            const ansObj = item.answers[i] || item.answers[i - 1];
+                            if (ansObj && ansObj.root) {
+                                rootBadge = `<span class="root-badge">(${ansObj.root})</span>`;
+                            }
+                        }
+
+                        const pillText = isRevealed ? `${i}. ${ansString}` : `[ ${i} ]`;
+                        // NEW: Clicking a pill triggers clickExamGapPill which toggles reveal in STOP mode
+                        const pillHTML = `<span onclick="board.clickExamGapPill(${i - 1})" class="board-gap-pill ${isActiveGap ? 'active-gap' : 'border-gray-300 bg-white text-gray-700'} ${isRevealed ? 'revealed' : ''}">${pillText}</span>${rootBadge}`;
+                        htmlContent = htmlContent.replace(`[${i}]`, pillHTML);
+                    }
+
+                    const activeOpts = this.getExamValidOptions(partNum, this.activeTabOffset).join(' / ');
+                    const isCurrentRevealed = !!this.examRun.revealedGaps[`${partNum}_${this.activeTabOffset + 1}`];
+
+                    card.innerHTML = `
+                        <div class="flex flex-wrap justify-between items-center border-b border-amber-200 pb-3 mb-4 gap-2">
+                            <div>
+                                <span class="text-xs font-black uppercase tracking-widest text-indigo-600">Part ${partNum} • ${this.examConfig.level}</span>
+                                <h3 class="text-2xl font-black text-gray-900">${item.title}</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-gray-600 bg-white px-3 py-1.5 rounded-xl border">
+                                    Selected: <strong class="text-indigo-700">Gap ${this.activeTabOffset + 1}</strong> 
+                                </span>
+                                <button onclick="board.clickExamGapPill(${this.activeTabOffset})" class="px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black rounded-xl text-xs cursor-pointer">
+                                    ${isCurrentRevealed ? '🙈 Hide Answer' : '👁 Reveal Gap Answer'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="exam-reading-text">${htmlContent}</div>
+                    `;
+                } else if (partNum === 4) {
+                    const q = this.examRun.p4Items[this.activeTabOffset] || this.examRun.p4Items[0];
+                    if (!q) return;
+                    const qNum = this.activeTabOffset + 1;
+                    const isRevealed = !!this.examRun.revealedGaps[`4_${qNum}`];
+                    const rawAns = Array.isArray(q.answers) ? q.answers.join(' OR ') : (q.answer || '');
+                    const cleanAns = String(rawAns).replace(/\s*\|\s*/g, ' / ');
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center border-b border-amber-200 pb-3 mb-4">
+                            <span class="text-xs font-black uppercase tracking-widest text-teal-700">Part 4 Transformation • Question ${qNum} of ${this.examRun.p4Items.length}</span>
+                            <button onclick="board.clickExamGapPill(${this.activeTabOffset})" class="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black rounded-xl text-xs cursor-pointer">
+                                ${isRevealed ? '🙈 Hide Answer' : '👁 Reveal Answer'}
+                            </button>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800 mb-4">${q.sentence1}</p>
+                        <div class="mb-4"><span class="bg-amber-300 px-4 py-1.5 rounded-xl font-black text-xl text-gray-900 uppercase border-2 border-amber-400 inline-block">${q.key_word}</span></div>
+                        <div class="text-2xl font-bold text-gray-800 flex flex-wrap items-baseline gap-2">
+                            <span>${q.sentence2_pre}</span>
+                            <span onclick="board.clickExamGapPill(${this.activeTabOffset})" class="px-4 py-1 border-b-4 ${isRevealed ? 'border-green-500 bg-green-100 text-green-800' : 'border-indigo-400 bg-white text-indigo-400'} font-black rounded-t-xl cursor-pointer min-w-[220px] text-center transition">
+                                ${isRevealed ? cleanAns : '[ Tap to Reveal ]'}
+                            </span>
+                            <span>${q.sentence2_post}</span>
+                        </div>
+                    `;
+                }
+            },
+
+            // NEW: Clicking a gap now toggles its answer visibility if STOPPED
+            clickExamGapPill: function(offset) {
+                const partNum = this.examRun.activePart;
+                if (this.status === 'STOP') {
+                    const key = `${partNum}_${offset + 1}`;
+                    this.examRun.revealedGaps[key] = !this.examRun.revealedGaps[key];
+                }
+                this.activeTabOffset = offset;
+                this.renderStage();
+            },
+
+            revealAllExamGaps: function() {
+                const partNum = this.examRun.activePart;
+                for (let i = 1; i <= 8; i++) {
+                    this.examRun.revealedGaps[`${partNum}_${i}`] = true;
+                }
+                this.renderStage();
+            },
+
             renderBasicMode: function() {
                 const container = document.getElementById('view-basic');
                 const tabsBar = document.getElementById('multi-tabs-bar');
@@ -562,7 +1308,6 @@
                     return;
                 }
 
-                // Multi-Box Live Progress while Status === 'GO' and roundBoxCount > 1
                 if (this.status === 'GO' && this.roundBoxCount > 1) {
                     const minQ = this.roundStartQ;
                     const maxQ = this.roundStartQ + this.roundBoxCount - 1;
@@ -591,11 +1336,10 @@
                     return;
                 }
 
-                // If Stopped and roundBoxCount > 1, show the Q1..QN grading tabs
                 if (this.status === 'STOP' && this.roundBoxCount > 1) {
                     tabsBar.classList.remove('hidden');
                     tabsBar.classList.add('flex');
-                    let tabsHTML = '';
+                    let tabsHTML = '<div class="flex flex-wrap gap-2">';
                     for (let i = 0; i < this.roundBoxCount; i++) {
                         const isActive = this.activeTabOffset === i;
                         tabsHTML += `
@@ -603,6 +1347,7 @@
                                 Q${i + 1}
                             </button>`;
                     }
+                    tabsHTML += '</div>';
                     tabsBar.innerHTML = tabsHTML;
                 }
 
@@ -613,7 +1358,6 @@
                 container.innerHTML = pList.map(p => {
                     const sub = roundSubs.find(s => s.player_id === p.id);
 
-                    // 1. WHILE ROUND IS LIVE ('GO' with 1 question): Hide answers so students cannot copy!
                     if (this.status === 'GO') {
                         if (sub) {
                             return `
@@ -636,7 +1380,6 @@
                         }
                     }
 
-                    // 2. AFTER TEACHER TAPS STOP ('STOP'): Show big answer & huge touch buttons
                     const answerText = (sub && sub.answer_text) ? sub.answer_text : "— No Answer —";
                     const isRight = sub && sub.is_correct === true;
                     const isWrong = sub && sub.is_correct === false;
@@ -650,28 +1393,19 @@
                                 </div>
                                 ${this.roundBoxCount > 1 ? `<span class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700">Q${this.activeTabOffset + 1}</span>` : ''}
                             </div>
-
                             <div class="text-3xl font-black text-gray-900 break-words py-2 text-center bg-gray-50 rounded-xl px-3 border border-gray-100">
                                 ${answerText}
                             </div>
-
                             ${sub ? `
                                 <div class="flex gap-3 pt-1">
-                                    <button onclick="board.gradeSubmission('${sub.id}', false)" class="grade-touch-btn btn-wrong ${isWrong ? 'selected' : ''}">
-                                        ✕ WRONG
-                                    </button>
-                                    <button onclick="board.gradeSubmission('${sub.id}', true)" class="grade-touch-btn btn-right ${isRight ? 'selected' : ''}">
-                                        ✓ RIGHT
-                                    </button>
+                                    <button onclick="board.gradeSubmission('${sub.id}', false)" class="grade-touch-btn btn-wrong ${isWrong ? 'selected' : ''}">✕ WRONG</button>
+                                    <button onclick="board.gradeSubmission('${sub.id}', true)" class="grade-touch-btn btn-right ${isRight ? 'selected' : ''}">✓ RIGHT</button>
                                 </div>
-                            ` : `
-                                <div class="text-center py-4 text-sm font-bold text-gray-400 uppercase tracking-wider">Did not submit</div>
-                            `}
+                            ` : `<div class="text-center py-4 text-sm font-bold text-gray-400 uppercase tracking-wider">Did not submit</div>`}
                         </div>`;
                 }).join('');
             },
 
-            // --- RENDER: SPEED (CASCADE) MODE ---
             renderSpeedMode: function() {
                 const container = document.getElementById('view-speed');
                 const roundSubs = this.allSubmissions
@@ -750,16 +1484,13 @@
                             </span>
                             <span class="text-sm font-bold text-gray-400">${roundSubs.length - position} waiting behind</span>
                         </div>
-
                         <div class="flex items-center justify-center gap-4">
                             <img src="avatars/img_${candidate.avatar_num}.png" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${candidate.nickname}'" class="w-20 h-20 rounded-full object-cover border-4 border-indigo-100 bg-white">
                             <h3 class="text-4xl font-black text-gray-900">${candidate.nickname}</h3>
                         </div>
-
                         <div class="text-4xl font-black text-indigo-950 bg-indigo-50 py-6 px-4 rounded-2xl border-2 border-indigo-100 break-words">
                             ${currentCandidateSub.answer_text}
                         </div>
-
                         <div class="flex gap-4 pt-2">
                             <button onclick="board.gradeSubmission('${currentCandidateSub.id}', false)" class="grade-touch-btn btn-wrong text-2xl py-6">
                                 ✕ WRONG (Show Next)
@@ -771,7 +1502,6 @@
                     </div>`;
             },
 
-            // --- RENDER: UNIFIED SESSION SCOREBOARD ---
             renderScoreboard: function() {
                 const list = document.getElementById('scoreboard-list');
                 const scores = {};
@@ -779,7 +1509,8 @@
                 Object.keys(this.players).forEach(pid => scores[pid] = 0);
                 this.allSubmissions.forEach(s => {
                     if (s.is_correct === true && scores[s.player_id] !== undefined) {
-                        scores[s.player_id] += 1;
+                        const isTwoPt = /\s*\[2PT\]$/i.test(s.answer_text);
+                        scores[s.player_id] += isTwoPt ? 2 : 1;
                     }
                 });
 

@@ -11,22 +11,37 @@
     <style type="text/tailwindcss">
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; touch-action: manipulation; }
         .big-input { @apply w-full p-4 text-2xl font-bold border-4 border-gray-200 rounded-2xl text-center focus:border-indigo-500 outline-none transition-all uppercase bg-white; }
-        .btn-main { @apply w-full py-5 rounded-2xl font-black text-2xl text-white shadow-lg active:scale-95 transition-transform bg-indigo-600 disabled:opacity-50; }
+        .btn-main { @apply w-full py-5 rounded-2xl font-black text-2xl text-white shadow-lg active:scale-95 transition-transform bg-indigo-600 disabled:opacity-50 cursor-pointer; }
+
+        /* Interactive Gap Pills inside Reading Text */
+        .exam-text-body { font-size: 1.15rem; line-height: 2.35; color: #1f2937; }
+        .gap-pill { @apply inline-flex items-center justify-center px-3 py-0.5 mx-1 rounded-xl font-black text-base border-2 transition transform active:scale-95 cursor-pointer select-none align-baseline shadow-sm; min-width: 3.5rem; }
+        .gap-pill-empty { @apply bg-indigo-50 border-indigo-300 border-dashed text-indigo-600 hover:bg-indigo-100; }
+        .gap-pill-saved { @apply bg-green-600 border-green-700 text-white shadow; }
+        .root-word-tag { @apply font-black text-purple-700 text-xs ml-0.5 mr-1.5 px-2 py-0.5 bg-purple-100 rounded-md uppercase tracking-wider align-middle border border-purple-200 select-none; }
     </style>
     <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
-<body class="min-h-screen flex flex-col p-5 max-w-md mx-auto">
+<body class="min-h-screen flex flex-col p-4 max-w-lg mx-auto">
 
-    <!-- PLAYER HEADER (Hidden until joined) -->
-    <header id="player-header" class="hidden items-center justify-between bg-white p-3 px-4 rounded-2xl shadow-sm border border-gray-200 mb-4 flex-none">
+    <!-- SYNC BANNER -->
+    <div id="sync-banner" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-indigo-900 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg">
+        🔄 Syncing saved answers...
+    </div>
+
+    <!-- PLAYER HEADER -->
+    <header id="player-header" class="hidden items-center justify-between bg-white p-3 px-4 rounded-2xl shadow-sm border border-gray-200 mb-3 flex-none">
         <div class="flex items-center gap-3">
-            <img id="my-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-500 bg-indigo-50">
+            <img id="my-avatar" src="" class="w-11 h-11 rounded-full object-cover border-2 border-indigo-500 bg-indigo-50">
             <div>
                 <div id="my-name" class="font-black text-lg text-gray-900 leading-none">---</div>
                 <div class="text-xs font-bold text-green-600 mt-1">● Connected</div>
             </div>
         </div>
-        <button onclick="student.leaveRoom()" class="text-xs font-bold text-gray-400 underline">Leave</button>
+        <div class="flex items-center gap-2">
+            <button onclick="student.switchRoom()" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1.5 rounded-xl border border-indigo-100 active:scale-95 cursor-pointer">Switch Room</button>
+            <button onclick="student.leaveRoom()" class="text-xs font-bold text-gray-400 underline cursor-pointer">Leave</button>
+        </div>
     </header>
 
     <!-- 1. LOGIN SCREEN -->
@@ -41,6 +56,7 @@
         <div>
             <label class="block font-bold text-gray-500 mb-2 ml-1 text-sm">YOUR NAME</label>
             <input type="text" id="input-nick" class="big-input" placeholder="MARIA" maxlength="12">
+            <p class="text-xs text-gray-400 font-semibold text-center mt-2">If disconnected, enter the exact same name to recover your answers!</p>
         </div>
 
         <button id="btn-join" onclick="student.joinGame()" class="btn-main">JOIN GAME</button>
@@ -54,7 +70,7 @@
         <p id="wait-sub" class="text-gray-500 font-semibold mt-2 text-lg">Your screen will unlock as soon as the teacher taps GO.</p>
     </div>
 
-    <!-- 3. SINGLE INPUT SCREEN (When Questions = 1 in Basic or Speed mode) -->
+    <!-- 3. SINGLE INPUT SCREEN -->
     <div id="screen-go" class="hidden flex-1 flex-col justify-between py-2">
         <div class="bg-green-100 border-2 border-green-300 text-green-900 font-black py-3 px-4 rounded-2xl text-center text-lg uppercase tracking-wider">
             🟢 Type Your Answer!
@@ -69,7 +85,7 @@
         </button>
     </div>
 
-    <!-- 4. MULTI-BOX SCREEN (When Questions > 1 in Basic mode) -->
+    <!-- 4. MULTI-BOX SCREEN -->
     <div id="screen-multi" class="hidden flex-1 flex-col overflow-hidden">
         <div class="bg-indigo-100 border-2 border-indigo-300 text-indigo-900 font-black py-2.5 px-4 rounded-2xl text-center text-sm uppercase tracking-wider mb-3 flex-none">
             📝 Fill in your answers & tap Save!
@@ -84,6 +100,47 @@
         </div>
     </div>
 
+    <!-- 5. EXAM SCREEN -->
+    <div id="screen-exam" class="hidden flex-1 flex-col overflow-hidden">
+        <div class="bg-indigo-600 text-white p-3 px-4 rounded-2xl shadow-md mb-3 flex justify-between items-center flex-none">
+            <div>
+                <span id="exam-badge" class="text-[11px] font-black uppercase tracking-widest bg-indigo-800 px-2.5 py-0.5 rounded-md">PART 2</span>
+                <h2 id="exam-title" class="font-black text-base leading-tight mt-1 truncate max-w-[210px]">Loading...</h2>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] font-bold uppercase opacity-80">Saved</div>
+                <div id="exam-saved-counter" class="text-xl font-black">0 / 8</div>
+            </div>
+        </div>
+
+        <div id="exam-content-area" class="flex-1 overflow-y-auto bg-white rounded-3xl p-5 shadow-inner border border-gray-200 space-y-4"></div>
+    </div>
+
+    <!-- POP-UP TYPING MODAL -->
+    <div id="typing-modal" class="hidden fixed inset-0 bg-black/75 z-50 flex-col justify-start items-center p-4 pt-8">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border-4 border-indigo-500 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <span id="modal-gap-title" class="font-black text-xl text-indigo-950">Gap 1</span>
+                <span id="modal-root-badge" class="hidden px-3 py-1 bg-amber-200 text-amber-950 font-black rounded-xl text-sm uppercase border border-amber-300">ROOT</span>
+            </div>
+
+            <p id="modal-context-text" class="hidden text-sm font-bold text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-200 leading-snug"></p>
+
+            <input type="text" id="modal-text-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
+                class="w-full p-4 text-2xl font-black border-4 border-indigo-300 rounded-2xl text-center uppercase outline-none focus:border-indigo-600 bg-indigo-50/30 text-indigo-950"
+                placeholder="TYPE ANSWER...">
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="student.closeTypingModal()" class="w-1/3 py-4 rounded-2xl font-black text-base text-gray-600 bg-gray-200 active:scale-95 cursor-pointer">
+                    CANCEL
+                </button>
+                <button id="btn-modal-save" onclick="student.saveModalAnswer()" class="w-2/3 py-4 rounded-2xl font-black text-xl text-white bg-green-500 hover:bg-green-600 shadow-lg active:scale-95 cursor-pointer">
+                    SAVE ANSWER ✓
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- CONFIGURATION ---
         const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
@@ -94,12 +151,31 @@
             supabase: null,
             sessionID: null,
             playerID: null,
+            pin: null,
+            currentMode: '',
             roundStartQ: 0,
             boxCount: 1,
             hasSubmittedThisRound: false,
 
+            savedAnswers: {},
+            examState: {
+                signature: '',
+                level: '',
+                part: 0,
+                ids: '',
+                itemData: null,
+                p4List: [],
+                activeGapOffset: 0
+            },
+
             init: async function() {
                 this.supabase = supabase.createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
+
+                // Auto-fill remembered nickname if available
+                const rememberedNick = localStorage.getItem('live_buzzer_student_nick');
+                if (rememberedNick) {
+                    document.getElementById('input-nick').value = rememberedNick;
+                }
 
                 const params = new URLSearchParams(window.location.search);
                 const urlPin = params.get('pin');
@@ -108,13 +184,28 @@
                     document.getElementById('pin-box').classList.add('hidden');
                 }
 
+                document.getElementById('modal-text-input').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.saveModalAnswer();
+                    }
+                });
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible' && this.sessionID && this.playerID) {
+                        this.manualSync();
+                    }
+                });
+
                 const saved = localStorage.getItem('live_buzzer_student');
                 if (saved) {
-                    const data = JSON.parse(saved);
-                    if (!urlPin || urlPin === data.pin) {
-                        const valid = await this.verifyAndRestore(data);
-                        if (valid) return;
-                    }
+                    try {
+                        const data = JSON.parse(saved);
+                        if (!urlPin || urlPin === data.pin) {
+                            const valid = await this.verifyAndRestore(data);
+                            if (valid) return;
+                        }
+                    } catch (e) {}
                     localStorage.removeItem('live_buzzer_student');
                 }
             },
@@ -123,10 +214,15 @@
                 const { data: sess } = await this.supabase.from('live_sessions').select('*').eq('id', savedData.sId).single();
                 if (!sess) return false;
 
+                const { data: pCheck } = await this.supabase.from('live_players').select('*').eq('id', savedData.pId).single();
+                if (!pCheck) return false;
+
                 this.sessionID = sess.id;
                 this.playerID = savedData.pId;
+                this.pin = savedData.pin;
                 this.showHeader(savedData.nick, savedData.avatar);
-                this.handleSessionState(sess);
+                await this.restoreSavedAnswers();
+                await this.handleSessionState(sess);
                 this.listenToRoom();
                 return true;
             },
@@ -141,7 +237,7 @@
 
                 const btn = document.getElementById('btn-join');
                 btn.disabled = true;
-                btn.innerText = "JOINING...";
+                btn.innerText = "CONNECTING...";
 
                 const { data: sess, error: sErr } = await this.supabase
                     .from('live_sessions')
@@ -159,32 +255,76 @@
                     return;
                 }
 
-                const randomAvatar = Math.floor(Math.random() * TOTAL_AVATARS) + 1;
-
-                const { data: player, error: pErr } = await this.supabase
+                const { data: existingPlayers } = await this.supabase
                     .from('live_players')
-                    .insert([{ session_id: sess.id, nickname: nick, avatar_num: randomAvatar }])
-                    .select()
-                    .single();
+                    .select('*')
+                    .eq('session_id', sess.id)
+                    .eq('nickname', nick)
+                    .limit(1);
 
-                if (pErr) {
-                    errEl.innerText = "Could not join. Try again.";
-                    errEl.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "JOIN GAME";
-                    return;
+                let player = existingPlayers && existingPlayers.length > 0 ? existingPlayers[0] : null;
+
+                if (!player) {
+                    const randomAvatar = Math.floor(Math.random() * TOTAL_AVATARS) + 1;
+                    const { data: newPlayer, error: pErr } = await this.supabase
+                        .from('live_players')
+                        .insert([{ session_id: sess.id, nickname: nick, avatar_num: randomAvatar }])
+                        .select()
+                        .single();
+
+                    if (pErr || !newPlayer) {
+                        errEl.innerText = "Could not join. Try again.";
+                        errEl.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.innerText = "JOIN GAME";
+                        return;
+                    }
+                    player = newPlayer;
                 }
 
                 this.sessionID = sess.id;
                 this.playerID = player.id;
+                this.pin = pin;
 
                 localStorage.setItem('live_buzzer_student', JSON.stringify({
-                    sId: sess.id, pId: player.id, pin: pin, nick: nick, avatar: randomAvatar
+                    sId: sess.id, pId: player.id, pin: pin, nick: player.nickname, avatar: player.avatar_num
                 }));
+                localStorage.setItem('live_buzzer_student_nick', player.nickname);
 
-                this.showHeader(nick, randomAvatar);
-                this.handleSessionState(sess);
+                this.showHeader(player.nickname, player.avatar_num);
+                await this.restoreSavedAnswers();
+                await this.handleSessionState(sess);
                 this.listenToRoom();
+            },
+
+            restoreSavedAnswers: async function() {
+                if (!this.sessionID || !this.playerID) return;
+                const banner = document.getElementById('sync-banner');
+                banner.classList.remove('hidden');
+
+                const { data: subs } = await this.supabase
+                    .from('live_submissions')
+                    .select('round_num, answer_text')
+                    .eq('session_id', this.sessionID)
+                    .eq('player_id', this.playerID);
+
+                if (subs) {
+                    this.savedAnswers = {};
+                    subs.forEach(s => {
+                        if (s.answer_text) {
+                            this.savedAnswers[s.round_num] = s.answer_text.replace(/\s*\[2PT\]$/i, '');
+                        }
+                    });
+                }
+
+                setTimeout(() => banner.classList.add('hidden'), 500);
+            },
+
+            manualSync: async function() {
+                if (!this.sessionID) return;
+                await this.restoreSavedAnswers();
+                const { data: sess } = await this.supabase.from('live_sessions').select('*').eq('id', this.sessionID).single();
+                if (sess) await this.handleSessionState(sess);
             },
 
             showHeader: function(nick, avatarNum) {
@@ -197,6 +337,20 @@
                 img.onerror = () => { img.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${nick}`; };
             },
 
+            switchRoom: function() {
+                localStorage.removeItem('live_buzzer_student');
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, '', window.location.pathname);
+                }
+                window.location.reload();
+            },
+
+            leaveRoom: function() {
+                localStorage.removeItem('live_buzzer_student');
+                localStorage.removeItem('live_buzzer_student_nick');
+                window.location.reload();
+            },
+
             listenToRoom: function() {
                 this.supabase.channel('student-room-listener')
                     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_sessions', filter: `id=eq.${this.sessionID}` },
@@ -206,45 +360,228 @@
             },
 
             handleSessionState: async function(sess) {
-                // Parse how many boxes this round has (e.g. 'BASIC_8' -> 8, 'BASIC_1' -> 1, 'SPEED' -> 1)
+                if (sess.status !== 'GO') {
+                    this.closeTypingModal();
+                    document.getElementById('wait-icon').innerText = "🔒";
+                    document.getElementById('wait-title').innerText = "Phones Locked";
+                    document.getElementById('wait-sub').innerText = "Look at the board! Waiting for the teacher to tap GO...";
+                    this.switchScreen('screen-wait');
+                    return;
+                }
+
+                if (sess.mode && sess.mode.startsWith('EX|')) {
+                    this.roundStartQ = sess.current_round;
+                    await this.loadAndRenderExam(sess.mode);
+                    this.switchScreen('screen-exam');
+                    return;
+                }
+
                 let parsedBoxes = 1;
                 if (sess.mode && sess.mode.startsWith('BASIC_')) {
                     parsedBoxes = parseInt(sess.mode.split('_')[1], 10) || 1;
                 }
 
-                const isNewRound = (sess.current_round !== this.roundStartQ) || (parsedBoxes !== this.boxCount);
+                const isNewRound = (sess.current_round !== this.roundStartQ) || (parsedBoxes !== this.boxCount) || (sess.mode !== this.currentMode);
                 this.roundStartQ = sess.current_round;
                 this.boxCount = parsedBoxes;
+                this.currentMode = sess.mode;
 
-                if (sess.status === 'GO') {
-                    // Multi-Box Basic Mode (2+ Questions)
-                    if (this.boxCount > 1) {
-                        this.buildMultiBoxes(this.boxCount, isNewRound);
-                        this.switchScreen('screen-multi');
+                if (this.boxCount > 1) {
+                    this.buildMultiBoxes(this.boxCount, isNewRound);
+                    this.switchScreen('screen-multi');
+                    return;
+                }
+
+                const existingSingle = this.savedAnswers[this.roundStartQ];
+                if (isNewRound) {
+                    this.hasSubmittedThisRound = !!existingSingle;
+                    document.getElementById('answer-input').value = existingSingle || '';
+                }
+
+                if (this.hasSubmittedThisRound && sess.mode === 'SPEED') {
+                    this.showSubmittedWait();
+                } else {
+                    const btn = document.getElementById('btn-submit');
+                    btn.disabled = false;
+                    btn.innerText = existingSingle ? "UPDATE ANSWER 🚀" : "SEND ANSWER 🚀";
+                    this.switchScreen('screen-go');
+                }
+            },
+
+            loadAndRenderExam: async function(modeStr) {
+                const parts = modeStr.split('|');
+                const level = parts[1];
+                const partNum = parseInt(parts[2], 10);
+                const idsRaw = parts[3];
+
+                if (this.examState.signature !== modeStr) {
+                    this.examState.signature = modeStr;
+                    this.examState.level = level;
+                    this.examState.part = partNum;
+                    this.examState.ids = idsRaw;
+
+                    if (partNum === 2) {
+                        const { data } = await this.supabase.from('exam_part2').select('*').eq('id', idsRaw).single();
+                        this.examState.itemData = data;
+                        this.boxCount = 8;
+                    } else if (partNum === 3) {
+                        const { data } = await this.supabase.from('exam_part3').select('*').eq('id', idsRaw).single();
+                        this.examState.itemData = data;
+                        this.boxCount = 8;
+                    } else if (partNum === 4) {
+                        const idList = idsRaw.split(',');
+                        const { data } = await this.supabase.from('exam_part4').select('*').in('id', idList);
+                        this.examState.p4List = idList.map(id => (data || []).find(d => String(d.id) === String(id))).filter(Boolean);
+                        this.boxCount = this.examState.p4List.length;
+                    }
+                }
+
+                this.renderExamView();
+            },
+
+            renderExamView: function() {
+                const partNum = this.examState.part;
+                const container = document.getElementById('exam-content-area');
+                document.getElementById('exam-badge').innerText = `PART ${partNum} • ${this.examState.level}`;
+
+                let savedCount = 0;
+                for (let i = 0; i < this.boxCount; i++) {
+                    if (this.savedAnswers[this.roundStartQ + i]) savedCount++;
+                }
+                document.getElementById('exam-saved-counter').innerText = `${savedCount} / ${this.boxCount}`;
+
+                if (partNum === 2 || partNum === 3) {
+                    const item = this.examState.itemData;
+                    if (!item) {
+                        container.innerHTML = `<p class="text-center text-gray-400 font-bold py-10">Loading text...</p>`;
                         return;
                     }
+                    document.getElementById('exam-title').innerText = item.title;
 
-                    // Single-Box Mode (Basic with 1 Question, or Speed Mode)
-                    if (isNewRound) {
-                        this.hasSubmittedThisRound = false;
-                        document.getElementById('answer-input').value = '';
+                    let html = item.content;
+                    for (let i = 1; i <= 8; i++) {
+                        const qNum = this.roundStartQ + (i - 1);
+                        const savedVal = this.savedAnswers[qNum] || '';
+                        const isSaved = savedVal !== '';
+
+                        let rootTag = '';
+                        if (partNum === 3 && item.answers) {
+                            const ansObj = item.answers[i] || item.answers[i - 1];
+                            if (ansObj && ansObj.root) {
+                                rootTag = `<span class="root-word-tag">${ansObj.root}</span>`;
+                            }
+                        }
+
+                        const pillLabel = isSaved ? `${i}. ${savedVal}` : `[ ${i} ]`;
+                        const pillClass = isSaved ? 'gap-pill gap-pill-saved' : 'gap-pill gap-pill-empty';
+                        const pillBtn = `<button type="button" onclick="student.openTypingModal(${i - 1})" class="${pillClass}">${pillLabel}</button>${rootTag}`;
+                        html = html.replace(`[${i}]`, pillBtn);
                     }
 
-                    if (this.hasSubmittedThisRound) {
-                        this.showSubmittedWait();
-                    } else {
-                        const btn = document.getElementById('btn-submit');
-                        btn.disabled = false;
-                        btn.innerText = "SEND ANSWER 🚀";
-                        this.switchScreen('screen-go');
-                        document.getElementById('answer-input').focus();
-                    }
-                } else {
-                    document.getElementById('wait-icon').innerText = "🔒";
-                    document.getElementById('wait-title').innerText = "Phones Locked";
-                    document.getElementById('wait-sub').innerText = "Look at the board! Waiting for the teacher to tap GO...";
-                    this.switchScreen('screen-wait');
+                    container.innerHTML = `<div class="exam-text-body">${html}</div>`;
+                } else if (partNum === 4) {
+                    document.getElementById('exam-title').innerText = "Key Word Transformations";
+                    container.innerHTML = this.examState.p4List.map((q, idx) => {
+                        const qNum = this.roundStartQ + idx;
+                        const savedVal = this.savedAnswers[qNum] || '';
+                        const isSaved = savedVal !== '';
+
+                        return `
+                            <div class="p-4 rounded-2xl border-2 ${isSaved ? 'border-green-500 bg-green-50/30' : 'border-gray-200 bg-gray-50'} space-y-2.5">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-black uppercase text-indigo-600">Question ${idx + 1}</span>
+                                    <span class="px-2.5 py-0.5 bg-amber-200 text-amber-950 font-black rounded-lg text-xs uppercase border border-amber-300">Key: ${q.key_word}</span>
+                                </div>
+                                <p class="text-sm font-bold text-gray-800 leading-snug">${q.sentence1}</p>
+                                <div class="text-sm font-bold text-gray-700 leading-relaxed pt-1">
+                                    <span>${q.sentence2_pre}</span>
+                                    <button type="button" onclick="student.openTypingModal(${idx})" class="${isSaved ? 'gap-pill gap-pill-saved' : 'gap-pill gap-pill-empty'} my-1">
+                                        ${isSaved ? savedVal : `Tap to Answer (${idx + 1})`}
+                                    </button>
+                                    <span>${q.sentence2_post}</span>
+                                </div>
+                            </div>`;
+                    }).join('');
                 }
+            },
+
+            openTypingModal: function(offset) {
+                this.examState.activeGapOffset = offset;
+                const partNum = this.examState.part;
+                const qNum = this.roundStartQ + offset;
+                const currentVal = this.savedAnswers[qNum] || '';
+
+                document.getElementById('modal-gap-title').innerText = partNum === 4 ? `Question ${offset + 1}` : `Gap ${offset + 1}`;
+
+                const rootBadge = document.getElementById('modal-root-badge');
+                const contextText = document.getElementById('modal-context-text');
+                rootBadge.classList.add('hidden');
+                contextText.classList.add('hidden');
+
+                if (partNum === 3 && this.examState.itemData && this.examState.itemData.answers) {
+                    const ansObj = this.examState.itemData.answers[offset + 1] || this.examState.itemData.answers[offset];
+                    if (ansObj && ansObj.root) {
+                        rootBadge.innerText = `ROOT: ${ansObj.root}`;
+                        rootBadge.classList.remove('hidden');
+                    }
+                } else if (partNum === 4 && this.examState.p4List[offset]) {
+                    const q = this.examState.p4List[offset];
+                    rootBadge.innerText = `KEY: ${q.key_word}`;
+                    rootBadge.classList.remove('hidden');
+                    contextText.innerHTML = `${q.sentence1}<br><span class="text-indigo-700">${q.sentence2_pre} <strong>[ ... ]</strong> ${q.sentence2_post}</span>`;
+                    contextText.classList.remove('hidden');
+                }
+
+                const input = document.getElementById('modal-text-input');
+                input.value = currentVal;
+
+                const modal = document.getElementById('typing-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => input.focus(), 50);
+            },
+
+            closeTypingModal: function() {
+                const modal = document.getElementById('typing-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            },
+
+            saveModalAnswer: async function() {
+                const input = document.getElementById('modal-text-input');
+                const val = input.value.trim().toUpperCase();
+                if (!val) {
+                    this.closeTypingModal();
+                    return;
+                }
+
+                const btn = document.getElementById('btn-modal-save');
+                btn.disabled = true;
+                btn.innerText = "SAVING...";
+
+                const targetQNum = this.roundStartQ + this.examState.activeGapOffset;
+
+                const { error } = await this.supabase
+                    .from('live_submissions')
+                    .upsert([{
+                        session_id: this.sessionID,
+                        player_id: this.playerID,
+                        round_num: targetQNum,
+                        answer_text: val,
+                        is_correct: null
+                    }], { onConflict: 'player_id,round_num' });
+
+                btn.disabled = false;
+                btn.innerText = "SAVE ANSWER ✓";
+
+                if (error) {
+                    alert("Could not save answer. Check your connection and try again.");
+                    return;
+                }
+
+                this.savedAnswers[targetQNum] = val;
+                this.closeTypingModal();
+                this.renderExamView();
             },
 
             buildMultiBoxes: function(count, forceRebuild) {
@@ -253,10 +590,11 @@
 
                 let html = '';
                 for (let i = 1; i <= count; i++) {
+                    const savedVal = this.savedAnswers[this.roundStartQ + (i - 1)] || '';
                     html += `
                         <div class="flex items-center gap-3 bg-white p-2.5 rounded-2xl border-2 border-gray-200 shadow-sm">
                             <span class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 font-black flex items-center justify-center text-lg flex-none">${i}</span>
-                            <input type="text" id="multi-box-${i}" class="w-full p-2 text-xl font-black uppercase outline-none text-gray-800 border-b-2 border-transparent focus:border-indigo-500" placeholder="Answer ${i}...">
+                            <input type="text" id="multi-box-${i}" value="${savedVal}" class="w-full p-2 text-xl font-black uppercase outline-none text-gray-800 border-b-2 border-transparent focus:border-indigo-500" placeholder="Answer ${i}...">
                         </div>`;
                 }
                 list.innerHTML = html;
@@ -282,7 +620,8 @@
                         session_id: this.sessionID,
                         player_id: this.playerID,
                         round_num: this.roundStartQ,
-                        answer_text: text
+                        answer_text: text,
+                        is_correct: null
                     }], { onConflict: 'player_id,round_num' });
 
                 if (error) {
@@ -291,6 +630,7 @@
                     return;
                 }
 
+                this.savedAnswers[this.roundStartQ] = text;
                 this.hasSubmittedThisRound = true;
                 this.showSubmittedWait();
             },
@@ -305,11 +645,14 @@
                     const el = document.getElementById(`multi-box-${i + 1}`);
                     const val = el ? el.value.trim().toUpperCase() : '';
                     if (val !== '') {
+                        const qNum = this.roundStartQ + i;
+                        this.savedAnswers[qNum] = val;
                         rowsToUpsert.push({
                             session_id: this.sessionID,
                             player_id: this.playerID,
-                            round_num: this.roundStartQ + i,
-                            answer_text: val
+                            round_num: qNum,
+                            answer_text: val,
+                            is_correct: null
                         });
                     }
                 }
@@ -339,13 +682,8 @@
                 this.switchScreen('screen-wait');
             },
 
-            leaveRoom: function() {
-                localStorage.removeItem('live_buzzer_student');
-                window.location.reload();
-            },
-
             switchScreen: function(screenId) {
-                ['screen-login', 'screen-wait', 'screen-go', 'screen-multi'].forEach(id => {
+                ['screen-login', 'screen-wait', 'screen-go', 'screen-multi', 'screen-exam'].forEach(id => {
                     const el = document.getElementById(id);
                     el.classList.add('hidden');
                     el.classList.remove('flex');
