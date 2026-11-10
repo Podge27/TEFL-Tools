@@ -12,7 +12,6 @@
     
     <style>
         body {
-            /* Fallback background if global.css doesn't load immediately */
             background: linear-gradient(135deg, #00BCD4, #4DD0E1); 
             min-height: 100vh;
             display: flex;
@@ -24,7 +23,7 @@
 
         #app-container {
             width: 100%;
-            max-width: 1000px; /* Made slightly wider for side-by-side view */
+            max-width: 1000px; 
             background-color: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -35,7 +34,6 @@
             position: relative;
         }
 
-        /* --- DRAGGABLE BALL STYLES (Round Balloons) --- */
         .letter-ball {
             position: absolute; 
             width: 64px;
@@ -46,11 +44,10 @@
             font-size: 28px;
             font-weight: 900;
             color: white;
-            border-radius: 50%; /* Perfect Circle */
+            border-radius: 50%; 
             cursor: grab;
             user-select: none;
             touch-action: none;
-            /* 3D Balloon Effect */
             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset -2px -2px 6px rgba(0,0,0,0.2);
             transition: transform 0.1s, box-shadow 0.1s;
@@ -58,9 +55,7 @@
             text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
         }
 
-        .letter-ball:active {
-            cursor: grabbing;
-        }
+        .letter-ball:active { cursor: grabbing; }
         
         .dragging {
             z-index: 1000 !important;
@@ -68,7 +63,6 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.3);
         }
 
-        /* --- SLOT STYLES --- */
         #slots-container {
             display: flex;
             justify-content: center;
@@ -86,14 +80,13 @@
             width: 64px;
             height: 64px;
             border: 3px solid #e2e8f0;
-            border-radius: 50%; /* Round slots */
+            border-radius: 50%; 
             background-color: white;
             flex-shrink: 0;
             transition: all 0.2s;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* --- POOL STYLES --- */
         #letters-container {
             position: relative;
             min-height: 250px;
@@ -101,17 +94,13 @@
             margin-top: auto; 
         }
 
-        /* --- ANIMATIONS --- */
         @keyframes pop {
             0% { transform: scale(1); }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
-        .animate-pop {
-            animation: pop 0.3s ease-out;
-        }
+        .animate-pop { animation: pop 0.3s ease-out; }
 
-        /* Setup Area Styling */
         textarea {
             @apply w-full p-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition resize-y text-gray-700 font-bold font-mono;
             min-height: 200px;
@@ -119,16 +108,10 @@
         
         .file-upload-btn {
             @apply w-full h-full py-4 px-6 bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl text-center cursor-pointer transition hover:bg-cyan-50 hover:border-cyan-400 hover:text-cyan-700 font-bold text-slate-500 flex flex-col items-center justify-center gap-2;
-            min-height: 200px; /* Matched height with textarea */
+            min-height: 200px; 
         }
-        .file-upload-btn:active {
-            @apply bg-slate-200 transform scale-95;
-        }
-
-        /* Buttons */
-        .btn-action {
-            @apply px-4 py-2 font-bold rounded-lg shadow-md transition transform active:scale-95;
-        }
+        .file-upload-btn:active { @apply bg-slate-200 transform scale-95; }
+        .btn-action { @apply px-4 py-2 font-bold rounded-lg shadow-md transition transform active:scale-95; }
     </style>
 <script data-goatcounter="https://TeflTools.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -138,7 +121,7 @@
         
         <div class="flex justify-between items-center mb-6">
             <a href="index.html" id="global-back-btn" class="btn-back">
-                <span>←</span> <span id="back-label">Back to Tools</span>
+                <span id="back-label">← Back to Tools</span>
             </a>
             <h1 class="text-2xl font-black text-slate-800 uppercase tracking-wide">The Balloon Game</h1>
             <div class="w-24"></div> 
@@ -146,16 +129,13 @@
 
         <div id="setup-panel" class="flex flex-col gap-6">
             <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                <h2 class="text-lg font-bold text-slate-700 mb-6 border-b border-slate-200 pb-2">1. Create Vocabulary List</h2>
+                <h2 class="text-lg font-bold text-slate-700 mb-6 border-b border-slate-200 pb-2">Create Vocabulary List</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
                     <div class="flex flex-col h-full">
                         <label class="block text-sm font-bold text-slate-600 mb-2">
                             Option A: Paste Words
-                            <span class="block text-xs font-normal text-slate-400 mt-1">
-                                Separate with commas or new lines.
-                            </span>
+                            <span class="block text-xs font-normal text-slate-400 mt-1">Separate with commas or new lines.</span>
                         </label>
                         <textarea id="vocab-paste" placeholder="Examples:&#10;APPLE, BANANA, CHERRY&#10;DOG&#10;CAT&#10;ELEPHANT" class="flex-grow"></textarea>
                     </div>
@@ -163,9 +143,7 @@
                     <div class="flex flex-col h-full">
                         <label class="block text-sm font-bold text-slate-600 mb-2">
                             Option B: Upload CSV
-                            <span class="block text-xs font-normal text-slate-400 mt-1">
-                                Upload a standard .txt or .csv file.
-                            </span>
+                            <span class="block text-xs font-normal text-slate-400 mt-1">Upload a standard .txt or .csv file.</span>
                         </label>
                         <div class="file-upload-btn" onclick="document.getElementById('vocab-file').click()">
                             <span class="text-4xl">📂</span>
@@ -173,29 +151,20 @@
                             <input type="file" id="vocab-file" accept=".csv, .txt" class="hidden" onchange="updateFileName(this)">
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <button onclick="window.processVocabSource()" 
-                    class="w-full py-4 bg-cyan-600 text-white font-black rounded-xl shadow-lg hover:bg-cyan-700 text-xl transition transform hover:scale-[1.01] active:scale-95">
+            <button onclick="window.processVocabSource()" class="w-full py-4 bg-cyan-600 text-white font-black rounded-xl shadow-lg hover:bg-cyan-700 text-xl transition transform hover:scale-[1.01] active:scale-95">
                 START GAME 🚀
             </button>
         </div>
 
         <div id="game-play-area" class="hidden flex-col flex-grow">
-            
             <div class="flex justify-between items-center mb-4">
-                <div class="text-sm font-bold text-slate-400">
-                    Word <span id="word-counter" class="text-slate-800">1</span>
-                </div>
+                <div class="text-sm font-bold text-slate-400">Word <span id="word-counter" class="text-slate-800">1</span></div>
                 <div class="flex gap-3">
-                    <button id="hint-button" onclick="window.giveHint()" class="btn-action bg-blue-100 text-blue-600 hover:bg-blue-200">
-                        💡 Hint
-                    </button>
-                    <button id="skip-button" onclick="window.skipWord()" class="btn-action bg-red-100 text-red-600 hover:bg-red-200">
-                        ⏩ Skip
-                    </button>
+                    <button id="hint-button" onclick="window.giveHint()" class="btn-action bg-blue-100 text-blue-600 hover:bg-blue-200">💡 Hint</button>
+                    <button id="skip-button" onclick="window.skipWord()" class="btn-action bg-red-100 text-red-600 hover:bg-red-200">⏩ Skip</button>
                 </div>
             </div>
 
@@ -204,7 +173,6 @@
             </div>
 
             <div id="slots-container"></div>
-
             <div id="letters-container"></div>
 
             <div id="next-btn-container" class="absolute bottom-6 left-0 w-full flex justify-center pointer-events-none hidden z-50">
@@ -212,72 +180,72 @@
                     NEXT WORD ➜
                 </button>
             </div>
-
         </div>
-
     </div>
 
     <script>
-        // --- CONSTANTS ---
+        // --- CONSTANTS & CONFIG ---
         const BALL_SIZE = 64;
-        const COLORS = [
-            '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E'
-        ];
+        const COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E'];
+        
+        // This is the badge that proves they are a student
+        const IS_STUDENT = new URLSearchParams(window.location.search).get('student') === 'true';
 
         // --- STATE ---
         let vocabList = []; 
         let currentWordIndex = -1;
         const state = {
-            currentWord: "",
-            slots: [],
-            balls: [],
-            isDragging: false,
-            activeBall: null,
+            currentWord: "", slots: [], balls: [], isDragging: false, activeBall: null,
             startX: 0, startY: 0, initialX: 0, initialY: 0,
-            slotMap: new Map(), // slotId -> ballElement
-            originalPosMap: new Map() // ballId -> {x, y}
+            slotMap: new Map(), originalPosMap: new Map()
         };
 
-        // --- DOM ---
         const elements = {
-            setupPanel: document.getElementById('setup-panel'),
-            gamePlayArea: document.getElementById('game-play-area'),
-            slotsContainer: document.getElementById('slots-container'),
-            lettersContainer: document.getElementById('letters-container'),
-            feedbackLabel: document.getElementById('feedback-label'),
-            nextBtnContainer: document.getElementById('next-btn-container'),
-            hintButton: document.getElementById('hint-button'),
-            skipButton: document.getElementById('skip-button'),
-            vocabFile: document.getElementById('vocab-file'),
-            vocabPaste: document.getElementById('vocab-paste'),
-            backBtn: document.getElementById('global-back-btn'),
-            backLabel: document.getElementById('back-label'),
-            wordCounter: document.getElementById('word-counter'),
-            fileNameDisplay: document.getElementById('file-name-display')
+            setupPanel: document.getElementById('setup-panel'), gamePlayArea: document.getElementById('game-play-area'),
+            slotsContainer: document.getElementById('slots-container'), lettersContainer: document.getElementById('letters-container'),
+            feedbackLabel: document.getElementById('feedback-label'), nextBtnContainer: document.getElementById('next-btn-container'),
+            hintButton: document.getElementById('hint-button'), skipButton: document.getElementById('skip-button'),
+            vocabFile: document.getElementById('vocab-file'), vocabPaste: document.getElementById('vocab-paste'),
+            backBtn: document.getElementById('global-back-btn'), backLabel: document.getElementById('back-label'),
+            wordCounter: document.getElementById('word-counter'), fileNameDisplay: document.getElementById('file-name-display')
         };
 
-        // --- NAVIGATION ---
+        // --- BULLETPROOF NAVIGATION ---
         elements.backBtn.addEventListener('click', (e) => {
+            if (IS_STUDENT) {
+                // If they are a student, taking this path uses the browser's "Back" arrow 
+                // to put them exactly back on the syllabus menu page safely.
+                e.preventDefault();
+                window.history.back();
+                return;
+            }
+
+            // Normal teacher behavior
             if (!elements.gamePlayArea.classList.contains('hidden')) {
-                // If in game, stay on page but go to Setup
                 e.preventDefault();
                 showSetup();
             }
-            // If in setup, let the link follow through to index.html
         });
 
         function showSetup() {
+            if (IS_STUDENT) return; // Completely lock students out of this function
+
             elements.setupPanel.classList.remove('hidden');
             elements.gamePlayArea.classList.add('hidden');
-            elements.backLabel.innerText = "Back to Tools";
-            elements.backBtn.href = "index.html"; // Ensure link points home
+            elements.backLabel.innerText = "← Back to Tools";
+            elements.backBtn.href = "index.html"; 
         }
 
         function showGame() {
             elements.setupPanel.classList.add('hidden');
             elements.gamePlayArea.classList.remove('hidden');
-            elements.backLabel.innerText = "Back to Setup";
-            elements.backBtn.href = "#"; // Prevent navigation away
+            
+            if (IS_STUDENT) {
+                elements.backLabel.innerText = "← Back to Menu";
+            } else {
+                elements.backLabel.innerText = "← Back to Setup";
+            }
+            elements.backBtn.href = "#"; 
         }
         
         function updateFileName(input) {
@@ -288,7 +256,6 @@
         }
 
         // --- GAME LOGIC ---
-
         function processVocabSource() {
             const fileInput = elements.vocabFile;
             const pasteInput = elements.vocabPaste;
@@ -306,22 +273,13 @@
         }
 
         function parseAndStartGame(content) {
-            // Split by line first
             const lines = content.split(/\r?\n/);
-            
-            vocabList = lines
-                .map(line => {
-                    // CSV Logic: Take ONLY the first column (text before the first comma)
-                    const firstCol = line.split(',')[0]; 
-                    return firstCol.trim().toUpperCase();
-                })
-                .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w)); // Filter empties and non-letters
+            vocabList = lines.map(line => line.split(',')[0].trim().toUpperCase())
+                             .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w)); 
 
-            // If only 1 line/no CSV structure found, try splitting by comma as a fallback for simple paste
             if (vocabList.length <= 1 && content.includes(',')) {
-                vocabList = content.split(',')
-                    .map(w => w.trim().toUpperCase())
-                    .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w));
+                vocabList = content.split(',').map(w => w.trim().toUpperCase())
+                                              .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w));
             }
 
             if (vocabList.length === 0) {
@@ -344,40 +302,27 @@
         }
 
         function renderRound(word) {
-            // Reset
-            state.slots = [];
-            state.balls = [];
-            state.slotMap.clear();
-            state.originalPosMap.clear();
-            elements.slotsContainer.innerHTML = '';
-            elements.lettersContainer.innerHTML = '';
+            state.slots = []; state.balls = []; state.slotMap.clear(); state.originalPosMap.clear();
+            elements.slotsContainer.innerHTML = ''; elements.lettersContainer.innerHTML = '';
             elements.nextBtnContainer.classList.add('hidden');
             elements.feedbackLabel.innerText = "Pop the balloons into the slots!";
             elements.feedbackLabel.className = "text-xl font-bold text-slate-600";
             
             state.currentWord = word;
-            
-            // Buttons
-            elements.hintButton.disabled = false;
-            elements.skipButton.disabled = false;
+            elements.hintButton.disabled = false; elements.skipButton.disabled = false;
 
-            // Scramble
-            let chars = Array.from(word.replace(/\s/g, '')); // remove spaces for logic
-            // Simple visual scramble
+            let chars = Array.from(word.replace(/\s/g, '')); 
             let displayChars = [...chars].sort(() => Math.random() - 0.5);
 
-            // Layout
             const containerWidth = elements.gamePlayArea.clientWidth - 40; 
             const itemWidth = BALL_SIZE + 10;
             const itemsPerRow = Math.floor(containerWidth / itemWidth);
             const numRows = Math.ceil(displayChars.length / itemsPerRow);
             const gap = (containerWidth - (itemsPerRow * itemWidth)) / 2;
 
-            // 1. Create Slots
             let slotId = 0;
             Array.from(word).forEach(char => {
                 if(char === ' ') {
-                    // Visual separator for space
                     const space = document.createElement('div');
                     space.style.width = "20px";
                     elements.slotsContainer.appendChild(space);
@@ -391,23 +336,16 @@
                 }
             });
 
-            // 2. Create Balls
             displayChars.forEach((char, i) => {
                 const ball = document.createElement('div');
                 ball.className = 'letter-ball';
                 ball.textContent = char;
                 ball.dataset.char = char;
                 ball.dataset.id = `ball-${i}`;
-                
-                // Assign random color
-                const color = COLORS[i % COLORS.length];
-                ball.style.backgroundColor = color;
+                ball.style.backgroundColor = COLORS[i % COLORS.length];
 
-                // Position
                 const row = Math.floor(i / itemsPerRow);
                 const col = i % itemsPerRow;
-                
-                // Add some randomness to position to feel "organic"
                 const randX = (Math.random() * 10) - 5;
                 const randY = (Math.random() * 10) - 5;
 
@@ -416,10 +354,8 @@
 
                 ball.style.left = `${x}px`;
                 ball.style.top = `${y}px`;
-
                 state.originalPosMap.set(ball.dataset.id, {x, y});
 
-                // Events
                 ball.addEventListener('mousedown', startDrag);
                 ball.addEventListener('touchstart', startDrag);
 
@@ -439,22 +375,19 @@
         function startDrag(e) {
             e.preventDefault();
             const ball = e.currentTarget;
-            if(ball.classList.contains('locked')) return; // Prevent moving locked balls
+            if(ball.classList.contains('locked')) return; 
 
-            const coords = getCoords(e);
-            
             state.isDragging = true;
             state.activeBall = ball;
             
-            // If dragging from a slot, free the slot
             if (ball.dataset.slotId) {
                 state.slotMap.delete(ball.dataset.slotId);
                 delete ball.dataset.slotId;
             }
 
             const rect = ball.getBoundingClientRect();
-            state.startX = coords.x;
-            state.startY = coords.y;
+            state.startX = getCoords(e).x;
+            state.startY = getCoords(e).y;
             state.initialX = rect.left;
             state.initialY = rect.top;
 
@@ -468,13 +401,10 @@
 
         function duringDrag(e) {
             if (!state.isDragging) return;
-            const coords = getCoords(e);
-            const dx = coords.x - state.startX;
-            const dy = coords.y - state.startY;
+            const dx = getCoords(e).x - state.startX;
+            const dy = getCoords(e).y - state.startY;
             
-            // Must convert to relative coords inside container
             const containerRect = elements.lettersContainer.getBoundingClientRect();
-            
             state.activeBall.style.left = (state.initialX + dx - containerRect.left) + "px";
             state.activeBall.style.top = (state.initialY + dy - containerRect.top) + "px";
             
@@ -490,40 +420,27 @@
             const ballCenterY = ballRect.top + ballRect.height/2;
 
             let snapped = false;
-
-            // Check slots
             const containerRect = elements.lettersContainer.getBoundingClientRect();
 
-            // Iterate slots to find nearest
             for (const slot of state.slots) {
                 const slotRect = slot.getBoundingClientRect();
-                const slotCenterX = slotRect.left + slotRect.width/2;
-                const slotCenterY = slotRect.top + slotRect.height/2;
-                
-                const dist = Math.hypot(ballCenterX - slotCenterX, ballCenterY - slotCenterY);
+                const dist = Math.hypot(ballCenterX - (slotRect.left + slotRect.width/2), ballCenterY - (slotRect.top + slotRect.height/2));
 
-                if (dist < 50) {
-                    // Check if slot is empty
-                    if (!state.slotMap.has(slot.dataset.id)) {
-                        // Snap
-                        ball.style.left = (slotRect.left - containerRect.left) + "px";
-                        ball.style.top = (slotRect.top - containerRect.top) + "px";
-                        
-                        state.slotMap.set(slot.dataset.id, ball);
-                        ball.dataset.slotId = slot.dataset.id;
-                        
-                        // Play pop animation
-                        ball.classList.remove('animate-pop');
-                        void ball.offsetWidth;
-                        ball.classList.add('animate-pop');
-
-                        snapped = true;
-                        break;
-                    }
+                if (dist < 50 && !state.slotMap.has(slot.dataset.id)) {
+                    ball.style.left = (slotRect.left - containerRect.left) + "px";
+                    ball.style.top = (slotRect.top - containerRect.top) + "px";
+                    
+                    state.slotMap.set(slot.dataset.id, ball);
+                    ball.dataset.slotId = slot.dataset.id;
+                    
+                    ball.classList.remove('animate-pop');
+                    void ball.offsetWidth;
+                    ball.classList.add('animate-pop');
+                    snapped = true;
+                    break;
                 }
             }
 
-            // Return to pool if not snapped
             if (!snapped) {
                 const orig = state.originalPosMap.get(ball.dataset.id);
                 ball.style.left = orig.x + "px";
@@ -544,29 +461,19 @@
 
         // --- WIN LOGIC ---
         function checkWin() {
-            // 1. Are all slots full?
             if (state.slotMap.size < state.slots.length) return;
 
-            // 2. Is it correct?
             let correct = true;
-            let attempt = "";
             state.slots.forEach(slot => {
-                const ball = state.slotMap.get(slot.dataset.id);
-                if (ball.dataset.char !== slot.dataset.target) correct = false;
-                attempt += ball.dataset.char;
+                if (state.slotMap.get(slot.dataset.id).dataset.char !== slot.dataset.target) correct = false;
             });
 
             if (correct) {
                 elements.feedbackLabel.innerHTML = `🎉 Correct! <span class="text-cyan-600">${state.currentWord}</span>`;
                 elements.nextBtnContainer.classList.remove('hidden');
                 
-                // Lock everything
-                state.balls.forEach(b => {
-                    b.classList.add('locked');
-                    b.style.cursor = 'default';
-                });
-                elements.hintButton.disabled = true;
-                elements.skipButton.disabled = true;
+                state.balls.forEach(b => { b.classList.add('locked'); b.style.cursor = 'default'; });
+                elements.hintButton.disabled = true; elements.skipButton.disabled = true;
             } else {
                 elements.feedbackLabel.innerText = "Not quite right...";
                 elements.feedbackLabel.className = "text-xl font-bold text-amber-500 animate-pop";
@@ -575,18 +482,12 @@
 
         // --- HELPERS ---
         window.giveHint = function() {
-            // Find first empty slot
             const emptySlot = state.slots.find(s => !state.slotMap.has(s.dataset.id));
             if (!emptySlot) return;
 
-            const charNeeded = emptySlot.dataset.target;
-
-            // Find a ball with that char that is NOT already in the correct slot
-            // Actually, just find one that is free (not in a slot)
-            const ball = state.balls.find(b => b.dataset.char === charNeeded && !b.dataset.slotId);
+            const ball = state.balls.find(b => b.dataset.char === emptySlot.dataset.target && !b.dataset.slotId);
 
             if (ball) {
-                // Manually snap it
                 const slotRect = emptySlot.getBoundingClientRect();
                 const containerRect = elements.lettersContainer.getBoundingClientRect();
                 
@@ -595,8 +496,7 @@
                 
                 state.slotMap.set(emptySlot.dataset.id, ball);
                 ball.dataset.slotId = emptySlot.dataset.id;
-                ball.classList.add('locked'); // Lock hinted balls? Maybe
-                
+                ball.classList.add('locked'); 
                 checkWin();
             }
         };
@@ -606,11 +506,32 @@
             setTimeout(newRound, 1000);
         };
 
-        // Expose functions for buttons
         window.processVocabSource = processVocabSource;
         window.giveHint = window.giveHint;
         window.skipWord = window.skipWord;
         window.newRound = newRound;
+
+        // --- AUTO-LOAD LOGIC ---
+        window.addEventListener('DOMContentLoaded', () => {
+            localStorage.removeItem('isStudent'); // Cleans up the old bug from your browser memory
+
+            const savedWords = localStorage.getItem('autoLoadWords');
+            
+            if (savedWords) {
+                vocabList = savedWords.split(',')
+                                     .map(w => w.trim().toUpperCase())
+                                     .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w));
+                
+                localStorage.removeItem('autoLoadWords');
+                
+                if (vocabList.length > 0) {
+                    vocabList.sort(() => Math.random() - 0.5);
+                    currentWordIndex = -1;
+                    showGame();
+                    newRound();
+                }
+            }
+        });
 
     </script>
 </body>

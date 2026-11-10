@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="global.css">
 
     <style type="text/tailwindcss">
         body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; height: 100vh; overflow: hidden; user-select: none; }
@@ -34,7 +33,7 @@
         .btn-right { @apply border-green-200 bg-green-50 text-green-600 hover:bg-green-100; }
         .btn-right.selected { @apply bg-green-600 text-white border-green-700 shadow-inner; }
 
-        /* Question Tabs when Questions > 1 */
+        /* Question Tabs */
         .q-tab { @apply px-5 py-3 rounded-2xl font-black text-lg border-2 transition transform active:scale-95 cursor-pointer shadow-sm; }
         .q-tab-active { @apply bg-indigo-600 text-white border-indigo-700 ring-4 ring-indigo-200; }
         .q-tab-inactive { @apply bg-white text-gray-700 border-gray-200 hover:bg-gray-50; }
@@ -56,9 +55,8 @@
     <!-- TOP BAR -->
     <header class="bg-white rounded-2xl p-2.5 px-4 shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-2 flex-none">
         
-        <!-- Left: Back, PIN, QR -->
         <div class="flex items-center gap-2">
-            <a href="index.html" class="btn-back">← Back</a>
+            <a href="index.html" class="px-4 py-2 bg-white text-indigo-600 border-2 border-indigo-100 hover:bg-indigo-50 font-black rounded-xl text-sm transition">← Back</a>
             <div class="bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 flex items-center gap-2">
                 <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">PIN</span>
                 <span id="header-pin" class="text-xl font-black text-indigo-700 font-mono tracking-widest">----</span>
@@ -68,14 +66,12 @@
             </button>
         </div>
 
-        <!-- Centre: 3-Mode Selector (Basic vs Speed vs Exam) -->
         <div class="flex items-center bg-gray-100 p-1 rounded-2xl gap-1">
             <button id="mode-basic" onclick="board.setMode('BASIC')" class="mode-btn mode-active">👥 Basic</button>
             <button id="mode-speed" onclick="board.setMode('SPEED')" class="mode-btn mode-inactive">⚡ Speed</button>
             <button id="mode-exam" onclick="board.setMode('EXAM')" class="mode-btn mode-inactive">📚 Exam</button>
         </div>
 
-        <!-- Right: Guide Timer + Scoreboard -->
         <div class="flex items-center gap-2">
             <div class="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
                 <button onclick="board.setTimer(30)" class="timer-preset-btn">30s</button>
@@ -110,7 +106,7 @@
             <!-- Exam Controls (Visible in Exam Mode) -->
             <div id="exam-round-config" class="hidden items-center gap-2">
                 <button onclick="board.openExamSetup()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black rounded-xl text-sm border-2 border-indigo-200 transition cursor-pointer">
-                    ⚙️ Configure Exam
+                    ⚙️ Configure
                 </button>
                 <div id="full-exam-pacer" class="hidden items-center bg-gray-100 p-1 rounded-xl gap-1 border border-gray-200">
                     <button id="pace-btn-2" onclick="board.paceFullExam(2)" class="px-3 py-1.5 rounded-lg font-black text-xs cursor-pointer transition">1. Part 2</button>
@@ -123,7 +119,7 @@
             <span id="sub-counter" class="text-base font-bold text-gray-500"></span>
         </div>
 
-        <!-- SINGLE UNIFIED GO / STOP TOGGLE BUTTON -->
+        <!-- CHAMELEON ACTION BUTTON -->
         <div class="flex-1 max-w-sm ml-auto">
             <button id="btn-round-toggle" onclick="board.toggleRound()" class="big-action-btn bg-green-500 hover:bg-green-600 w-full">
                 🚀 GO (Open Phones)
@@ -158,7 +154,6 @@
                     </button>
                 </div>
 
-                <!-- Step 1 & 2: Level & Scope -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">1. Select Level</label>
@@ -179,7 +174,6 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Granular Dropdowns -->
                 <div class="space-y-4 bg-white p-5 rounded-2xl border border-gray-200">
                     <div id="picker-p2" class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <label class="font-black text-sm text-indigo-950 min-w-[180px]">Part 2 (Open Cloze):</label>
@@ -204,30 +198,51 @@
                         <select id="select-p4-grammar" onchange="board.examConfig.p4Grammar = this.value" class="hidden w-full p-3 border-2 border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500"></select>
                     </div>
                 </div>
-
-                <div class="text-center pt-2">
-                    <p class="text-sm font-bold text-indigo-600">👉 Tap <span class="bg-green-500 text-white px-2.5 py-1 rounded-lg font-black">🚀 GO (Open Phones)</span> above when ready to launch!</p>
-                </div>
             </div>
 
-            <!-- 3B. ACTIVE EXAM BOARD (Context Card + Student Progress / Grading Cards) -->
+            <!-- 3B. ACTIVE EXAM BOARD -->
             <div id="exam-live-stage" class="hidden flex-col gap-6">
-                <!-- Context Card (Shows Text or Current Part 4 Transformation) -->
                 <div id="exam-context-card" class="bg-amber-50/40 border-2 border-amber-200/80 rounded-3xl p-6 shadow-sm"></div>
-                
-                <!-- Student Cards Grid -->
                 <div id="exam-students-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 content-start"></div>
             </div>
         </div>
 
-        <!-- 4. SCOREBOARD OVERLAY -->
-        <div id="view-scoreboard" class="hidden space-y-4 max-w-3xl mx-auto pb-12">
+        <!-- 4. SCOREBOARD OVERLAY (Dual Function) -->
+        <div id="view-scoreboard" class="hidden space-y-4 max-w-5xl mx-auto pb-12 w-full">
             <div class="flex justify-between items-center border-b-2 border-gray-100 pb-4 mb-6">
-                <h2 class="text-4xl font-black text-indigo-950">🏆 Session Standings</h2>
-                <button onclick="board.toggleScoreboard()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black rounded-xl text-lg cursor-pointer">✕ Back to Game</button>
+                <h2 id="scoreboard-title" class="text-4xl font-black text-indigo-950">🏆 Session Standings</h2>
+                <button onclick="board.toggleScoreboard()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black rounded-xl text-lg cursor-pointer">✕ Back</button>
             </div>
             
-            <div id="scoreboard-list" class="space-y-3"></div>
+            <!-- Standard Leaderboard -->
+            <div id="scoreboard-list" class="space-y-3 w-full max-w-3xl mx-auto hidden"></div>
+
+            <!-- Exam Report Card Table -->
+            <div id="exam-report-container" class="hidden flex-col w-full">
+                <div class="flex justify-between items-end mb-3 px-1">
+                    <p class="text-sm font-bold text-gray-400">Detailed breakdown of the current active exam.</p>
+                    <button onclick="board.copyExamScores()" class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 font-bold rounded-xl border border-green-300 transition cursor-pointer text-sm shadow-sm flex items-center gap-2">
+                        📋 Copy to Excel
+                    </button>
+                </div>
+                <div class="overflow-x-auto border-2 border-gray-200 rounded-2xl shadow-sm">
+                    <table class="w-full text-left bg-white whitespace-nowrap">
+                        <thead class="bg-gray-50 border-b-2 border-gray-200 text-gray-500 font-black uppercase text-xs tracking-wider">
+                            <tr>
+                                <th class="p-4">Student</th>
+                                <th class="p-4 text-center">Part 2 (8)</th>
+                                <th class="p-4 text-center">Part 3 (8)</th>
+                                <th class="p-4 text-center">Part 4 (12)</th>
+                                <th class="p-4 text-center border-l-2 border-gray-100 bg-gray-100/50">Total (28)</th>
+                                <th class="p-4 text-center bg-gray-100/50">%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exam-score-tbody" class="text-gray-800 font-bold divide-y divide-gray-100 text-lg">
+                            <!-- rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             <div class="pt-10 mt-10 border-t border-gray-100 flex justify-end">
                 <button onclick="board.resetScores()" class="text-xs font-semibold text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer">
@@ -255,7 +270,7 @@
             <div class="flex flex-col sm:flex-row items-center gap-8 bg-indigo-50/60 p-6 rounded-2xl border border-indigo-100">
                 <div id="qrcode" class="bg-white p-4 rounded-2xl shadow-sm border"></div>
                 <div class="flex-1 w-full">
-                    <h3 class="font-bold text-gray-500 uppercase text-xs tracking-wider mb-3">Connected Students (Can join anytime)</h3>
+                    <h3 class="font-bold text-gray-500 uppercase text-xs tracking-wider mb-3">Connected Students</h3>
                     <div id="modal-roster" class="flex flex-wrap gap-3 max-h-48 overflow-y-auto touch-scroll p-2">
                         <p class="text-gray-400 italic">Waiting for students to scan...</p>
                     </div>
@@ -274,14 +289,14 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk"; // <-- Paste your key here
         const STUDENT_FILE = "interactive_student.html";
 
-const board = {
+        const board = {
             supabase: null,
             sessionID: null,
             pin: null,
             status: 'WAITING',   
             mode: 'BASIC',       
             displayRound: 0,
-            questionCursor: 0,
+            questionCursor: 0, 
             roundStartQ: 0,
             roundBoxCount: 1,
             boxCount: 1,
@@ -295,6 +310,7 @@ const board = {
             timerRemaining: 30,
             timerInterval: null,
 
+            examCursor: 20000, 
             examDB: { part2: [], part3: [], part4: [], loaded: false },
             examConfig: {
                 level: 'B2',
@@ -520,7 +536,6 @@ const board = {
                 }
             },
 
-            // NEW: Background grader for when STOP EXAM is clicked
             autoGradeAllPending: function() {
                 [2, 3].forEach(partNum => {
                     if (this.examRun.partStartQ[partNum] !== null) {
@@ -569,9 +584,29 @@ const board = {
                 document.getElementById('box-count-display').innerText = this.boxCount;
             },
 
-            setMode: function(newMode) {
+            updateMainButton: function() {
+                const btn = document.getElementById('btn-round-toggle');
                 if (this.status === 'GO') {
-                    alert("Please tap STOP & REVEAL to finish the current round before switching modes.");
+                    btn.className = "big-action-btn bg-red-500 hover:bg-red-600 w-full animate-pulse";
+                    btn.innerHTML = this.mode === 'EXAM' ? "🛑 END EXAM" : "🛑 STOP & REVEAL";
+                } else {
+                    btn.className = "big-action-btn bg-green-500 hover:bg-green-600 w-full";
+                    if (this.mode === 'EXAM') {
+                        btn.innerHTML = this.examRun.showSetup ? "🚀 LAUNCH EXAM" : "⚙️ CONFIGURE NEW EXAM";
+                        if (!this.examRun.showSetup) {
+                            btn.classList.replace('bg-green-500', 'bg-indigo-500');
+                            btn.classList.replace('hover:bg-green-600', 'hover:bg-indigo-600');
+                        }
+                    } else {
+                        btn.innerHTML = "🚀 GO (Open Phones)";
+                    }
+                }
+            },
+
+            setMode: function(newMode) {
+                // The Safe Switch State Lock
+                if (this.status === 'GO') {
+                    alert("Please tap STOP to end the current game before switching modes.");
                     return;
                 }
                 this.mode = newMode;
@@ -596,6 +631,7 @@ const board = {
                     this.refreshExamConfigUI();
                 }
 
+                this.updateMainButton();
                 this.renderStage();
             },
 
@@ -605,6 +641,7 @@ const board = {
                     return;
                 }
                 this.examRun.showSetup = true;
+                this.updateMainButton();
                 this.renderStage();
             },
 
@@ -744,15 +781,15 @@ const board = {
 
                 this.examRun.partStartQ = { 2: null, 3: null, 4: null };
                 this.examRun.revealedGaps = {};
+                // Advance the exam cursor so old exams don't conflict
+                this.examCursor += 100;
                 return true;
             },
 
-            // NEW: Split pacing logic to allow safe review
             paceFullExam: async function(partNum) {
                 if (this.examConfig.scope !== 'FULL') return;
 
                 if (this.status === 'STOP') {
-                    // Just change the teacher's local view without reopening the exam
                     this.examRun.activePart = partNum;
                     this.activeTabOffset = 0;
                     this.roundBoxCount = (partNum === 4) ? this.examRun.p4Items.length : 8;
@@ -762,7 +799,6 @@ const board = {
                     this.updatePacerButtonsUI();
                     this.renderStage();
                 } else {
-                    // Exam is LIVE, so push the new part to the students' phones
                     await this.launchExamPart(partNum);
                 }
             },
@@ -805,6 +841,7 @@ const board = {
                 } finally {
                     setTimeout(() => {
                         btn.disabled = false;
+                        this.updateMainButton();
                         this.isTransitioning = false;
                     }, 350);
                 }
@@ -820,15 +857,16 @@ const board = {
                         await this.launchExamPart(firstPart);
                         return;
                     } else {
-                        // User clicked "New Exam Activity" after STOP
+                        // Launch NEW exam Activity
                         this.examRun.showSetup = true;
                         this.examRun.activePart = null;
+                        this.updateMainButton();
                         this.renderStage();
                         return;
                     }
                 }
 
-                // Standard Basic / Speed Mode Launch
+                // Standard Basic / Speed Mode
                 this.status = 'GO';
                 this.showScoreboard = false;
                 this.displayRound++;
@@ -840,14 +878,11 @@ const board = {
 
                 document.getElementById('round-display').innerText = this.displayRound;
 
-                const btn = document.getElementById('btn-round-toggle');
-                btn.innerHTML = "🛑 STOP & REVEAL";
-                btn.className = "big-action-btn bg-red-500 hover:bg-red-600 w-full animate-pulse";
-
                 const badge = document.getElementById('status-badge');
                 badge.innerText = "🟢 Phones Unlocked";
                 badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-green-100 text-green-700";
 
+                this.updateMainButton();
                 this.renderStage();
 
                 const dbMode = (this.mode === 'SPEED') ? 'SPEED' : `BASIC_${this.roundBoxCount}`;
@@ -868,25 +903,24 @@ const board = {
                 const count = (partNum === 4) ? this.examRun.p4Items.length : 8;
                 this.roundBoxCount = count;
 
+                // Exam uses the 20000+ cursor logic to split data cleanly from Gamified modes
                 if (this.examRun.partStartQ[partNum] !== null) {
                     this.roundStartQ = this.examRun.partStartQ[partNum];
                 } else {
                     this.displayRound++;
-                    this.roundStartQ = this.questionCursor + 1;
-                    this.questionCursor += count;
+                    // Base is 20000 + (100 for each new exam) + (part offset)
+                    const partOffset = partNum === 2 ? 0 : partNum === 3 ? 20 : 40;
+                    this.roundStartQ = this.examCursor + partOffset; 
                     this.examRun.partStartQ[partNum] = this.roundStartQ;
                 }
 
                 document.getElementById('round-display').innerText = this.displayRound;
 
-                const btn = document.getElementById('btn-round-toggle');
-                btn.innerHTML = "🛑 STOP EXAM"; // The all-or-nothing stop button
-                btn.className = "big-action-btn bg-red-500 hover:bg-red-600 w-full animate-pulse";
-
                 const badge = document.getElementById('status-badge');
                 badge.innerText = `🟢 Exam Part ${partNum} Live`;
                 badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-green-100 text-green-700";
 
+                this.updateMainButton();
                 this.updatePacerButtonsUI();
                 this.renderStage();
 
@@ -906,22 +940,16 @@ const board = {
 
             stopRound: async function() {
                 this.status = 'STOP';
-                const btn = document.getElementById('btn-round-toggle');
 
                 if (this.mode === 'EXAM') {
-                    // NEW: Stop now ends the exam entirely, auto-grades the backlog, and offers a reset
-                    btn.innerHTML = "📚 New Exam Activity";
-                    btn.className = "big-action-btn bg-indigo-500 hover:bg-indigo-600 w-full";
                     this.autoGradeAllPending();
-                } else {
-                    btn.innerHTML = "🚀 GO (Next Round)";
-                    btn.className = "big-action-btn bg-green-500 hover:bg-green-600 w-full";
                 }
 
                 const badge = document.getElementById('status-badge');
                 badge.innerText = "🔴 Phones Locked — Grading";
                 badge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800";
 
+                this.updateMainButton();
                 this.renderStage();
 
                 if (this.sessionID) {
@@ -1014,6 +1042,29 @@ const board = {
             toggleScoreboard: function() {
                 this.showScoreboard = !this.showScoreboard;
                 this.renderStage();
+            },
+
+            // NEW: Copy to Clipboard for Exam view
+            copyExamScores: function() {
+                const table = document.getElementById('exam-score-tbody');
+                if (!table || table.children.length === 0) return;
+
+                let exportText = "Student\tPart 2 (8)\tPart 3 (8)\tPart 4 (12)\tTotal (28)\tPercentage (%)\n";
+                const rows = table.querySelectorAll('tr');
+                rows.forEach(tr => {
+                    const cells = tr.querySelectorAll('td');
+                    if (cells.length === 6) {
+                        const rowData = Array.from(cells).map(td => td.innerText.trim());
+                        exportText += rowData.join("\t") + "\n";
+                    }
+                });
+
+                navigator.clipboard.writeText(exportText).then(() => {
+                    alert("✅ Copied! You can now Paste directly into Excel or Google Sheets.");
+                }).catch(err => {
+                    console.error("Copy failed", err);
+                    alert("Failed to copy. Your browser might block clipboard access.");
+                });
             },
 
             renderStage: function() {
@@ -1187,7 +1238,7 @@ const board = {
                             ${sub ? `
                                 <div class="flex gap-3 pt-1">
                                     <button onclick="board.gradeSubmission('${sub.id}', false)" class="grade-touch-btn btn-wrong ${isWrong ? 'selected' : ''}">✕ WRONG</button>
-                                    <button onclick="board.gradeSubmission('${sub.id}', true)" class="grade-touch-btn btn-right ${isRight ? 'selected' : ''}">✓ RIGHT</button>
+                                    <button onclick="board.gradeSubmission('${sub.id}', true)" class="grade-touch-btn btn-right ${isRight ? 'selected' : ''}">✓ RIGHT (Override)</button>
                                 </div>
                             ` : `<div class="text-center py-4 text-sm font-bold text-gray-400 uppercase tracking-wider">Did not submit</div>`}
                         </div>`;
@@ -1218,7 +1269,6 @@ const board = {
                         }
 
                         const pillText = isRevealed ? `${i}. ${ansString}` : `[ ${i} ]`;
-                        // NEW: Clicking a pill triggers clickExamGapPill which toggles reveal in STOP mode
                         const pillHTML = `<span onclick="board.clickExamGapPill(${i - 1})" class="board-gap-pill ${isActiveGap ? 'active-gap' : 'border-gray-300 bg-white text-gray-700'} ${isRevealed ? 'revealed' : ''}">${pillText}</span>${rootBadge}`;
                         htmlContent = htmlContent.replace(`[${i}]`, pillHTML);
                     }
@@ -1271,7 +1321,6 @@ const board = {
                 }
             },
 
-            // NEW: Clicking a gap now toggles its answer visibility if STOPPED
             clickExamGapPill: function(offset) {
                 const partNum = this.examRun.activePart;
                 if (this.status === 'STOP') {
@@ -1502,30 +1551,49 @@ const board = {
                     </div>`;
             },
 
+            // THE DUAL SCOREBOARD RENDERER
             renderScoreboard: function() {
+                const isExamMode = (this.mode === 'EXAM');
+                const listGame = document.getElementById('scoreboard-list');
+                const listExam = document.getElementById('exam-report-container');
+                
+                document.getElementById('scoreboard-title').innerText = isExamMode ? "📋 Detailed Exam Report" : "🏆 Session Standings";
+
+                if (isExamMode) {
+                    listGame.classList.add('hidden');
+                    listExam.classList.remove('hidden');
+                    listExam.classList.add('flex');
+                    this.renderExamScoreboard();
+                } else {
+                    listExam.classList.add('hidden');
+                    listExam.classList.remove('flex');
+                    listGame.classList.remove('hidden');
+                    this.renderGameScoreboard();
+                }
+            },
+
+            renderGameScoreboard: function() {
                 const list = document.getElementById('scoreboard-list');
                 const scores = {};
-
-                Object.keys(this.players).forEach(pid => scores[pid] = 0);
-                this.allSubmissions.forEach(s => {
-                    if (s.is_correct === true && scores[s.player_id] !== undefined) {
-                        const isTwoPt = /\s*\[2PT\]$/i.test(s.answer_text);
-                        scores[s.player_id] += isTwoPt ? 2 : 1;
-                    }
-                });
-
-                const sortedIds = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
-
-                if (sortedIds.length === 0) {
+                const pIds = Object.keys(this.players);
+                
+                if (pIds.length === 0) {
                     list.innerHTML = `<p class="text-center text-gray-400 py-12 font-bold">No students connected yet.</p>`;
                     return;
                 }
 
+                pIds.forEach(pid => scores[pid] = 0);
+                this.allSubmissions.forEach(s => {
+                    // Filter out Exam data (exam round numbers are 20000+)
+                    if (s.round_num < 20000 && s.is_correct === true && scores[s.player_id] !== undefined) {
+                        scores[s.player_id] += 1;
+                    }
+                });
+
+                const sortedIds = pIds.sort((a, b) => scores[b] - scores[a]);
                 list.innerHTML = sortedIds.map((pid, idx) => {
                     const p = this.players[pid];
-                    const medals = ['🥇', '🥈', '🥉'];
-                    const rankDisplay = idx < 3 ? medals[idx] : `#${idx + 1}`;
-
+                    const rankDisplay = idx < 3 ? ['🥇', '🥈', '🥉'][idx] : `#${idx + 1}`;
                     return `
                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border-2 border-gray-200">
                             <div class="flex items-center gap-4">
@@ -1537,6 +1605,61 @@ const board = {
                                 ${scores[pid]} <span class="text-sm font-bold text-gray-400 uppercase">pts</span>
                             </div>
                         </div>`;
+                }).join('');
+            },
+
+            renderExamScoreboard: function() {
+                const tbody = document.getElementById('exam-score-tbody');
+                const pIds = Object.keys(this.players);
+                
+                if (pIds.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 font-bold">No students connected.</td></tr>`;
+                    return;
+                }
+
+                const s2Base = this.examRun.partStartQ[2];
+                const s3Base = this.examRun.partStartQ[3];
+                const s4Base = this.examRun.partStartQ[4];
+
+                const scores = {};
+                pIds.forEach(pid => scores[pid] = { p2: 0, p3: 0, p4: 0, total: 0 });
+
+                this.allSubmissions.forEach(s => {
+                    if (s.is_correct === true && scores[s.player_id]) {
+                        if (s2Base && s.round_num >= s2Base && s.round_num < s2Base + 8) scores[s.player_id].p2 += 1;
+                        if (s3Base && s.round_num >= s3Base && s.round_num < s3Base + 8) scores[s.player_id].p3 += 1;
+                        if (s4Base && s.round_num >= s4Base && s.round_num < s4Base + 12) {
+                            scores[s.player_id].p4 += /\s*\[2PT\]$/i.test(s.answer_text) ? 2 : 1;
+                        }
+                    }
+                });
+
+                // Sort by total score
+                const sortedIds = pIds.sort((a, b) => {
+                    const totalA = scores[a].p2 + scores[a].p3 + scores[a].p4;
+                    const totalB = scores[b].p2 + scores[b].p3 + scores[b].p4;
+                    return totalB - totalA;
+                });
+
+                tbody.innerHTML = sortedIds.map(pid => {
+                    const p = this.players[pid];
+                    const sc = scores[pid];
+                    sc.total = sc.p2 + sc.p3 + sc.p4;
+                    const percent = Math.round((sc.total / 28) * 100);
+                    const colorClass = percent >= 60 ? 'text-green-600' : 'text-red-500';
+
+                    return `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-4 flex items-center gap-3">
+                                <img src="avatars/img_${p.avatar_num}.png" class="w-10 h-10 rounded-full border border-gray-200">
+                                <span>${p.nickname}</span>
+                            </td>
+                            <td class="p-4 text-center ${s2Base ? 'text-indigo-600' : 'text-gray-300'}">${sc.p2} / 8</td>
+                            <td class="p-4 text-center ${s3Base ? 'text-purple-600' : 'text-gray-300'}">${sc.p3} / 8</td>
+                            <td class="p-4 text-center ${s4Base ? 'text-teal-600' : 'text-gray-300'}">${sc.p4} / 12</td>
+                            <td class="p-4 text-center border-l-2 border-gray-100 bg-gray-50/50 text-2xl">${sc.total}</td>
+                            <td class="p-4 text-center bg-gray-50/50 ${colorClass}">${percent}%</td>
+                        </tr>`;
                 }).join('');
             }
         };

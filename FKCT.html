@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FKCT 5 Hills Smashfest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root { --snes-purple: #4f46e5; --snes-gold: #fbbf24; }
+        * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; box-sizing: border-box; }
+        body { margin: 0; padding: 0; background-color: #0f0e17; color: #fffffe; font-family: 'Press Start 2P', monospace; overflow: hidden; touch-action: manipulation; }
+        .crt::after { content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.18) 50%); z-index: 40; background-size: 100% 4px; pointer-events: none; }
+        canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; width: 100%; height: 100%; }
+        .snes-box { background: #1a1b2f; border: 4px solid #ffffff; box-shadow: inset -4px -4px 0px #0b0c16, inset 4px 4px 0px #4f5280, 0 6px 0 #000; }
+        .snes-btn { background: linear-gradient(180deg, #ffbd39 0%, #e07a00 100%); border: 3px solid #fff; box-shadow: 0 5px 0 #7c3f00, inset 0 2px 0 rgba(255,255,255,0.6); transition: transform 0.04s, box-shadow 0.04s; }
+        .snes-btn:active, .snes-btn.pressed { transform: translateY(4px); box-shadow: 0 1px 0 #7c3f00, inset 0 1px 0 rgba(255,255,255,0.4); }
+        .pedal-btn-left { background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%); border: 4px solid #bfdbfe; box-shadow: 0 6px 0 #1e3a8a, inset 0 3px 0 rgba(255,255,255,0.5); }
+        .pedal-btn-left:active, .pedal-btn-left.pressed { transform: translateY(5px); box-shadow: 0 1px 0 #1e3a8a; background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%); }
+        .pedal-btn-right { background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%); border: 4px solid #fecaca; box-shadow: 0 6px 0 #7f1d1d, inset 0 3px 0 rgba(255,255,255,0.5); }
+        .pedal-btn-right:active, .pedal-btn-right.pressed { transform: translateY(5px); box-shadow: 0 1px 0 #7f1d1d; background: linear-gradient(180deg, #f87171 0%, #dc2626 100%); }
+        .rider-card, .course-card { background: #232542; border: 3px solid #52588a; transition: all 0.15s ease; cursor: pointer; }
+        .rider-card.selected, .course-card.selected { background: #2f3363; border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.5), inset 0 0 8px rgba(251, 191, 36, 0.3); transform: translateY(-2px); }
+        @keyframes pulse-fast { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        .mirador-flash { animation: pulse-fast 0.4s infinite; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between bg-slate-950 crt overflow-hidden select-none">
+
+    <!-- START / MAIN MENU -->
+    <div id="startScreen" class="fixed inset-0 z-50 bg-gradient-to-b from-sky-900 via-indigo-950 to-slate-950 flex flex-col items-center p-2 sm:p-4 overflow-y-auto hide-scroll">
+        
+        <div class="w-full max-w-4xl text-center mt-1">
+            <div class="inline-block px-3 py-1 bg-amber-400 text-slate-950 text-[10px] sm:text-xs rounded mb-1 font-bold tracking-wider">
+                SUPER CYCLING SYSTEM '26
+            </div>
+            <h1 class="text-xl sm:text-3xl text-amber-400 drop-shadow-[0_4px_0_#78350f] tracking-tighter">
+                FKCT 5 HILLS SMASHFEST
+            </h1>
+        </div>
+
+        <div class="w-full max-w-4xl my-2">
+            <h2 class="text-center text-[10px] sm:text-xs text-white mb-2 tracking-wide">1. SELECT AVATAR</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="riderGrid"></div>
+        </div>
+
+        <div class="w-full max-w-4xl my-2">
+            <h2 class="text-center text-[10px] sm:text-xs text-white mb-2 tracking-wide">2. SELECT COURSE</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2" id="courseGrid"></div>
+            <div class="w-full flex justify-center mt-4">
+                <button onclick="showLeaderboard()" class="px-4 py-2 bg-slate-800 border-2 border-slate-600 rounded text-[9px] text-sky-300 hover:bg-slate-700 transition-colors">
+                    VIEW COURSE LEADERBOARD
+                </button>
+            </div>
+        </div>
+
+        <div class="w-full max-w-4xl snes-box p-3 mt-auto rounded-lg flex flex-row items-center justify-between gap-3">
+            <button onclick="toggleAudio()" id="soundToggleStart" class="px-3 py-3 rounded border-2 border-sky-400 bg-sky-900/60 text-[10px] text-sky-200">
+                SFX: ON
+            </button>
+            <button onclick="startRace()" class="snes-btn px-6 py-3 rounded-lg text-xs sm:text-sm text-slate-950 font-bold tracking-wider flex-1">
+                START CLIMB!
+            </button>
+        </div>
+        <div class="text-[8px] text-slate-400 text-center mt-2">MASH L/R ON MOBILE, OR SPACE/ARROWS ON DESKTOP</div>
+    </div>
+
+    <!-- FINISH SCREEN -->
+    <div id="finishScreen" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+        <div class="snes-box w-full max-w-lg p-5 rounded-xl text-center border-4 border-amber-400">
+            <div class="text-xs text-amber-300 mb-1">SUMMIT REACHED!</div>
+            <h2 id="finishCourseName" class="text-xl sm:text-2xl text-white drop-shadow-[0_3px_0_#b45309] mb-4">COURSE CONQUERED!</h2>
+            <div class="flex items-center justify-center gap-4 bg-slate-900/90 p-3 rounded-lg border-2 border-slate-700 mb-4">
+                <canvas id="finishPortrait" width="64" height="64" class="w-16 h-16 rounded border-2 border-amber-400 bg-sky-900"></canvas>
+                <div class="text-left">
+                    <div id="finishRiderName" class="text-sm sm:text-base text-amber-400">PODGE</div>
+                    <div id="finishRankText" class="text-[10px] text-emerald-400 mt-1">1ST PLACE!</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-left mb-5">
+                <div class="bg-slate-900 p-2.5 rounded border border-slate-700"><div class="text-[8px] text-slate-400">OFFICIAL TIME</div><div id="statTime" class="text-sm text-white mt-1">01:45.2</div></div>
+                <div class="bg-slate-900 p-2.5 rounded border border-slate-700"><div class="text-[8px] text-slate-400">AVERAGE POWER</div><div id="statAvgWatts" class="text-sm text-amber-400 mt-1">342 W</div></div>
+            </div>
+            
+            <div id="scoreSubmission" class="mb-4">
+                <div class="text-[8px] text-sky-300 mb-1 text-left">ENTER NAME FOR LEADERBOARD:</div>
+                <input type="text" id="playerNameInput" maxlength="12" placeholder="YOUR NAME" class="w-full bg-slate-900 border-2 border-slate-600 text-white p-2 rounded text-xs focus:border-amber-400 outline-none uppercase text-center mb-3 font-mono font-bold tracking-wider">
+            </div>
+
+            <div class="flex gap-3 justify-center">
+                <button onclick="submitScoreAndMenu()" class="px-4 py-3 rounded border-2 border-slate-400 bg-slate-800 text-[10px] text-white hover:bg-slate-700">SUBMIT & MENU</button>
+                <button onclick="submitScoreAndRestart()" class="snes-btn px-5 py-3 rounded text-[10px] text-slate-950 font-bold">SUBMIT & RACE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboardModal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+        <div class="snes-box w-full max-w-lg p-5 rounded-xl text-center border-4 border-sky-400">
+            <h2 class="text-xl sm:text-2xl text-white mb-2 drop-shadow-[0_2px_0_#0284c7]">LEADERBOARD</h2>
+            <div class="flex items-center justify-between mb-4 w-full">
+                <button onclick="changeLeaderboard(-1)" class="text-amber-400 text-sm sm:text-base hover:text-white px-4 py-1 active:scale-90 transition-transform cursor-pointer">&#9664;</button>
+                <div id="leaderboardCourseName" class="text-[10px] sm:text-xs text-amber-400 tracking-wider flex-1">COURSE NAME</div>
+                <button onclick="changeLeaderboard(1)" class="text-amber-400 text-sm sm:text-base hover:text-white px-4 py-1 active:scale-90 transition-transform cursor-pointer">&#9654;</button>
+            </div>
+            <div id="leaderboardContent" class="bg-slate-900 border-2 border-slate-700 rounded p-3 min-h-[200px] flex items-center justify-center overflow-x-auto">
+                <!-- Data injected here -->
+            </div>
+            <button onclick="closeLeaderboard()" class="mt-5 px-6 py-3 rounded border-2 border-slate-400 bg-slate-800 text-[10px] text-white hover:bg-slate-700">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- HUD -->
+    <div class="w-full bg-slate-950 border-b-4 border-slate-700 p-1.5 z-20 shrink-0">
+        <div class="max-w-6xl mx-auto flex flex-col gap-1.5">
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-1.5 text-center">
+                <div class="bg-slate-900 border-2 border-slate-700 rounded px-1.5 py-1 flex flex-col justify-center">
+                    <div class="text-[7px] text-slate-400">DISTANCE</div>
+                    <div class="text-[10px] text-white font-bold mt-0.5"><span id="hudDist">0.00</span><span class="text-[7px] text-slate-400">KM</span></div>
+                    <div id="hudToGo" class="text-[7px] text-amber-400">TO GO</div>
+                </div>
+                <div class="bg-slate-900 border-2 border-slate-700 rounded px-1.5 py-1 flex flex-col justify-center">
+                    <div class="text-[7px] text-slate-400">ALT / SLOPE</div>
+                    <div class="text-[10px] text-emerald-400 font-bold mt-0.5"><span id="hudElev">0</span><span class="text-[7px] text-slate-400">M</span></div>
+                    <div id="hudGrad" class="text-[8px] text-rose-400 font-bold">GRAD: 0%</div>
+                </div>
+                <div class="bg-slate-900 border-2 border-slate-700 rounded px-1.5 py-1 flex flex-col justify-center col-span-1">
+                    <div class="text-[7px] text-slate-400">POWER</div>
+                    <div class="text-xs text-amber-400 font-bold mt-0.5"><span id="hudWatts">0</span> <span class="text-[7px]">W</span></div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded overflow-hidden border border-slate-600 mt-0.5">
+                        <div id="hudWattBar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 w-0"></div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border-2 border-slate-700 rounded px-1.5 py-1 flex flex-col justify-center">
+                    <div class="text-[7px] text-slate-400">SPEED/TIME</div>
+                    <div class="text-[10px] text-sky-400 font-bold mt-0.5"><span id="hudSpeed">0.0</span> <span class="text-[7px]">KPH</span></div>
+                    <div id="hudTime" class="text-[8px] text-white">00:00.0</div>
+                </div>
+                <div class="hidden sm:flex bg-slate-900 border-2 border-slate-700 rounded px-2 py-1 items-center justify-around">
+                    <button onclick="resetToMenu()" class="px-2 py-1.5 bg-slate-800 border border-slate-600 rounded text-[9px] text-amber-300">MENU</button>
+                </div>
+            </div>
+            <div class="relative w-full h-4 sm:h-5 bg-slate-900 border-2 border-slate-700 rounded overflow-hidden flex items-center px-1">
+                <canvas id="profileCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME CANVAS -->
+    <div class="relative flex-1 w-full overflow-hidden bg-sky-400">
+        <canvas id="gameCanvas"></canvas>
+        <div id="alertBanner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-amber-400 text-slate-950 border-4 border-white px-4 py-2 rounded shadow-lg text-center mirador-flash pointer-events-none">
+            <div id="alertTitle" class="text-[10px] sm:text-sm font-bold">★ ALERT ★</div>
+            <div id="alertSub" class="text-[8px] sm:text-[10px]">KEEP PUSHING!</div>
+        </div>
+        <div class="sm:hidden absolute top-2 right-2 z-30 flex gap-1.5">
+            <button onclick="resetToMenu()" class="bg-slate-900/85 border border-slate-500 text-amber-300 px-2 py-1 rounded text-[8px]">MENU</button>
+        </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="w-full bg-slate-900 border-t-4 border-slate-700 p-2 z-20 shrink-0">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
+            <button id="btnLeftPedal" class="pedal-btn-left flex-1 py-3.5 sm:py-5 rounded-xl flex flex-col items-center justify-center active:scale-95">
+                <span class="text-xs sm:text-base font-bold text-white">LEFT</span>
+            </button>
+            <div class="w-20 sm:w-32 bg-slate-950 border-2 border-slate-700 rounded-xl py-2 px-1 flex flex-col items-center justify-center text-center shrink-0">
+                <div id="activeCourseLabel" class="text-[7px] sm:text-[9px] text-amber-400 truncate w-full">COURSE</div>
+                <div class="text-[10px] sm:text-sm text-white font-bold my-0.5"><span id="hudCadence">0</span> <span class="text-[7px] text-slate-400">RPM</span></div>
+            </div>
+            <button id="btnRightPedal" class="pedal-btn-right flex-1 py-3.5 sm:py-5 rounded-xl flex flex-col items-center justify-center active:scale-95">
+                <span class="text-xs sm:text-base font-bold text-white">RIGHT</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        // 0. Supabase Config
+        const SUPABASE_URL = "https://ehhkjhyanmovymjqlxwo.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk"; // <-- Paste your key here
+        
+        
+        let supabaseClient = null;
+        if (window.supabase && SUPABASE_URL.startsWith('http')) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+        // 1. DATA: Avatars & Courses
+        const RIDERS = [
+            { id: 'podge', name: 'PODGE', bio: 'Bearded Boi.', jerseyMain: '#facc15', jerseySleeve: '#eab308', skinColor: '#f1c27d', hairColor: '#5c3a21', eyeColor: '#2563eb', hasBeard: true, hasGlasses: true, hairStyle: 'full', bigEars: false, thinFace: false },
+            { id: 'felice', name: 'FELICE', bio: 'Villa Veteran.', jerseyMain: '#7a1c34', jerseySleeve: '#7dd3fc', skinColor: '#e5b887', hairColor: '#9ca3af', eyeColor: '#4b5563', hasBeard: false, hasGlasses: false, hairStyle: 'bald_old', bigEars: false, thinFace: false },
+            { id: 'lewis', name: 'LEWIS', bio: 'Scotland Express.', jerseyMain: '#1e3a8a', jerseySleeve: '#172554', skinColor: '#f5cba7', hairColor: '#27272a', eyeColor: '#0284c7', hasBeard: false, hasGlasses: false, hairStyle: 'handsome', bigEars: false, thinFace: true },
+            { id: 'simon', name: 'SIMON', bio: 'Red Rose Climber.', jerseyMain: '#dc2626', jerseySleeve: '#b91c1c', skinColor: '#f7d0b5', hairColor: '#785233', eyeColor: '#3b82f6', hasBeard: false, hasGlasses: false, hairStyle: 'balding', bigEars: true, thinFace: false }
+        ];
+
+        const COURSES = [
+            { id: 'assuan', name: 'Assuan', dist: 5710, elev: 301, gradBase: 5.3, short: 'Classic climb. Olives & Mirador.' },
+            { id: '14percent', name: '14 Percent', dist: 6100, elev: 383, gradBase: 6.2, short: 'Ends with a brutal 14% wall!' },
+            { id: 'medina', name: 'Medina Azahara', dist: 3100, elev: 238, gradBase: 7.6, short: 'Sprint past ancient ruins.' },
+            { id: 'muriano', name: 'Muriano', dist: 7700, elev: 343, gradBase: 4.4, short: 'Busy road, downhill boost, tank.' },
+            { id: 'trassierra', name: 'Trassierra', dist: 4800, elev: 267, gradBase: 5.5, short: 'Asymmetric valley views & winding.' }
+        ];
+
+        let selectedRiderIndex = 0;
+        let selectedCourseIndex = 0;
+        let leaderboardViewIndex = 0;
+        let audioEnabled = true;
+
+        // 2. Audio Engine
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) audioCtx = new AudioContextClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('soundToggleStart').textContent = `SFX: ${audioEnabled ? 'ON' : 'OFF'}`;
+        }
+        function playPedalSound(watts) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(110 + Math.min(320, watts * 0.25), now);
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.06);
+            } catch (e) {}
+        }
+        function playJingle(type) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const notes = type === 'alert' ? [659.25, 783.99, 1046.50] : [440, 554.37, 659.25, 880];
+                notes.forEach((freq, idx) => {
+                    const now = audioCtx.currentTime + idx * 0.1;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now); osc.stop(now + 0.1);
+                });
+            } catch (e) {}
+        }
+
+        // 3. Render Avatars & UI
+        function drawRiderPortrait(canvas, rider) {
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            const w = canvas.width, h = canvas.height;
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = '#15803d'; ctx.fillRect(0, h - 18, w, 18);
+            ctx.fillStyle = rider.jerseyMain; ctx.fillRect(12, 42, 40, 22);
+            ctx.fillStyle = rider.jerseySleeve; ctx.fillRect(8, 44, 8, 20); ctx.fillRect(48, 44, 8, 20);
+            
+            if (rider.id === 'lewis') { ctx.fillStyle = '#fff'; for(let i=0;i<14;i++){ ctx.fillRect(24+i,46+i,3,3); ctx.fillRect(36-i,46+i,3,3); } }
+            else if (rider.id === 'podge') { ctx.fillStyle = '#ca8a04'; ctx.fillRect(30, 42, 4, 22); }
+            else if (rider.id === 'felice') { ctx.fillStyle = '#7dd3fc'; ctx.fillRect(24, 42, 16, 4); }
+            else if (rider.id === 'simon') { ctx.fillStyle = '#fff'; ctx.fillRect(24,42,16,3); ctx.fillRect(38,48,6,6); ctx.fillStyle = '#dc2626'; ctx.fillRect(40,48,2,6); ctx.fillRect(38,50,6,2); }
+
+            ctx.fillStyle = rider.skinColor; ctx.fillRect(26, 35, 12, 9);
+            const headW = rider.thinFace ? 24 : 28; ctx.fillRect(rider.thinFace ? 20 : 18, 12, headW, 25);
+            
+            if (rider.bigEars) { ctx.fillRect(11, 20, 7, 13); ctx.fillRect(46, 20, 7, 13); }
+            else { ctx.fillRect(16, 23, 4, 8); ctx.fillRect(44, 23, 4, 8); }
+
+            if (rider.hairStyle === 'full') { ctx.fillStyle = rider.hairColor; ctx.fillRect(17,8,30,7); ctx.fillRect(16,11,5,11); ctx.fillRect(43,11,5,11); }
+            else if (rider.hairStyle === 'handsome') { ctx.fillStyle = rider.hairColor; ctx.fillRect(19,7,26,7); ctx.fillRect(18,10,4,10); ctx.fillRect(42,10,4,10); }
+            else if (rider.hairStyle === 'balding') { ctx.fillStyle = rider.hairColor; ctx.fillRect(16,14,5,10); ctx.fillRect(43,14,5,10); }
+
+            ctx.fillStyle = '#fff'; ctx.fillRect(23, 22, 6, 4); ctx.fillRect(35, 22, 6, 4);
+            ctx.fillStyle = rider.eyeColor; ctx.fillRect(25, 22, 3, 4); ctx.fillRect(37, 22, 3, 4);
+            if (rider.hasGlasses) { ctx.fillStyle = '#1f2937'; ctx.fillRect(21,20,10,2); ctx.fillRect(33,20,10,2); ctx.fillRect(21,26,10,2); ctx.fillRect(33,26,10,2); }
+            if (rider.hasBeard) { ctx.fillStyle = rider.hairColor; ctx.fillRect(18,29,28,9); ctx.fillRect(21,37,22,3); ctx.fillStyle = '#fff'; ctx.fillRect(28,32,8,2); }
+            else { ctx.fillStyle = '#991b1b'; ctx.fillRect(28, 32, 8, 2); }
+        }
+
+        function renderMenus() {
+            const rGrid = document.getElementById('riderGrid'); rGrid.innerHTML = '';
+            RIDERS.forEach((r, i) => {
+                const c = document.createElement('div');
+                c.className = `rider-card p-2 rounded flex flex-col items-center text-center ${i === selectedRiderIndex ? 'selected' : ''}`;
+                c.onclick = () => { selectedRiderIndex = i; renderMenus(); playPedalSound(300); };
+                const cv = document.createElement('canvas'); cv.width = 64; cv.height = 64; cv.className = 'w-12 h-12 mb-1';
+                drawRiderPortrait(cv, r);
+                c.innerHTML = `<div class="text-[8px] sm:text-[10px] font-bold text-amber-400">${r.name}</div>
+                               <div class="text-[6px] sm:text-[8px] text-slate-300 mt-1 leading-tight px-1">${r.bio}</div>`;
+                c.prepend(cv); rGrid.appendChild(c);
+            });
+
+            const cGrid = document.getElementById('courseGrid'); cGrid.innerHTML = '';
+            COURSES.forEach((crs, i) => {
+                const c = document.createElement('div');
+                c.className = `course-card p-2 rounded text-center ${i === selectedCourseIndex ? 'selected' : ''}`;
+                c.onclick = () => { selectedCourseIndex = i; renderMenus(); playPedalSound(300); };
+                c.innerHTML = `<div class="text-[9px] sm:text-[11px] font-bold text-sky-300">${crs.name}</div>
+                               <div class="text-[7px] text-slate-300 mt-1.5">${crs.dist/1000}km | ${crs.elev}m</div>
+                               <div class="text-[7px] text-amber-300 mt-0.5">${crs.gradBase}% AVG</div>`;
+                cGrid.appendChild(c);
+            });
+        }
+
+        // 4. Course Generation
+        const SEGMENT_LENGTH = 25;
+        let roadSegments = [];
+
+        function buildCourse() {
+            roadSegments = [];
+            const course = COURSES[selectedCourseIndex];
+            const totalSegs = Math.ceil(course.dist / SEGMENT_LENGTH) + 60;
+            
+            for (let i = 0; i < totalSegs; i++) {
+                const meters = i * SEGMENT_LENGTH;
+                let curve = Math.sin(i * 0.09) * 2.2 + Math.cos(i * 0.037) * 1.6;
+                // Baseline environment: Lots of olive trees everywhere
+                let leftObj = (i % 4 === 0) ? 'olive' : null;
+                let rightObj = (i % 5 === 0) ? 'olive' : null;
+                let centerObj = null;
+
+                if (course.id === 'assuan') {
+                    if (Math.abs(meters - 4210) < 15) rightObj = 'mirador_sign';
+                    else if (i % 4 === 0 && meters >= 2500) { leftObj = 'pine'; rightObj = 'pine'; }
+                } else if (course.id === '14percent') {
+                    if (Math.abs(meters - 5100) < 15) rightObj = 'sign_14';
+                    else if (i % 6 === 0) leftObj = rightObj = 'rock';
+                } else if (course.id === 'medina') {
+                    if (meters === 1500 || meters === 1525) rightObj = 'ruins';
+                    if (meters === 2500) leftObj = 'monastery';
+                } else if (course.id === 'muriano') {
+                    curve = Math.sin(i * 0.05) * 1.5; // straighter
+                    if (Math.abs(meters - 6000) < 15) rightObj = 'tank';
+                    if (meters < 1000 && i % 4 === 0) leftObj = 'car';
+                    else if (i % 7 === 0) { leftObj = 'pine'; rightObj = 'pine'; }
+                } else if (course.id === 'trassierra') {
+                    curve = Math.sin(i * 0.15) * 3.5 + Math.cos(i * 0.08) * 2; // Highly winding
+                    if (Math.abs(meters - 2400) < 15) rightObj = 'bins';
+                    if (i % 6 === 0) rightObj = 'pine'; // Mountains on right
+                }
+                
+                // Centered Finish Line Logic
+                if (Math.abs(meters - course.dist) < 15) centerObj = 'summit_arch';
+                
+                // Add Andalusian white houses (casas) heavily populated along all routes
+                if (meters < course.dist - 50) { 
+                    if (i % 5 === 0 && !leftObj && Math.random() > 0.5) leftObj = 'casa';
+                    if (i % 7 === 0 && !rightObj && Math.random() > 0.5) rightObj = 'casa';
+                }
+
+                roadSegments.push({ index: i, meters, curve, leftObj, rightObj, centerObj });
+            }
+        }
+
+        // 5. Game State
+        let gameState = 'menu';
+        let distanceMeters = 0, currentWatts = 0, currentSpeedKph = 0, elapsedSeconds = 0;
+        let mashEnergy = 0, pedalAnimPhase = 0, roadCurvatureX = 0;
+        let rivalDistanceMeters = 0;
+        let alertTriggered = false;
+
+        function registerPedalStroke() {
+            if (gameState !== 'racing') return;
+            mashEnergy = Math.min(1200, mashEnergy + 90);
+            pedalAnimPhase = (pedalAnimPhase + 1) % 4;
+            playPedalSound(currentWatts);
+        }
+
+        function setupControls() {
+            const l = document.getElementById('btnLeftPedal'), r = document.getElementById('btnRightPedal');
+            const handler = (e) => { e.preventDefault(); registerPedalStroke(); e.target.classList.add('pressed'); setTimeout(()=>e.target.classList.remove('pressed'), 50); };
+            l.addEventListener('pointerdown', handler); r.addEventListener('pointerdown', handler);
+            document.getElementById('gameCanvas').addEventListener('pointerdown', (e) => { e.preventDefault(); registerPedalStroke(); });
+            window.addEventListener('keydown', (e) => {
+                if (e.repeat || gameState !== 'racing') return;
+                if (['ArrowLeft','ArrowRight','KeyA','KeyD','Space'].includes(e.code)) registerPedalStroke();
+            });
+        }
+
+        // 6. Graphics / Renderer
+        const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
+        const W = 360, H = 240;
+
+        function drawObj(type, x, y, s, rw = 0) {
+            if (type === 'olive') {
+                const w = 28*s, h = 26*s;
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(x - w*0.12, y - h*0.4, w*0.24, h*0.4);
+                ctx.fillStyle = '#4d7c5b'; ctx.fillRect(x - w*0.5, y - h*0.85, w, h*0.5);
+                ctx.fillStyle = '#cad2c5'; ctx.fillRect(x - w*0.25, y - h*0.9, w*0.5, h*0.15);
+            } else if (type === 'pine') {
+                const w = 34*s, h = 42*s;
+                ctx.fillStyle = '#7c4a32'; ctx.fillRect(x - w*0.08, y - h*0.65, w*0.16, h*0.65);
+                ctx.fillStyle = '#14532d'; ctx.fillRect(x - w*0.55, y - h*0.85, w*1.1, h*0.25);
+            } else if (type === 'rock') {
+                ctx.fillStyle = '#64748b'; ctx.fillRect(x - 12*s, y - 16*s, 24*s, 16*s);
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(x - 8*s, y - 20*s, 16*s, 14*s);
+            } else if (type === 'mirador_sign' || type === 'sign_14') {
+                const w = 60*s, h = 45*s;
+                ctx.fillStyle = '#78350f'; ctx.fillRect(x-w*0.3, y-h*0.5, 4*s, h*0.5); ctx.fillRect(x+w*0.2, y-h*0.5, 4*s, h*0.5);
+                ctx.fillStyle = type === 'sign_14' ? '#fff' : '#fef3c7'; ctx.fillRect(x-w*0.5, y-h, w, h*0.6);
+                ctx.strokeStyle = type === 'sign_14' ? '#dc2626' : '#047857'; ctx.lineWidth = 3*s; ctx.strokeRect(x-w*0.5, y-h, w, h*0.6);
+                if (s > 0.4) {
+                    ctx.fillStyle = '#000'; ctx.font = `${8*s}px monospace`; ctx.textAlign='center';
+                    ctx.fillText(type === 'sign_14' ? '14% MAX' : 'MIRADOR', x, y-h*0.6);
+                }
+            } else if (type === 'summit_arch') {
+                // Centered Arch Logic
+                const w = Math.max(180*s, rw * 1.5), h = 100*s;
+                ctx.fillStyle = '#dc2626'; ctx.fillRect(x-w*0.5, y-h, w*0.1, h); ctx.fillRect(x+w*0.4, y-h, w*0.1, h);
+                ctx.fillStyle = '#facc15'; ctx.fillRect(x-w*0.5, y-h, w, h*0.2);
+                ctx.fillStyle = '#fff'; ctx.font = `${Math.max(10, 16*s)}px "Press Start 2P"`; ctx.textAlign='center'; 
+                ctx.fillText('FINISH', x, y-h*0.5);
+            } else if (type === 'casa') {
+                // White Andalusian Houses
+                const w = 45*s, h = 35*s;
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(x - w*0.5, y - h, w, h);
+                ctx.fillStyle = '#ea580c'; ctx.beginPath(); ctx.moveTo(x - w*0.6, y - h); ctx.lineTo(x, y - h - 15*s); ctx.lineTo(x + w*0.6, y - h); ctx.fill();
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x - 5*s, y - 15*s, 10*s, 15*s); // door
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(x - 15*s, y - 25*s, 8*s, 8*s); // window
+            } else if (type === 'ruins') {
+                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(x-20*s, y-30*s, 15*s, 30*s); ctx.fillRect(x+5*s, y-20*s, 12*s, 20*s);
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(x-20*s, y-35*s, 40*s, 10*s); // broken top
+            } else if (type === 'monastery') {
+                const w = 140*s, h = 80*s;
+                ctx.fillStyle = '#fef08a'; ctx.fillRect(x-w*0.5, y-h, w, h);
+                ctx.fillStyle = '#ea580c'; ctx.fillRect(x-w*0.55, y-h-15*s, w*1.1, 20*s); // roof
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x-10*s, y-30*s, 20*s, 30*s); // door
+                ctx.fillStyle = '#000'; ctx.fillRect(x-2*s, y-h-35*s, 4*s, 20*s); ctx.fillRect(x-8*s, y-h-30*s, 16*s, 4*s); // cross
+            } else if (type === 'tank') {
+                const w = 70*s, h = 35*s;
+                ctx.fillStyle = '#14532d'; ctx.fillRect(x-w*0.5, y-h*0.4, w, h*0.4); // tracks
+                ctx.fillStyle = '#166534'; ctx.fillRect(x-w*0.45, y-h*0.8, w*0.9, h*0.4); // body
+                ctx.fillRect(x-w*0.2, y-h, w*0.4, h*0.3); // turret
+                ctx.fillRect(x-w*0.8, y-h*0.85, w*0.6, h*0.1); // barrel pointing left
+            } else if (type === 'car') {
+                const w = 50*s, h = 30*s;
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x-w*0.3, y-h*0.2, 10*s, 10*s); ctx.fillRect(x+w*0.1, y-h*0.2, 10*s, 10*s); // wheels
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(x-w*0.5, y-h*0.5, w, h*0.4); // body
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(x-w*0.3, y-h*0.9, w*0.6, h*0.4); // cabin
+            } else if (type === 'bins') {
+                ctx.fillStyle = '#166534'; ctx.fillRect(x-20*s, y-30*s, 40*s, 25*s); // container
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x-18*s, y-5*s, 8*s, 5*s); ctx.fillRect(x+10*s, y-5*s, 8*s, 5*s); // wheels
+            }
+        }
+
+        function drawCyclist(x, y, rider, scale, pPhase) {
+            ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
+            const sway = (currentWatts>400) ? Math.sin(pPhase * Math.PI / 2) * 3 : 0;
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(-12, -3, 24, 5); // shadow
+            ctx.fillStyle = '#18181b'; ctx.fillRect(-3+sway*0.4, -22, 6, 22); // wheel
+            ctx.fillStyle = '#e11d48'; ctx.fillRect(-2+sway*0.5, -28, 4, 12); ctx.fillRect(-10+sway*0.5, -26, 20, 3); // frame
+            
+            const leftUp = (pPhase < 2);
+            ctx.fillStyle = rider.skinColor;
+            ctx.fillRect(-8+sway*0.5, leftUp ? -24 : -17, 5, leftUp ? 9 : 13);
+            ctx.fillRect(3+sway*0.5, leftUp ? -17 : -24, 5, leftUp ? 13 : 9);
+            ctx.fillStyle = rider.shortsColor || '#111827'; ctx.fillRect(-9+sway*0.6, -32, 18, 9);
+            ctx.fillStyle = rider.jerseyMain; ctx.fillRect(-10+sway*0.7, -45, 20, 14);
+            ctx.fillStyle = rider.skinColor; ctx.fillRect(-7+sway*0.8, -56, 14, 11); // head
+            if (rider.bigEars) { ctx.fillRect(-11+sway*0.8, -53, 4, 6); ctx.fillRect(7+sway*0.8, -53, 4, 6); }
+            ctx.fillStyle = rider.hairColor; ctx.fillRect(-8+sway*0.8, (rider.hairStyle==='balding')?-54:-58, 16, 9);
+            ctx.restore();
+        }
+
+        function renderScene() {
+            const course = COURSES[selectedCourseIndex];
+            canvas.width = W; canvas.height = H; ctx.imageSmoothingEnabled = false;
+
+            // Sky
+            const sky = ctx.createLinearGradient(0,0,0,100);
+            sky.addColorStop(0, '#0284c7'); sky.addColorStop(1, '#7dd3fc');
+            ctx.fillStyle = sky; ctx.fillRect(0,0,W,100);
+            ctx.fillStyle = '#fef08a'; ctx.fillRect(285,16,26,26); // sun
+
+            // Mountains Parallax
+            ctx.fillStyle = '#1e3a5f';
+            const mxStart = course.id === 'trassierra' ? W/2 : 0; // Asymmetric background for Trassierra
+            for (let mx = mxStart; mx < W; mx += 45) {
+                const peakH = 18 + Math.sin(mx * 0.05) * 10;
+                ctx.beginPath(); ctx.moveTo(mx-25, 100); ctx.lineTo(mx+10, 100-peakH); ctx.lineTo(mx+45, 100); ctx.fill();
+            }
+
+            // Road Projection
+            const baseSegIdx = Math.floor(distanceMeters / SEGMENT_LENGTH);
+            const segFraction = (distanceMeters % SEGMENT_LENGTH) / SEGMENT_LENGTH;
+            const drawDist = 45;
+            let dx = 0, ddx = 0;
+            const proj = [];
+
+            for (let n = 0; n < drawDist; n++) {
+                const seg = roadSegments[(baseSegIdx + n) % roadSegments.length] || roadSegments[0];
+                const z = (n - segFraction) / drawDist;
+                const p = Math.pow(1 - z, 1.6);
+                dx += seg.curve * 0.035; ddx += dx;
+                proj.push({
+                    seg, n,
+                    y: 100 + p * (H - 100),
+                    w: 18 + p * 235,
+                    x: (W/2) + ddx * (1-p) * 18,
+                    s: 0.12 + p * 0.95
+                });
+            }
+
+            // Draw Segments
+            for (let i = proj.length - 1; i > 0; i--) {
+                const pf = proj[i], pn = proj[i-1];
+                const alt = (pn.seg.index % 2 === 0);
+                
+                // Ground
+                ctx.fillStyle = alt ? '#849b6e' : '#6b8e63';
+                ctx.fillRect(0, pf.y, W, pn.y - pf.y + 1);
+
+                // Road style (Muriano busy road at start)
+                const isBusyRoad = course.id === 'muriano' && pn.seg.meters < 1000;
+                ctx.fillStyle = isBusyRoad ? (alt ? '#64748b' : '#475569') : (alt ? '#475569' : '#334155');
+                
+                ctx.beginPath();
+                ctx.moveTo(pf.x - pf.w*0.5, pf.y); ctx.lineTo(pf.x + pf.w*0.5, pf.y);
+                ctx.lineTo(pn.x + pn.w*0.5, pn.y); ctx.lineTo(pn.x - pn.w*0.5, pn.y);
+                ctx.fill();
+
+                // Passing Cars on Muriano (Simulated movement)
+                if (isBusyRoad && pn.seg.leftObj === 'car') {
+                    // Shift segment forward visually based on time to simulate driving towards player
+                    const offset = Math.floor(elapsedSeconds * 4) % 10;
+                    if ((pn.seg.index + offset) % 4 === 0) {
+                        drawObj('car', pn.x - pn.w*0.35, pn.y, pn.s);
+                    }
+                } else {
+                    if (pn.seg.leftObj) drawObj(pn.seg.leftObj, pn.x - pn.w*0.75, pn.y, pn.s);
+                }
+                
+                if (pn.seg.rightObj) drawObj(pn.seg.rightObj, pn.x + pn.w*0.75, pn.y, pn.s);
+                
+                // Centered Objects (Finish Line)
+                if (pn.seg.centerObj) drawObj(pn.seg.centerObj, pn.x, pn.y, pn.s, pn.w);
+
+                // Rival
+                const rivalSeg = Math.floor((rivalDistanceMeters - distanceMeters) / SEGMENT_LENGTH);
+                if (rivalSeg === pn.n && pn.n > 0) {
+                    drawCyclist(pn.x + pn.w*0.15, pn.y, RIDERS[(selectedRiderIndex+1)%4], pn.s * 1.15, Math.floor(elapsedSeconds*8)%4);
+                }
+            }
+
+            drawCyclist(W/2, H-12, RIDERS[selectedRiderIndex], 1.25, pedalAnimPhase);
+        }
+
+        // 7. Physics & Loop
+        function getGradient() {
+            const course = COURSES[selectedCourseIndex];
+            if (course.id === '14percent' && distanceMeters > 5100) return 14.0;
+            if (course.id === 'muriano' && distanceMeters > 3500 && distanceMeters < 4500) return -4.0; // downhill
+            return course.gradBase + Math.sin(distanceMeters/1000 * 4) * 1.5;
+        }
+
+        function updateLogic(dt) {
+            if (gameState !== 'racing') return;
+            elapsedSeconds += dt;
+            const course = COURSES[selectedCourseIndex];
+            
+            mashEnergy = Math.max(0, mashEnergy - 350 * dt);
+            currentWatts += (mashEnergy - currentWatts) * (dt * 10);
+            if (currentWatts < 5) currentWatts = 0;
+
+            const grad = getGradient();
+            let drag = grad * 1.8;
+            if (course.id === '14percent' && distanceMeters > 5100) drag *= 2.5; // Brutal 14% physics wall
+
+            if (currentWatts > 10 || grad < 0) {
+                const tgt = Math.max(2, (Math.pow(Math.max(0, currentWatts), 0.72) * 0.6) - drag * 0.5);
+                currentSpeedKph += (tgt - currentSpeedKph) * (dt * 3);
+            } else {
+                currentSpeedKph = Math.max(0, currentSpeedKph - 15 * dt);
+            }
+
+            // Scale speed so a 5.7km course at 450W finishes in ~45s.
+            const scale = course.dist / 5710 * 6.5; 
+            const mps = (currentSpeedKph / 3.6) * scale;
+            distanceMeters += mps * dt;
+            
+            // Rival pacing ~46s finish
+            const rivalSpeed = 19 + Math.sin(elapsedSeconds)*2;
+            rivalDistanceMeters += ((rivalSpeed / 3.6) * scale) * dt;
+
+            roadCurvatureX += roadSegments[Math.floor(distanceMeters/SEGMENT_LENGTH)%roadSegments.length].curve * (mps*0.002);
+
+            // Alerts
+            if (!alertTriggered) {
+                if (course.id === 'assuan' && distanceMeters > 4210) showAlert('MIRADOR REACHED!', '1.5 KM TO GO!');
+                else if (course.id === '14percent' && distanceMeters > 5100) showAlert('14% GRADIENT!', 'BRICK WALL! HAMMER IT!');
+                else if (course.id === 'muriano' && distanceMeters > 3500 && distanceMeters < 3600) showAlert('DOWNHILL!', 'FREE SPEED!');
+            }
+
+            if (distanceMeters >= course.dist) finishRace();
+            updateHUD(grad, course);
+        }
+
+        function showAlert(title, sub) {
+            alertTriggered = true; playJingle('alert');
+            document.getElementById('alertTitle').textContent = title;
+            document.getElementById('alertSub').textContent = sub;
+            const b = document.getElementById('alertBanner'); b.classList.remove('hidden');
+            setTimeout(() => b.classList.add('hidden'), 4000);
+        }
+
+        function updateHUD(grad, course) {
+            document.getElementById('hudDist').textContent = (distanceMeters/1000).toFixed(2);
+            document.getElementById('hudToGo').textContent = Math.max(0, (course.dist - distanceMeters)/1000).toFixed(2) + 'KM TO GO';
+            document.getElementById('hudElev').textContent = Math.round(Math.min(course.elev, (distanceMeters/course.dist)*course.elev));
+            document.getElementById('hudGrad').textContent = `GRAD: ${grad.toFixed(1)}%`;
+            document.getElementById('hudWatts').textContent = Math.round(currentWatts);
+            document.getElementById('hudSpeed').textContent = currentSpeedKph.toFixed(1);
+            document.getElementById('hudCadence').textContent = currentWatts > 10 ? Math.round(55 + currentWatts*0.08) : 0;
+            document.getElementById('hudWattBar').style.width = Math.min(100, (currentWatts/900)*100) + '%';
+            
+            const mins = Math.floor(elapsedSeconds / 60);
+            document.getElementById('hudTime').textContent = `${String(mins).padStart(2,'0')}:${(elapsedSeconds%60).toFixed(1).padStart(4,'0')}`;
+
+            // Mini Profile
+            const pc = document.getElementById('profileCanvas'), pctx = pc.getContext('2d');
+            pc.width = pc.clientWidth; pc.height = pc.clientHeight;
+            pctx.fillStyle = '#059669'; pctx.fillRect(0, pc.height-3, (distanceMeters/course.dist)*pc.width, 3);
+            pctx.fillStyle = '#facc15'; pctx.fillRect((distanceMeters/course.dist)*pc.width-2, pc.height-6, 4, 4);
+        }
+
+        function startRace() {
+            initAudio(); buildCourse();
+            distanceMeters = 0; currentWatts = 0; mashEnergy = 200; currentSpeedKph = 10; elapsedSeconds = 0;
+            rivalDistanceMeters = 15; alertTriggered = false;
+            document.getElementById('activeCourseLabel').textContent = COURSES[selectedCourseIndex].name;
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('finishScreen').classList.add('hidden');
+            gameState = 'racing'; playJingle('alert');
+        }
+
+        function finishRace() {
+            gameState = 'finished'; playJingle('finish');
+            drawRiderPortrait(document.getElementById('finishPortrait'), RIDERS[selectedRiderIndex]);
+            document.getElementById('finishCourseName').textContent = COURSES[selectedCourseIndex].name + ' CONQUERED!';
+            document.getElementById('finishRiderName').textContent = RIDERS[selectedRiderIndex].name;
+            document.getElementById('finishRankText').textContent = distanceMeters >= rivalDistanceMeters ? '1ST PLACE!' : '2ND PLACE';
+            document.getElementById('statTime').textContent = document.getElementById('hudTime').textContent;
+            
+            document.getElementById('playerNameInput').value = ''; // Reset input field
+            document.getElementById('finishScreen').classList.remove('hidden');
+        }
+
+        async function submitScore() {
+            if (!supabaseClient || SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
+            
+            let name = document.getElementById('playerNameInput').value.trim().toUpperCase();
+            if (!name) name = 'ANONYMOUS';
+            
+            const courseId = COURSES[selectedCourseIndex].id;
+            const cyclistName = RIDERS[selectedRiderIndex].name;
+            const timeSecs = parseFloat(elapsedSeconds.toFixed(1));
+
+            document.getElementById('playerNameInput').value = 'SAVING...';
+            
+            try {
+                await supabaseClient.from('cycling_leaderboard').insert([{
+                    player_name: name.substring(0, 12),
+                    cyclist: cyclistName,
+                    course: courseId,
+                    time_seconds: timeSecs
+                }]);
+            } catch (error) {
+                console.error('Error saving score:', error);
+            }
+        }
+
+        async function submitScoreAndMenu() {
+            await submitScore();
+            resetToMenu();
+        }
+
+        async function submitScoreAndRestart() {
+            await submitScore();
+            startRace();
+        }
+
+        function changeLeaderboard(dir) {
+            initAudio();
+            leaderboardViewIndex += dir;
+            if (leaderboardViewIndex < 0) leaderboardViewIndex = COURSES.length - 1;
+            if (leaderboardViewIndex >= COURSES.length) leaderboardViewIndex = 0;
+            showLeaderboard(leaderboardViewIndex);
+        }
+
+        async function showLeaderboard(forceIndex) {
+            if (typeof forceIndex === 'number') leaderboardViewIndex = forceIndex;
+            else leaderboardViewIndex = selectedCourseIndex;
+
+            const course = COURSES[leaderboardViewIndex];
+            document.getElementById('leaderboardCourseName').textContent = course.name.toUpperCase();
+            const boardContent = document.getElementById('leaderboardContent');
+            document.getElementById('leaderboardModal').classList.remove('hidden');
+            
+            if (!supabaseClient || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+                boardContent.innerHTML = '<div class="text-[9px] text-red-400">SUPABASE NOT CONFIGURED.<br><br>ADD URL AND KEY IN CODE.</div>';
+                return;
+            }
+
+            boardContent.innerHTML = '<div class="text-[10px] text-white animate-pulse">FETCHING TIMES...</div>';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('cycling_leaderboard')
+                    .select('*')
+                    .eq('course', course.id)
+                    .order('time_seconds', { ascending: true })
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    boardContent.innerHTML = '<div class="text-[10px] text-slate-400">NO TIMES RECORDED YET.<br><br>BE THE FIRST!</div>';
+                    return;
+                }
+
+                let html = '<table class="w-full text-[9px] sm:text-[11px] text-left text-white border-collapse"><thead class="text-amber-400 border-b border-slate-700"><tr><th class="pb-2 w-8">#</th><th class="pb-2">NAME</th><th class="pb-2 hidden sm:table-cell">RIDER</th><th class="pb-2 text-right">TIME</th></tr></thead><tbody>';
+                data.forEach((row, i) => {
+                    const mins = Math.floor(row.time_seconds / 60);
+                    const secs = (row.time_seconds % 60).toFixed(1).padStart(4, '0');
+                    html += `<tr class="border-b border-slate-800/60"><td class="py-2 text-slate-400">${i+1}</td><td class="py-2 truncate max-w-[100px] text-sky-200">${row.player_name}</td><td class="py-2 text-slate-400 hidden sm:table-cell">${row.cyclist}</td><td class="py-2 text-right font-bold text-amber-300">${String(mins).padStart(2,'0')}:${secs}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                boardContent.innerHTML = html;
+
+            } catch (error) {
+                boardContent.innerHTML = '<div class="text-[10px] text-red-400">ERROR LOADING SCORES</div>';
+                console.error(error);
+            }
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboardModal').classList.add('hidden');
+        }
+
+        function resetToMenu() { gameState = 'menu'; document.getElementById('startScreen').classList.remove('hidden'); document.getElementById('finishScreen').classList.add('hidden'); }
+
+        let lastTime = performance.now();
+        function loop(now) {
+            const dt = Math.min(0.1, (now - lastTime) / 1000);
+            lastTime = now;
+            updateLogic(dt);
+            if (gameState === 'racing') renderScene();
+            requestAnimationFrame(loop);
+        }
+
+        window.onload = () => { renderMenus(); setupControls(); requestAnimationFrame(loop); };
+    </script>
+</body>
+</html>

@@ -210,7 +210,7 @@
     <div id="game-container">
 
         <div class="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-            <a href="index.html" class="btn-back no-print text-sm">← Back to Tools</a>
+            <a href="index.html" id="global-back-btn" class="btn-back no-print text-sm"><span id="back-label">← Back to Tools</span></a>
             <h1 class="text-4xl font-black text-slate-800 uppercase tracking-tight">Word Search</h1>
             <div class="w-20"></div>
         </div>
@@ -294,7 +294,7 @@
                 <h2 class="text-3xl font-black text-slate-800 mb-2">You did it!</h2>
                 <p class="text-slate-500 mb-6 font-bold">All words found.</p>
                 <div class="flex gap-3 justify-center">
-                    <button onclick="location.reload()" class="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-600">
+                    <button id="play-again-btn" class="bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-600">
                         Play Again
                     </button>
                     <button onclick="document.getElementById('win-modal').classList.add('hidden')" class="text-slate-400 font-bold">
@@ -316,6 +316,9 @@
         let isSelecting = false;
         let startCell = null;
         let currentSelection = []; 
+        
+        // This is the badge that proves they are a student
+        const IS_STUDENT = new URLSearchParams(window.location.search).get('student') === 'true';
 
         const fileInput = document.getElementById('csv-file-input');
         const generateBtn = document.getElementById('generate-btn');
@@ -330,9 +333,27 @@
             sizeDisplay.textContent = `${gridSize}x${gridSize}`;
         });
 
+        // Setup the "Change Settings" button (hidden for students)
         document.getElementById('game-back-btn').addEventListener('click', () => {
             document.getElementById('game-area').classList.add('hidden');
             document.getElementById('setup-area').classList.remove('hidden');
+        });
+
+        // Setup the Global "Back to Tools" button
+        document.getElementById('global-back-btn').addEventListener('click', (e) => {
+            if (IS_STUDENT) {
+                e.preventDefault();
+                window.history.back(); // Send students safely back to syllabus menu
+            }
+        });
+
+        // Setup the Win Modal "Play Again" button
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            if (IS_STUDENT) {
+                window.history.back(); // If they win, return to menu
+            } else {
+                location.reload(); // Teachers can reload to make a new puzzle
+            }
         });
 
         /* --- 2. CSV PARSER --- */
@@ -345,7 +366,7 @@
             reader.onload = (evt) => {
                 const lines = evt.target.result.split(/\r?\n/);
                 words = lines
-                    .map(l => l.split(',')[0].trim().toUpperCase())
+                    .map(l => l.split(',')[0].trim().toUpperCase().replace(/\s/g, '')) // Remove spaces!
                     .filter(w => w.length > 1 && /^[A-Z]+$/.test(w));
                 
                 words = [...new Set(words)];
@@ -371,15 +392,13 @@
             words.sort((a, b) => b.length - a.length);
             const usedWords = [];
 
-            // 3. Directions (FIXED)
-            // Easy Mode: East [0, 1], South [1, 0], South-East [1, 1]
+            // Directions
             let directions = [[0, 1], [1, 0], [1, 1]];
             if (allowBackwards.checked) {
-                // Hard Mode adds: West, North, North-West, South-West, North-East
                 directions.push([0, -1], [-1, 0], [-1, -1], [1, -1], [-1, 1]);
             }
 
-            // 4. Place Words
+            // Place Words
             words.forEach(word => {
                 if(word.length > gridSize) return; 
 
@@ -399,7 +418,7 @@
                 }
             });
 
-            // 5. Fill Empty Spots
+            // Fill Empty Spots
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let r = 0; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
@@ -614,6 +633,49 @@
             });
             
             document.querySelectorAll('.word-item').forEach(el => el.classList.add('found'));
+        });
+
+        // --- 6. AUTO-LOAD & SECURITY LOGIC ---
+        window.addEventListener('DOMContentLoaded', () => {
+            localStorage.removeItem('isStudent'); // Cleans up the old memory bug
+
+            if (IS_STUDENT) {
+                // Change top back button
+                document.getElementById('back-label').innerText = '← Back to Menu';
+                // Completely hide the "Change Settings" button
+                document.getElementById('game-back-btn').style.display = 'none';
+                // Change the Win Modal button
+                document.getElementById('play-again-btn').innerText = 'Back to Menu';
+            }
+
+            const savedWords = localStorage.getItem('autoLoadWords');
+            
+            if (savedWords) {
+                words = savedWords.split(',')
+                                     .map(w => w.trim().toUpperCase().replace(/\s/g, '')) 
+                                     .filter(w => w.length > 1 && /^[A-Z]+$/.test(w));
+                
+                localStorage.removeItem('autoLoadWords');
+                
+                if (words.length > 0) {
+                    words = [...new Set(words)]; // Ensure no duplicate words
+
+                    // NEW: Automatically shrink the grid for students!
+                    if (IS_STUDENT) {
+                        // Find the length of the longest word in their list
+                        const longestWordLength = Math.max(...words.map(w => w.length));
+                        // Make the grid 2 spaces bigger than that word, but never smaller than 10x10
+                        gridSize = Math.max(10, longestWordLength + 2);
+                    }
+
+                    initGame();
+                    document.getElementById('setup-area').classList.add('hidden');
+                    document.getElementById('game-area').classList.remove('hidden');
+                }
+            } else if (IS_STUDENT && words.length === 0) {
+                // Security bounce: if a student manages to refresh the setup screen, send them away
+                window.history.back();
+            }
         });
 
     </script>

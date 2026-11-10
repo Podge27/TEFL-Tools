@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #00BCD4, #4DD0E1); /* Cyan Blue Theme */
+            background: linear-gradient(135deg, #00BCD4, #4DD0E1);
             min-height: 100vh;
             padding: 20px;
             display: flex;
@@ -19,7 +19,7 @@
         }
         #game-container {
             width: 100%;
-            max-width: 950px; /* Slightly wider */
+            max-width: 950px;
             background-color: white;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             border-radius: 20px;
@@ -28,8 +28,8 @@
 
         /* --- KEYBOARD KEYS (BIG) --- */
         .keyboard-key {
-            width: 60px;  /* BIG KEYS */
-            height: 60px; /* BIG KEYS */
+            width: 60px;
+            height: 60px;
             font-size: 1.5rem;
             font-weight: 800;
             margin: 6px;
@@ -51,24 +51,21 @@
             background-color: #e2e8f0;
         }
         .keyboard-key:disabled {
-            opacity: 0.8; /* Keep opacity higher so we can see the color clearly */
+            opacity: 0.8;
             cursor: default;
             transform: none;
             border-bottom-width: 4px;
         }
 
-        /* --- ACCESSIBILITY COLOR FIX --- */
-        /* Replaced Green with Blue, and Red with Dark Grey for high contrast */
-        
         .correct-guess {
-            background-color: #2563eb !important; /* Royal Blue */
+            background-color: #2563eb !important;
             border-color: #1d4ed8 !important;
             color: white !important;
         }
         .incorrect-guess {
-            background-color: #334155 !important; /* Dark Slate Gray (High Contrast) */
+            background-color: #334155 !important;
             border-color: #1e293b !important;
-            color: #94a3b8 !important; /* Light grey text */
+            color: #94a3b8 !important;
             opacity: 0.6;
         }
 
@@ -79,7 +76,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2.5rem; /* Huge Text */
+            font-size: 2.5rem;
             font-weight: 900;
             border-bottom: 5px solid #1f2937;
             margin: 0 4px;
@@ -89,7 +86,7 @@
         /* --- INPUTS & BUTTONS --- */
         textarea {
             width: 100%;
-            height: 120px; /* TALLER INPUT */
+            height: 120px;
             padding: 15px;
             border: 2px solid #cbd5e1;
             border-radius: 12px;
@@ -98,13 +95,12 @@
             margin-bottom: 10px;
         }
         
-        /* Custom File Upload Button Look */
         .file-upload-label {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 120px; /* Match textarea height */
+            height: 120px;
             border: 3px dashed #cbd5e1;
             border-radius: 12px;
             cursor: pointer;
@@ -140,12 +136,10 @@
         .btn-dark { background-color: #374151; }
         .btn-dark:hover { background-color: #1f2937; }
 
-        /* NEW: Hint Button Style */
         .btn-yellow { background-color: #F59E0B; }
         .btn-yellow:hover { background-color: #D97706; }
         .btn-yellow:disabled { background-color: #cbd5e1; box-shadow: none; cursor: not-allowed; }
 
-        /* Back Button */
         #back-to-main-button {
             background-color: #94a3b8;
             color: white;
@@ -270,8 +264,6 @@
         const fileLabel = document.getElementById('file-label-text');
 
         // --- 1. SETUP LOGIC ---
-
-        // Handle CSV Upload
         csvInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -283,7 +275,6 @@
             reader.onload = (evt) => {
                 const text = evt.target.result;
                 const lines = text.split(/\r?\n/);
-                // Extract first column, clean, filter
                 wordPool = lines.map(l => l.split(',')[0].trim().toUpperCase())
                                 .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w));
                 
@@ -296,7 +287,6 @@
             reader.readAsText(file);
         });
 
-        // Handle Typed Input
         document.getElementById('start-typed-button').addEventListener('click', () => {
             const text = typedInput.value;
             wordPool = text.split(/[\n,]/)
@@ -317,24 +307,27 @@
         }
 
         // --- 2. GAME LOGIC ---
-
         function nextRound() {
             if (wordPool.length === 0) {
                 alert("No more words!");
-                window.location.reload();
+                
+                // Security Check: If a student finishes, send them to menu, not setup.
+                const isStudent = new URLSearchParams(window.location.search).get('student') === 'true';
+                if (isStudent) {
+                    window.history.back();
+                } else {
+                    window.location.reload();
+                }
                 return;
             }
 
-            // Pick random word
             const randomIndex = Math.floor(Math.random() * wordPool.length);
             wordToGuess = wordPool[randomIndex];
             
-            // Reset State
             guessedLetters.clear();
             errors = 0;
             gameActive = true;
             
-            // Reset UI
             messageEl.textContent = "";
             guessesLeftEl.textContent = `Lives: ${maxErrors}`;
             newGameBtn.classList.add('hidden');
@@ -351,7 +344,7 @@
 
             for (const char of wordToGuess) {
                 if (char === ' ') {
-                    html += `<div class="w-8"></div>`; // Spacer
+                    html += `<div class="w-8"></div>`;
                 } else {
                     if (guessedLetters.has(char)) {
                         html += `<div class="guess-letter">${char}</div>`;
@@ -363,7 +356,7 @@
             }
             wordDisplay.innerHTML = html;
 
-            if (won) endGame(true);
+            if (won && gameActive) endGame(true);
         }
 
         function drawKeyboard() {
@@ -455,9 +448,48 @@
             handleGuess(randomChar);
         });
 
-        // Listeners
         newGameBtn.addEventListener('click', nextRound);
         resetSetupBtn.addEventListener('click', () => window.location.reload());
+
+        // --- AUTO-LOAD & SECURITY LOGIC ---
+        window.addEventListener('DOMContentLoaded', () => {
+            localStorage.removeItem('isStudent'); // Cleans up the old memory bug
+
+            const isStudent = new URLSearchParams(window.location.search).get('student') === 'true';
+            const savedWords = localStorage.getItem('autoLoadWords');
+
+            if (isStudent) {
+                // Change back button to safely return to syllabus menu
+                const backBtn = document.getElementById('back-to-main-button');
+                backBtn.innerHTML = '← Back to Menu';
+                backBtn.onclick = (e) => {
+                    e.preventDefault();
+                    window.history.back();
+                };
+                
+                // Completely hide the link to the setup screen
+                document.getElementById('reset-setup-button').style.display = 'none';
+
+                // Prevent students from hitting reload and breaking into the empty setup screen
+                if (!savedWords && wordPool.length === 0) {
+                    window.history.back();
+                    return;
+                }
+            }
+
+            // Load the words
+            if (savedWords) {
+                wordPool = savedWords.split(',')
+                                     .map(w => w.trim().toUpperCase())
+                                     .filter(w => w.length > 0 && /^[A-Z\s]+$/.test(w));
+                
+                localStorage.removeItem('autoLoadWords');
+                
+                if (wordPool.length > 0) {
+                    startGame();
+                }
+            }
+        });
 
     </script>
 </body>
