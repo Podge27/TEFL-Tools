@@ -1,0 +1,4314 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Patrick's Laundrette</title>
+    <style>
+        /* Lock viewport strictly so the 16:9 canvas fits any phone, tablet, or desktop without scrolling */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100dvw;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: #253036;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+
+        #gameCanvas {
+            display: block;
+            aspect-ratio: 16 / 9;
+            width: min(100dvw, calc(100dvh * 16 / 9));
+            height: min(100dvh, calc(100dvw * 9 / 16));
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+            touch-action: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="960" height="540" aria-label="Patrick's Laundrette Interactive Game"></canvas>
+    <script>
+        /* =========================================================================
+         * PATRICK'S LAUNDRETTE - UPDATE 2
+         * Calm, autism-friendly retro top-down laundrette game (960 x 540 logical)
+         * Views:
+         *   1. Top-Down Laundrette (Desk Baskets, Arriving Customers, 5 Levels,
+         *      5 Washers, 5 Dryers, Plant, Mat, Popeye)
+         *   2. Popeye the Terrier Close-Up (Interactive Head Rubbing & Hearts)
+         *   3. Front-On Machine Close-Up (Direct Door Tap, Pull-Out Soap Drawer,
+         *      Drag-to-Pour Detergent & Softener, Drag-and-Drop Varied Clothes)
+         * ========================================================================= */
+
+        const LOGICAL_W = 960;
+        const LOGICAL_H = 540;
+        const CYCLE_DURATION = 8.5; // Calm 8.5-second wash / dry cycle
+
+        // Gentle 5-Level Progression (no stressful red timers or game overs)
+        const LEVELS = [
+            { level: 1, loads: 1, itemsPerLoad: 3, spawnInterval: 0,  returnDelay: 15 },
+            { level: 2, loads: 2, itemsPerLoad: 3, spawnInterval: 14, returnDelay: 17 },
+            { level: 3, loads: 3, itemsPerLoad: 4, spawnInterval: 12, returnDelay: 17 },
+            { level: 4, loads: 4, itemsPerLoad: 4, spawnInterval: 10, returnDelay: 16 },
+            { level: 5, loads: 5, itemsPerLoad: 5, spawnInterval: 9,  returnDelay: 15 }
+        ];
+
+        // Friendly pastel retro customer appearances
+        const CUSTOMER_STYLES = [
+            { name: 'Maya',   hair: '#5c3c2e', skin: '#f2c6a0', shirt: '#e8a4b8', trousers: '#5a6d82' },
+            { name: 'Arthur', hair: '#8f7d6a', skin: '#f6d5b8', shirt: '#8cb8de', trousers: '#5f6b64' },
+            { name: 'Priya',  hair: '#3a3335', skin: '#d8a27c', shirt: '#b7a3dc', trousers: '#4e5d6c' },
+            { name: 'Oliver', hair: '#c48d4e', skin: '#f7d6ba', shirt: '#90c7a5', trousers: '#6a5d54' },
+            { name: 'Nora',   hair: '#6e493a', skin: '#e7b793', shirt: '#f2be8d', trousers: '#52657a' }
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        /* =========================================================================
+         * SENSORY-FRIENDLY PASTEL RETRO PALETTE
+         * ========================================================================= */
+        const PALETTE = {
+            ink: '#31403b',
+            inkSoft: '#596b65',
+
+            wallCream: '#f6f0e4',
+            wallTrim: '#c5b89e',
+            wallBanner: '#9dbbae',
+            wallBannerDark: '#6c8b7e',
+            floorA: '#e8f3ee',
+            floorB: '#ddece5',
+
+            // Washers (soft pastel blue)
+            washerBody: '#cde6f7',
+            washerTop: '#e7f4fd',
+            washerShade: '#a4cce8',
+            washerAccent: '#5a99cf',
+            washerDrum: '#4a647a',
+            washerWater: 'rgba(130, 198, 240, 0.52)',
+
+            // Dryers (soft pastel peach)
+            dryerBody: '#fde4cd',
+            dryerTop: '#fff3e7',
+            dryerShade: '#edc39c',
+            dryerAccent: '#de8e58',
+            dryerDrum: '#6d5a51',
+
+            // Reception Desk (warm oak)
+            deskTop: '#e1b88a',
+            deskMain: '#c89968',
+            deskFront: '#a97b4c',
+            bellGold: '#ecd074',
+
+            // UI & Accents
+            cream: '#fbf8f0',
+            creamShade: '#ece5d4',
+            greenSoft: '#86cfa6',
+            greenMid: '#58ad7d',
+            greenPale: '#dff5e8',
+            bluePale: '#e1f1fc',
+            pinkSoft: '#f2b7cc',
+            pinkMid: '#d582a0',
+            amberPale: '#fef3d9',
+            amberBorder: '#d9a452',
+            lavenderPale: '#ece6f8',
+            lavenderMid: '#a795cc',
+            highlightGlow: 'rgba(255, 250, 222, 0.78)',
+            cueGlow: 'rgba(252, 232, 152, 0.85)',
+
+            // Patrick
+            hair: '#6c4732',
+            hairLight: '#8a5f45',
+            skin: '#f6d2b4',
+            shirt: '#59aea0',
+            trousers: '#4d617a',
+            shoes: '#685040',
+
+            // Basket
+            basketMain: '#d9b382',
+            basketDark: '#b38b59',
+            basketLight: '#ecd0a6'
+        };
+
+        // Varied calming pastel clothing colours & 7 distinct recognisable shapes
+        const CLOTHES_COLOURS = [
+            { fill: '#9ac4e2', trim: '#6d9bc0' }, // Soft Blue
+            { fill: '#98ccb0', trim: '#6ba386' }, // Sage Green
+            { fill: '#fae08c', trim: '#d4b054' }, // Butter Yellow
+            { fill: '#eab0bd', trim: '#c78393' }, // Dusty Rose
+            { fill: '#c7b8e6', trim: '#9a87c2' }, // Muted Lavender
+            { fill: '#f6c29f', trim: '#d4956e' }, // Gentle Peach
+            { fill: '#a3dcd0', trim: '#6eb3a5' }  // Soft Mint
+        ];
+
+        const CLOTHES_SHAPES = ['tshirt', 'trousers', 'socks', 'jumper', 'shorts', 'dress', 'towel'];
+
+        /* =========================================================================
+         * GENTLE WEB AUDIO API SYNTHESIZER (Soft sine & triangle waves only)
+         * ========================================================================= */
+        const Sound = {
+            ctx: null,
+            enabled: true,
+            humOsc: null,
+            humLfo: null,
+            humGain: null,
+            humActive: false,
+
+            init() {
+                try {
+                    if (!this.ctx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) this.ctx = new AudioCtx();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                } catch (_) {}
+            },
+
+            tone(startFreq, endFreq, duration, volume = 0.05, type = 'sine', delay = 0) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const now = this.ctx.currentTime + delay;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(startFreq, now);
+                    if (endFreq !== startFreq) {
+                        osc.frequency.exponentialRampToValueAtTime(Math.max(25, endFreq), now + duration);
+                    }
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(volume, now + 0.018);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration + 0.03);
+                } catch (_) {}
+            },
+
+            woodTap() { this.tone(285, 175, 0.065, 0.048, 'triangle'); },
+            softNudge() { this.tone(220, 195, 0.09, 0.038, 'sine'); },
+            footstep(toggle) {
+                const f = toggle ? 155 : 138;
+                this.tone(f, f * 0.72, 0.035, 0.017, 'sine');
+            },
+
+            zoomIn() {
+                this.tone(440, 440, 0.14, 0.042, 'sine', 0);
+                this.tone(587.33, 587.33, 0.22, 0.046, 'triangle', 0.075);
+            },
+
+            zoomOut() {
+                this.tone(523.25, 523.25, 0.12, 0.04, 'sine', 0);
+                this.tone(392.00, 392.00, 0.18, 0.04, 'triangle', 0.065);
+            },
+
+            doorLatch(opening) {
+                if (opening) {
+                    this.tone(215, 315, 0.085, 0.055, 'triangle', 0);
+                    this.tone(365, 295, 0.06, 0.035, 'sine', 0.04);
+                } else {
+                    this.tone(295, 155, 0.095, 0.06, 'triangle', 0);
+                    this.tone(175, 130, 0.07, 0.038, 'sine', 0.04);
+                }
+            },
+
+            drawerSlide(opening) {
+                if (opening) {
+                    this.tone(180, 260, 0.14, 0.042, 'sine', 0);
+                    this.tone(270, 310, 0.08, 0.03, 'triangle', 0.08);
+                } else {
+                    this.tone(260, 170, 0.13, 0.045, 'sine', 0);
+                    this.tone(165, 130, 0.06, 0.035, 'triangle', 0.09);
+                }
+            },
+
+            clothPickup() { this.tone(330, 460, 0.08, 0.042, 'sine'); },
+            clothDrop() { this.tone(420, 560, 0.11, 0.052, 'triangle'); },
+
+            liquidPour(isSoftener) {
+                const base = isSoftener ? 470 : 380;
+                const steps = [1.0, 1.14, 1.07, 1.24, 1.18, 1.38];
+                steps.forEach((mult, idx) => {
+                    this.tone(base * mult, base * mult * 1.12, 0.1, 0.038, 'sine', idx * 0.085);
+                });
+                this.tone(base * 1.5, base * 1.5, 0.24, 0.042, 'triangle', 0.54);
+            },
+
+            startChime() {
+                this.tone(392.00, 392.00, 0.14, 0.048, 'sine', 0);
+                this.tone(523.25, 523.25, 0.24, 0.052, 'triangle', 0.1);
+            },
+
+            machineDone() {
+                this.tone(440.00, 440.00, 0.28, 0.048, 'sine', 0);
+                this.tone(554.37, 554.37, 0.28, 0.048, 'sine', 0.14);
+                this.tone(659.25, 659.25, 0.45, 0.052, 'triangle', 0.28);
+            },
+
+            deskPickup() {
+                this.tone(493.88, 493.88, 0.14, 0.042, 'sine', 0);
+                this.tone(659.25, 659.25, 0.22, 0.048, 'triangle', 0.09);
+            },
+
+            deskDeliver() {
+                [523.25, 659.25, 783.99, 1046.5].forEach((n, i) => {
+                    this.tone(n, n, 0.32, 0.048, 'triangle', i * 0.095);
+                });
+            },
+
+            doorbell() {
+                this.tone(659.25, 659.25, 0.24, 0.042, 'sine', 0);
+                this.tone(523.25, 523.25, 0.36, 0.045, 'triangle', 0.14);
+            },
+
+            levelComplete() {
+                const notes = [523.25, 659.25, 783.99, 987.77, 1046.5];
+                notes.forEach((n, i) => {
+                    this.tone(n, n, 0.42, 0.05, 'triangle', i * 0.11);
+                });
+            },
+
+            popeyeHappy(step) {
+                const notes = [523.25, 587.33, 659.25, 783.99];
+                const f = notes[step % notes.length];
+                this.tone(f * 0.92, f, 0.16, 0.042, 'sine', 0);
+                this.tone(f * 1.25, f * 1.25, 0.18, 0.028, 'triangle', 0.05);
+            },
+
+            startHum() {
+                if (!this.enabled || this.humActive) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const lfo = this.ctx.createOscillator();
+                    const lfoGain = this.ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(62, now);
+
+                    lfo.type = 'sine';
+                    lfo.frequency.setValueAtTime(0.65, now);
+                    lfoGain.gain.setValueAtTime(0.011, now);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(0.03, now + 0.45);
+
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(gain.gain);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    lfo.start(now);
+
+                    this.humOsc = osc;
+                    this.humLfo = lfo;
+                    this.humGain = gain;
+                    this.humActive = true;
+                } catch (_) {
+                    this.humActive = false;
+                }
+            },
+
+            stopHum() {
+                if (!this.humActive || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    if (this.humGain) {
+                        this.humGain.gain.cancelScheduledValues(now);
+                        this.humGain.gain.setValueAtTime(Math.max(0.0001, this.humGain.gain.value), now);
+                        this.humGain.gain.linearRampToValueAtTime(0.0001, now + 0.2);
+                    }
+                    if (this.humOsc) this.humOsc.stop(now + 0.24);
+                    if (this.humLfo) this.humLfo.stop(now + 0.24);
+                } catch (_) {}
+                this.humOsc = null;
+                this.humLfo = null;
+                this.humGain = null;
+                this.humActive = false;
+            },
+
+            syncHum() {
+                const shouldHum = this.enabled &&
+                    state.scene === 'machine' &&
+                    state.activeMachine &&
+                    state.activeMachine.state === 'running' &&
+                    !state.transition.active;
+
+                if (shouldHum && !this.humActive) this.startHum();
+                else if (!shouldHum && this.humActive) this.stopHum();
+            }
+        };
+
+        /* =========================================================================
+         * LAYOUT CONSTANTS & HIT REGIONS (960 x 540)
+         * ========================================================================= */
+        const UI = {
+            startGameBtn: { x: 350, y: 348, w: 260, h: 56 },
+            exitBtn: { x: 764, y: 12, w: 74, h: 38 },
+            soundBtn: { x: 848, y: 12, w: 96, h: 38 },
+            backBtn: { x: 16, y: 12, w: 196, h: 38 },
+            nextLevelBtn: { x: 360, y: 332, w: 240, h: 58 },
+
+            // Machine Close-Up zones
+            leftZone: { x: 20, y: 78, w: 264, h: 440 },
+            machineRect: { x: 306, y: 78, w: 348, h: 440 },
+
+            // Pull-Out Dispenser Drawer & Individual Compartments
+            drawerClosedRect: { x: 320, y: 92, w: 124, h: 72 },
+            drawerOpenRect: { x: 316, y: 92, w: 152, h: 128 },
+            detCompartment: { x: 320, y: 96, w: 72, h: 96 },
+            sofCompartment: { x: 394, y: 96, w: 72, h: 96 },
+
+            startBtn: { x: 558, y: 94, w: 84, h: 66 },
+
+            // Door geometry
+            doorCenter: { x: 480, y: 356 },
+            doorOuterR: 122,
+            doorInnerR: 92,
+
+            // Right zone: Draggable bottles + checklist
+            rightZone: { x: 676, y: 78, w: 264, h: 440 },
+            detergentSlot: { x: 688, y: 84, w: 114, h: 136 },
+            softenerSlot: { x: 814, y: 84, w: 114, h: 136 },
+
+            // Popeye Close-Up head rub ellipse
+            popeyeHead: { cx: 480, cy: 262, rx: 108, ry: 88 }
+        };
+
+        // Top-Down Room Landmarks
+        const PLANT = { cx: 56, cy: 100 };
+
+        const DESK = {
+            x: 28,
+            y: 146,
+            w: 138,
+            h: 156,
+            walkX: 198,
+            walkY: 226,
+            faceDir: 'left'
+        };
+
+        const POPEYE_SPOT = {
+            cx: 104,
+            cy: 388,
+            hitRect: { x: 52, y: 342, w: 106, h: 92 },
+            walkX: 184,
+            walkY: 388,
+            faceDir: 'left'
+        };
+
+        const ENTRANCE = {
+            matX: 46,
+            matY: 462,
+            matW: 114,
+            matH: 46,
+            doorX: 52,
+            doorY: 516,
+            doorW: 102,
+            doorH: 24
+        };
+
+        // 5 Washers (top row) and 5 Dryers (bottom row)
+        const MACHINES = [];
+        const M_W = 118;
+        const M_H = 124;
+        const M_START_X = 250;
+        const M_GAP = 16;
+
+        for (let i = 0; i < 5; i++) {
+            const mx = M_START_X + i * (M_W + M_GAP);
+
+            MACHINES.push({
+                id: `washer-${i + 1}`,
+                type: 'washer',
+                label: `WASHER ${i + 1}`,
+                fullTitle: `WASHER ${i + 1}`,
+                number: i + 1,
+                x: mx,
+                y: 84,
+                w: M_W,
+                h: M_H,
+                walkX: mx + M_W / 2,
+                walkY: 242,
+                faceDir: 'up',
+                state: 'empty', // 'empty' | 'loading' | 'running' | 'done'
+                doorOpen: false,
+                drawerOpen: false,
+                drawerAnim: 0,
+                expectedCount: 0,
+                items: [],
+                hasDetergent: false,
+                hasSoftener: false,
+                progress: 0,
+                spinAngle: 0
+            });
+
+            MACHINES.push({
+                id: `dryer-${i + 1}`,
+                type: 'dryer',
+                label: `DRYER ${i + 1}`,
+                fullTitle: `DRYER ${i + 1}`,
+                number: i + 1,
+                x: mx,
+                y: 374,
+                w: M_W,
+                h: M_H,
+                walkX: mx + M_W / 2,
+                walkY: 344,
+                faceDir: 'down',
+                state: 'empty',
+                doorOpen: false,
+                drawerOpen: false,
+                drawerAnim: 0,
+                expectedCount: 0,
+                items: [],
+                hasDetergent: false,
+                hasSoftener: false,
+                progress: 0,
+                spinAngle: 0
+            });
+        }
+
+        const OBSTACLES = [
+            { x: 24, y: 72, w: 62, h: 56 },
+            { x: DESK.x - 4, y: DESK.y - 4, w: DESK.w + 8, h: DESK.h + 8 },
+            { x: POPEYE_SPOT.hitRect.x - 4, y: POPEYE_SPOT.hitRect.y - 4, w: POPEYE_SPOT.hitRect.w + 8, h: POPEYE_SPOT.hitRect.h + 8 },
+            { x: M_START_X - 6, y: 74, w: 5 * M_W + 4 * M_GAP + 12, h: M_H + 18 },
+            { x: M_START_X - 6, y: 368, w: 5 * M_W + 4 * M_GAP + 12, h: M_H + 18 }
+        ];
+
+        const FLOOR_BOUNDS = {
+            minX: 34,
+            maxX: 926,
+            minY: 82,
+            maxY: 500
+        };
+
+        /* =========================================================================
+         * VARIED CLOTHING LOAD GENERATOR (3 varied items & pastel colours per load)
+         * ========================================================================= */
+        function shuffleCopy(arr) {
+            const copy = arr.slice();
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function createDirtyLoad(itemCount = 3) {
+            const shapes = shuffleCopy(CLOTHES_SHAPES).slice(0, itemCount);
+            const colours = shuffleCopy(CLOTHES_COLOURS).slice(0, itemCount);
+            const items = shapes.map((shape, idx) => ({
+                uid: `${shape}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+                id: shape,
+                fill: colours[idx].fill,
+                trim: colours[idx].trim,
+                state: 'dirty' // 'dirty' | 'wet' | 'clean'
+            }));
+
+            return {
+                type: 'dirty',
+                totalCount: itemCount,
+                unloadingFrom: null,
+                items
+            };
+        }
+
+        /* =========================================================================
+         * GAME STATE
+         * ========================================================================= */
+        const state = {
+            scene: 'topdown', // 'topdown' | 'popeye' | 'machine'
+            activeMachine: null,
+            hoverTarget: null,
+            selectedTarget: null,
+            pendingAction: null,
+
+            level: 1,
+            loadsFinished: 0,
+            loadsSpawned: 0,
+            spawnTimer: 0,
+            deskQueue: [],      // Dirty baskets visibly waiting on the Reception Desk
+            customers: [],      // Active customers walking in, waiting, or walking out
+            pendingReturns: [], // { timer, styleIdx } scheduled customer returns
+            nextCustomerId: 1,
+            levelCompleteDelay: 0,
+            levelCompleteOverlay: null, // null | 'level' | 'all'
+
+            basket: null,
+            deskSparkles: [],
+            banner: null,
+            ripple: null,
+
+            transition: {
+                active: false,
+                alpha: 0,
+                phase: 'none',
+                nextScene: null,
+                nextMachine: null
+            },
+
+            // Unified Drag-and-Drop (Clothes or Detergent/Softener Bottles)
+            drag: {
+                active: false,
+                pointerId: null,
+                kind: null, // 'cloth' | 'bottle'
+                item: null,
+                from: null, // 'basket' | 'drum' | 'shelf'
+                x: 0,
+                y: 0,
+                overDrum: false,
+                overBasket: false,
+                overDetSlot: false,
+                overSofSlot: false
+            },
+
+            // Animated Bottle Pour Sequence
+            pouring: null,
+
+            // Popeye Close-Up State
+            popeye: {
+                isRubbing: false,
+                pointerId: null,
+                lastX: 0,
+                lastY: 0,
+                rubEnergy: 0,
+                rubSoundAccum: 0,
+                soundStep: 0,
+                tailPhase: 0,
+                hearts: [],
+                cursorX: 0,
+                cursorY: 0
+            },
+
+            nudgeTimer: 0,
+            time: 0,
+            keys: {}
+        };
+
+        const patrick = {
+            x: 520,
+            y: 292,
+            speed: 205,
+            dir: 'down',
+            isMoving: false,
+            walkTimer: 0,
+            walkFrame: 0,
+            stepToggle: false,
+            path: []
+        };
+
+        /* =========================================================================
+         * PATHFINDING & COLLISION
+         * ========================================================================= */
+        const CELL = 24;
+        const GRID_COLS = Math.floor(LOGICAL_W / CELL);
+        const GRID_ROWS = Math.floor(LOGICAL_H / CELL);
+
+        function isPointWalkable(px, py, pad = 14) {
+            if (px < FLOOR_BOUNDS.minX || px > FLOOR_BOUNDS.maxX ||
+                py < FLOOR_BOUNDS.minY || py > FLOOR_BOUNDS.maxY) {
+                return false;
+            }
+            for (let i = 0; i < OBSTACLES.length; i++) {
+                const o = OBSTACLES[i];
+                if (px > o.x - pad && px < o.x + o.w + pad &&
+                    py > o.y - pad && py < o.y + o.h + pad) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function findNearestWalkable(tx, ty) {
+            const cx = Math.max(FLOOR_BOUNDS.minX, Math.min(FLOOR_BOUNDS.maxX, tx));
+            const cy = Math.max(FLOOR_BOUNDS.minY, Math.min(FLOOR_BOUNDS.maxY, ty));
+            if (isPointWalkable(cx, cy, 12)) return { x: cx, y: cy };
+
+            for (let r = 12; r <= 180; r += 12) {
+                for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+                    const nx = cx + Math.cos(a) * r;
+                    const ny = cy + Math.sin(a) * r;
+                    if (isPointWalkable(nx, ny, 12)) return { x: nx, y: ny };
+                }
+            }
+            return { x: 520, y: 292 };
+        }
+
+        function isLineClear(x1, y1, x2, y2) {
+            const dist = Math.hypot(x2 - x1, y2 - y1);
+            const steps = Math.max(2, Math.ceil(dist / 10));
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps;
+                if (!isPointWalkable(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, 12)) return false;
+            }
+            return true;
+        }
+
+        function computePath(startX, startY, endX, endY) {
+            if (isLineClear(startX, startY, endX, endY)) {
+                return [{ x: endX, y: endY }];
+            }
+
+            const sCol = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(startX / CELL)));
+            const sRow = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(startY / CELL)));
+            const eCol = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(endX / CELL)));
+            const eRow = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(endY / CELL)));
+
+            const visited = new Uint8Array(GRID_COLS * GRID_ROWS);
+            const parent = new Int32Array(GRID_COLS * GRID_ROWS).fill(-1);
+            const queue = [];
+
+            const startIdx = sRow * GRID_COLS + sCol;
+            const endIdx = eRow * GRID_COLS + eCol;
+            visited[startIdx] = 1;
+            queue.push(startIdx);
+
+            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+            let found = false;
+            let head = 0;
+
+            while (head < queue.length) {
+                const curr = queue[head++];
+                if (curr === endIdx) {
+                    found = true;
+                    break;
+                }
+                const c = curr % GRID_COLS;
+                const r = Math.floor(curr / GRID_COLS);
+
+                for (let d = 0; d < dirs.length; d++) {
+                    const nc = c + dirs[d][0];
+                    const nr = r + dirs[d][1];
+                    if (nc < 0 || nc >= GRID_COLS || nr < 0 || nr >= GRID_ROWS) continue;
+                    const nIdx = nr * GRID_COLS + nc;
+                    if (visited[nIdx]) continue;
+
+                    const wx = nc * CELL + CELL / 2;
+                    const wy = nr * CELL + CELL / 2;
+                    if (nIdx !== endIdx && !isPointWalkable(wx, wy, 10)) continue;
+
+                    visited[nIdx] = 1;
+                    parent[nIdx] = curr;
+                    queue.push(nIdx);
+                }
+            }
+
+            if (!found) return [{ x: endX, y: endY }];
+
+            const raw = [];
+            let cur = endIdx;
+            while (cur !== -1 && cur !== startIdx) {
+                const c = cur % GRID_COLS;
+                const r = Math.floor(cur / GRID_COLS);
+                raw.push({ x: c * CELL + CELL / 2, y: r * CELL + CELL / 2 });
+                cur = parent[cur];
+            }
+            raw.reverse();
+            if (raw.length > 0) raw[raw.length - 1] = { x: endX, y: endY };
+            else raw.push({ x: endX, y: endY });
+            return raw;
+        }
+
+        /* =========================================================================
+         * SCENE TRANSITIONS & HELPER LOGIC
+         * ========================================================================= */
+        function showBanner(text, duration = 4.0) {
+            state.banner = { text, timer: 0, maxTimer: duration };
+        }
+
+        function startTransition(nextScene, nextMachine = null) {
+            if (state.transition.active) return;
+
+            state.drag.active = false;
+            state.drag.item = null;
+            state.drag.kind = null;
+            state.pouring = null;
+            state.popeye.isRubbing = false;
+
+            state.transition.active = true;
+            state.transition.phase = 'out';
+            state.transition.alpha = 0;
+            state.transition.nextScene = nextScene;
+            state.transition.nextMachine = nextMachine;
+
+            Sound.stopHum();
+            if (state.scene === 'title') Sound.startChime();
+            else if (nextScene === 'topdown') Sound.zoomOut();
+            else Sound.zoomIn();
+        }
+
+        function updateTransition(dt) {
+            const tr = state.transition;
+            if (!tr.active) return;
+
+            const speed = 5.4;
+            if (tr.phase === 'out') {
+                tr.alpha += dt * speed;
+                if (tr.alpha >= 1) {
+                    tr.alpha = 1;
+                    const fromTitle = state.scene === 'title';
+                    state.scene = tr.nextScene;
+                    state.activeMachine = tr.nextMachine;
+                    state.selectedTarget = null;
+                    state.pendingAction = null;
+                    state.nudgeTimer = 0;
+                    if (fromTitle) startLevel(1);
+                    if (tr.nextScene === 'popeye') {
+                        state.popeye.hearts = [];
+                        state.popeye.rubEnergy = 0;
+                    }
+                    tr.phase = 'in';
+                }
+            } else if (tr.phase === 'in') {
+                tr.alpha -= dt * speed;
+                if (tr.alpha <= 0) {
+                    tr.alpha = 0;
+                    tr.active = false;
+                    tr.phase = 'none';
+                    Sound.syncHum();
+                }
+            }
+        }
+
+        function allClothesLoaded(m) {
+            return m.expectedCount > 0 && m.items.length >= m.expectedCount;
+        }
+
+        function isMachineReadyToStart(m) {
+            if (!m || m.state !== 'loading' || m.doorOpen) return false;
+            if (!allClothesLoaded(m)) return false;
+            if (m.type === 'washer') {
+                return m.hasDetergent && m.hasSoftener && !m.drawerOpen && !state.pouring;
+            }
+            return true;
+        }
+
+        function canLoadMachineWithBasket(m) {
+            if (!m || !state.basket || state.basket.items.length === 0) return false;
+            if (m.state !== 'empty' && m.state !== 'loading') return false;
+            if (m.expectedCount > 0 && m.items.length >= m.expectedCount) return false;
+            if (state.basket.unloadingFrom && state.basket.unloadingFrom !== m.id) return false;
+
+            if (m.type === 'washer') return state.basket.type === 'dirty';
+            if (m.type === 'dryer') return state.basket.type === 'wet';
+            return false;
+        }
+
+        function canUnloadMachine(m) {
+            if (!m || m.state !== 'done' || m.items.length === 0) return false;
+            if (!state.basket) return true;
+            return state.basket.unloadingFrom === m.id;
+        }
+
+        function getNextVisualCue(m) {
+            if (!m || m.state === 'running') return null;
+
+            if (m.state === 'done') {
+                return (canUnloadMachine(m) && !m.doorOpen) ? 'openDoor' : null;
+            }
+
+            const clothesDone = allClothesLoaded(m);
+            if (!clothesDone) {
+                return (canLoadMachineWithBasket(m) && !m.doorOpen) ? 'openDoor' : null;
+            }
+
+            if (m.doorOpen) return 'closeDoor';
+
+            if (m.type === 'washer') {
+                const needsSupply = !m.hasDetergent || !m.hasSoftener;
+                if (needsSupply && !m.drawerOpen) return 'openDrawer';
+                if (!m.hasDetergent && m.drawerOpen) return 'pourDetergent';
+                if (!m.hasSoftener && m.drawerOpen) return 'pourSoftener';
+                if (!needsSupply && m.drawerOpen) return 'closeDrawer';
+            }
+
+            if (isMachineReadyToStart(m)) return 'start';
+            return null;
+        }
+
+        function getMachineHintMessage(m) {
+            if (!m) return null;
+            if (m.state === 'running') {
+                return m.type === 'washer'
+                    ? 'Washing gently... Watch or go back to the shop!'
+                    : 'Drying warmly... Watch or go back to the shop!';
+            }
+            if (m.state === 'done') {
+                return canUnloadMachine(m) ? null : 'Your hands are full! Drop off your basket first.';
+            }
+            if (allClothesLoaded(m) || canLoadMachineWithBasket(m)) return null;
+
+            if (!state.basket) {
+                if (m.type === 'washer') {
+                    return state.deskQueue.length > 0
+                        ? 'Tap the Reception Desk to pick up a dirty basket!'
+                        : 'Wait for a customer to drop off laundry at the Desk!';
+                }
+                return 'Wash dirty clothes in a Washer first to get wet clothes!';
+            }
+            if (state.basket.unloadingFrom) {
+                const other = MACHINES.find(x => x.id === state.basket.unloadingFrom);
+                return `Finish taking the clothes out of ${other ? other.label : 'the finished machine'} first!`;
+            }
+            if (m.type === 'washer') {
+                if (state.basket.type === 'wet') return 'These clothes are wet! Take them to a Dryer.';
+                if (state.basket.type === 'clean') return 'These clothes are clean & dry! Take them to the Desk.';
+            } else {
+                if (state.basket.type === 'dirty') return 'These clothes are dirty! Put them in a Washer first.';
+                if (state.basket.type === 'clean') return 'These clothes are clean & dry! Take them to the Desk.';
+            }
+            return null;
+        }
+
+        /* =========================================================================
+         * LEVEL PROGRESSION & ARRIVING CUSTOMERS
+         * ========================================================================= */
+        function getCurrentLevelConfig() {
+            return LEVELS[Math.min(LEVELS.length - 1, Math.max(0, state.level - 1))];
+        }
+
+        function resetAllMachines() {
+            for (const m of MACHINES) {
+                m.state = 'empty';
+                m.doorOpen = false;
+                m.drawerOpen = false;
+                m.drawerAnim = 0;
+                m.expectedCount = 0;
+                m.items = [];
+                m.hasDetergent = false;
+                m.hasSoftener = false;
+                m.progress = 0;
+                m.spinAngle = 0;
+            }
+        }
+
+        function startLevel(levelNum) {
+            state.level = levelNum;
+            const cfg = getCurrentLevelConfig();
+
+            state.loadsFinished = 0;
+            state.loadsSpawned = 0;
+            state.spawnTimer = 0.75; // First customer arrives right away
+            state.deskQueue = [];
+            state.customers = [];
+            state.pendingReturns = [];
+            state.basket = null;
+            state.deskSparkles = [];
+            state.levelCompleteDelay = 0;
+            state.levelCompleteOverlay = null;
+            state.selectedTarget = null;
+            state.pendingAction = null;
+
+            resetAllMachines();
+            Sound.stopHum();
+
+            if (state.scene !== 'topdown') {
+                state.scene = 'topdown';
+                state.activeMachine = null;
+            }
+
+            patrick.x = 520;
+            patrick.y = 292;
+            patrick.dir = 'down';
+            patrick.path = [];
+
+            const loadWord = cfg.loads === 1 ? '1 load' : `${cfg.loads} loads`;
+            showBanner(`Level ${cfg.level}: Wash & dry ${loadWord} (${cfg.itemsPerLoad} items each)!`, 4.4);
+        }
+
+        function getWaitingCustomerSlot(index) {
+            const slots = [
+                { x: 186, y: 278 },
+                { x: 186, y: 314 },
+                { x: 218, y: 296 },
+                { x: 218, y: 262 }
+            ];
+            return slots[index % slots.length];
+        }
+
+        function spawnDropoffCustomer() {
+            const cfg = getCurrentLevelConfig();
+            const styleIdx = (state.nextCustomerId - 1) % CUSTOMER_STYLES.length;
+            const id = state.nextCustomerId++;
+
+            state.customers.push({
+                id,
+                styleIdx,
+                role: 'dropoff', // 'dropoff' | 'pickup'
+                phase: 'entering', // 'entering' | 'pausing' | 'waiting' | 'celebrating' | 'leaving'
+                x: 103,
+                y: 528,
+                dir: 'up',
+                speed: 122,
+                walkTimer: 0,
+                walkFrame: 0,
+                pauseTimer: 0,
+                carrying: 'dirty', // null | 'dirty' | 'clean'
+                loadData: createDirtyLoad(cfg.itemsPerLoad),
+                waypoints: [
+                    { x: 103, y: 472 },
+                    { x: 216, y: 448 },
+                    { x: 216, y: 278 },
+                    { x: 186, y: 278 }
+                ]
+            });
+
+            state.loadsSpawned += 1;
+            Sound.doorbell();
+        }
+
+        function spawnPickupCustomer(styleIdx) {
+            const waitingCount = state.customers.filter(c => c.role === 'pickup' && c.phase !== 'leaving').length;
+            const slot = getWaitingCustomerSlot(waitingCount);
+            const id = state.nextCustomerId++;
+
+            state.customers.push({
+                id,
+                styleIdx,
+                role: 'pickup',
+                phase: 'entering',
+                x: 103,
+                y: 528,
+                dir: 'up',
+                speed: 112,
+                walkTimer: 0,
+                walkFrame: 0,
+                pauseTimer: 0,
+                carrying: null,
+                loadData: null,
+                waypoints: [
+                    { x: 103, y: 472 },
+                    { x: 216, y: 448 },
+                    { x: 216, y: slot.y },
+                    { x: slot.x, y: slot.y }
+                ]
+            });
+
+            Sound.doorbell();
+        }
+
+        function sendCustomerOut(c) {
+            c.phase = 'leaving';
+            c.waypoints = [
+                { x: 216, y: c.y },
+                { x: 216, y: 448 },
+                { x: 103, y: 472 },
+                { x: 103, y: 544 }
+            ];
+        }
+
+        function updateCustomersAndLevel(dt) {
+            if (state.levelCompleteOverlay) return;
+
+            const cfg = getCurrentLevelConfig();
+
+            // Delayed level complete overlay trigger
+            if (state.levelCompleteDelay > 0) {
+                state.levelCompleteDelay -= dt;
+                if (state.levelCompleteDelay <= 0) {
+                    state.levelCompleteDelay = 0;
+                    state.levelCompleteOverlay = state.level >= LEVELS.length ? 'all' : 'level';
+                    Sound.stopHum();
+                    Sound.levelComplete();
+                    return;
+                }
+            }
+
+            // Spawn arriving drop-off customers for this level
+            if (state.loadsSpawned < cfg.loads) {
+                state.spawnTimer -= dt;
+                if (state.spawnTimer <= 0) {
+                    spawnDropoffCustomer();
+                    state.spawnTimer = cfg.spawnInterval;
+                }
+            }
+
+            // Tick pending customer returns
+            for (let i = state.pendingReturns.length - 1; i >= 0; i--) {
+                state.pendingReturns[i].timer -= dt;
+                if (state.pendingReturns[i].timer <= 0) {
+                    const ret = state.pendingReturns.splice(i, 1)[0];
+                    spawnPickupCustomer(ret.styleIdx);
+                }
+            }
+
+            // Move active customers along waypoints
+            for (let i = state.customers.length - 1; i >= 0; i--) {
+                const c = state.customers[i];
+
+                if (c.waypoints.length > 0) {
+                    const target = c.waypoints[0];
+                    const dx = target.x - c.x;
+                    const dy = target.y - c.y;
+                    const dist = Math.hypot(dx, dy);
+                    const step = c.speed * dt;
+
+                    if (Math.abs(dx) > Math.abs(dy)) c.dir = dx < 0 ? 'left' : 'right';
+                    else if (Math.abs(dy) > 0.1) c.dir = dy < 0 ? 'up' : 'down';
+
+                    if (dist <= step) {
+                        c.x = target.x;
+                        c.y = target.y;
+                        c.waypoints.shift();
+                    } else {
+                        c.x += (dx / dist) * step;
+                        c.y += (dy / dist) * step;
+                    }
+
+                    c.walkTimer += dt;
+                    if (c.walkTimer >= 0.22) {
+                        c.walkTimer = 0;
+                        c.walkFrame = (c.walkFrame + 1) % 2;
+                    }
+
+                    if (c.waypoints.length === 0) {
+                        c.walkFrame = 0;
+                        if (c.phase === 'entering') {
+                            c.dir = 'left';
+                            if (c.role === 'dropoff') {
+                                c.phase = 'pausing';
+                                c.pauseTimer = 0.55;
+                            } else {
+                                c.phase = 'waiting';
+                            }
+                        } else if (c.phase === 'leaving') {
+                            state.customers.splice(i, 1);
+                        }
+                    }
+                } else if (c.phase === 'pausing') {
+                    c.pauseTimer -= dt;
+                    if (c.pauseTimer <= 0) {
+                        if (c.loadData) {
+                            state.deskQueue.push(c.loadData);
+                            c.loadData = null;
+                            c.carrying = null;
+                            Sound.clothDrop();
+                            state.pendingReturns.push({
+                                timer: cfg.returnDelay,
+                                styleIdx: c.styleIdx
+                            });
+                        }
+                        sendCustomerOut(c);
+                    }
+                } else if (c.phase === 'celebrating') {
+                    c.pauseTimer -= dt;
+                    if (c.pauseTimer <= 0) {
+                        sendCustomerOut(c);
+                    }
+                }
+            }
+        }
+
+        function handleDeskInteraction() {
+            state.pendingAction = null;
+
+            if (!state.basket) {
+                if (state.deskQueue.length > 0) {
+                    state.basket = state.deskQueue.shift();
+                    Sound.deskPickup();
+                    showBanner(`Picked up a basket (${state.basket.items.length} items)! Take it to a Washer.`, 3.8);
+                } else {
+                    Sound.softNudge();
+                    const cfg = getCurrentLevelConfig();
+                    if (state.loadsSpawned < cfg.loads) {
+                        showBanner('A customer is on their way with laundry!', 3.2);
+                    } else {
+                        showBanner('No baskets on the desk — check your washers and dryers!', 3.4);
+                    }
+                }
+                return;
+            }
+
+            if (state.basket.unloadingFrom) {
+                const other = MACHINES.find(x => x.id === state.basket.unloadingFrom);
+                Sound.softNudge();
+                showBanner(`Grab the rest of the clothes from ${other ? other.label : 'the machine'} first!`, 3.8);
+                return;
+            }
+
+            if (state.basket.type === 'clean') {
+                state.basket = null;
+                state.loadsFinished += 1;
+                Sound.deskDeliver();
+
+                // Hand cleanly to a waiting customer (or cancel one pending return if finished early)
+                const waitingCust = state.customers.find(c => c.role === 'pickup' && (c.phase === 'waiting' || c.phase === 'entering'));
+                if (waitingCust) {
+                    waitingCust.carrying = 'clean';
+                    waitingCust.phase = 'celebrating';
+                    waitingCust.waypoints = [];
+                    waitingCust.pauseTimer = 0.7;
+                } else if (state.pendingReturns.length > 0) {
+                    state.pendingReturns.shift();
+                }
+
+                for (let i = 0; i < 14; i++) {
+                    state.deskSparkles.push({
+                        x: DESK.x + 86 + (Math.random() - 0.5) * 86,
+                        y: DESK.y + 72 + (Math.random() - 0.5) * 56,
+                        vy: -(24 + Math.random() * 26),
+                        size: 5 + Math.random() * 5,
+                        life: 0,
+                        maxLife: 0.95 + Math.random() * 0.4
+                    });
+                }
+
+                const cfg = getCurrentLevelConfig();
+                if (state.loadsFinished >= cfg.loads) {
+                    showBanner(`Lovely work, Patrick! All loads for Level ${cfg.level} are done!`, 3.5);
+                    state.levelCompleteDelay = 0.95;
+                } else {
+                    showBanner(`Thank you, Patrick! Load ${state.loadsFinished} of ${cfg.loads} is sparkling clean!`, 4.0);
+                }
+                return;
+            }
+
+            if (state.basket.type === 'dirty') {
+                Sound.softNudge();
+                showBanner('Pop these dirty clothes into a Washer first!', 3.6);
+            } else if (state.basket.type === 'wet') {
+                Sound.softNudge();
+                showBanner('These clothes are wet! Take them to a Dryer.', 3.6);
+            }
+        }
+
+        function spawnPopeyeHeart(x, y) {
+            const colors = ['#f4a7be', '#f7b99a', '#f7df8d', '#c7b5ec', '#95d6b7'];
+            state.popeye.hearts.push({
+                x: x + (Math.random() - 0.5) * 34,
+                y: y - 10 + (Math.random() - 0.5) * 16,
+                vx: (Math.random() - 0.5) * 28,
+                vy: -(48 + Math.random() * 36),
+                size: 10 + Math.random() * 7,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 0,
+                maxLife: 1.25 + Math.random() * 0.4
+            });
+        }
+
+        function getBasketItemSlots(count) {
+            if (count <= 1) return [{ x: 152, y: 220, r: 46 }];
+            if (count === 2) return [{ x: 102, y: 220, r: 44 }, { x: 202, y: 220, r: 44 }];
+            if (count === 3) {
+                return [
+                    { x: 152, y: 170, r: 41 },
+                    { x: 96,  y: 266, r: 41 },
+                    { x: 208, y: 266, r: 41 }
+                ];
+            }
+            if (count === 4) {
+                return [
+                    { x: 98,  y: 172, r: 38 },
+                    { x: 206, y: 172, r: 38 },
+                    { x: 98,  y: 266, r: 38 },
+                    { x: 206, y: 266, r: 38 }
+                ];
+            }
+            return [
+                { x: 92,  y: 162, r: 35 },
+                { x: 212, y: 162, r: 35 },
+                { x: 152, y: 216, r: 35 },
+                { x: 92,  y: 272, r: 35 },
+                { x: 212, y: 272, r: 35 }
+            ];
+        }
+
+        function getDrumItemSlots(count) {
+            const cx = UI.doorCenter.x;
+            const cy = UI.doorCenter.y;
+            if (count <= 1) return [{ x: cx, y: cy + 6, r: 38 }];
+            if (count === 2) return [{ x: cx - 34, y: cy + 8, r: 36 }, { x: cx + 34, y: cy + 8, r: 36 }];
+            if (count === 3) {
+                return [
+                    { x: cx,      y: cy - 30, r: 34 },
+                    { x: cx - 38, y: cy + 26, r: 34 },
+                    { x: cx + 38, y: cy + 26, r: 34 }
+                ];
+            }
+            if (count === 4) {
+                return [
+                    { x: cx - 35, y: cy - 28, r: 31 },
+                    { x: cx + 35, y: cy - 28, r: 31 },
+                    { x: cx - 35, y: cy + 30, r: 31 },
+                    { x: cx + 35, y: cy + 30, r: 31 }
+                ];
+            }
+            return [
+                { x: cx,      y: cy - 42, r: 28 },
+                { x: cx - 44, y: cy - 6,  r: 28 },
+                { x: cx + 44, y: cy - 6,  r: 28 },
+                { x: cx - 28, y: cy + 40, r: 28 },
+                { x: cx + 28, y: cy + 40, r: 28 }
+            ];
+        }
+
+        /* =========================================================================
+        /* =========================================================================
+         * POINTER & KEYBOARD INPUT (Rock-solid 960x540 coordinate mapping)
+         * ========================================================================= */
+        function getLogicalPoint(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: ((clientX - rect.left) / rect.width) * LOGICAL_W,
+                y: ((clientY - rect.top) / rect.height) * LOGICAL_H
+            };
+        }
+
+        function hitRect(px, py, r) {
+            return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+        }
+
+        function hitCircle(px, py, cx, cy, r) {
+            return Math.hypot(px - cx, py - cy) <= r;
+        }
+
+        function hitEllipse(px, py, cx, cy, rx, ry) {
+            const nx = (px - cx) / rx;
+            const ny = (py - cy) / ry;
+            return (nx * nx + ny * ny) <= 1;
+        }
+
+        function getNearbyTopDownInteractable() {
+            let best = null;
+            let bestDist = 66;
+            for (const m of MACHINES) {
+                const d = Math.hypot(patrick.x - m.walkX, patrick.y - m.walkY);
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = { type: 'machine', machine: m };
+                }
+            }
+            if (Math.hypot(patrick.x - DESK.walkX, patrick.y - DESK.walkY) < bestDist) {
+                bestDist = Math.hypot(patrick.x - DESK.walkX, patrick.y - DESK.walkY);
+                best = { type: 'desk' };
+            }
+            if (Math.hypot(patrick.x - POPEYE_SPOT.walkX, patrick.y - POPEYE_SPOT.walkY) < bestDist) {
+                best = { type: 'popeye' };
+            }
+            return best;
+        }
+
+        function handlePointerDown(e) {
+            e.preventDefault();
+            Sound.init();
+            if (state.transition.active) return;
+
+            const pt = getLogicalPoint(e.clientX, e.clientY);
+
+            if (hitRect(pt.x, pt.y, UI.soundBtn)) {
+                Sound.enabled = !Sound.enabled;
+                if (Sound.enabled) Sound.woodTap();
+                Sound.syncHum();
+                return;
+            }
+
+            if (state.scene === 'title') {                         // <-- NEW
+                if (hitRect(pt.x, pt.y, UI.startGameBtn)) {        // <-- NEW
+                    startTransition('topdown', null);              // <-- NEW
+                }                                                  // <-- NEW
+                return;                                            // <-- NEW
+            }                                                      // <-- NEW
+
+            if (state.levelCompleteOverlay) {
+                if (state.levelCompleteOverlay === 'level' && hitRect(pt.x, pt.y, UI.nextLevelBtn)) {
+                    Sound.zoomIn();
+                    startLevel(state.level + 1);
+                }
+                return;
+            }
+
+            if (state.scene === 'topdown') {
+                if (hitRect(pt.x, pt.y, UI.exitBtn)) {
+                    startTransition('title', null);
+                    return;
+                }
+                handleTopDownTap(pt.x, pt.y);
+            } else if (state.scene === 'popeye') {
+                if (hitRect(pt.x, pt.y, UI.backBtn)) {
+                    startTransition('topdown', null);
+                    return;
+                }
+                if (hitEllipse(pt.x, pt.y, UI.popeyeHead.cx, UI.popeyeHead.cy, UI.popeyeHead.rx, UI.popeyeHead.ry)) {
+                    state.popeye.isRubbing = true;
+                    state.popeye.pointerId = e.pointerId;
+                    state.popeye.lastX = pt.x;
+                    state.popeye.lastY = pt.y;
+                    state.popeye.cursorX = pt.x;
+                    state.popeye.cursorY = pt.y;
+                    state.popeye.rubEnergy = Math.min(1.0, state.popeye.rubEnergy + 0.55);
+                    spawnPopeyeHeart(pt.x, pt.y - 24);
+                    Sound.popeyeHappy(state.popeye.soundStep++);
+                    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+                } else {
+                    Sound.woodTap();
+                }
+            } else if (state.scene === 'machine') {
+                handleMachinePointerDown(pt.x, pt.y, e.pointerId);
+            }
+        }
+
+        function handleTopDownTap(px, py) {
+            for (const m of MACHINES) {
+                if (hitRect(px, py, m)) {
+                    Sound.woodTap();
+                    state.selectedTarget = m.id;
+                    state.pendingAction = { type: 'machine', machine: m };
+                    state.ripple = null;
+                    if (Math.hypot(patrick.x - m.walkX, patrick.y - m.walkY) < 16) {
+                        patrick.x = m.walkX;
+                        patrick.y = m.walkY;
+                        patrick.dir = m.faceDir;
+                        patrick.path = [];
+                        startTransition('machine', m);
+                    } else {
+                        patrick.path = computePath(patrick.x, patrick.y, m.walkX, m.walkY);
+                    }
+                    return;
+                }
+            }
+
+            if (hitRect(px, py, DESK)) {
+                Sound.woodTap();
+                state.selectedTarget = 'desk';
+                state.pendingAction = { type: 'desk' };
+                state.ripple = null;
+                if (Math.hypot(patrick.x - DESK.walkX, patrick.y - DESK.walkY) < 18) {
+                    patrick.dir = DESK.faceDir;
+                    patrick.path = [];
+                    handleDeskInteraction();
+                } else {
+                    patrick.path = computePath(patrick.x, patrick.y, DESK.walkX, DESK.walkY);
+                }
+                return;
+            }
+
+            if (hitRect(px, py, POPEYE_SPOT.hitRect)) {
+                Sound.woodTap();
+                state.selectedTarget = 'popeye';
+                state.pendingAction = { type: 'popeye' };
+                state.ripple = null;
+                if (Math.hypot(patrick.x - POPEYE_SPOT.walkX, patrick.y - POPEYE_SPOT.walkY) < 18) {
+                    patrick.dir = POPEYE_SPOT.faceDir;
+                    patrick.path = [];
+                    startTransition('popeye', null);
+                } else {
+                    patrick.path = computePath(patrick.x, patrick.y, POPEYE_SPOT.walkX, POPEYE_SPOT.walkY);
+                }
+                return;
+            }
+
+            if (py >= 64) {
+                const target = findNearestWalkable(px, py);
+                Sound.woodTap();
+                state.selectedTarget = null;
+                state.pendingAction = null;
+                state.ripple = { x: target.x, y: target.y, age: 0, maxAge: 0.55 };
+                patrick.path = computePath(patrick.x, patrick.y, target.x, target.y);
+            }
+        }
+
+        function handleMachinePointerDown(px, py, pointerId) {
+            const m = state.activeMachine;
+            if (!m) return;
+
+            if (hitRect(px, py, UI.backBtn)) {
+                startTransition('topdown', null);
+                return;
+            }
+
+            // Wait until short pour animation finishes
+            if (state.pouring) return;
+
+            // START button
+            if (hitRect(px, py, UI.startBtn)) {
+                if (isMachineReadyToStart(m)) {
+                    m.state = 'running';
+                    m.progress = 0;
+                    Sound.startChime();
+                    Sound.syncHum();
+                } else if (m.state !== 'running') {
+                    Sound.softNudge();
+                    state.nudgeTimer = 0.8;
+                }
+                return;
+            }
+
+            // PULL-OUT DISPENSER DRAWER (Washers only — tap directly to slide open/shut)
+            if (m.type === 'washer' && m.state !== 'running') {
+                const drawerHit = m.drawerOpen ? UI.drawerOpenRect : UI.drawerClosedRect;
+                if (hitRect(px, py, drawerHit)) {
+                    m.drawerOpen = !m.drawerOpen;
+                    Sound.drawerSlide(m.drawerOpen);
+                    return;
+                }
+            }
+
+            // DRAG DETERGENT / SOFTENER BOTTLES FROM SHELF
+            if (m.type === 'washer' && (m.state === 'empty' || m.state === 'loading')) {
+                if (hitRect(px, py, UI.detergentSlot)) {
+                    if (m.hasDetergent) {
+                        Sound.woodTap();
+                        return;
+                    }
+                    startBottleDrag('detergent', px, py, pointerId);
+                    return;
+                }
+                if (hitRect(px, py, UI.softenerSlot)) {
+                    if (m.hasSoftener) {
+                        Sound.woodTap();
+                        return;
+                    }
+                    startBottleDrag('softener', px, py, pointerId);
+                    return;
+                }
+            }
+
+            // DRAG CLOTHES FROM LEFT BASKET
+            if (canLoadMachineWithBasket(m) && state.basket) {
+                const slots = getBasketItemSlots(state.basket.items.length);
+                for (let i = state.basket.items.length - 1; i >= 0; i--) {
+                    const s = slots[i];
+                    if (hitCircle(px, py, s.x, s.y, s.r + 8)) {
+                        const item = state.basket.items[i];
+                        state.basket.items.splice(i, 1);
+                        startClothDrag(item, 'basket', px, py, pointerId);
+                        return;
+                    }
+                }
+            }
+
+            // DRAG CLOTHES FROM OPEN DRUM
+            const canPickFromDrum = m.doorOpen && m.items.length > 0 && (
+                canUnloadMachine(m) ||
+                (m.state === 'loading' && (!state.basket || state.basket.type === (m.type === 'washer' ? 'dirty' : 'wet')))
+            );
+            if (canPickFromDrum) {
+                const slots = getDrumItemSlots(m.items.length);
+                for (let i = m.items.length - 1; i >= 0; i--) {
+                    const s = slots[i];
+                    if (hitCircle(px, py, s.x, s.y, s.r + 6)) {
+                        const item = m.items[i];
+                        m.items.splice(i, 1);
+                        startClothDrag(item, 'drum', px, py, pointerId);
+                        return;
+                    }
+                }
+            }
+
+            // TAP MACHINE DOOR DIRECTLY (No Open/Close Door Buttons)
+            if (m.state !== 'running') {
+                const distFromCenter = Math.hypot(px - UI.doorCenter.x, py - UI.doorCenter.y);
+                const tappedClosedDoor = !m.doorOpen && distFromCenter <= UI.doorOuterR + 12;
+                const openFlapHit = { x: 294, y: UI.doorCenter.y - UI.doorOuterR, w: 90, h: UI.doorOuterR * 2 };
+                const tappedOpenDoor = m.doorOpen && (
+                    hitRect(px, py, openFlapHit) ||
+                    (distFromCenter >= UI.doorInnerR - 8 && distFromCenter <= UI.doorOuterR + 12) ||
+                    (m.items.length === 0 && distFromCenter <= UI.doorOuterR + 10)
+                );
+
+                if (tappedClosedDoor || tappedOpenDoor) {
+                    m.doorOpen = !m.doorOpen;
+                    Sound.doorLatch(m.doorOpen);
+                    return;
+                }
+            } else if (hitCircle(px, py, UI.doorCenter.x, UI.doorCenter.y, UI.doorOuterR)) {
+                Sound.softNudge();
+            }
+        }
+
+        function startClothDrag(item, from, x, y, pointerId) {
+            state.drag.active = true;
+            state.drag.pointerId = pointerId;
+            state.drag.kind = 'cloth';
+            state.drag.item = item;
+            state.drag.from = from;
+            state.drag.x = x;
+            state.drag.y = y;
+            updateDragHoverTargets(x, y);
+            Sound.clothPickup();
+            try { canvas.setPointerCapture(pointerId); } catch (_) {}
+        }
+
+        function startBottleDrag(bottleKind, x, y, pointerId) {
+            state.drag.active = true;
+            state.drag.pointerId = pointerId;
+            state.drag.kind = 'bottle';
+            state.drag.item = bottleKind;
+            state.drag.from = 'shelf';
+            state.drag.x = x;
+            state.drag.y = y;
+            updateDragHoverTargets(x, y);
+            Sound.clothPickup();
+            try { canvas.setPointerCapture(pointerId); } catch (_) {}
+        }
+
+        function updateDragHoverTargets(px, py) {
+            const m = state.activeMachine;
+            state.drag.overDrum = false;
+            state.drag.overBasket = false;
+            state.drag.overDetSlot = false;
+            state.drag.overSofSlot = false;
+            if (!m || !state.drag.active) return;
+
+            if (state.drag.kind === 'cloth') {
+                state.drag.overDrum = m.doorOpen && hitCircle(px, py, UI.doorCenter.x, UI.doorCenter.y, UI.doorOuterR + 16);
+                state.drag.overBasket = hitRect(px, py, UI.leftZone);
+            } else if (state.drag.kind === 'bottle' && m.drawerOpen) {
+                const detZone = { x: UI.detCompartment.x - 16, y: UI.detCompartment.y - 16, w: UI.detCompartment.w + 20, h: UI.detCompartment.h + 30 };
+                const sofZone = { x: UI.sofCompartment.x - 4,  y: UI.sofCompartment.y - 16, w: UI.sofCompartment.w + 20, h: UI.sofCompartment.h + 30 };
+                state.drag.overDetSlot = state.drag.item === 'detergent' && hitRect(px, py, detZone);
+                state.drag.overSofSlot = state.drag.item === 'softener'  && hitRect(px, py, sofZone);
+            }
+        }
+
+        function startPourAnimation(bottleKind) {
+            const isSoft = bottleKind === 'softener';
+            const targetX = isSoft ? 430 : 358;
+            const targetY = 166;
+            state.pouring = {
+                kind: bottleKind,
+                timer: 0,
+                duration: 0.72,
+                x: targetX + 26,
+                y: targetY - 46,
+                targetX,
+                targetY,
+                color: isSoft ? '#f2a8c4' : '#7ec2ef',
+                drops: []
+            };
+            Sound.liquidPour(isSoft);
+        }
+
+        function handlePointerMove(e) {
+            const pt = getLogicalPoint(e.clientX, e.clientY);
+
+            if (state.drag.active && e.pointerId === state.drag.pointerId) {
+                state.drag.x = pt.x;
+                state.drag.y = pt.y;
+                updateDragHoverTargets(pt.x, pt.y);
+                return;
+            }
+
+            if (state.scene === 'popeye' && state.popeye.isRubbing && e.pointerId === state.popeye.pointerId) {
+                state.popeye.cursorX = pt.x;
+                state.popeye.cursorY = pt.y;
+                if (hitEllipse(pt.x, pt.y, UI.popeyeHead.cx, UI.popeyeHead.cy, UI.popeyeHead.rx + 28, UI.popeyeHead.ry + 24)) {
+                    const moved = Math.hypot(pt.x - state.popeye.lastX, pt.y - state.popeye.lastY);
+                    if (moved > 3) {
+                        state.popeye.rubEnergy = Math.min(1.0, state.popeye.rubEnergy + moved * 0.012);
+                        state.popeye.rubSoundAccum += moved;
+                        if (state.popeye.rubSoundAccum > 42) {
+                            state.popeye.rubSoundAccum = 0;
+                            spawnPopeyeHeart(pt.x, pt.y - 26);
+                            Sound.popeyeHappy(state.popeye.soundStep++);
+                        }
+                    }
+                }
+                state.popeye.lastX = pt.x;
+                state.popeye.lastY = pt.y;
+                return;
+            }
+
+            // Desktop hover highlights
+            // Desktop hover highlights
+            state.hoverTarget = null;
+            if (hitRect(pt.x, pt.y, UI.soundBtn)) { state.hoverTarget = 'sound'; return; }
+            if (state.scene === 'title') {                                                       // <-- NEW
+                if (hitRect(pt.x, pt.y, UI.startGameBtn)) state.hoverTarget = 'startGame';       // <-- NEW
+                return;                                                                          // <-- NEW
+            }                                                                                    // <-- NEW
+            if (state.levelCompleteOverlay) {
+                if (state.levelCompleteOverlay === 'level' && hitRect(pt.x, pt.y, UI.nextLevelBtn)) {
+                    state.hoverTarget = 'nextLevel';
+                }
+                return;
+            }
+            if ((state.scene === 'popeye' || state.scene === 'machine') && hitRect(pt.x, pt.y, UI.backBtn)) {
+                state.hoverTarget = 'back';
+                return;
+            }
+            if (state.scene === 'topdown') {
+                if (hitRect(pt.x, pt.y, UI.exitBtn)) { state.hoverTarget = 'exit'; return; }
+                for (const m of MACHINES) {
+                    if (hitRect(pt.x, pt.y, m)) { state.hoverTarget = m.id; return; }
+                }
+                if (hitRect(pt.x, pt.y, DESK)) state.hoverTarget = 'desk';
+                else if (hitRect(pt.x, pt.y, POPEYE_SPOT.hitRect)) state.hoverTarget = 'popeye';
+            } else if (state.scene === 'machine' && state.activeMachine) {
+                const m = state.activeMachine;
+                if (hitRect(pt.x, pt.y, UI.startBtn) && isMachineReadyToStart(m)) state.hoverTarget = 'start';
+                else if (m.type === 'washer' && hitRect(pt.x, pt.y, UI.detergentSlot)) state.hoverTarget = 'detergent';
+                else if (m.type === 'washer' && hitRect(pt.x, pt.y, UI.softenerSlot)) state.hoverTarget = 'softener';
+                else if (m.type === 'washer' && hitRect(pt.x, pt.y, m.drawerOpen ? UI.drawerOpenRect : UI.drawerClosedRect)) state.hoverTarget = 'drawer';
+            }
+        }
+
+        function handlePointerUpOrCancel(e) {
+            if (state.popeye.isRubbing && e.pointerId === state.popeye.pointerId) {
+                state.popeye.isRubbing = false;
+                state.popeye.pointerId = null;
+                try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+            }
+
+            if (state.drag.active && e.pointerId === state.drag.pointerId) {
+                const pt = getLogicalPoint(e.clientX, e.clientY);
+                updateDragHoverTargets(pt.x, pt.y);
+                finishDragDrop();
+                try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+            }
+        }
+
+        function finishDragDrop() {
+            const m = state.activeMachine;
+            const { kind, item, from, overDrum, overBasket, overDetSlot, overSofSlot, x: dropX, y: dropY } = state.drag;
+
+            state.drag.active = false;
+            state.drag.pointerId = null;
+            state.drag.kind = null;
+            state.drag.item = null;
+            state.drag.from = null;
+            state.drag.overDrum = false;
+            state.drag.overBasket = false;
+            state.drag.overDetSlot = false;
+            state.drag.overSofSlot = false;
+
+            if (!m || !item) return;
+
+            // Bottle dropped over its matching open compartment
+            if (kind === 'bottle') {
+                if ((item === 'detergent' && overDetSlot) || (item === 'softener' && overSofSlot)) {
+                    startPourAnimation(item);
+                } else {
+                    Sound.softNudge();
+                    if (!m.drawerOpen && hitRect(dropX, dropY, UI.drawerOpenRect)) {
+                        state.nudgeTimer = 0.8;
+                    }
+                }
+                return;
+            }
+
+            // Cloth dropped
+            if (from === 'basket') {
+                const targetTotal = m.expectedCount > 0 ? m.expectedCount : (state.basket ? state.basket.totalCount : 3);
+                if (overDrum && m.doorOpen && (m.state === 'empty' || m.state === 'loading') && m.items.length < targetTotal) {
+                    if (m.expectedCount === 0) m.expectedCount = targetTotal;
+                    m.items.push(item);
+                    m.state = 'loading';
+                    Sound.clothDrop();
+                    if (state.basket && state.basket.items.length === 0) state.basket = null;
+                } else {
+                    if (!state.basket) {
+                        state.basket = { type: item.state, totalCount: targetTotal, unloadingFrom: null, items: [] };
+                    }
+                    state.basket.items.push(item);
+                    Sound.softNudge();
+                    if (!m.doorOpen && hitCircle(dropX, dropY, UI.doorCenter.x, UI.doorCenter.y, UI.doorOuterR + 14)) {
+                        state.nudgeTimer = 0.8;
+                    }
+                }
+            } else if (from === 'drum') {
+                if (overBasket && (m.state === 'done' || m.state === 'loading')) {
+                    const expectedType = m.state === 'done'
+                        ? (m.type === 'washer' ? 'wet' : 'clean')
+                        : (m.type === 'washer' ? 'dirty' : 'wet');
+
+                    if (!state.basket) {
+                        state.basket = {
+                            type: expectedType,
+                            totalCount: m.expectedCount || (m.items.length + 1),
+                            unloadingFrom: m.state === 'done' ? m.id : null,
+                            items: []
+                        };
+                    }
+                    state.basket.items.push(item);
+                    Sound.clothDrop();
+
+                    if (m.items.length === 0) {
+                        if (m.state === 'done') {
+                            m.state = 'empty';
+                            m.expectedCount = 0;
+                            m.hasDetergent = false;
+                            m.hasSoftener = false;
+                            m.drawerOpen = false;
+                            m.progress = 0;
+                            if (state.basket) state.basket.unloadingFrom = null;
+                            Sound.machineDone();
+                        } else if (m.state === 'loading') {
+                            m.state = 'empty';
+                            m.expectedCount = 0;
+                        }
+                    }
+                } else {
+                    m.items.push(item);
+                    Sound.softNudge();
+                }
+            }
+        }
+
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        canvas.addEventListener('pointermove', handlePointerMove);
+        canvas.addEventListener('pointerup', handlePointerUpOrCancel);
+        canvas.addEventListener('pointercancel', handlePointerUpOrCancel);
+        canvas.addEventListener('pointerleave', () => {
+            if (!state.drag.active) state.hoverTarget = null;
+        });
+
+        window.addEventListener('keydown', (e) => {
+            const code = e.code;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(code)) {
+                e.preventDefault();
+            }
+            state.keys[code] = true;
+            if (state.transition.active) return;
+
+            if ((code === 'Escape' || code === 'Backspace') && (state.scene === 'machine' || state.scene === 'popeye')) {
+                startTransition('topdown', null);
+                return;
+            }
+
+            if ((code === 'Space' || code === 'Enter') && state.scene === 'title') {             // <-- NEW
+                Sound.init();                                                                    // <-- NEW
+                startTransition('topdown', null);                                                // <-- NEW
+                return;                                                                          // <-- NEW
+            }                                                                                    // <-- NEW
+
+            if ((code === 'Space' || code === 'Enter') && state.scene === 'topdown') {
+                Sound.init();
+                const near = getNearbyTopDownInteractable();
+                if (!near) return;
+                patrick.path = [];
+                if (near.type === 'machine') {
+                    patrick.dir = near.machine.faceDir;
+                    startTransition('machine', near.machine);
+                } else if (near.type === 'desk') {
+                    patrick.dir = DESK.faceDir;
+                    handleDeskInteraction();
+                } else if (near.type === 'popeye') {
+                    patrick.dir = POPEYE_SPOT.faceDir;
+                    startTransition('popeye', null);
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            state.keys[e.code] = false;
+        });
+
+        /* =========================================================================
+         * MAIN UPDATE LOOP
+         * ========================================================================= */
+        function updateMachines(dt) {
+            for (const m of MACHINES) {
+                const targetAnim = m.drawerOpen ? 1 : 0;
+                m.drawerAnim += (targetAnim - m.drawerAnim) * Math.min(1, dt * 12);
+
+                if (m.state === 'running') {
+                    m.progress += dt / CYCLE_DURATION;
+                    m.spinAngle += dt * (m.type === 'washer' ? 4.4 : 3.6);
+
+                    if (m.progress >= 1) {
+                        m.progress = 1;
+                        m.state = 'done';
+                        const nextItemState = m.type === 'washer' ? 'wet' : 'clean';
+                        for (const it of m.items) it.state = nextItemState;
+                        Sound.machineDone();
+                        Sound.syncHum();
+                    }
+                }
+            }
+        }
+
+        function updatePouring(dt) {
+            const p = state.pouring;
+            if (!p) return;
+
+            p.timer += dt;
+            if (p.timer < p.duration * 0.8 && Math.random() < 0.6) {
+                p.drops.push({
+                    x: p.targetX + (Math.random() - 0.5) * 14,
+                    y: p.targetY + (Math.random() - 0.5) * 6,
+                    vx: (Math.random() - 0.5) * 40,
+                    vy: -(24 + Math.random() * 24),
+                    r: 3 + Math.random() * 3,
+                    life: 0,
+                    maxLife: 0.35
+                });
+            }
+
+            for (let i = p.drops.length - 1; i >= 0; i--) {
+                const d = p.drops[i];
+                d.life += dt;
+                d.x += d.vx * dt;
+                d.y += d.vy * dt;
+                d.vy += 120 * dt;
+                if (d.life >= d.maxLife) p.drops.splice(i, 1);
+            }
+
+            if (p.timer >= p.duration) {
+                const m = state.activeMachine;
+                if (m) {
+                    if (p.kind === 'detergent') m.hasDetergent = true;
+                    if (p.kind === 'softener') m.hasSoftener = true;
+                }
+                state.pouring = null;
+            }
+        }
+
+        function updatePopeye(dt) {
+            const p = state.popeye;
+            p.rubEnergy = Math.max(0, p.rubEnergy - dt * (p.isRubbing ? 0.35 : 0.95));
+            p.tailPhase += dt * (4.2 + p.rubEnergy * 11.5);
+
+            for (let i = p.hearts.length - 1; i >= 0; i--) {
+                const h = p.hearts[i];
+                h.life += dt;
+                if (h.life >= h.maxLife) {
+                    p.hearts.splice(i, 1);
+                } else {
+                    h.x += h.vx * dt + Math.sin(state.time * 4 + i) * 10 * dt;
+                    h.y += h.vy * dt;
+                }
+            }
+        }
+
+        function updatePatrick(dt) {
+            if (state.scene !== 'topdown' || state.transition.active) {
+                patrick.isMoving = false;
+                return;
+            }
+
+            let kx = 0, ky = 0;
+            if (state.keys['ArrowLeft'] || state.keys['KeyA']) kx -= 1;
+            if (state.keys['ArrowRight'] || state.keys['KeyD']) kx += 1;
+            if (state.keys['ArrowUp'] || state.keys['KeyW']) ky -= 1;
+            if (state.keys['ArrowDown'] || state.keys['KeyS']) ky += 1;
+
+            if (kx !== 0 || ky !== 0) {
+                patrick.path = [];
+                state.selectedTarget = null;
+                state.pendingAction = null;
+
+                const len = Math.hypot(kx, ky);
+                const vx = (kx / len) * patrick.speed * dt;
+                const vy = (ky / len) * patrick.speed * dt;
+
+                if (Math.abs(kx) > Math.abs(ky)) patrick.dir = kx < 0 ? 'left' : 'right';
+                else patrick.dir = ky < 0 ? 'up' : 'down';
+
+                let moved = false;
+                if (isPointWalkable(patrick.x + vx, patrick.y, 13)) { patrick.x += vx; moved = true; }
+                if (isPointWalkable(patrick.x, patrick.y + vy, 13)) { patrick.y += vy; moved = true; }
+                patrick.isMoving = moved;
+            } else if (patrick.path.length > 0) {
+                const target = patrick.path[0];
+                const dx = target.x - patrick.x;
+                const dy = target.y - patrick.y;
+                const dist = Math.hypot(dx, dy);
+                const step = patrick.speed * dt;
+
+                if (Math.abs(dx) > Math.abs(dy)) patrick.dir = dx < 0 ? 'left' : 'right';
+                else if (Math.abs(dy) > 0.1) patrick.dir = dy < 0 ? 'up' : 'down';
+
+                if (dist <= step) {
+                    patrick.x = target.x;
+                    patrick.y = target.y;
+                    patrick.path.shift();
+                } else {
+                    patrick.x += (dx / dist) * step;
+                    patrick.y += (dy / dist) * step;
+                }
+                patrick.isMoving = true;
+
+                if (patrick.path.length === 0) {
+                    patrick.isMoving = false;
+                    if (state.pendingAction) {
+                        const act = state.pendingAction;
+                        state.pendingAction = null;
+                        if (act.type === 'machine') {
+                            patrick.dir = act.machine.faceDir;
+                            startTransition('machine', act.machine);
+                        } else if (act.type === 'desk') {
+                            patrick.dir = DESK.faceDir;
+                            handleDeskInteraction();
+                        } else if (act.type === 'popeye') {
+                            patrick.dir = POPEYE_SPOT.faceDir;
+                            startTransition('popeye', null);
+                        }
+                    }
+                }
+            } else {
+                patrick.isMoving = false;
+            }
+
+            if (patrick.isMoving) {
+                patrick.walkTimer += dt;
+                if (patrick.walkTimer >= 0.18) {
+                    patrick.walkTimer = 0;
+                    patrick.walkFrame = (patrick.walkFrame + 1) % 2;
+                    patrick.stepToggle = !patrick.stepToggle;
+                    Sound.footstep(patrick.stepToggle);
+                }
+            } else {
+                patrick.walkTimer = 0;
+                patrick.walkFrame = 0;
+            }
+        }
+        function update(dt) {
+            state.time += dt;
+            updateTransition(dt);
+            if (state.scene === 'title') return;
+            updateMachines(dt);
+            updateCustomersAndLevel(dt);
+            updatePouring(dt);
+            updatePopeye(dt);
+            updatePatrick(dt);
+            if (state.nudgeTimer > 0) state.nudgeTimer = Math.max(0, state.nudgeTimer - dt);
+            if (state.ripple) {
+                state.ripple.age += dt;
+                if (state.ripple.age >= state.ripple.maxAge) state.ripple = null;
+            }
+            if (state.banner) {
+                state.banner.timer += dt;
+                if (state.banner.timer >= state.banner.maxTimer) state.banner = null;
+            }
+            for (let i = state.deskSparkles.length - 1; i >= 0; i--) {
+                const s = state.deskSparkles[i];
+                s.life += dt;
+                s.y += s.vy * dt;
+                if (s.life >= s.maxLife) state.deskSparkles.splice(i, 1);
+            }
+        }
+
+        /* =========================================================================
+         * DRAWING PRIMITIVES
+         * ========================================================================= */
+        function fillRoundRect(x, y, w, h, r, fill, stroke = null, lineWidth = 2) {
+            const rad = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + rad, y);
+            ctx.lineTo(x + w - rad, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+            ctx.lineTo(x + w, y + h - rad);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+            ctx.lineTo(x + rad, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+            ctx.lineTo(x, y + rad);
+            ctx.quadraticCurveTo(x, y, x + rad, y);
+            ctx.closePath();
+            if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+            if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth; ctx.stroke(); }
+        }
+
+        function drawHeart(cx, cy, size, color, alpha = 1) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.translate(cx, cy);
+            ctx.fillStyle = color;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            const s = size * 0.55;
+            ctx.moveTo(0, s * 0.9);
+            ctx.bezierCurveTo(-s * 1.4, s * 0.1, -s * 1.4, -s * 1.0, 0, -s * 0.35);
+            ctx.bezierCurveTo(s * 1.4, -s * 1.0, s * 1.4, s * 0.1, 0, s * 0.9);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawSparkle(cx, cy, r, color = '#fff8c9') {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(0, -r);
+            ctx.quadraticCurveTo(r * 0.22, -r * 0.22, r, 0);
+            ctx.quadraticCurveTo(r * 0.22, r * 0.22, 0, r);
+            ctx.quadraticCurveTo(-r * 0.22, r * 0.22, -r, 0);
+            ctx.quadraticCurveTo(-r * 0.22, -r * 0.22, 0, -r);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawWrappedText(text, cx, startY, maxW, lineH) {
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+            for (const word of words) {
+                const test = current ? current + ' ' + word : word;
+                if (ctx.measureText(test).width > maxW && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            }
+            if (current) lines.push(current);
+            lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
+        }
+
+        function drawSoundToggle() {
+            const b = UI.soundBtn;
+            fillRoundRect(b.x, b.y, b.w, b.h, 8, state.hoverTarget === 'sound' ? '#ffffff' : PALETTE.cream, PALETTE.ink, 2.2);
+
+            const sx = b.x + 14;
+            const sy = b.y + 11;
+            ctx.fillStyle = Sound.enabled ? PALETTE.wallBannerDark : '#9aa5a1';
+            ctx.fillRect(sx, sy + 4, 5, 8);
+            ctx.beginPath();
+            ctx.moveTo(sx + 5, sy + 4);
+            ctx.lineTo(sx + 13, sy - 1);
+            ctx.lineTo(sx + 13, sy + 17);
+            ctx.lineTo(sx + 5, sy + 12);
+            ctx.closePath();
+            ctx.fill();
+
+            if (Sound.enabled) {
+                ctx.strokeStyle = PALETTE.wallBannerDark;
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                ctx.arc(sx + 15, sy + 8, 5, -0.7, 0.7);
+                ctx.stroke();
+            } else {
+                ctx.strokeStyle = '#c87872';
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(sx + 16, sy + 3); ctx.lineTo(sx + 24, sy + 13);
+                ctx.moveTo(sx + 24, sy + 3); ctx.lineTo(sx + 16, sy + 13);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 13px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(Sound.enabled ? 'ON' : 'OFF', b.x + 48, b.y + b.h / 2 + 1);
+        }
+
+        function drawBackButton() {
+            const b = UI.backBtn;
+            fillRoundRect(b.x, b.y, b.w, b.h, 9, state.hoverTarget === 'back' ? '#ffffff' : PALETTE.cream, PALETTE.ink, 2.5);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 15px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('← BACK TO SHOP', b.x + b.w / 2, b.y + b.h / 2 + 1);
+        }
+
+        /* =========================================================================
+         * 7 DISTINCT CLOTHING ITEMS (T-shirt, Trousers, Socks, Jumper, Shorts, Dress, Towel)
+         * ========================================================================= */
+        function drawClothingItem(item, cx, cy, scale = 1.0, showShadow = false) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(scale, scale);
+
+            if (showShadow) {
+                ctx.fillStyle = 'rgba(49, 64, 59, 0.22)';
+                ctx.beginPath();
+                ctx.ellipse(3, 27, 26, 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const cond = item.state;
+            const fillCol = item.fill || '#fae08c';
+            const trimCol = item.trim || '#d4b054';
+
+            ctx.fillStyle = fillCol;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.5;
+            ctx.lineJoin = 'round';
+
+            if (item.id === 'tshirt') {
+                ctx.beginPath();
+                ctx.moveTo(-13, -25); ctx.quadraticCurveTo(0, -17, 13, -25);
+                ctx.lineTo(32, -14); ctx.lineTo(25, 0); ctx.lineTo(18, -4);
+                ctx.lineTo(18, 26); ctx.lineTo(-18, 26); ctx.lineTo(-18, -4);
+                ctx.lineTo(-25, 0); ctx.lineTo(-32, -14); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = trimCol;
+                ctx.fillRect(-16, 2, 32, 7);
+            } else if (item.id === 'jumper') {
+                ctx.beginPath();
+                ctx.moveTo(-12, -25); ctx.quadraticCurveTo(0, -19, 12, -25);
+                ctx.lineTo(24, -18); ctx.lineTo(34, 14); ctx.lineTo(24, 18);
+                ctx.lineTo(18, -2); ctx.lineTo(18, 26); ctx.lineTo(-18, 26);
+                ctx.lineTo(-18, -2); ctx.lineTo(-24, 18); ctx.lineTo(-34, 14);
+                ctx.lineTo(-24, -18); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = trimCol;
+                ctx.fillRect(-17, 19, 34, 6);
+                ctx.beginPath();
+                ctx.ellipse(0, -22, 11, 4, 0, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
+            } else if (item.id === 'trousers') {
+                ctx.beginPath();
+                ctx.moveTo(-18, -27); ctx.lineTo(18, -27); ctx.lineTo(22, 27);
+                ctx.lineTo(5, 27); ctx.lineTo(0, -2); ctx.lineTo(-5, 27);
+                ctx.lineTo(-22, 27); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = trimCol;
+                ctx.fillRect(-17, -26, 34, 7);
+                ctx.fillStyle = PALETTE.cream;
+                ctx.beginPath();
+                ctx.arc(0, -22.5, 2.3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (item.id === 'shorts') {
+                ctx.beginPath();
+                ctx.moveTo(-20, -20); ctx.lineTo(20, -20); ctx.lineTo(24, 16);
+                ctx.lineTo(5, 16); ctx.lineTo(0, 2); ctx.lineTo(-5, 16);
+                ctx.lineTo(-24, 16); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = trimCol;
+                ctx.fillRect(-19, -19, 38, 7);
+                ctx.strokeStyle = PALETTE.cream;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-4, -15); ctx.lineTo(-6, -8);
+                ctx.moveTo(4, -15); ctx.lineTo(6, -8);
+                ctx.stroke();
+            } else if (item.id === 'dress') {
+                ctx.beginPath();
+                ctx.moveTo(-11, -26); ctx.quadraticCurveTo(0, -19, 11, -26);
+                ctx.lineTo(18, -20); ctx.lineTo(14, -6); ctx.lineTo(28, 25);
+                ctx.quadraticCurveTo(0, 30, -28, 25); ctx.lineTo(-14, -6);
+                ctx.lineTo(-18, -20); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = trimCol;
+                ctx.fillRect(-14, -6, 28, 6);
+            } else if (item.id === 'towel') {
+                fillRoundRect(-24, -20, 48, 40, 7, fillCol, PALETTE.ink, 2.5);
+                ctx.fillStyle = trimCol;
+                ctx.fillRect(-23, -8, 46, 5);
+                ctx.fillRect(-23, 8, 46, 5);
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 1.6;
+                for (let fx = -18; fx <= 18; fx += 6) {
+                    ctx.beginPath(); ctx.moveTo(fx, 20); ctx.lineTo(fx, 25); ctx.stroke();
+                }
+            } else if (item.id === 'socks') {
+                const drawOneSock = (ox, oy, rot, col) => {
+                    ctx.save();
+                    ctx.translate(ox, oy);
+                    ctx.rotate(rot);
+                    ctx.fillStyle = col;
+                    ctx.strokeStyle = PALETTE.ink;
+                    ctx.lineWidth = 2.3;
+                    ctx.beginPath();
+                    ctx.moveTo(-8, -21); ctx.lineTo(7, -21); ctx.lineTo(7, 4);
+                    ctx.quadraticCurveTo(7, 10, 14, 12);
+                    ctx.quadraticCurveTo(20, 14, 18, 21);
+                    ctx.quadraticCurveTo(16, 25, 6, 23);
+                    ctx.lineTo(-6, 17);
+                    ctx.quadraticCurveTo(-10, 13, -8, 5);
+                    ctx.closePath();
+                    ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-7, -16, 13, 3.5);
+                    ctx.fillRect(-7, -10, 13, 3);
+                    ctx.restore();
+                };
+                drawOneSock(-12, -1, -0.14, fillCol);
+                drawOneSock(10, 3, 0.14, trimCol);
+            }
+
+            if (cond === 'dirty') {
+                ctx.fillStyle = 'rgba(130, 92, 56, 0.72)';
+                ctx.beginPath(); ctx.ellipse(-7, 5, 6.5, 4.2, 0.3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(9, -6, 5.2, 3.8, -0.4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(5, 13, 4.2, 2.8, 0.2, 0, Math.PI * 2); ctx.fill();
+            } else if (cond === 'wet') {
+                for (const d of [{ x: -11, y: -6 }, { x: 11, y: 4 }, { x: -2, y: 14 }]) {
+                    ctx.fillStyle = '#7ec8f7';
+                    ctx.strokeStyle = '#3d7eb0';
+                    ctx.lineWidth = 1.4;
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y - 6);
+                    ctx.quadraticCurveTo(d.x + 5, d.y + 1, d.x, d.y + 5);
+                    ctx.quadraticCurveTo(d.x - 5, d.y + 1, d.x, d.y - 6);
+                    ctx.closePath();
+                    ctx.fill(); ctx.stroke();
+                }
+            } else if (cond === 'clean') {
+                const pulse = 0.85 + Math.sin(state.time * 4.5) * 0.2;
+                drawSparkle(-17, -15, 6.8 * pulse, '#fffdf0');
+                drawSparkle(18, 10, 5.8 * pulse, '#d6f5e3');
+                drawSparkle(13, -17, 4.5 * pulse, '#fff3b0');
+            }
+
+            ctx.restore();
+        }
+
+        /* =========================================================================
+         * VIEW 1: TOP-DOWN LAUNDRETTE
+         * ========================================================================= */
+        function drawTopDownHeader() {
+            const cfg = getCurrentLevelConfig();
+            ctx.fillStyle = PALETTE.wallBanner;
+            ctx.fillRect(0, 0, LOGICAL_W, 64);
+            ctx.fillStyle = PALETTE.wallBannerDark;
+            ctx.fillRect(0, 60, LOGICAL_W, 5);
+
+            // Shop Title Pill
+            fillRoundRect(12, 12, 214, 38, 10, PALETTE.cream, PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.washerBody;
+            ctx.strokeStyle = PALETTE.washerAccent;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.arc(30, 31, 7, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 15px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("Patrick's Laundrette", 43, 32);
+
+            // Level Pill
+            fillRoundRect(236, 12, 120, 38, 10, PALETTE.lavenderPale, PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 14.5px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Level ${cfg.level} / ${LEVELS.length}`, 296, 32);
+
+            // Loads Progress Pill
+            fillRoundRect(366, 12, 134, 38, 10, PALETTE.greenPale, PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 14.5px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Loads: ${state.loadsFinished} / ${cfg.loads}`, 433, 32);
+
+            // Carrying Pill
+            let carryText = 'Hands Free';
+            let pillBg = PALETTE.cream;
+            let dotCol = '#9cb0a8';
+            if (state.basket) {
+                const n = state.basket.items.length;
+                if (state.basket.type === 'dirty') {
+                    carryText = `Carrying: Dirty Basket (${n})`;
+                    pillBg = PALETTE.amberPale;
+                    dotCol = '#d89b44';
+                } else if (state.basket.type === 'wet') {
+                    carryText = `Carrying: Wet Basket (${n})`;
+                    pillBg = PALETTE.bluePale;
+                    dotCol = '#5a99cf';
+                } else if (state.basket.type === 'clean') {
+                    carryText = `Carrying: Clean & Dry (${n})`;
+                    pillBg = PALETTE.greenPale;
+                    dotCol = '#4ba373';
+                }
+            }
+            fillRoundRect(510, 12, 244, 38, 10, pillBg, PALETTE.ink, 2.2);
+            ctx.fillStyle = dotCol;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.arc(529, 31, 7, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 13px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(carryText, 544, 32);
+
+            // Exit Button (back to Start Screen)
+            const eb = UI.exitBtn;
+            fillRoundRect(eb.x, eb.y, eb.w, eb.h, 8, state.hoverTarget === 'exit' ? '#ffffff' : '#f7e6e4', PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 13.5px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('EXIT', eb.x + eb.w / 2, eb.y + eb.h / 2 + 1);
+
+            drawSoundToggle();
+
+        }
+
+        function drawTopDownRoom() {
+            const tile = 32;
+            for (let y = 64; y < LOGICAL_H - 22; y += tile) {
+                for (let x = 20; x < LOGICAL_W - 20; x += tile) {
+                    const even = ((Math.floor(x / tile) + Math.floor(y / tile)) % 2) === 0;
+                    ctx.fillStyle = even ? PALETTE.floorA : PALETTE.floorB;
+                    ctx.fillRect(x, y, tile, tile);
+                }
+            }
+
+            ctx.fillStyle = PALETTE.wallCream;
+            ctx.fillRect(0, 64, 20, LOGICAL_H - 64);
+            ctx.fillRect(LOGICAL_W - 20, 64, 20, LOGICAL_H - 64);
+            ctx.fillRect(0, LOGICAL_H - 22, LOGICAL_W, 22);
+
+            ctx.fillStyle = PALETTE.wallTrim;
+            ctx.fillRect(16, 64, 5, LOGICAL_H - 82);
+            ctx.fillRect(LOGICAL_W - 21, 64, 5, LOGICAL_H - 82);
+            ctx.fillRect(16, LOGICAL_H - 24, LOGICAL_W - 32, 5);
+
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.08)';
+            ctx.fillRect(21, 65, LOGICAL_W - 42, 8);
+
+            drawTopDownHeader();
+            drawPottedPlant(PLANT.cx, PLANT.cy);
+            drawEntrance();
+
+            if (state.ripple) {
+                const t = state.ripple.age / state.ripple.maxAge;
+                const rad = 8 + t * 22;
+                ctx.strokeStyle = `rgba(92, 134, 118, ${(1 - t) * 0.65})`;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.ellipse(state.ripple.x, state.ripple.y, rad, rad * 0.62, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        function drawPottedPlant(cx, cy) {
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.14)';
+            ctx.beginPath(); ctx.ellipse(cx, cy + 16, 20, 9, 0, 0, Math.PI * 2); ctx.fill();
+
+            fillRoundRect(cx - 15, cy - 2, 30, 21, 4, '#d99b76', PALETTE.ink, 2.2);
+            fillRoundRect(cx - 17, cy - 6, 34, 7, 3, '#e7b18f', PALETTE.ink, 2);
+
+            const leaves = [
+                { x: cx - 11, y: cy - 12, r: 9, c: '#6aa484' },
+                { x: cx + 11, y: cy - 12, r: 9, c: '#6aa484' },
+                { x: cx - 5,  y: cy - 20, r: 9, c: '#86be9d' },
+                { x: cx + 6,  y: cy - 19, r: 8, c: '#7cb593' },
+                { x: cx,      y: cy - 10, r: 9, c: '#76b08e' }
+            ];
+            for (const l of leaves) {
+                ctx.fillStyle = l.c;
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(l.x, l.y, l.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            }
+        }
+
+        function drawEntrance() {
+            const e = ENTRANCE;
+            fillRoundRect(e.matX, e.matY, e.matW, e.matH, 6, '#ccb28c', '#8c7250', 2.4);
+            ctx.strokeStyle = '#efe2cc';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(e.matX + 6, e.matY + 6, e.matW - 12, e.matH - 12);
+
+            ctx.fillStyle = '#5c4932';
+            ctx.font = '900 13px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('WELCOME', e.matX + e.matW / 2, e.matY + e.matH / 2 + 1);
+
+            ctx.fillStyle = '#c9e5ec';
+            ctx.fillRect(e.doorX, e.doorY, e.doorW, e.doorH);
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.2;
+            ctx.strokeRect(e.doorX, e.doorY, e.doorW, e.doorH);
+
+            ctx.fillStyle = PALETTE.deskMain;
+            ctx.fillRect(e.doorX - 5, e.doorY - 2, 7, e.doorH + 2);
+            ctx.fillRect(e.doorX + e.doorW - 2, e.doorY - 2, 7, e.doorH + 2);
+        }
+
+        function drawReceptionDesk() {
+            const d = DESK;
+            const highlighted = state.hoverTarget === 'desk' || state.selectedTarget === 'desk';
+
+            fillRoundRect(d.x + 4, d.y + 7, d.w + 2, d.h + 2, 9, 'rgba(49, 64, 59, 0.14)');
+            if (highlighted) {
+                fillRoundRect(d.x - 6, d.y - 6, d.w + 12, d.h + 12, 12, PALETTE.highlightGlow);
+            }
+
+            fillRoundRect(d.x, d.y, d.w, d.h, 8, PALETTE.deskMain, PALETTE.ink, 2.5);
+            fillRoundRect(d.x + 3, d.y + 3, d.w - 6, d.h - 32, 6, PALETTE.deskTop, PALETTE.ink, 2);
+            ctx.fillStyle = PALETTE.deskFront;
+            ctx.fillRect(d.x + 4, d.y + d.h - 27, d.w - 8, 23);
+
+            // Service Bell
+            const bx = d.x + 104, by = d.y + 28;
+            ctx.fillStyle = PALETTE.ink;
+            ctx.beginPath(); ctx.ellipse(bx, by + 6, 11, 4.8, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = PALETTE.bellGold;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.arc(bx, by + 4, 8.5, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = PALETTE.ink;
+            ctx.fillRect(bx - 1.5, by - 6, 3, 2.5);
+
+            // Clipboard
+            fillRoundRect(d.x + 14, d.y + 16, 38, 48, 4, '#926943', PALETTE.ink, 1.8);
+            ctx.fillStyle = PALETTE.cream;
+            ctx.fillRect(d.x + 18, d.y + 22, 30, 36);
+            ctx.fillStyle = '#9aa8a4';
+            ctx.fillRect(d.x + 25, d.y + 13, 16, 6);
+            ctx.fillStyle = '#8b9c96';
+            ctx.fillRect(d.x + 22, d.y + 30, 22, 3);
+            ctx.fillRect(d.x + 22, d.y + 38, 16, 3);
+            ctx.fillRect(d.x + 22, d.y + 46, 20, 3);
+
+            // Visible Laundry Basket on Desk whenever customers have dropped off dirty loads
+            if (state.deskQueue.length > 0) {
+                const pulse = Math.sin(state.time * 3.4) * 1.4;
+                const bx = d.x + 92;
+                const by = d.y + 72 + pulse;
+                drawMiniCarriedBasket(bx, by, 'dirty', 1.32);
+
+                // Clear circular number badge when 2 or more baskets are waiting
+                if (state.deskQueue.length >= 2) {
+                    const badgeX = bx + 18;
+                    const badgeY = by - 16;
+                    ctx.fillStyle = PALETTE.dryerAccent;
+                    ctx.strokeStyle = PALETTE.ink;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(badgeX, badgeY, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '900 14px "Trebuchet MS", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(String(state.deskQueue.length), badgeX, badgeY + 1);
+                }
+            }
+
+            if (state.basket && state.basket.type === 'clean' && !state.basket.unloadingFrom) {
+                const glow = 0.4 + Math.sin(state.time * 4.5) * 0.25;
+                ctx.save();
+                ctx.globalAlpha = glow;
+                fillRoundRect(d.x + 56, d.y + 46, 68, 42, 10, PALETTE.greenSoft);
+                ctx.restore();
+                drawSparkle(d.x + 90, d.y + 66, 11, '#fffef0');
+            }
+            
+
+            for (const s of state.deskSparkles) {
+                ctx.save();
+                ctx.globalAlpha = 1 - s.life / s.maxLife;
+                drawSparkle(s.x, s.y, s.size, '#fff9c4');
+                ctx.restore();
+            }
+
+            fillRoundRect(d.x + 26, d.y + 98, 84, 24, 6, PALETTE.cream, PALETTE.ink, 2);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 14px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('DESK', d.x + 68, d.y + 111);
+        }
+
+        function drawTopDownPopeye() {
+            const p = POPEYE_SPOT;
+            const highlighted = state.hoverTarget === 'popeye' || state.selectedTarget === 'popeye';
+
+            if (highlighted) {
+                ctx.fillStyle = PALETTE.highlightGlow;
+                ctx.beginPath(); ctx.ellipse(p.cx, p.cy, 54, 42, 0, 0, Math.PI * 2); ctx.fill();
+            }
+
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.14)';
+            ctx.beginPath(); ctx.ellipse(p.cx + 2, p.cy + 8, 46, 32, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = PALETTE.lavenderPale;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.4;
+            ctx.beginPath(); ctx.ellipse(p.cx, p.cy + 2, 44, 30, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.strokeStyle = PALETTE.lavenderMid;
+            ctx.lineWidth = 1.6;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.ellipse(p.cx, p.cy + 2, 34, 21, 0, 0, Math.PI * 2); ctx.stroke();
+            ctx.setLineDash([]);
+
+            const wag = Math.sin(state.popeye.tailPhase) * 7;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 7;
+            ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(p.cx - 18, p.cy + 2); ctx.lineTo(p.cx - 32, p.cy - 6 + wag); ctx.stroke();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath(); ctx.moveTo(p.cx - 24, p.cy - 1 + wag * 0.4); ctx.lineTo(p.cx - 32, p.cy - 6 + wag); ctx.stroke();
+            ctx.lineCap = 'butt';
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.ellipse(p.cx - 6, p.cy + 4, 18, 13, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#31373d';
+            ctx.beginPath(); ctx.ellipse(p.cx - 11, p.cy + 2, 9, 8, -0.2, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.ellipse(p.cx + 12, p.cy + 14, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(p.cx + 1,  p.cy + 15, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.strokeStyle = '#59aea0';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(p.cx + 4, p.cy - 5); ctx.lineTo(p.cx + 14, p.cy + 6); ctx.stroke();
+
+            const hx = p.cx + 12;
+            const hy = p.cy - 7 + Math.sin(state.time * 3.2) * 1.2;
+
+            ctx.fillStyle = '#31373d';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(hx - 12, hy - 6); ctx.lineTo(hx - 15, hy - 21); ctx.lineTo(hx - 3, hy - 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(hx + 12, hy - 6); ctx.lineTo(hx + 15, hy - 21); ctx.lineTo(hx + 3, hy - 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.ellipse(hx, hy, 14, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            // Distinct black eye patch
+            ctx.fillStyle = '#2d3339';
+            ctx.beginPath(); ctx.ellipse(hx - 5.5, hy - 2, 6, 5.5, -0.2, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(hx - 5, hy - 2.5, 1.5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = PALETTE.ink;
+            ctx.beginPath(); ctx.arc(hx + 5.5, hy - 2, 2.2, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#2d3339';
+            ctx.beginPath(); ctx.ellipse(hx, hy + 4, 3.2, 2.2, 0, 0, Math.PI * 2); ctx.fill();
+
+            fillRoundRect(p.cx - 34, p.cy + 26, 68, 20, 6, PALETTE.cream, PALETTE.ink, 1.8);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 11px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('POPEYE', p.cx, p.cy + 37);
+        }
+
+        function drawTopDownMachine(m) {
+            const isW = m.type === 'washer';
+            const bodyCol = isW ? PALETTE.washerBody : PALETTE.dryerBody;
+            const topCol = isW ? PALETTE.washerTop : PALETTE.dryerTop;
+            const shadeCol = isW ? PALETTE.washerShade : PALETTE.dryerShade;
+            const accentCol = isW ? PALETTE.washerAccent : PALETTE.dryerAccent;
+            const drumCol = isW ? PALETTE.washerDrum : PALETTE.dryerDrum;
+
+            const near = getNearbyTopDownInteractable();
+            const highlighted = state.hoverTarget === m.id || state.selectedTarget === m.id || (near && near.type === 'machine' && near.machine.id === m.id);
+
+            fillRoundRect(m.x + 3, m.y + 5, m.w, m.h, 9, 'rgba(49, 64, 59, 0.14)');
+            if (highlighted) fillRoundRect(m.x - 5, m.y - 5, m.w + 10, m.h + 10, 12, PALETTE.highlightGlow);
+
+            fillRoundRect(m.x, m.y, m.w, m.h, 8, bodyCol, PALETTE.ink, 2.4);
+            fillRoundRect(m.x + 2, m.y + 2, m.w - 4, 24, 6, topCol);
+
+            ctx.fillStyle = shadeCol;
+            ctx.fillRect(m.x + 2, m.y + 26, m.w - 4, 16);
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(m.x + 1, m.y + 26); ctx.lineTo(m.x + m.w - 1, m.y + 26);
+            ctx.moveTo(m.x + 1, m.y + 42); ctx.lineTo(m.x + m.w - 1, m.y + 42);
+            ctx.stroke();
+
+            if (isW) {
+                ctx.fillStyle = PALETTE.cream;
+                ctx.fillRect(m.x + 9, m.y + 30, 26, 8);
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(m.x + 9, m.y + 30, 26, 8);
+            } else {
+                ctx.fillStyle = accentCol;
+                ctx.fillRect(m.x + 10, m.y + 31, 22, 2.5);
+                ctx.fillRect(m.x + 10, m.y + 35.5, 22, 2.5);
+            }
+
+            let ledCol = '#b8c7c1';
+            if (m.state === 'loading') ledCol = '#efc264';
+            else if (m.state === 'running') ledCol = isW ? '#6ab8f0' : '#f0a25e';
+            else if (m.state === 'done') ledCol = '#58c488';
+
+            ctx.fillStyle = ledCol;
+            ctx.beginPath(); ctx.arc(m.x + m.w - 34, m.y + 34, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = PALETTE.ink; ctx.lineWidth = 1.2; ctx.stroke();
+
+            ctx.fillStyle = PALETTE.cream;
+            ctx.beginPath(); ctx.arc(m.x + m.w - 16, m.y + 34, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            const cx = m.x + m.w / 2, cy = m.y + 82;
+            ctx.fillStyle = PALETTE.cream;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.arc(cx, cy, 31, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = drumCol;
+            ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.fill();
+
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, 21, 0, Math.PI * 2); ctx.clip();
+
+            if (m.items.length > 0) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                if (m.state === 'running') ctx.rotate(m.spinAngle);
+                for (let k = 0; k < m.items.length; k++) {
+                    const a = (k * Math.PI * 2) / Math.max(1, m.items.length);
+                    ctx.fillStyle = m.items[k].fill || '#fae08c';
+                    ctx.beginPath(); ctx.arc(Math.cos(a) * 8, Math.sin(a) * 8, 6.8, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            if (m.state === 'running') {
+                if (isW) {
+                    ctx.fillStyle = 'rgba(130, 198, 240, 0.42)';
+                    ctx.fillRect(cx - 22, cy - 2, 44, 24);
+                    for (let b = 0; b < 4; b++) {
+                        const bx = cx - 12 + b * 8;
+                        const by = cy + 12 - ((state.time * 22 + b * 9) % 24);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+                        ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI * 2); ctx.fill();
+                    }
+                } else {
+                    const glow = 0.22 + Math.sin(state.time * 6) * 0.1;
+                    ctx.fillStyle = `rgba(255, 210, 130, ${glow})`;
+                    ctx.fillRect(cx - 22, cy - 22, 44, 44);
+                    drawSparkle(cx - 8, cy - 7 + Math.sin(state.time * 5) * 4, 5, '#fff6c4');
+                    drawSparkle(cx + 9, cy + 6 + Math.cos(state.time * 4) * 4, 4.5, '#ffe699');
+                }
+            }
+            ctx.restore();
+
+            ctx.strokeStyle = accentCol;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.stroke();
+
+            ctx.fillStyle = accentCol;
+            ctx.fillRect(cx + 23, cy - 8, 5, 16);
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 12px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(isW ? 'WASHER' : 'DRYER', m.x + 8, m.y + 15);
+
+            const badgeSize = 26;
+            const bx = m.x + m.w - badgeSize - 4;
+            const by = m.y - 4;
+            fillRoundRect(bx, by, badgeSize, badgeSize, 7, accentCol, PALETTE.ink, 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 16px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(String(m.number), bx + badgeSize / 2, by + badgeSize / 2 + 1);
+
+            if (m.state === 'running') {
+                const barX = m.x + 12, barY = m.y + m.h - 14, barW = m.w - 24;
+                fillRoundRect(barX, barY, barW, 10, 5, PALETTE.cream, PALETTE.ink, 1.6);
+                fillRoundRect(barX + 2, barY + 2, Math.max(6, (barW - 4) * m.progress), 6, 3, isW ? '#6ab8f0' : '#f0a25e');
+            }
+
+            if (m.state === 'done') {
+                const bob = Math.sin(state.time * 4.2) * 2.5;
+                const badgeW = 78, badgeH = 24;
+                const rx = m.x + (m.w - badgeW) / 2, ry = m.y - 14 + bob;
+                fillRoundRect(rx, ry, badgeW, badgeH, 12, PALETTE.greenSoft, PALETTE.ink, 2);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = '900 12px "Trebuchet MS", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('✓ READY', rx + badgeW / 2, ry + badgeH / 2 + 1);
+            }
+        }
+
+        function drawMiniCarriedBasket(cx, cy, basketType = 'dirty', scale = 1.0) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = basketType === 'dirty' ? '#e5c678' : (basketType === 'wet' ? '#95c9f0' : '#fae08c');
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(-5, -6, 6, 0, Math.PI * 2);
+            ctx.arc(5, -6, 6, 0, Math.PI * 2);
+            ctx.arc(0, -9, 6, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = PALETTE.basketMain;
+            ctx.beginPath();
+            ctx.moveTo(-14, -5); ctx.lineTo(14, -5); ctx.lineTo(11, 9); ctx.lineTo(-11, 9); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            fillRoundRect(-15, -7, 30, 4, 2, PALETTE.basketLight, PALETTE.ink, 1.4);
+            if (basketType === 'clean') drawSparkle(0, -14, 5, '#fffdf0');
+            ctx.restore();
+        }
+
+        function drawPatrick() {
+            const px = Math.round(patrick.x);
+            const py = Math.round(patrick.y);
+            const bob = patrick.isMoving ? (patrick.walkFrame === 0 ? -2 : 1) : Math.sin(state.time * 3.2) * 1.4;
+            const stride = patrick.isMoving ? (patrick.walkFrame === 0 ? -4 : 4) : 0;
+
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.22)';
+            ctx.beginPath(); ctx.ellipse(px, py + 4, 16, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.save();
+            ctx.translate(px, py + bob);
+
+            if (state.basket && patrick.dir === 'up') drawMiniCarriedBasket(0, -24, state.basket.type);
+
+            const isSide = patrick.dir === 'left' || patrick.dir === 'right';
+            const lFootY = isSide ? 0 : (stride > 0 ? -3 : 0);
+            const rFootY = isSide ? 0 : (stride < 0 ? -3 : 0);
+            const lFootX = isSide ? -5 + stride : -8;
+            const rFootX = isSide ? 1 - stride : 1;
+
+            ctx.fillStyle = PALETTE.trousers;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2;
+            ctx.fillRect(lFootX, -12 + lFootY, 7, 11); ctx.strokeRect(lFootX, -12 + lFootY, 7, 11);
+            ctx.fillRect(rFootX, -12 + rFootY, 7, 11); ctx.strokeRect(rFootX, -12 + rFootY, 7, 11);
+
+            ctx.fillStyle = PALETTE.shoes;
+            ctx.fillRect(lFootX - 1, -3 + lFootY, 9, 5);
+            ctx.fillRect(rFootX - 1, -3 + rFootY, 9, 5);
+
+            fillRoundRect(-13, -29, 26, 19, 6, PALETTE.shirt, PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.cream;
+            ctx.fillRect(-4, -27, 8, 3);
+
+            const armSwing = patrick.isMoving ? (patrick.walkFrame === 0 ? 3 : -3) : 0;
+            if (!isSide) {
+                fillRoundRect(-17, -27 + (state.basket ? -2 : armSwing), 5, 13, 2, PALETTE.shirt, PALETTE.ink, 1.8);
+                fillRoundRect(12, -27 + (state.basket ? -2 : -armSwing), 5, 13, 2, PALETTE.shirt, PALETTE.ink, 1.8);
+            } else {
+                fillRoundRect(-4 + (state.basket ? 3 : armSwing), -26, 8, 12, 3, PALETTE.shirt, PALETTE.ink, 1.8);
+            }
+
+            fillRoundRect(-14, -52, 28, 25, 8, PALETTE.skin, PALETTE.ink, 2.2);
+
+            if (patrick.dir === 'up') {
+                fillRoundRect(-15, -55, 30, 22, 8, PALETTE.hair, PALETTE.ink, 2.2);
+                ctx.fillStyle = PALETTE.hairLight;
+                ctx.fillRect(-8, -49, 16, 4);
+            } else if (patrick.dir === 'down') {
+                fillRoundRect(-15, -56, 30, 12, 6, PALETTE.hair, PALETTE.ink, 2.2);
+                ctx.fillStyle = PALETTE.hair;
+                ctx.fillRect(-14, -47, 5, 7); ctx.fillRect(9, -47, 5, 7); ctx.fillRect(-4, -46, 8, 4);
+                ctx.fillStyle = PALETTE.hairLight;
+                ctx.fillRect(-8, -53, 14, 3);
+
+                ctx.fillStyle = PALETTE.ink;
+                ctx.fillRect(-7, -41, 3.5, 4.5); ctx.fillRect(3.5, -41, 3.5, 4.5);
+                ctx.fillStyle = 'rgba(232, 148, 134, 0.45)';
+                ctx.fillRect(-11, -36, 4, 2.8); ctx.fillRect(7, -36, 4, 2.8);
+
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 1.8;
+                ctx.beginPath(); ctx.arc(0, -35, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+            } else {
+                const flip = patrick.dir === 'left' ? -1 : 1;
+                ctx.save();
+                ctx.scale(flip, 1);
+                fillRoundRect(-15, -56, 29, 12, 6, PALETTE.hair, PALETTE.ink, 2.2);
+                ctx.fillStyle = PALETTE.hair; ctx.fillRect(-15, -47, 11, 14);
+                ctx.fillStyle = PALETTE.hairLight; ctx.fillRect(-8, -53, 12, 3);
+                ctx.fillStyle = PALETTE.ink; ctx.fillRect(4, -41, 3.5, 4.5);
+                ctx.fillStyle = 'rgba(232, 148, 134, 0.45)'; ctx.fillRect(7, -36, 3.5, 2.5);
+                ctx.restore();
+            }
+
+            if (state.basket && patrick.dir !== 'up') {
+                const bx = patrick.dir === 'left' ? -18 : (patrick.dir === 'right' ? 18 : 0);
+                const by = patrick.dir === 'down' ? -14 : -17;
+                drawMiniCarriedBasket(bx, by, state.basket.type);
+            }
+            ctx.restore();
+        }
+
+        function drawCustomer(c) {
+            const style = CUSTOMER_STYLES[c.styleIdx % CUSTOMER_STYLES.length];
+            const cx = Math.round(c.x);
+            const cy = Math.round(c.y);
+            const isMoving = c.waypoints.length > 0;
+            const bob = isMoving ? (c.walkFrame === 0 ? -2 : 1) : Math.sin(state.time * 2.8 + c.id) * 1.2;
+            const stride = isMoving ? (c.walkFrame === 0 ? -3.5 : 3.5) : 0;
+
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.2)';
+            ctx.beginPath(); ctx.ellipse(cx, cy + 4, 15, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.save();
+            ctx.translate(cx, cy + bob);
+
+            if (c.carrying && c.dir === 'up') {
+                drawMiniCarriedBasket(0, -24, c.carrying, 0.96);
+            }
+
+            const isSide = c.dir === 'left' || c.dir === 'right';
+            const lFootY = isSide ? 0 : (stride > 0 ? -3 : 0);
+            const rFootY = isSide ? 0 : (stride < 0 ? -3 : 0);
+            const lFootX = isSide ? -5 + stride : -8;
+            const rFootX = isSide ? 1 - stride : 1;
+
+            ctx.fillStyle = style.trousers;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2;
+            ctx.fillRect(lFootX, -12 + lFootY, 7, 11); ctx.strokeRect(lFootX, -12 + lFootY, 7, 11);
+            ctx.fillRect(rFootX, -12 + rFootY, 7, 11); ctx.strokeRect(rFootX, -12 + rFootY, 7, 11);
+
+            ctx.fillStyle = PALETTE.shoes;
+            ctx.fillRect(lFootX - 1, -3 + lFootY, 9, 5);
+            ctx.fillRect(rFootX - 1, -3 + rFootY, 9, 5);
+
+            fillRoundRect(-12, -29, 24, 19, 6, style.shirt, PALETTE.ink, 2.1);
+
+            const armSwing = isMoving ? (c.walkFrame === 0 ? 3 : -3) : 0;
+            if (!isSide) {
+                fillRoundRect(-16, -27 + (c.carrying ? -2 : armSwing), 5, 13, 2, style.shirt, PALETTE.ink, 1.8);
+                fillRoundRect(11, -27 + (c.carrying ? -2 : -armSwing), 5, 13, 2, style.shirt, PALETTE.ink, 1.8);
+            } else {
+                fillRoundRect(-4 + (c.carrying ? 3 : armSwing), -26, 8, 12, 3, style.shirt, PALETTE.ink, 1.8);
+            }
+
+            fillRoundRect(-13, -51, 26, 24, 8, style.skin, PALETTE.ink, 2.1);
+
+            if (c.dir === 'up') {
+                fillRoundRect(-14, -54, 28, 21, 8, style.hair, PALETTE.ink, 2.1);
+            } else if (c.dir === 'down') {
+                fillRoundRect(-14, -55, 28, 12, 6, style.hair, PALETTE.ink, 2.1);
+                ctx.fillStyle = style.hair;
+                ctx.fillRect(-13, -46, 4, 8); ctx.fillRect(9, -46, 4, 8);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.fillRect(-6.5, -41, 3.2, 4.2); ctx.fillRect(3.3, -41, 3.2, 4.2);
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 1.6;
+                ctx.beginPath(); ctx.arc(0, -35, 3.6, 0.2, Math.PI - 0.2); ctx.stroke();
+            } else {
+                const flip = c.dir === 'left' ? -1 : 1;
+                ctx.save();
+                ctx.scale(flip, 1);
+                fillRoundRect(-14, -55, 27, 12, 6, style.hair, PALETTE.ink, 2.1);
+                ctx.fillStyle = style.hair; ctx.fillRect(-14, -46, 10, 13);
+                ctx.fillStyle = PALETTE.ink; ctx.fillRect(3.5, -41, 3.2, 4.2);
+                ctx.restore();
+            }
+
+            if (c.carrying && c.dir !== 'up') {
+                const bx = c.dir === 'left' ? -18 : (c.dir === 'right' ? 18 : 0);
+                const by = c.dir === 'down' ? -14 : -17;
+                drawMiniCarriedBasket(bx, by, c.carrying, 0.96);
+            }
+
+            // Calm thought bubble showing a clean folded shirt while patiently waiting
+            if (c.role === 'pickup' && c.phase === 'waiting') {
+                const floatY = -74 + Math.sin(state.time * 3.2 + c.id) * 2.5;
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(2, floatY + 20, 3.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(7, floatY + 14, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                fillRoundRect(-10, floatY - 14, 38, 28, 12, '#ffffff', PALETTE.ink, 2);
+
+                // Clean folded shirt icon inside bubble
+                fillRoundRect(-2, floatY - 7, 22, 14, 4, '#98ccb0', PALETTE.ink, 1.6);
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(5, floatY - 7); ctx.lineTo(9, floatY - 2); ctx.lineTo(13, floatY - 7);
+                ctx.closePath();
+                ctx.fill();
+                drawSparkle(21, floatY - 9, 4.5, '#fae08c');
+            } else if (c.phase === 'celebrating') {
+                drawHeart(0, -68 - (0.7 - c.pauseTimer) * 16, 11, '#f2a8c4', 1);
+            }
+
+            ctx.restore();
+        }
+
+        function drawTopDownBanner() {
+            if (!state.banner) return;
+            const b = state.banner;
+            let alpha = 1;
+            if (b.timer > b.maxTimer - 0.6) alpha = Math.max(0, (b.maxTimer - b.timer) / 0.6);
+
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const w = 640, h = 46, x = 230, y = 268;
+            fillRoundRect(x + 3, y + 4, w, h, 14, 'rgba(37, 48, 54, 0.2)');
+            fillRoundRect(x, y, w, h, 14, PALETTE.cream, PALETTE.ink, 2.6);
+            fillRoundRect(x + 5, y + 5, w - 10, h - 10, 10, null, PALETTE.wallBanner, 1.5);
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 16px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(b.text, x + w / 2, y + h / 2 + 1);
+            ctx.restore();
+        }
+
+        function drawTopDownScene() {
+            drawTopDownRoom();
+            for (const m of MACHINES) if (m.type === 'washer') drawTopDownMachine(m);
+
+            const drawables = [
+                { y: DESK.y + DESK.h - 20, fn: drawReceptionDesk },
+                { y: POPEYE_SPOT.cy + 16, fn: drawTopDownPopeye },
+                { y: patrick.y, fn: drawPatrick }
+            ];
+            for (const c of state.customers) {
+                drawables.push({ y: c.y, fn: () => drawCustomer(c) });
+            }
+            drawables.sort((a, b) => a.y - b.y);
+            for (const d of drawables) d.fn();
+
+            for (const m of MACHINES) if (m.type === 'dryer') drawTopDownMachine(m);
+            drawTopDownBanner();
+        }
+
+        /* =========================================================================
+        /* =========================================================================
+         * VIEW 2: POPEYE THE TERRIER CLOSE-UP
+         * ========================================================================= */
+        function drawPopeyeCloseUpScene() {
+            const p = state.popeye;
+            const isHappy = p.rubEnergy > 0.08;
+
+            ctx.fillStyle = PALETTE.wallCream;
+            ctx.fillRect(0, 62, LOGICAL_W, 338);
+            ctx.fillStyle = 'rgba(157, 187, 174, 0.14)';
+            for (let x = 0; x < LOGICAL_W; x += 64) ctx.fillRect(x, 62, 32, 338);
+
+            ctx.fillStyle = PALETTE.floorB;
+            ctx.fillRect(0, 400, LOGICAL_W, 140);
+            ctx.fillStyle = PALETTE.wallTrim;
+            ctx.fillRect(0, 396, LOGICAL_W, 7);
+
+            drawPottedPlant(124, 386);
+
+            ctx.fillStyle = PALETTE.wallBanner;
+            ctx.fillRect(0, 0, LOGICAL_W, 62);
+            ctx.fillStyle = PALETTE.wallBannerDark;
+            ctx.fillRect(0, 58, LOGICAL_W, 5);
+            drawBackButton();
+            drawSoundToggle();
+
+            fillRoundRect(348, 12, 264, 38, 10, PALETTE.cream, PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 18px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('POPEYE THE TERRIER', 480, 32);
+
+            // Retro Dialogue Speech Bubble
+            const sbX = 248, sbY = 76, sbW = 464, sbH = 58;
+            fillRoundRect(sbX + 3, sbY + 4, sbW, sbH, 20, 'rgba(49, 64, 59, 0.14)');
+            fillRoundRect(sbX, sbY, sbW, sbH, 20, '#ffffff', PALETTE.ink, 2.8);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(466, sbY + sbH - 2); ctx.lineTo(480, sbY + sbH + 16); ctx.lineTo(494, sbY + sbH - 2); ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.8;
+            ctx.beginPath();
+            ctx.moveTo(466, sbY + sbH); ctx.lineTo(480, sbY + sbH + 16); ctx.lineTo(494, sbY + sbH); ctx.stroke();
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 22px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Hi Patrick, great to see you!', 480, sbY + sbH / 2 + 1);
+
+            // Cushion
+            const cx = 480, cy = 424;
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.16)';
+            ctx.beginPath(); ctx.ellipse(cx, cy + 28, 198, 42, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = PALETTE.lavenderPale;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3.2;
+            ctx.beginPath(); ctx.ellipse(cx, cy + 8, 186, 52, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.strokeStyle = PALETTE.lavenderMid;
+            ctx.lineWidth = 2.4;
+            ctx.setLineDash([7, 7]);
+            ctx.beginPath(); ctx.ellipse(cx, cy + 8, 152, 34, 0, 0, Math.PI * 2); ctx.stroke();
+            ctx.setLineDash([]);
+
+            const bob = isHappy ? Math.sin(state.time * 9) * 3.5 : Math.sin(state.time * 2.8) * 2.2;
+            const wagAngle = Math.sin(p.tailPhase) * (0.38 + p.rubEnergy * 0.42);
+
+            // Wagging Tail
+            ctx.save();
+            ctx.translate(cx + 76, cy - 30);
+            ctx.rotate(wagAngle);
+            ctx.fillStyle = '#2f353b';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(46, -24, 62, -62);
+            ctx.quadraticCurveTo(72, -66, 70, -50);
+            ctx.quadraticCurveTo(56, -12, 12, 16);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(62, -55, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+
+            // Body & Paws
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3.2;
+            ctx.beginPath(); ctx.ellipse(cx, cy - 42, 86, 74, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#2f353b';
+            ctx.beginPath(); ctx.ellipse(cx + 48, cy - 52, 32, 38, 0.25, 0, Math.PI * 2); ctx.fill();
+
+            fillRoundRect(cx - 56, cy - 34, 34, 64, 16, '#ffffff', PALETTE.ink, 3);
+            fillRoundRect(cx + 22, cy - 34, 34, 64, 16, '#ffffff', PALETTE.ink, 3);
+
+            // Collar
+            fillRoundRect(cx - 56, cy - 102, 112, 20, 10, '#59aea0', PALETTE.ink, 2.8);
+            ctx.fillStyle = PALETTE.bellGold;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.4;
+            ctx.beginPath(); ctx.arc(cx, cy - 78, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 14px "Trebuchet MS", sans-serif';
+            ctx.fillText('P', cx, cy - 77);
+
+            // Head & Ears
+            const hx = cx, hy = 258 + bob;
+            const earWiggle = isHappy ? Math.sin(state.time * 12) * 0.1 : 0;
+
+            const drawEar = (dir) => {
+                ctx.save();
+                ctx.translate(hx + dir * 62, hy - 44);
+                ctx.rotate(dir * (0.18 - earWiggle));
+                ctx.fillStyle = '#2f353b';
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 3.2;
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(dir * 22, 20); ctx.lineTo(dir * 18, -56); ctx.lineTo(-dir * 30, -8); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#f2bfc8';
+                ctx.beginPath();
+                ctx.moveTo(dir * 12, 6); ctx.lineTo(dir * 10, -34); ctx.lineTo(-dir * 14, -6); ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            };
+            drawEar(-1);
+            drawEar(1);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3.4;
+            ctx.beginPath(); ctx.ellipse(hx, hy, 88, 72, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            // Distinct Black Patch Over One Eye
+            ctx.save();
+            ctx.beginPath(); ctx.ellipse(hx, hy, 86, 70, 0, 0, Math.PI * 2); ctx.clip();
+            ctx.fillStyle = '#2c3238';
+            ctx.beginPath(); ctx.ellipse(hx - 36, hy - 14, 34, 30, -0.22, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3.4;
+            ctx.beginPath(); ctx.ellipse(hx, hy, 88, 72, 0, 0, Math.PI * 2); ctx.stroke();
+
+            if (isHappy) {
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4.5;
+                ctx.beginPath(); ctx.arc(hx - 35, hy - 10, 13, Math.PI + 0.35, -0.35); ctx.stroke();
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.beginPath(); ctx.arc(hx + 35, hy - 10, 13, Math.PI + 0.35, -0.35); ctx.stroke();
+                ctx.lineCap = 'butt';
+
+                ctx.fillStyle = 'rgba(244, 158, 178, 0.55)';
+                ctx.beginPath();
+                ctx.ellipse(hx - 54, hy + 12, 13, 8, 0, 0, Math.PI * 2);
+                ctx.ellipse(hx + 54, hy + 12, 13, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(hx - 34, hy - 13, 11.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#252b30';
+                ctx.beginPath(); ctx.arc(hx - 34, hy - 13, 7.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(hx - 37, hy - 16, 3, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = '#252b30';
+                ctx.beginPath(); ctx.arc(hx + 34, hy - 13, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(hx + 31, hy - 16, 3.5, 0, Math.PI * 2); ctx.fill();
+            }
+
+            ctx.fillStyle = '#2b3137';
+            ctx.beginPath(); ctx.ellipse(hx, hy + 13, 15, 11, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
+            ctx.beginPath(); ctx.ellipse(hx - 4, hy + 10, 4.5, 2.5, -0.3, 0, Math.PI * 2); ctx.fill();
+
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(hx, hy + 24); ctx.lineTo(hx, hy + 32); ctx.stroke();
+            ctx.beginPath(); ctx.arc(hx - 12, hy + 30, 12, 0.15, Math.PI - 0.55); ctx.stroke();
+            ctx.beginPath(); ctx.arc(hx + 12, hy + 30, 12, 0.55, Math.PI - 0.15); ctx.stroke();
+            ctx.lineCap = 'butt';
+
+            if (isHappy) {
+                ctx.fillStyle = '#f29eb3';
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2.2;
+                ctx.beginPath(); ctx.ellipse(hx, hy + 43, 9, 11, 0, 0, Math.PI); ctx.fill(); ctx.stroke();
+            }
+
+            for (const h of p.hearts) {
+                drawHeart(h.x, h.y, h.size, h.color, 1 - Math.pow(h.life / h.maxLife, 1.8));
+            }
+            if (p.isRubbing) drawSparkle(p.cursorX, p.cursorY, 12, '#fff9cc');
+
+            fillRoundRect(310, 480, 340, 42, 21, isHappy ? PALETTE.greenPale : PALETTE.cream, PALETTE.ink, 2.5);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 18px "Trebuchet MS", sans-serif';
+            ctx.fillText(isHappy ? 'Popeye loves head rubs!' : "Rub Popeye's head!", 480, 502);
+        }
+
+        /* =========================================================================
+         * VIEW 3: FRONT-ON MACHINE CLOSE-UP (UPDATE 1 FOCUS)
+         * ========================================================================= */
+        function drawMachineCloseUpScene() {
+            const m = state.activeMachine;
+            if (!m) return;
+
+            const isW = m.type === 'washer';
+            const accentCol = isW ? PALETTE.washerAccent : PALETTE.dryerAccent;
+
+            ctx.fillStyle = '#edf5f1';
+            ctx.fillRect(0, 62, LOGICAL_W, 388);
+            ctx.strokeStyle = 'rgba(157, 187, 174, 0.22)';
+            ctx.lineWidth = 1.2;
+            for (let x = 0; x < LOGICAL_W; x += 48) { ctx.beginPath(); ctx.moveTo(x, 62); ctx.lineTo(x, 450); ctx.stroke(); }
+            for (let y = 110; y < 450; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(LOGICAL_W, y); ctx.stroke(); }
+
+            ctx.fillStyle = '#e7dfd0';
+            ctx.fillRect(0, 450, LOGICAL_W, 90);
+            ctx.fillStyle = PALETTE.wallTrim;
+            ctx.fillRect(0, 446, LOGICAL_W, 6);
+
+            ctx.fillStyle = PALETTE.wallBanner;
+            ctx.fillRect(0, 0, LOGICAL_W, 62);
+            ctx.fillStyle = PALETTE.wallBannerDark;
+            ctx.fillRect(0, 58, LOGICAL_W, 5);
+
+            drawBackButton();
+            drawSoundToggle();
+
+            fillRoundRect(306, 10, 348, 42, 10, PALETTE.cream, PALETTE.ink, 2.4);
+            ctx.fillStyle = accentCol;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.arc(336, 31, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 20px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(m.fullTitle, 490, 32);
+
+            drawMachineLeftZone(m);
+            drawMachineCenterZone(m);
+            drawMachineRightZone(m);
+
+            if (state.pouring) drawActivePourAnimation(state.pouring);
+
+            if (state.drag.active && state.drag.item) {
+                if (state.drag.kind === 'cloth') {
+                    drawClothingItem(state.drag.item, state.drag.x, state.drag.y, 1.22, true);
+                } else if (state.drag.kind === 'bottle') {
+                    const overMatch = state.drag.overDetSlot || state.drag.overSofSlot;
+                    drawBottleSprite(state.drag.x, state.drag.y, state.drag.item === 'softener', overMatch ? -0.85 : -0.18, 1.15);
+                }
+            }
+        }
+
+        function drawBottleSprite(cx, cy, isSoftener, rotation = 0, scale = 1.0) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation);
+            ctx.scale(scale, scale);
+
+            const mainCol = isSoftener ? '#f4b5cb' : '#8cc5ec';
+            const capCol = isSoftener ? '#d47c9d' : '#5697cc';
+
+            fillRoundRect(-11, -44, 22, 12, 4, capCol, PALETTE.ink, 2);
+
+            if (!isSoftener) {
+                fillRoundRect(-24, -32, 48, 64, 10, mainCol, PALETTE.ink, 2.4);
+                fillRoundRect(9, -20, 9, 20, 4, PALETTE.cream, PALETTE.ink, 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(-6, 2, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = mainCol;
+                ctx.beginPath(); ctx.arc(-9, 0, 3.8, 0, Math.PI * 2); ctx.arc(-2, 5, 2.8, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.fillStyle = mainCol;
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(-15, -32); ctx.lineTo(15, -32);
+                ctx.quadraticCurveTo(26, -8, 23, 28);
+                ctx.quadraticCurveTo(0, 35, -23, 28);
+                ctx.quadraticCurveTo(-26, -8, -15, -32);
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                for (let k = 0; k < 5; k++) {
+                    const a = (k * Math.PI * 2) / 5;
+                    ctx.beginPath(); ctx.arc(Math.cos(a) * 6.5, 3 + Math.sin(a) * 6.5, 4.5, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.fillStyle = '#fae08c';
+                ctx.beginPath(); ctx.arc(0, 3, 4.2, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawActivePourAnimation(p) {
+            const t = p.timer / p.duration;
+            const streamAlpha = t < 0.85 ? 1 : (1 - t) / 0.15;
+
+            ctx.save();
+            ctx.globalAlpha = streamAlpha;
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 9;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(p.x - 16, p.y - 8);
+            ctx.quadraticCurveTo(p.targetX + 4, p.y + 18, p.targetX, p.targetY);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(p.x - 17, p.y - 6);
+            ctx.quadraticCurveTo(p.targetX + 2, p.y + 18, p.targetX - 1, p.targetY - 2);
+            ctx.stroke();
+            ctx.restore();
+
+            for (const d of p.drops) {
+                ctx.save();
+                ctx.globalAlpha = 1 - d.life / d.maxLife;
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+
+            drawBottleSprite(p.x + 12, p.y - 10, p.kind === 'softener', -1.08 + Math.sin(state.time * 18) * 0.05, 1.12);
+        }
+
+        function drawMachineLeftZone(m) {
+            const z = UI.leftZone;
+            const highlightDrop = state.drag.active && state.drag.kind === 'cloth' && state.drag.from === 'drum' && state.drag.overBasket;
+
+            fillRoundRect(z.x, z.y, z.w, z.h, 16, highlightDrop ? PALETTE.greenPale : PALETTE.cream, highlightDrop ? PALETTE.greenMid : PALETTE.ink, highlightDrop ? 3.5 : 2.4);
+
+            let title = 'LAUNDRY BASKET';
+            let pillCol = PALETTE.creamShade;
+            if (canLoadMachineWithBasket(m) && state.basket) {
+                title = state.basket.type === 'dirty' ? 'DIRTY BASKET' : 'WET BASKET';
+                pillCol = state.basket.type === 'dirty' ? PALETTE.amberPale : PALETTE.bluePale;
+            } else if (canUnloadMachine(m)) {
+                title = m.type === 'washer' ? 'WET BASKET' : 'CLEAN BASKET';
+                pillCol = PALETTE.greenPale;
+            }
+
+            fillRoundRect(z.x + 18, z.y + 14, z.w - 36, 34, 10, pillCol, PALETTE.ink, 2);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 15px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(title, z.x + z.w / 2, z.y + 32);
+
+            const hint = getMachineHintMessage(m);
+            const bx = z.x + z.w / 2;
+            const by = z.y + 348;
+
+            if (highlightDrop) {
+                ctx.setLineDash([8, 6]);
+                fillRoundRect(z.x + 12, z.y + 60, z.w - 24, z.h - 74, 12, 'rgba(134, 207, 166, 0.16)', PALETTE.greenMid, 3);
+                ctx.setLineDash([]);
+            }
+
+            // Back rim of basket
+            ctx.fillStyle = PALETTE.basketDark;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.4;
+            ctx.beginPath(); ctx.ellipse(bx, by - 26, 92, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            if (canUnloadMachine(m) && state.basket && state.basket.items.length > 0) {
+                const count = state.basket.items.length;
+                for (let i = 0; i < count; i++) {
+                    const ox = (i - (count - 1) / 2) * 44;
+                    drawClothingItem(state.basket.items[i], bx + ox, by - 44, 0.78, false);
+                }
+            }
+
+            // Front woven basket body
+            ctx.fillStyle = PALETTE.basketMain;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.6;
+            ctx.beginPath();
+            ctx.moveTo(bx - 92, by - 24); ctx.lineTo(bx + 92, by - 24);
+            ctx.lineTo(bx + 72, by + 62); ctx.quadraticCurveTo(bx, by + 72, bx - 72, by + 62);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            ctx.strokeStyle = PALETTE.basketDark;
+            ctx.lineWidth = 3;
+            for (const vx of [-48, -16, 16, 48]) {
+                ctx.beginPath(); ctx.moveTo(bx + vx, by - 16); ctx.lineTo(bx + vx * 0.82, by + 56); ctx.stroke();
+            }
+            fillRoundRect(bx - 96, by - 32, 192, 14, 7, PALETTE.basketLight, PALETTE.ink, 2.2);
+            if (canLoadMachineWithBasket(m) && state.basket) {
+                const slots = getBasketItemSlots(state.basket.items.length);
+                const itemScale = state.basket.items.length >= 5 ? 0.80 : (state.basket.items.length === 4 ? 0.88 : 0.96);
+                for (let i = 0; i < state.basket.items.length; i++) {
+                    const s = slots[i];
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.74)';
+                    ctx.strokeStyle = 'rgba(92, 134, 118, 0.35)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(s.x, s.y, s.r - 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                    drawClothingItem(state.basket.items[i], s.x, s.y, itemScale, true);
+                }
+                ctx.fillStyle = PALETTE.inkSoft;
+               ctx.font = 'bold 13px "Trebuchet MS", sans-serif';
+                ctx.fillText('Drag each item into the open door!', bx, z.y + 424);
+            } else if (canUnloadMachine(m)) {
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
+                if (m.doorOpen) {
+                    ctx.fillText('Drag clothes from the', bx, z.y + 132);
+                    ctx.fillText('machine into this basket!', bx, z.y + 154);
+                } else {
+                    ctx.fillText('Tap the door to open it,', bx, z.y + 132);
+                    ctx.fillText('then drag clothes here!', bx, z.y + 154);
+                }
+            } else if (m.state === 'loading' && allClothesLoaded(m)) {
+                fillRoundRect(z.x + 18, z.y + 128, z.w - 36, 92, 12, PALETTE.greenPale, PALETTE.greenMid, 2);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = '900 15px "Trebuchet MS", sans-serif';
+                ctx.fillText('All clothes are inside!', bx, z.y + 162);
+                ctx.font = 'bold 13px "Trebuchet MS", sans-serif';
+                ctx.fillStyle = PALETTE.inkSoft;
+                ctx.fillText('Follow the steps on the right.', bx, z.y + 190);
+            } else if (hint) {
+                fillRoundRect(z.x + 14, z.y + 104, z.w - 28, 124, 12, PALETTE.amberPale, PALETTE.amberBorder, 2.2);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
+                drawWrappedText(hint, bx, z.y + 142, z.w - 52, 22);
+            }
+        }
+
+        function drawMachineCenterZone(m) {
+            const r = UI.machineRect;
+            const isW = m.type === 'washer';
+            const bodyCol = isW ? PALETTE.washerBody : PALETTE.dryerBody;
+            const topCol = isW ? PALETTE.washerTop : PALETTE.dryerTop;
+            const shadeCol = isW ? PALETTE.washerShade : PALETTE.dryerShade;
+            const accentCol = isW ? PALETTE.washerAccent : PALETTE.dryerAccent;
+            const drumCol = isW ? PALETTE.washerDrum : PALETTE.dryerDrum;
+            const cue = getNextVisualCue(m);
+            const pulse = 0.55 + Math.sin(state.time * 4.8) * 0.45;
+
+            ctx.fillStyle = 'rgba(49, 64, 59, 0.16)';
+            ctx.beginPath(); ctx.ellipse(r.x + r.w / 2, r.y + r.h + 4, r.w * 0.52, 12, 0, 0, Math.PI * 2); ctx.fill();
+            fillRoundRect(r.x + 26, r.y + r.h - 10, 38, 16, 4, PALETTE.ink);
+            fillRoundRect(r.x + r.w - 64, r.y + r.h - 10, 38, 16, 4, PALETTE.ink);
+
+            fillRoundRect(r.x, r.y, r.w, r.h - 4, 18, bodyCol, PALETTE.ink, 3.2);
+            ctx.fillStyle = topCol;
+            ctx.fillRect(r.x + 6, r.y + 3, r.w - 12, 10);
+
+            const panelH = 98;
+            fillRoundRect(r.x + 3, r.y + 3, r.w - 6, panelH, 14, shadeCol);
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.8;
+            ctx.beginPath(); ctx.moveTo(r.x + 1, r.y + panelH + 3); ctx.lineTo(r.x + r.w - 1, r.y + panelH + 3); ctx.stroke();
+
+            if (!isW) {
+                fillRoundRect(r.x + 16, r.y + 14, 122, 72, 9, PALETTE.cream, PALETTE.ink, 2.2);
+                ctx.fillStyle = m.state === 'running' ? '#f0a25e' : accentCol;
+                for (let s = 0; s < 4; s++) ctx.fillRect(r.x + 28, r.y + 24 + s * 9, 98, 4);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = '900 11px "Trebuchet MS", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(m.state === 'running' ? 'WARM AIR ON' : 'WARM AIR', r.x + 77, r.y + 72);
+            }
+
+            // LCD Status + LED + Progress Bar
+            fillRoundRect(r.x + 148, r.y + 14, 96, 40, 7, '#d8eadf', PALETTE.ink, 2.2);
+            let lcdText = 'EMPTY';
+            if (m.state === 'loading') lcdText = isMachineReadyToStart(m) ? 'READY!' : 'LOADING';
+            else if (m.state === 'running') lcdText = isW ? 'WASHING' : 'DRYING';
+            else if (m.state === 'done') lcdText = 'DONE! ✓';
+
+            ctx.fillStyle = '#2d4b3d';
+            ctx.font = '900 13.5px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(lcdText, r.x + 196, r.y + 35);
+
+            let ledCol = '#b5c4be';
+            if (m.state === 'loading') ledCol = isMachineReadyToStart(m) ? '#58c488' : '#efc264';
+            else if (m.state === 'running') ledCol = isW ? '#6ab8f0' : '#f0a25e';
+            else if (m.state === 'done') ledCol = '#58c488';
+
+            ctx.fillStyle = ledCol;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.arc(r.x + 157, r.y + 72, 6.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            fillRoundRect(r.x + 170, r.y + 64, 74, 16, 8, PALETTE.cream, PALETTE.ink, 1.8);
+            const prog = m.state === 'done' ? 1 : m.progress;
+            if (prog > 0.01) {
+                fillRoundRect(r.x + 173, r.y + 67, Math.max(10, 68 * prog), 10, 5, m.state === 'done' ? '#62c48c' : (isW ? '#6ab8f0' : '#f0a25e'));
+            }
+
+            // Chunky START Button
+            const sb = UI.startBtn;
+            const ready = isMachineReadyToStart(m);
+            if (ready) {
+                ctx.save();
+                ctx.globalAlpha = 0.45 * (0.75 + pulse * 0.25);
+                fillRoundRect(sb.x - 5, sb.y - 5, sb.w + 10, sb.h + 10, 14, '#7ce0a6');
+                ctx.restore();
+            }
+
+            const btnFill = ready
+                ? (state.hoverTarget === 'start' ? '#7be0a5' : '#63cc90')
+                : (m.state === 'running' ? '#a6d2ec' : '#d5dfdb');
+
+            fillRoundRect(sb.x, sb.y, sb.w, sb.h, 12, btnFill, PALETTE.ink, 2.6);
+            fillRoundRect(sb.x + 4, sb.y + 4, sb.w - 8, 14, 6, 'rgba(255, 255, 255, 0.32)');
+            ctx.fillStyle = ready ? '#ffffff' : '#6b7d77';
+            ctx.font = '900 17px "Trebuchet MS", sans-serif';
+            ctx.fillText(m.state === 'running' ? 'ON' : 'START', sb.x + sb.w / 2, sb.y + sb.h / 2 + 2);
+
+            // Drum & Direct-Tap Door
+            const cx = UI.doorCenter.x, cy = UI.doorCenter.y;
+            const outerR = UI.doorOuterR, innerR = UI.doorInnerR;
+
+            ctx.fillStyle = shadeCol;
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = drumCol;
+            ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = PALETTE.ink; ctx.lineWidth = 2.6; ctx.stroke();
+
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, innerR - 2, 0, Math.PI * 2); ctx.clip();
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(m.spinAngle);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, 54, 0, Math.PI * 2); ctx.stroke();
+
+            for (let p = 0; p < 3; p++) {
+                const a = (p * Math.PI * 2) / 3;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+                ctx.lineWidth = 9;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(a) * 34, Math.sin(a) * 34);
+                ctx.lineTo(Math.cos(a) * 78, Math.sin(a) * 78);
+                ctx.stroke();
+            }
+            ctx.lineCap = 'butt';
+
+            if (m.state === 'running' && m.items.length > 0) {
+                for (let i = 0; i < m.items.length; i++) {
+                    const a = (i * Math.PI * 2) / m.items.length + 0.5;
+                    drawClothingItem(m.items[i], Math.cos(a) * 36, Math.sin(a) * 36, 0.80, false);
+                }
+            }
+            ctx.restore();
+            if (m.state !== 'running' && m.items.length > 0) {
+                const slots = getDrumItemSlots(m.items.length);
+                const drumScale = m.items.length >= 5 ? 0.72 : (m.items.length === 4 ? 0.80 : 0.90);
+                for (let i = 0; i < m.items.length; i++) {
+                    const s = slots[i];
+                    if (m.doorOpen && canUnloadMachine(m)) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+                        ctx.beginPath(); ctx.arc(s.x, s.y, s.r - 2, 0, Math.PI * 2); ctx.fill();
+                    }
+                    drawClothingItem(m.items[i], s.x, s.y, drumScale, false);
+                }
+            }
+
+            if (m.state === 'running') {
+                if (isW) {
+                    const waveY = cy + 16 + Math.sin(state.time * 4) * 5;
+                    ctx.fillStyle = PALETTE.washerWater;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - innerR, waveY);
+                    ctx.quadraticCurveTo(cx - 44, waveY - 12, cx, waveY);
+                    ctx.quadraticCurveTo(cx + 44, waveY + 12, cx + innerR, waveY);
+                    ctx.lineTo(cx + innerR, cy + innerR); ctx.lineTo(cx - innerR, cy + innerR);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    for (let b = 0; b < 9; b++) {
+                        const bx = cx - 56 + b * 15;
+                        const by = cy + 68 - ((state.time * 42 + b * 23) % 130);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+                        ctx.strokeStyle = 'rgba(130, 198, 240, 0.85)';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(bx + Math.sin(state.time * 3 + b) * 6, by, 5 + (b % 3) * 2.5, 0, Math.PI * 2);
+                        ctx.fill(); ctx.stroke();
+                    }
+                } else {
+                    const glow = 0.16 + Math.sin(state.time * 5) * 0.08;
+                    ctx.fillStyle = `rgba(255, 206, 128, ${glow})`;
+                    ctx.fillRect(cx - innerR, cy - innerR, innerR * 2, innerR * 2);
+                    for (let s = 0; s < 6; s++) {
+                        const a = state.time * 1.8 + (s * Math.PI * 2) / 6;
+                        const sr = 36 + (s % 2) * 26;
+                        drawSparkle(cx + Math.cos(a) * sr, cy + Math.sin(a) * sr, 9, '#fff5ba');
+                    }
+                }
+            }
+
+            if (state.drag.active && state.drag.kind === 'cloth' && state.drag.from === 'basket' && state.drag.overDrum) {
+                ctx.fillStyle = 'rgba(134, 207, 166, 0.25)';
+                ctx.fillRect(cx - innerR, cy - innerR, innerR * 2, innerR * 2);
+                ctx.strokeStyle = '#9ef0c0';
+                ctx.lineWidth = 5;
+                ctx.setLineDash([10, 8]);
+                ctx.beginPath(); ctx.arc(cx, cy, innerR - 10, 0, Math.PI * 2); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            ctx.restore();
+
+            // Closed vs Swung-Open Door (Tap door directly!)
+            if (!m.doorOpen) {
+                ctx.fillStyle = 'rgba(218, 240, 252, 0.22)';
+                ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2); ctx.fill();
+
+                ctx.strokeStyle = PALETTE.cream;
+                ctx.lineWidth = 22;
+                ctx.beginPath(); ctx.arc(cx, cy, innerR + 12, 0, Math.PI * 2); ctx.stroke();
+
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(cx, cy, outerR - 4, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2); ctx.stroke();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+                ctx.lineWidth = 7;
+                ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.arc(cx, cy, innerR - 18, -2.5, -1.8); ctx.stroke();
+                ctx.lineCap = 'butt';
+
+                fillRoundRect(cx - outerR - 4, cy - 26, 14, 52, 5, accentCol, PALETTE.ink, 2.4);
+
+                if (cue === 'openDoor') {
+                    ctx.save();
+                    ctx.globalAlpha = 0.55 + pulse * 0.4;
+                    fillRoundRect(cx + outerR - 30, cy - 38, 38, 76, 14, PALETTE.cueGlow);
+                    ctx.restore();
+                }
+
+                fillRoundRect(cx + outerR - 22, cy - 30, 22, 60, 8, accentCol, PALETTE.ink, 2.6);
+                ctx.fillStyle = topCol;
+                ctx.fillRect(cx + outerR - 15, cy - 18, 5, 36);
+            } else {
+                const hingeX = cx - outerR + 4;
+                if (cue === 'closeDoor') {
+                    ctx.save();
+                    ctx.globalAlpha = 0.55 + pulse * 0.4;
+                    ctx.fillStyle = PALETTE.cueGlow;
+                    ctx.beginPath(); ctx.ellipse(hingeX - 20, cy, 32, outerR + 4, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.fillStyle = PALETTE.cream;
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.ellipse(hingeX - 20, cy, 24, outerR - 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                ctx.fillStyle = 'rgba(180, 220, 240, 0.55)';
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.ellipse(hingeX - 20, cy, 13, innerR - 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                fillRoundRect(hingeX - 6, cy - 26, 14, 52, 5, accentCol, PALETTE.ink, 2.4);
+            }
+
+            if (isW) drawWasherDispenserDrawer(m, cue, pulse);
+        }
+
+        function drawWasherDispenserDrawer(m, cue, pulse) {
+            const anim = m.drawerAnim;
+            const dx = 318;
+            const dy = 92;
+            const dw = 124 + anim * 28;
+            const dh = 72 + anim * 56;
+
+            if (cue === 'openDrawer' || cue === 'closeDrawer') {
+                ctx.save();
+                ctx.globalAlpha = 0.55 + pulse * 0.4;
+                fillRoundRect(dx - 6, dy - 6, dw + 12, dh + 12, 13, PALETTE.cueGlow);
+                ctx.restore();
+            }
+
+            if (anim > 0.05) {
+                fillRoundRect(dx + 4, dy + 8, dw, dh, 10, `rgba(49, 64, 59, ${(0.22 * anim).toFixed(2)})`);
+            }
+
+            fillRoundRect(dx, dy, dw, dh, 9, PALETTE.cream, PALETTE.ink, 2.4);
+
+            if (anim > 0.25) {
+                ctx.save();
+                ctx.globalAlpha = Math.min(1, (anim - 0.2) / 0.5);
+
+                const slotY = dy + 10;
+                const slotH = dh - 40;
+                const slotW = (dw - 22) / 2;
+
+                // Left Blue Detergent Compartment
+                const detGlow = state.drag.active && state.drag.overDetSlot;
+                const detFill = m.hasDetergent ? '#89c7f0' : (detGlow ? '#cde9fa' : '#e6f2fa');
+                fillRoundRect(dx + 8, slotY, slotW, slotH, 7, detFill, detGlow ? '#3a84bd' : PALETTE.washerAccent, detGlow ? 3 : 2);
+                if (m.hasDetergent) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                    ctx.fillRect(dx + 14, slotY + 10, slotW - 12, 6);
+                }
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = '900 9.5px "Trebuchet MS", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('DETERGENT', dx + 8 + slotW / 2, slotY + slotH / 2 - 6);
+                ctx.font = 'bold 10px "Trebuchet MS", sans-serif';
+                ctx.fillStyle = m.hasDetergent ? '#1e5c8a' : PALETTE.inkSoft;
+                ctx.fillText(m.hasDetergent ? '✓ FULL' : 'Pour here', dx + 8 + slotW / 2, slotY + slotH / 2 + 12);
+
+                // Right Pink/Lavender Softener Compartment
+                const sofX = dx + 14 + slotW;
+                const sofGlow = state.drag.active && state.drag.overSofSlot;
+                const sofFill = m.hasSoftener ? '#f4b5cb' : (sofGlow ? '#fbd3e2' : '#fbeaf0');
+                fillRoundRect(sofX, slotY, slotW, slotH, 7, sofFill, sofGlow ? '#b8567b' : PALETTE.pinkMid, sofGlow ? 3 : 2);
+                if (m.hasSoftener) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                    ctx.fillRect(sofX + 6, slotY + 10, slotW - 12, 6);
+                }
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = '900 9.5px "Trebuchet MS", sans-serif';
+                ctx.fillText('SOFTENER', sofX + slotW / 2, slotY + slotH / 2 - 6);
+                ctx.font = 'bold 10px "Trebuchet MS", sans-serif';
+                ctx.fillStyle = m.hasSoftener ? '#8f3a5b' : PALETTE.inkSoft;
+                ctx.fillText(m.hasSoftener ? '✓ FULL' : 'Pour here', sofX + slotW / 2, slotY + slotH / 2 + 12);
+
+                ctx.restore();
+            } else {
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = '900 11px "Trebuchet MS", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('SOAP DRAWER', dx + dw / 2, dy + 22);
+
+                ctx.fillStyle = m.hasDetergent ? '#7cc0ee' : '#dce4e0';
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 1.4;
+                ctx.beginPath(); ctx.arc(dx + dw / 2 - 14, dy + 38, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                ctx.fillStyle = m.hasSoftener ? '#f2a8c4' : '#dce4e0';
+                ctx.beginPath(); ctx.arc(dx + dw / 2 + 14, dy + 38, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            }
+
+            // Drawer Pull Handle
+            const handleY = dy + dh - 21;
+            fillRoundRect(dx + dw / 2 - 34, handleY, 68, 14, 6, PALETTE.washerBody, PALETTE.ink, 1.8);
+            ctx.fillStyle = PALETTE.washerAccent;
+            ctx.fillRect(dx + dw / 2 - 18, handleY + 5, 36, 4);
+        }
+
+        function drawMachineRightZone(m) {
+            const z = UI.rightZone;
+            const isW = m.type === 'washer';
+            const cue = getNextVisualCue(m);
+
+            if (isW) {
+                fillRoundRect(z.x, z.y, z.w, 148, 16, PALETTE.cream, PALETTE.ink, 2.2);
+                fillRoundRect(z.x + 10, z.y + 104, z.w - 20, 12, 5, PALETTE.deskTop, PALETTE.ink, 1.8);
+
+                const hidingDet = (state.drag.active && state.drag.kind === 'bottle' && state.drag.item === 'detergent') ||
+                                  (state.pouring && state.pouring.kind === 'detergent');
+                drawShelfBottleSlot(UI.detergentSlot, 'DETERGENT', m.hasDetergent, false, hidingDet, cue === 'pourDetergent');
+
+                const hidingSof = (state.drag.active && state.drag.kind === 'bottle' && state.drag.item === 'softener') ||
+                                  (state.pouring && state.pouring.kind === 'softener');
+                drawShelfBottleSlot(UI.softenerSlot, 'SOFTENER', m.hasSoftener, true, hidingSof, cue === 'pourSoftener');
+
+                drawChecklistCard(m, z.x, 236, z.w, 282);
+            } else {
+                fillRoundRect(z.x, z.y, z.w, 134, 16, PALETTE.cream, PALETTE.ink, 2.4);
+                fillRoundRect(z.x + 48, z.y + 72, 168, 28, 10, '#f7cfc2', PALETTE.ink, 2.2);
+                fillRoundRect(z.x + 60, z.y + 48, 144, 26, 10, '#cde8d8', PALETTE.ink, 2.2);
+                fillRoundRect(z.x + 74, z.y + 26, 116, 24, 9, '#fcf0c7', PALETTE.ink, 2.2);
+                ctx.fillStyle = PALETTE.inkSoft;
+                ctx.font = 'bold 13px "Trebuchet MS", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Warm & Fluffy Drying!', z.x + z.w / 2, z.y + 116);
+
+                drawChecklistCard(m, z.x, 224, z.w, 294);
+            }
+        }
+
+        function drawShelfBottleSlot(rect, label, added, isSoftener, isHidden, shouldCue) {
+            const cx = rect.x + rect.w / 2;
+            const cy = rect.y + 56;
+
+            if (shouldCue && !added && !isHidden) {
+                ctx.save();
+                ctx.globalAlpha = 0.45 + Math.sin(state.time * 4.8) * 0.35;
+                fillRoundRect(rect.x + 6, rect.y + 4, rect.w - 12, 96, 12, PALETTE.cueGlow);
+                ctx.restore();
+            }
+
+            if (!isHidden) {
+                ctx.save();
+                if (added) ctx.globalAlpha = 0.55;
+                drawBottleSprite(cx, cy, isSoftener, 0, 0.92);
+                ctx.restore();
+            }
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 12px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, cx, rect.y + 118);
+
+            ctx.fillStyle = added ? '#2d7a4f' : PALETTE.inkSoft;
+            ctx.font = 'bold 10.5px "Trebuchet MS", sans-serif';
+            ctx.fillText(added ? '✓ POURED' : 'Drag to drawer', cx, rect.y + 132);
+        }
+
+        function drawChecklistCard(m, x, y, w, h) {
+            fillRoundRect(x, y, w, h, 16, PALETTE.cream, PALETTE.ink, 2.4);
+
+            fillRoundRect(x + 18, y + 10, w - 36, 28, 9, PALETTE.creamShade, PALETTE.ink, 1.8);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 13.5px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('STEPS TO DO', x + w / 2, y + 25);
+
+            const isW = m.type === 'washer';
+            const total = m.expectedCount > 0 ? m.expectedCount : (state.basket ? state.basket.totalCount : 3);
+            let steps = [];
+
+            if (m.state === 'done') {
+                const unloaded = total - m.items.length;
+                steps = [
+                    { text: '1. Tap door to open', done: m.doorOpen },
+                    { text: isW ? `2. Drag wet clothes (${unloaded}/${total})` : `2. Drag dry clothes (${unloaded}/${total})`, done: unloaded === total }
+                ];
+            } else {
+                const loaded = m.items.length;
+                const clothesIn = allClothesLoaded(m);
+                const isRunning = m.state === 'running';
+                if (isW) {
+                    steps = [
+                        { text: `1. Put clothes in (${loaded}/${total})`, done: clothesIn || isRunning },
+                        { text: '2. Pour Detergent', done: m.hasDetergent || isRunning },
+                        { text: '3. Pour Softener', done: m.hasSoftener || isRunning },
+                        { text: '4. Shut soap drawer', done: (!m.drawerOpen && m.hasDetergent && m.hasSoftener) || isRunning },
+                        { text: '5. Shut machine door', done: (!m.doorOpen && clothesIn) || isRunning },
+                        { text: '6. Press START', done: isRunning }
+                    ];
+                } else {
+                    steps = [
+                        { text: `1. Put wet clothes in (${loaded}/${total})`, done: clothesIn || isRunning },
+                        { text: '2. Shut machine door', done: (!m.doorOpen && clothesIn) || isRunning },
+                        { text: '3. Press START', done: isRunning }
+                    ];
+                }
+            }
+
+            const firstTodoIdx = steps.findIndex(s => !s.done);
+            const rowH = steps.length > 4 ? 38 : 54;
+            const startY = y + 48;
+
+            steps.forEach((step, i) => {
+                const ry = startY + i * rowH;
+                if (i === firstTodoIdx) {
+                    const pulseBg = state.nudgeTimer > 0 ? '#fce7a7' : '#eef7f2';
+                    fillRoundRect(x + 10, ry - 3, w - 20, rowH - 5, 8, pulseBg, state.nudgeTimer > 0 ? PALETTE.amberBorder : '#b9d8c9', 1.6);
+                }
+
+                const checkX = x + 26;
+                const checkY = ry + (rowH - 12) / 2;
+                ctx.fillStyle = step.done ? PALETTE.greenSoft : '#ffffff';
+                ctx.strokeStyle = step.done ? PALETTE.greenMid : PALETTE.inkSoft;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(checkX, checkY, 9.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                if (step.done) {
+                    ctx.strokeStyle = PALETTE.ink;
+                    ctx.lineWidth = 2.4;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(checkX - 4, checkY);
+                    ctx.lineTo(checkX - 1, checkY + 3.8);
+                    ctx.lineTo(checkX + 4.8, checkY - 3.8);
+                    ctx.stroke();
+                    ctx.lineCap = 'butt';
+                }
+
+                ctx.fillStyle = step.done ? PALETTE.inkSoft : PALETTE.ink;
+                ctx.font = step.done ? 'bold 12.5px "Trebuchet MS", sans-serif' : '900 13px "Trebuchet MS", sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(step.text, x + 43, checkY + 1);
+            });
+        }
+        /* =========================================================================
+         * LEVEL COMPLETE & ALL LEVELS COMPLETE OVERLAY
+         * ========================================================================= */
+        function drawLevelCompleteOverlay() {
+            if (!state.levelCompleteOverlay) return;
+
+            const isAll = state.levelCompleteOverlay === 'all';
+            ctx.fillStyle = 'rgba(37, 48, 54, 0.48)';
+            ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+            const cx = 190, cy = 114, cw = 580, ch = 316;
+            fillRoundRect(cx + 5, cy + 7, cw, ch, 24, 'rgba(24, 34, 38, 0.28)');
+            fillRoundRect(cx, cy, cw, ch, 24, PALETTE.cream, PALETTE.ink, 3.5);
+            fillRoundRect(cx + 10, cy + 10, cw - 20, ch - 20, 18, null, PALETTE.wallBanner, 2);
+
+            // Gentle floating stars/sparkles around the title
+            const pulse = 0.85 + Math.sin(state.time * 4) * 0.18;
+            drawSparkle(cx + 82, cy + 78, 15 * pulse, '#fae08c');
+            drawSparkle(cx + cw - 82, cy + 78, 15 * pulse, '#fae08c');
+            drawSparkle(cx + 114, cy + 124, 9 * pulse, '#98ccb0');
+            drawSparkle(cx + cw - 114, cy + 124, 9 * pulse, '#f2b7cc');
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (!isAll) {
+                ctx.font = '900 34px "Trebuchet MS", sans-serif';
+                ctx.fillText(`Level ${state.level} Complete!`, LOGICAL_W / 2, cy + 84);
+
+                ctx.fillStyle = PALETTE.inkSoft;
+                ctx.font = 'bold 22px "Trebuchet MS", sans-serif';
+                ctx.fillText('Well done, Patrick!', LOGICAL_W / 2, cy + 138);
+
+                const nextCfg = LEVELS[state.level];
+                fillRoundRect(cx + 96, cy + 170, cw - 192, 36, 12, PALETTE.greenPale, PALETTE.greenMid, 2);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = 'bold 15px "Trebuchet MS", sans-serif';
+                ctx.fillText(`Up next: Level ${nextCfg.level} — ${nextCfg.loads} loads (${nextCfg.itemsPerLoad} items each)`, LOGICAL_W / 2, cy + 189);
+
+                const b = UI.nextLevelBtn;
+                const hover = state.hoverTarget === 'nextLevel';
+                fillRoundRect(b.x, b.y, b.w, b.h, 16, hover ? '#78dc9f' : '#5ec78b', PALETTE.ink, 3);
+                fillRoundRect(b.x + 6, b.y + 5, b.w - 12, 14, 7, 'rgba(255, 255, 255, 0.3)');
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 21px "Trebuchet MS", sans-serif';
+                ctx.fillText('NEXT LEVEL →', b.x + b.w / 2, b.y + b.h / 2 + 2);
+            } else {
+                ctx.font = '900 34px "Trebuchet MS", sans-serif';
+                ctx.fillText('All 5 Levels Complete!', LOGICAL_W / 2, cy + 92);
+
+                ctx.fillStyle = PALETTE.inkSoft;
+                ctx.font = 'bold 24px "Trebuchet MS", sans-serif';
+                ctx.fillText('Great job, Patrick!', LOGICAL_W / 2, cy + 150);
+
+                fillRoundRect(cx + 80, cy + 196, cw - 160, 74, 16, PALETTE.lavenderPale, PALETTE.lavenderMid, 2.2);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
+                ctx.fillText('Every customer got their clean laundry!', LOGICAL_W / 2, cy + 224);
+                ctx.fillStyle = PALETTE.inkSoft;
+                ctx.font = 'bold 15px "Trebuchet MS", sans-serif';
+                ctx.fillText('The laundrette is all tidy and closed for the night.', LOGICAL_W / 2, cy + 250);
+            }
+        }
+
+         /* =========================================================================
+         * START SCREEN (SNES Mario Bros. 2/3 Style)
+         * ========================================================================= */
+        function drawTitleLaundrettePicture(x, y, w, h) {
+            // Retro gold & cream SNES picture frame
+            fillRoundRect(x - 8, y - 8, w + 16, h + 16, 14, '#fae08c', '#31403b', 3);
+            fillRoundRect(x - 3, y - 3, w + 6, h + 6, 10, '#31403b');
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.clip();
+
+            // Pastel sky & gentle drifting clouds
+            ctx.fillStyle = '#d4edf9';
+            ctx.fillRect(x, y, w, h);
+
+            const drawCloud = (cx, cy, s) => {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 14 * s, 0, Math.PI * 2);
+                ctx.arc(cx + 15 * s, cy - 4 * s, 16 * s, 0, Math.PI * 2);
+                ctx.arc(cx + 31 * s, cy, 13 * s, 0, Math.PI * 2);
+                ctx.fill();
+            };
+            const cDrift = (state.time * 8) % (w + 120);
+            drawCloud(x + ((40 + cDrift) % (w + 100)) - 50, y + 32, 0.9);
+            drawCloud(x + ((250 + cDrift * 0.7) % (w + 100)) - 50, y + 24, 0.75);
+
+            // Cosy street ground inside the picture
+            ctx.fillStyle = '#d8d0c0';
+            ctx.fillRect(x, y + h - 36, w, 36);
+            ctx.fillStyle = '#b9afa0';
+            ctx.fillRect(x, y + h - 36, w, 4);
+
+            // Laundrette Shopfront Building
+            const bx = x + 44, by = y + 48, bw = w - 88, bh = h - 84;
+            fillRoundRect(bx, by, bw, bh, 6, PALETTE.wallCream, PALETTE.ink, 2.8);
+
+            // Roof trim & Signboard
+            fillRoundRect(bx - 6, by - 10, bw + 12, 16, 5, PALETTE.wallBannerDark, PALETTE.ink, 2.4);
+            fillRoundRect(bx + 54, by - 26, bw - 108, 24, 6, PALETTE.cream, PALETTE.ink, 2.4);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 13px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("PATRICK'S LAUNDRETTE", bx + bw / 2, by - 13);
+
+            // Striped Pastel Awning
+            const awY = by + 8;
+            const stripes = 9;
+            const sw = (bw + 8) / stripes;
+            for (let i = 0; i < stripes; i++) {
+                ctx.fillStyle = i % 2 === 0 ? PALETTE.greenSoft : PALETTE.cream;
+                ctx.fillRect(bx - 4 + i * sw, awY, sw + 0.5, 22);
+                ctx.beginPath();
+                ctx.arc(bx - 4 + i * sw + sw / 2, awY + 22, sw / 2, 0, Math.PI);
+                ctx.fill();
+            }
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.2;
+            ctx.strokeRect(bx - 4, awY, bw + 8, 22);
+
+            // Wooden Shop Door (left) + OPEN sign
+            const dx = bx + 20, dy = by + 44, dw = 68, dh = bh - 44;
+            fillRoundRect(dx, dy, dw, dh, 4, PALETTE.deskMain, PALETTE.ink, 2.4);
+            fillRoundRect(dx + 9, dy + 10, dw - 18, 46, 3, '#cde8f6', PALETTE.ink, 2);
+            fillRoundRect(dx + 16, dy + 24, dw - 32, 18, 4, PALETTE.greenPale, PALETTE.ink, 1.5);
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 10px "Trebuchet MS", sans-serif';
+            ctx.fillText('OPEN', dx + dw / 2, dy + 34);
+            ctx.fillStyle = PALETTE.bellGold;
+            ctx.beginPath(); ctx.arc(dx + dw - 11, dy + 68, 4, 0, Math.PI * 2); ctx.fill();
+
+            // Big Glowing Shopfront Window (right) with 3 little washers inside
+            const wx = bx + 104, wy = by + 44, ww = bw - 122, wh = 82;
+            fillRoundRect(wx, wy, ww, wh, 6, '#e8f6fc', PALETTE.ink, 2.4);
+
+            for (let m = 0; m < 3; m++) {
+                const mx = wx + 14 + m * 64;
+                const my = wy + 22;
+                fillRoundRect(mx, my, 52, 56, 5, PALETTE.washerBody, PALETTE.ink, 2);
+                ctx.fillStyle = PALETTE.washerDrum;
+                ctx.beginPath(); ctx.arc(mx + 26, my + 34, 15, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = PALETTE.cream;
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(mx + 26, my + 34, 15, 0, Math.PI * 2); ctx.stroke();
+
+                // Gentle spinning bubble inside each window washer
+                const a = state.time * 3 + m * 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(mx + 26 + Math.cos(a) * 6, my + 34 + Math.sin(a) * 6, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Window shine lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(wx + 12, wy + 26); ctx.lineTo(wx + 32, wy + 8);
+            ctx.moveTo(wx + 24, wy + 30); ctx.lineTo(wx + 44, wy + 12);
+            ctx.stroke();
+
+             // "DOGS WELCOME" sign with a tiny paw print at the top of the window
+            const swX = wx + (ww - 134) / 2;
+            const swY = wy + 3;
+            fillRoundRect(swX, swY, 134, 17, 4, PALETTE.amberPale, PALETTE.ink, 1.5);
+
+            // Tiny paw print on the left of the sign
+            ctx.fillStyle = PALETTE.ink;
+            ctx.beginPath();
+            ctx.arc(swX + 14, swY + 10.5, 2.5, 0, Math.PI * 2);
+            ctx.arc(swX + 10.5, swY + 6.8, 1.3, 0, Math.PI * 2);
+            ctx.arc(swX + 14,   swY + 5.6, 1.3, 0, Math.PI * 2);
+            ctx.arc(swX + 17.5, swY + 6.8, 1.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = PALETTE.ink;
+            ctx.font = '900 9.5px "Trebuchet MS", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('DOGS WELCOME', swX + 76, swY + 9);
+
+            // Potted plant outside the door
+            ctx.save();
+            ctx.translate(bx - 16, by + bh - 12);
+            ctx.scale(0.85, 0.85);
+            drawPottedPlant(0, 0);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        function drawTitleWalkingPair(patrickX, baseY) {
+            const step = Math.sin(state.time * 9.5);
+            const bob = Math.abs(step) * 3.5;
+            const stride = step * 7;
+
+            // --- 1. PATRICK WALKING RIGHT CARRYING A LAUNDRY BASKET ---
+            ctx.save();
+            ctx.translate(patrickX, baseY - bob);
+
+            // Legs & Shoes
+            fillRoundRect(-7 + stride, -15, 9, 14, 3, PALETTE.trousers, PALETTE.ink, 2);
+            fillRoundRect(-7 - stride, -15, 9, 14, 3, PALETTE.trousers, PALETTE.ink, 2);
+            fillRoundRect(-8 + stride, -5, 13, 6, 3, PALETTE.shoes, PALETTE.ink, 1.8);
+            fillRoundRect(-8 - stride, -5, 13, 6, 3, PALETTE.shoes, PALETTE.ink, 1.8);
+
+            // Torso (Teal shirt)
+            fillRoundRect(-12, -35, 24, 22, 6, PALETTE.shirt, PALETTE.ink, 2.2);
+
+            // Head (side profile facing right)
+            fillRoundRect(-13, -59, 27, 25, 9, PALETTE.skin, PALETTE.ink, 2.2);
+            fillRoundRect(-15, -63, 29, 12, 6, PALETTE.hair, PALETTE.ink, 2.2);
+            ctx.fillStyle = PALETTE.hair;
+            ctx.fillRect(-14, -54, 11, 15);
+            ctx.fillStyle = PALETTE.hairLight;
+            ctx.fillRect(-8, -60, 12, 3);
+
+            // Eye, rosy cheek & happy smile
+            ctx.fillStyle = PALETTE.ink;
+            ctx.fillRect(5, -49, 3.5, 4.5);
+            ctx.fillStyle = 'rgba(232, 148, 134, 0.55)';
+            ctx.fillRect(7, -43, 4, 2.8);
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.arc(8, -41, 4, 0.2, Math.PI * 0.75); ctx.stroke();
+
+            // Laundry basket heaped with colourful clothes held in front
+            const bx = 24, by = -23;
+            ctx.fillStyle = '#fae08c';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.arc(bx - 7, by - 9, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#eab0bd';
+            ctx.beginPath(); ctx.arc(bx + 7, by - 8, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#9ac4e2';
+            ctx.beginPath(); ctx.arc(bx, by - 13, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = PALETTE.basketMain;
+            ctx.beginPath();
+            ctx.moveTo(bx - 16, by - 6); ctx.lineTo(bx + 16, by - 6);
+            ctx.lineTo(bx + 12, by + 11); ctx.lineTo(bx - 12, by + 11);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            fillRoundRect(bx - 18, by - 9, 36, 5, 2.5, PALETTE.basketLight, PALETTE.ink, 1.6);
+
+            // Arm holding basket
+            fillRoundRect(2, -29, 15, 7, 3.5, PALETTE.shirt, PALETTE.ink, 1.8);
+            ctx.fillStyle = PALETTE.skin;
+            ctx.beginPath(); ctx.arc(17, -25.5, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.restore();
+
+            // --- 2. POPEYE TROTTING HAPPILY BEHIND PATRICK ---
+            const px = patrickX - 66;
+            const dogStep = Math.sin(state.time * 12);
+            const dogBob = Math.abs(dogStep) * 3;
+            const wag = Math.sin(state.time * 14) * 6;
+
+            ctx.save();
+            ctx.translate(px, baseY - dogBob);
+
+            // Wagging tail
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(-16, -15); ctx.lineTo(-27, -25 + wag); ctx.stroke();
+            ctx.strokeStyle = '#2c3238';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath(); ctx.moveTo(-16, -15); ctx.lineTo(-22, -20 + wag * 0.5); ctx.stroke();
+            ctx.lineCap = 'butt';
+
+            // Trotting little legs
+            fillRoundRect(-14 + dogStep * 5, -10, 6, 10, 3, '#ffffff', PALETTE.ink, 1.8);
+            fillRoundRect(6 - dogStep * 5, -10, 6, 10, 3, '#ffffff', PALETTE.ink, 1.8);
+            fillRoundRect(-8 - dogStep * 5, -10, 6, 10, 3, '#e8e8e8', PALETTE.ink, 1.8);
+            fillRoundRect(11 + dogStep * 5, -10, 6, 10, 3, '#e8e8e8', PALETTE.ink, 1.8);
+
+            // Body with black terrier patch
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.ellipse(0, -16, 18, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#2f353b';
+            ctx.beginPath(); ctx.ellipse(-5, -18, 9, 7, -0.2, 0, Math.PI * 2); ctx.fill();
+
+            // Teal collar
+            ctx.strokeStyle = '#59aea0';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(10, -23); ctx.lineTo(16, -13); ctx.stroke();
+
+            // Head, pointy black ears & Popeye's signature black eye patch
+            const hx = 17, hy = -27;
+            ctx.fillStyle = '#2f353b';
+            ctx.strokeStyle = PALETTE.ink;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(hx - 8, hy - 6); ctx.lineTo(hx - 10, hy - 20); ctx.lineTo(hx + 1, hy - 11); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.ellipse(hx, hy, 13, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            // Black eye patch & bright eye
+            ctx.fillStyle = '#2c3238';
+            ctx.beginPath(); ctx.ellipse(hx + 4, hy - 2, 6, 5.2, 0.15, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(hx + 5, hy - 2.5, 1.8, 0, Math.PI * 2); ctx.fill();
+
+            // Little nose
+            ctx.fillStyle = '#2c3238';
+            ctx.beginPath(); ctx.arc(hx + 13, hy + 1, 3, 0, Math.PI * 2); ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawTitleScene() {
+            // Classic SNES pure black screen
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+            // Sound toggle in top-right corner
+            drawSoundToggle();
+
+            // Bold Retro SNES Title with drop shadow
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '900 46px "Trebuchet MS", sans-serif';
+            ctx.fillStyle = '#4e7e99';
+            ctx.fillText("PATRICK'S LAUNDRETTE", LOGICAL_W / 2 + 4, 54);
+            ctx.fillStyle = '#fae08c';
+            ctx.fillText("PATRICK'S LAUNDRETTE", LOGICAL_W / 2, 50);
+
+            // Twinkling retro stars flanking the title
+            const tw = 0.8 + Math.sin(state.time * 3.5) * 0.25;
+            drawSparkle(148, 48, 11 * tw, '#fae08c');
+            drawSparkle(812, 48, 11 * tw, '#fae08c');
+
+            // Framed Retro Laundrette Picture
+            drawTitleLaundrettePicture(270, 96, 420, 228);
+
+            // Chunky START GAME button
+            const b = UI.startGameBtn;
+            const hover = state.hoverTarget === 'startGame';
+            const pulse = 0.4 + Math.sin(state.time * 4.5) * 0.25;
+
+            ctx.save();
+            ctx.globalAlpha = pulse;
+            fillRoundRect(b.x - 6, b.y - 6, b.w + 12, b.h + 12, 18, '#86cfa6');
+            ctx.restore();
+
+            fillRoundRect(b.x, b.y, b.w, b.h, 14, hover ? '#7be0a5' : '#5ec78b', '#ffffff', 3);
+            fillRoundRect(b.x + 6, b.y + 5, b.w - 12, 14, 7, 'rgba(255, 255, 255, 0.28)');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 24px "Trebuchet MS", sans-serif';
+            ctx.fillText('▶  START GAME', b.x + b.w / 2, b.y + b.h / 2 + 2);
+
+            // Patrick & Popeye walking left-to-right across the black underneath
+            const walkX = ((state.time * 88) % (LOGICAL_W + 240)) - 80;
+            drawTitleWalkingPair(walkX, 514);
+        }
+
+        /* =========================================================================
+         * MAIN RENDER & ANIMATION LOOP
+         * ========================================================================= */
+        function render() {
+            ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+            if (state.scene === 'title') drawTitleScene();
+            else if (state.scene === 'topdown') drawTopDownScene();
+            else if (state.scene === 'popeye') drawPopeyeCloseUpScene();
+            else if (state.scene === 'machine') drawMachineCloseUpScene();
+
+            if (state.scene === 'topdown') drawTopDownScene();
+            else if (state.scene === 'popeye') drawPopeyeCloseUpScene();
+            else if (state.scene === 'machine') drawMachineCloseUpScene();
+
+            drawLevelCompleteOverlay();
+
+            if (state.transition.active && state.transition.alpha > 0.01) {
+                ctx.fillStyle = `rgba(37, 48, 54, ${state.transition.alpha.toFixed(3)})`;
+                ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+            }
+        }
+
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+            lastTime = timestamp;
+
+            update(dt);
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        window.onload = function () {
+            state.scene = 'title';
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
