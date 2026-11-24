@@ -292,6 +292,13 @@
                 });
             },
 
+            bedtimeLullaby() {
+                const notes = [523.25, 493.88, 440.00, 392.00, 329.63, 261.63];
+                notes.forEach((n, i) => {
+                    this.tone(n, n, 0.65, 0.04, 'sine', i * 0.24);
+                });
+            },
+
             popeyeHappy(step) {
                 const notes = [523.25, 587.33, 659.25, 783.99];
                 const f = notes[step % notes.length];
@@ -376,7 +383,7 @@
             exitBtn: { x: 764, y: 12, w: 74, h: 38 },
             soundBtn: { x: 848, y: 12, w: 96, h: 38 },
             backBtn: { x: 16, y: 12, w: 196, h: 38 },
-            nextLevelBtn: { x: 360, y: 332, w: 240, h: 58 },
+            nextLevelBtn: { x: 360, y: 404, w: 240, h: 54 },
 
             // Machine Close-Up zones
             leftZone: { x: 20, y: 78, w: 264, h: 440 },
@@ -1040,7 +1047,8 @@
                     state.levelCompleteDelay = 0;
                     state.levelCompleteOverlay = state.level >= LEVELS.length ? 'all' : 'level';
                     Sound.stopHum();
-                    Sound.levelComplete();
+                if (state.level >= LEVELS.length) Sound.bedtimeLullaby();
+                    else Sound.levelComplete();
                     return;
                 }
             }
@@ -3907,65 +3915,313 @@
         /* =========================================================================
          * LEVEL COMPLETE & ALL LEVELS COMPLETE OVERLAY
          * ========================================================================= */
-        function drawLevelCompleteOverlay() {
+function drawLevelCompleteOverlay() {
             if (!state.levelCompleteOverlay) return;
 
             const isAll = state.levelCompleteOverlay === 'all';
-            ctx.fillStyle = 'rgba(37, 48, 54, 0.48)';
-            ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
-
-            const cx = 190, cy = 114, cw = 580, ch = 316;
-            fillRoundRect(cx + 5, cy + 7, cw, ch, 24, 'rgba(24, 34, 38, 0.28)');
-            fillRoundRect(cx, cy, cw, ch, 24, PALETTE.cream, PALETTE.ink, 3.5);
-            fillRoundRect(cx + 10, cy + 10, cw - 20, ch - 20, 18, null, PALETTE.wallBanner, 2);
-
-            // Gentle floating stars/sparkles around the title
-            const pulse = 0.85 + Math.sin(state.time * 4) * 0.18;
-            drawSparkle(cx + 82, cy + 78, 15 * pulse, '#fae08c');
-            drawSparkle(cx + cw - 82, cy + 78, 15 * pulse, '#fae08c');
-            drawSparkle(cx + 114, cy + 124, 9 * pulse, '#98ccb0');
-            drawSparkle(cx + cw - 114, cy + 124, 9 * pulse, '#f2b7cc');
-
-            ctx.fillStyle = PALETTE.ink;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            const t = state.time;
 
             if (!isAll) {
-                ctx.font = '900 34px "Trebuchet MS", sans-serif';
-                ctx.fillText(`Level ${state.level} Complete!`, LOGICAL_W / 2, cy + 84);
+                // Dimmed backdrop
+                ctx.fillStyle = 'rgba(37, 48, 54, 0.55)';
+                ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+                const cx = 160, cy = 62, cw = 640, ch = 416;
+                fillRoundRect(cx + 5, cy + 7, cw, ch, 24, 'rgba(24, 34, 38, 0.28)');
+                fillRoundRect(cx, cy, cw, ch, 24, PALETTE.cream, PALETTE.ink, 3.5);
+                fillRoundRect(cx + 10, cy + 10, cw - 20, ch - 20, 18, null, PALETTE.wallBanner, 2);
+
+                // Title
+                ctx.fillStyle = PALETTE.ink;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '900 32px "Trebuchet MS", sans-serif';
+                ctx.fillText(`Level ${state.level} Complete!`, LOGICAL_W / 2, cy + 46);
 
                 ctx.fillStyle = PALETTE.inkSoft;
-                ctx.font = 'bold 22px "Trebuchet MS", sans-serif';
-                ctx.fillText('Well done, Patrick!', LOGICAL_W / 2, cy + 138);
+                ctx.font = 'bold 19px "Trebuchet MS", sans-serif';
+                ctx.fillText('Well done, Patrick!', LOGICAL_W / 2, cy + 78);
 
+                // Cosy Dance Stage
+                const sx = 220, sy = 160, sw = 520, sh = 192;
+                fillRoundRect(sx, sy, sw, sh, 16, '#e8f3ee', PALETTE.ink, 2.5);
+                ctx.fillStyle = '#d8eae1';
+                ctx.fillRect(sx + 2, sy + sh - 46, sw - 4, 44);
+                ctx.strokeStyle = PALETTE.wallBanner;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(sx + 2, sy + sh - 46);
+                ctx.lineTo(sx + sw - 2, sy + sh - 46);
+                ctx.stroke();
+
+                // Pastel bunting along the top of the stage
+                const flagCols = ['#f2b7cc', '#fae08c', '#9ac4e2', '#98ccb0', '#c7b8e6'];
+                for (let f = 0; f < 10; f++) {
+                    const fx = sx + 22 + f * 48;
+                    ctx.fillStyle = flagCols[f % flagCols.length];
+                    ctx.strokeStyle = PALETTE.ink;
+                    ctx.lineWidth = 1.6;
+                    ctx.beginPath();
+                    ctx.moveTo(fx, sy + 2);
+                    ctx.lineTo(fx + 36, sy + 2);
+                    ctx.lineTo(fx + 18, sy + 24);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                // Dance rhythm
+                const beat = Math.sin(t * 5.2);
+                const hop = Math.abs(beat) * 14;
+                const tilt = beat * 0.12;
+
+                // --- DANCING PATRICK (left side of stage) ---
+                const px = 392, py = 316;
+                ctx.fillStyle = 'rgba(49, 64, 59, 0.16)';
+                ctx.beginPath();
+                ctx.ellipse(px, py + 4, 24 - hop * 0.4, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(px, py - hop);
+                ctx.rotate(-tilt * 0.7);
+
+                // Legs kicking happily
+                ctx.fillStyle = PALETTE.trousers;
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2.4;
+                fillRoundRect(-14, -22, 11, 22, 4, PALETTE.trousers, PALETTE.ink, 2.2);
+                fillRoundRect(3, -22, 11, 22, 4, PALETTE.trousers, PALETTE.ink, 2.2);
+                fillRoundRect(-16, -5, 14, 8, 3, PALETTE.shoes, PALETTE.ink, 2);
+                fillRoundRect(2, -5, 14, 8, 3, PALETTE.shoes, PALETTE.ink, 2);
+
+                // Shirt
+                fillRoundRect(-18, -54, 36, 34, 9, PALETTE.shirt, PALETTE.ink, 2.4);
+
+                // Waving arms
+                ctx.save();
+                ctx.translate(-17, -46);
+                ctx.rotate(-0.8 + beat * 0.65);
+                fillRoundRect(-6, -24, 11, 26, 5, PALETTE.shirt, PALETTE.ink, 2.2);
+                ctx.fillStyle = PALETTE.skin;
+                ctx.beginPath(); ctx.arc(0, -24, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.restore();
+
+                ctx.save();
+                ctx.translate(17, -46);
+                ctx.rotate(0.8 + beat * 0.65);
+                fillRoundRect(-5, -24, 11, 26, 5, PALETTE.shirt, PALETTE.ink, 2.2);
+                ctx.fillStyle = PALETTE.skin;
+                ctx.beginPath(); ctx.arc(0, -24, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.restore();
+
+                // Head
+                fillRoundRect(-20, -88, 40, 36, 12, PALETTE.skin, PALETTE.ink, 2.4);
+                fillRoundRect(-21, -93, 42, 16, 8, PALETTE.hair, PALETTE.ink, 2.4);
+                ctx.fillStyle = PALETTE.hair;
+                ctx.fillRect(-20, -80, 6, 10);
+                ctx.fillRect(14, -80, 6, 10);
+                ctx.fillStyle = PALETTE.hairLight;
+                ctx.fillRect(-10, -89, 18, 4);
+
+                // Happy curved eyes & big grin
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2.6;
+                ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.arc(-8, -71, 4.5, Math.PI + 0.3, -0.3); ctx.stroke();
+                ctx.beginPath(); ctx.arc(8, -71, 4.5, Math.PI + 0.3, -0.3); ctx.stroke();
+                ctx.fillStyle = 'rgba(232, 148, 134, 0.5)';
+                ctx.beginPath(); ctx.arc(-13, -65, 4, 0, Math.PI * 2); ctx.arc(13, -65, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(0, -64, 7, 0.15, Math.PI - 0.15); ctx.stroke();
+                ctx.lineCap = 'butt';
+                ctx.restore();
+
+                // --- DANCING WASHING MACHINE (right side of stage) ---
+                const mx = 562, my = 274;
+                ctx.fillStyle = 'rgba(49, 64, 59, 0.16)';
+                ctx.beginPath();
+                ctx.ellipse(mx, my + 46, 42 - hop * 0.5, 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(mx, my - hop * 0.85);
+                ctx.rotate(tilt);
+
+                // Little dancing feet
+                fillRoundRect(-26, 34, 16, 10, 4, PALETTE.ink);
+                fillRoundRect(10, 34, 16, 10, 4, PALETTE.ink);
+
+                // Waving cartoon arms
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(-40, -6);
+                ctx.quadraticCurveTo(-58, -18 - beat * 14, -64, -32 - beat * 10);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(40, -6);
+                ctx.quadraticCurveTo(58, -18 + beat * 14, 64, -32 + beat * 10);
+                ctx.stroke();
+                ctx.lineCap = 'butt';
+
+                // Machine body
+                fillRoundRect(-42, -52, 84, 90, 12, PALETTE.washerBody, PALETTE.ink, 2.8);
+                fillRoundRect(-40, -50, 80, 20, 10, PALETTE.washerShade);
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(-42, -30); ctx.lineTo(42, -30); ctx.stroke();
+                fillRoundRect(-32, -45, 22, 10, 3, PALETTE.cream, PALETTE.ink, 1.6);
+                ctx.fillStyle = '#58c488';
+                ctx.beginPath(); ctx.arc(24, -40, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                // Smiling face on the drum
+                ctx.fillStyle = PALETTE.cream;
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2.4;
+                ctx.beginPath(); ctx.arc(0, 6, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#bce0f7';
+                ctx.beginPath(); ctx.arc(0, 6, 19, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                ctx.strokeStyle = PALETTE.ink;
+                ctx.lineWidth = 2.4;
+                ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.arc(-7, 2, 3.5, Math.PI + 0.3, -0.3); ctx.stroke();
+                ctx.beginPath(); ctx.arc(7, 2, 3.5, Math.PI + 0.3, -0.3); ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 8, 7, 0.15, Math.PI - 0.15); ctx.stroke();
+                ctx.lineCap = 'butt';
+                ctx.restore();
+
+                // Floating music notes & sparkles
+                ctx.fillStyle = PALETTE.washerAccent;
+                ctx.font = '900 22px "Trebuchet MS", sans-serif';
+                ctx.fillText('♪', 466, 212 + Math.sin(t * 4) * 8);
+                ctx.fillStyle = PALETTE.pinkMid;
+                ctx.fillText('♫', 494, 196 + Math.cos(t * 4.5) * 8);
+                drawSparkle(288, 228, 9 + Math.sin(t * 5) * 2, '#fae08c');
+                drawSparkle(672, 222, 9 + Math.cos(t * 5) * 2, '#f2b7cc');
+
+                // Next level preview pill
                 const nextCfg = LEVELS[state.level];
-                fillRoundRect(cx + 96, cy + 170, cw - 192, 36, 12, PALETTE.greenPale, PALETTE.greenMid, 2);
+                fillRoundRect(cx + 96, 362, cw - 192, 32, 10, PALETTE.greenPale, PALETTE.greenMid, 2);
                 ctx.fillStyle = PALETTE.ink;
-                ctx.font = 'bold 15px "Trebuchet MS", sans-serif';
-                ctx.fillText(`Up next: Level ${nextCfg.level} — ${nextCfg.loads} loads (${nextCfg.itemsPerLoad} items each)`, LOGICAL_W / 2, cy + 189);
+                ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
+                ctx.fillText(`Up next: Level ${nextCfg.level} — ${nextCfg.loads} loads (${nextCfg.itemsPerLoad} items each)`, LOGICAL_W / 2, 379);
 
+                // NEXT LEVEL button
                 const b = UI.nextLevelBtn;
                 const hover = state.hoverTarget === 'nextLevel';
                 fillRoundRect(b.x, b.y, b.w, b.h, 16, hover ? '#78dc9f' : '#5ec78b', PALETTE.ink, 3);
                 fillRoundRect(b.x + 6, b.y + 5, b.w - 12, 14, 7, 'rgba(255, 255, 255, 0.3)');
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '900 21px "Trebuchet MS", sans-serif';
+                ctx.font = '900 20px "Trebuchet MS", sans-serif';
                 ctx.fillText('NEXT LEVEL →', b.x + b.w / 2, b.y + b.h / 2 + 2);
             } else {
-                ctx.font = '900 34px "Trebuchet MS", sans-serif';
-                ctx.fillText('All 5 Levels Complete!', LOGICAL_W / 2, cy + 92);
+                // =========================================================
+                // LEVEL 5 ENDING: CALM "TIME FOR BED" BEDROOM SCENE
+                // =========================================================
+                ctx.fillStyle = '#253247';
+                ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
 
-                ctx.fillStyle = PALETTE.inkSoft;
-                ctx.font = 'bold 24px "Trebuchet MS", sans-serif';
-                ctx.fillText('Great job, Patrick!', LOGICAL_W / 2, cy + 150);
+                // Cosy bedroom floor
+                ctx.fillStyle = '#3b4a5e';
+                ctx.fillRect(0, 412, LOGICAL_W, 128);
+                ctx.fillStyle = '#1d2736';
+                ctx.fillRect(0, 408, LOGICAL_W, 6);
 
-                fillRoundRect(cx + 80, cy + 196, cw - 160, 74, 16, PALETTE.lavenderPale, PALETTE.lavenderMid, 2.2);
-                ctx.fillStyle = PALETTE.ink;
+                // Bedroom window with crescent moon & gentle stars
+                fillRoundRect(640, 118, 188, 152, 12, '#182233', '#7f93ad', 4);
+                ctx.fillStyle = '#f8eab0';
+                ctx.beginPath(); ctx.arc(702, 174, 22, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#182233';
+                ctx.beginPath(); ctx.arc(712, 168, 20, 0, Math.PI * 2); ctx.fill();
+
+                const stars = [[754, 152], [790, 178], [744, 204], [786, 228], [678, 222]];
+                stars.forEach(([sx, sy], idx) => {
+                    const tw = 0.55 + Math.sin(t * 2.2 + idx) * 0.4;
+                    ctx.save();
+                    ctx.globalAlpha = tw;
+                    drawSparkle(sx, sy, 6, '#fff8d4');
+                    ctx.restore();
+                });
+                // Window crossbars
+                ctx.fillStyle = '#7f93ad';
+                ctx.fillRect(731, 118, 6, 152);
+                ctx.fillRect(640, 191, 188, 6);
+
+                // Warm bedside table & lamp glow
+                fillRoundRect(118, 344, 78, 86, 8, '#7a5a40', '#1d2736', 2.6);
+                ctx.fillStyle = 'rgba(255, 228, 158, 0.16)';
+                ctx.beginPath(); ctx.arc(157, 304, 72, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#d9b382';
+                ctx.fillRect(152, 314, 10, 30);
+                fillRoundRect(134, 286, 46, 30, 8, '#fae08c', '#1d2736', 2.2);
+
+                // Patrick's Bed
+                fillRoundRect(220, 294, 30, 140, 8, '#8d6648', '#1d2736', 3); // Headboard
+                fillRoundRect(536, 340, 24, 94, 8, '#8d6648', '#1d2736', 3);  // Footboard
+                fillRoundRect(244, 376, 298, 42, 8, '#8d6648', '#1d2736', 3); // Frame
+
+                // Pillow
+                fillRoundRect(254, 326, 78, 34, 14, PALETTE.cream, '#1d2736', 2.4);
+
+                // Sleeping Patrick
+                ctx.fillStyle = PALETTE.skin;
+                ctx.strokeStyle = '#1d2736';
+                ctx.lineWidth = 2.4;
+                ctx.beginPath(); ctx.arc(294, 336, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = PALETTE.hair;
+                ctx.beginPath(); ctx.arc(288, 328, 19, Math.PI * 0.75, Math.PI * 1.95); ctx.closePath(); ctx.fill(); ctx.stroke();
+                // Closed peaceful eye
+                ctx.strokeStyle = '#1d2736';
+                ctx.lineWidth = 2.2;
+                ctx.beginPath(); ctx.arc(302, 338, 4.5, 0.2, Math.PI - 0.2); ctx.stroke();
+
+                // Cosy pastel quilt rising gently with breathing
+                const breathe = Math.sin(t * 1.6) * 2.5;
+                fillRoundRect(312, 328 - breathe, 224, 56 + breathe, 18, '#86be9d', '#1d2736', 2.8);
+                fillRoundRect(312, 328 - breathe, 36, 56 + breathe, 12, '#dff5e8', '#1d2736', 2.4);
+
+                // Soft floating Zzz
+                ctx.fillStyle = 'rgba(255, 248, 212, 0.78)';
+                ctx.textAlign = 'center';
                 ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
-                ctx.fillText('Every customer got their clean laundry!', LOGICAL_W / 2, cy + 224);
+                ctx.fillText('z', 330, 298 - (t * 12) % 24);
+                ctx.font = 'bold 23px "Trebuchet MS", sans-serif';
+                ctx.fillText('Z', 352, 276 - (t * 12 + 12) % 24);
+
+                // Sleeping Popeye on his cushion beside the bed
+                const dgx = 700, dgy = 446;
+                ctx.fillStyle = PALETTE.lavenderPale;
+                ctx.strokeStyle = '#1d2736';
+                ctx.lineWidth = 2.8;
+                ctx.beginPath(); ctx.ellipse(dgx, dgy + 8, 68, 24, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+                // Curled terrier body
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.ellipse(dgx + 4, dgy - 4 - breathe * 0.6, 38, 22, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#2f353b';
+                ctx.beginPath(); ctx.ellipse(dgx + 14, dgy - 6 - breathe * 0.6, 16, 12, 0.2, 0, Math.PI * 2); ctx.fill();
+
+                // Sleeping head with black eye patch
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.ellipse(dgx - 28, dgy, 22, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#2c3238';
+                ctx.beginPath(); ctx.ellipse(dgx - 34, dgy - 2, 9, 8, -0.2, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(dgx - 34, dgy - 1, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+                // Calm header message
+                fillRoundRect(200, 32, 560, 70, 18, 'rgba(251, 248, 240, 0.94)', PALETTE.ink, 3);
+                ctx.fillStyle = PALETTE.ink;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '900 28px "Trebuchet MS", sans-serif';
+                ctx.fillText('Time for bed. Well done, Patrick!', LOGICAL_W / 2, 56);
                 ctx.fillStyle = PALETTE.inkSoft;
-                ctx.font = 'bold 15px "Trebuchet MS", sans-serif';
-                ctx.fillText('The laundrette is all tidy and closed for the night.', LOGICAL_W / 2, cy + 250);
+                ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
+                ctx.fillText('All 5 levels complete — the laundrette is closed for the night.', LOGICAL_W / 2, 84);
             }
         }
 
@@ -4283,9 +4539,6 @@
             else if (state.scene === 'popeye') drawPopeyeCloseUpScene();
             else if (state.scene === 'machine') drawMachineCloseUpScene();
 
-            if (state.scene === 'topdown') drawTopDownScene();
-            else if (state.scene === 'popeye') drawPopeyeCloseUpScene();
-            else if (state.scene === 'machine') drawMachineCloseUpScene();
 
             drawLevelCompleteOverlay();
 

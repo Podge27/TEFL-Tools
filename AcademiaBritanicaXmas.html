@@ -1,0 +1,3593 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Panda's Christmas Maze — Academia Británica</title>
+
+  <!-- 16-Bit Arcade Display Font + Clean Legible Body Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+  <!-- Supabase JS v2 SDK (falls back seamlessly to Demo Mode if unconfigured or offline) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ============================================================
+       ACADEMIA BRITÁNICA 16-BIT BRAND PALETTE & READABILITY RULES
+       - Hero UI Surface: Marigold Yellow (#F7B12C)
+       - Crisp Text on Yellow & Borders/Walls: Deep Indigo (#211D54)
+       - Snow Paths, Modal Cards & Logo Pills: Crisp White (#FFFFFF)
+       ============================================================ */
+    :root {
+      --marigold: #F7B12C;
+      --marigold-light: #FFCB57;
+      --marigold-deep: #D98F0E;
+      --indigo: #211D54;
+      --indigo-mid: #2D2870;
+      --indigo-dark: #141136;
+      --indigo-fog: #120F33;
+      --white: #FFFFFF;
+      --snow: #F8FAFC;
+      --muted: #525875;
+      --success: #15803D;
+      --success-bright: #4ADE80;
+      --danger: #DC2626;
+      --font-arcade: 'Press Start 2P', monospace;
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top center, #FFCB57 0%, #F7B12C 52%, #E29B18 100%);
+      color: var(--indigo);
+      font-family: var(--font-body);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 12px 28px;
+      overflow-x: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ============================================================
+       16-BIT SNES FRAMES (MARIGOLD YELLOW + DEEP INDIGO BORDERS)
+       ============================================================ */
+    .snes-frame {
+      background: linear-gradient(180deg, var(--marigold-light) 0%, var(--marigold) 100%);
+      border: 4px solid var(--indigo);
+      border-radius: 14px;
+      box-shadow:
+        inset 0 0 0 3px rgba(255, 255, 255, 0.35),
+        0 6px 0 var(--indigo-dark),
+        0 12px 24px rgba(20, 17, 54, 0.28);
+    }
+
+    .game-shell {
+      width: 100%;
+      max-width: 660px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ============================================================
+       CRISP WHITE LOGO PILL BADGE
+       ============================================================ */
+    .logo-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--white);
+      border: 3px solid var(--indigo);
+      border-radius: 999px;
+      padding: 5px 14px;
+      box-shadow: 0 3px 0 var(--indigo-dark);
+      min-height: 40px;
+      flex-shrink: 0;
+    }
+
+    .logo-pill.large {
+      padding: 9px 22px;
+      min-height: 58px;
+      border-width: 4px;
+      box-shadow: 0 4px 0 var(--indigo-dark);
+    }
+
+    .logo-pill img {
+      display: block;
+      max-height: 28px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .logo-pill.large img {
+      max-height: 42px;
+    }
+
+    .logo-fallback-svg {
+      display: block;
+      height: 28px;
+      width: auto;
+    }
+
+    .logo-pill.large .logo-fallback-svg {
+      height: 40px;
+    }
+
+    /* ============================================================
+       TOP HUD BAR (DEEP INDIGO TEXT ON MARIGOLD YELLOW, NO SHADOWS)
+       ============================================================ */
+    .hud-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+
+    .hud-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .hud-left-cluster {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-menu-btn {
+      font-family: var(--font-arcade);
+      font-size: 8.5px;
+      color: var(--indigo);
+      background: var(--white);
+      border: 3px solid var(--indigo);
+      border-radius: 9px;
+      padding: 9px 11px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--indigo-dark);
+      white-space: nowrap;
+      transition: transform 0.08s ease;
+    }
+
+    .hud-menu-btn:hover {
+      background: #FEF9C3;
+    }
+
+    .hud-menu-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--indigo-dark);
+    }
+
+    .hud-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* High-contrast stat pills: crisp white/soft-gold tiles with Deep Indigo text */
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.92);
+      border: 2.5px solid var(--indigo);
+      border-radius: 8px;
+      padding: 5px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 58px;
+      box-shadow: 0 3px 0 var(--indigo-dark);
+    }
+
+    .stat-label {
+      font-family: var(--font-arcade);
+      font-size: 6px;
+      color: var(--indigo);
+      opacity: 0.85;
+      margin-bottom: 3px;
+    }
+
+    .stat-value {
+      font-family: var(--font-arcade);
+      font-size: 9.5px;
+      color: var(--indigo);
+    }
+
+    .stat-value.streak-hot {
+      color: #B45309;
+    }
+
+    .mute-btn {
+      font-family: var(--font-arcade);
+      font-size: 12px;
+      background: var(--white);
+      color: var(--indigo);
+      border: 2.5px solid var(--indigo);
+      border-radius: 8px;
+      padding: 7px 9px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--indigo-dark);
+    }
+
+    .mute-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--indigo-dark);
+    }
+
+    /* Live Lantern Boost Countdown Bar (8 seconds) */
+    .lantern-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--indigo);
+      border: 2.5px solid var(--indigo-dark);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+
+    .lantern-bar-label {
+      font-family: var(--font-arcade);
+      font-size: 7.5px;
+      color: var(--white);
+      white-space: nowrap;
+    }
+
+    .lantern-bar-track {
+      flex: 1;
+      height: 11px;
+      background: var(--indigo-dark);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(247, 177, 44, 0.5);
+    }
+
+    .lantern-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--marigold) 0%, #FFF3B0 100%);
+      transition: width 0.08s linear;
+    }
+
+    /* ============================================================
+       CANVAS VIEWPORT & TITLE / LEADERBOARD OVERLAYS
+       ============================================================ */
+    .viewport-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 5px solid var(--indigo);
+      box-shadow:
+        0 8px 0 var(--indigo-dark),
+        0 16px 36px rgba(20, 17, 54, 0.38);
+      background: var(--indigo-fog);
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(20, 17, 54, 0.82);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 14px;
+      z-index: 12;
+      overflow-y: auto;
+    }
+
+    /* Marigold Yellow Hero Card */
+    .arcade-card {
+      width: 100%;
+      max-width: 490px;
+      margin: auto 0;
+      background: linear-gradient(180deg, var(--marigold-light) 0%, var(--marigold) 100%);
+      border: 4px solid var(--indigo);
+      border-radius: 14px;
+      padding: 18px 18px 20px;
+      text-align: center;
+      box-shadow:
+        inset 0 0 0 3px rgba(255, 255, 255, 0.35),
+        0 8px 0 var(--indigo-dark),
+        0 18px 36px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Large Display Heading: Crisp White w/ Deep Indigo 16-bit Pixel Shadow */
+    .arcade-title {
+      font-family: var(--font-arcade);
+      font-size: clamp(13px, 3.4vw, 18px);
+      line-height: 1.55;
+      color: var(--white);
+      text-shadow: 0 3px 0 var(--indigo), 2px 3px 0 var(--indigo);
+      margin: 12px 0 8px;
+    }
+
+    /* Subtitles & Smaller Copy on Yellow: Crisp Deep Indigo, NO Shadows */
+    .arcade-subtitle {
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--indigo);
+      margin: 0 0 14px;
+    }
+
+    /* Setup Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: var(--font-arcade);
+      font-size: 7.5px;
+      color: var(--indigo);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .retro-input,
+    .retro-select {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 9px;
+      border: 3px solid var(--indigo);
+      background: var(--white);
+      color: var(--indigo);
+      font-family: var(--font-body);
+      font-size: 0.96rem;
+      font-weight: 700;
+      outline: none;
+      box-shadow: 0 3px 0 rgba(33, 29, 84, 0.25);
+    }
+
+    .retro-input::placeholder {
+      color: #8E95B2;
+      font-weight: 600;
+    }
+
+    .retro-input:focus,
+    .retro-select:focus {
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.75), 0 3px 0 var(--indigo);
+    }
+
+    /* ============================================================
+       RETRO BUTTONS (DEEP INDIGO TEXT ON YELLOW/WHITE, WHITE ON DARK INDIGO)
+       ============================================================ */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-arcade {
+      font-family: var(--font-arcade);
+      font-size: 9.5px;
+      line-height: 1.45;
+      color: var(--white);
+      background: linear-gradient(180deg, var(--indigo-mid) 0%, var(--indigo) 100%);
+      border: 3px solid var(--indigo-dark);
+      border-radius: 10px;
+      padding: 13px 14px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 145px;
+      box-shadow: 0 4px 0 var(--indigo-dark);
+      transition: transform 0.08s ease, filter 0.1s ease;
+    }
+
+    .btn-arcade:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+
+    .btn-arcade:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--indigo-dark);
+    }
+
+    /* Yellow & White Buttons strictly use Deep Indigo (#211D54) text with zero shadows */
+    .btn-arcade.yellow-btn {
+      background: linear-gradient(180deg, var(--marigold-light) 0%, var(--marigold) 100%);
+      border-color: var(--indigo);
+      color: var(--indigo);
+      box-shadow: 0 4px 0 var(--indigo-dark);
+    }
+
+    .btn-arcade.white-btn {
+      background: var(--white);
+      border-color: var(--indigo);
+      color: var(--indigo);
+      box-shadow: 0 4px 0 var(--indigo-dark);
+    }
+
+    .btn-arcade.whatsapp {
+      background: linear-gradient(180deg, #16A34A 0%, #15803D 100%);
+      border-color: var(--indigo-dark);
+      color: var(--white);
+      box-shadow: 0 4px 0 var(--indigo-dark);
+    }
+
+    .btn-arcade:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* ============================================================
+       BOTTOM DOCK: LEGEND + RESPONSIVE SNES D-PAD
+       ============================================================ */
+    .bottom-dock {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+
+    .hint-box {
+      flex: 1;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--indigo);
+    }
+
+    .hint-box strong {
+      font-family: var(--font-arcade);
+      font-size: 8.5px;
+      color: var(--indigo);
+      background: var(--white);
+      border: 2px solid var(--indigo);
+      border-radius: 5px;
+      padding: 2px 6px;
+      margin-right: 4px;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .legend-chip {
+      background: var(--white);
+      color: var(--indigo);
+      border: 2px solid var(--indigo);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(3, 42px);
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .dpad-btn {
+      font-family: var(--font-arcade);
+      font-size: 13px;
+      color: var(--white);
+      background: linear-gradient(180deg, var(--indigo-mid) 0%, var(--indigo) 100%);
+      border: 2.5px solid var(--indigo-dark);
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--indigo-dark);
+      display: grid;
+      place-items: center;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .dpad-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--indigo-dark);
+      background: var(--indigo-dark);
+    }
+
+    .dpad-centre {
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--indigo);
+      margin: 7px;
+    }
+
+    /* ============================================================
+       LEADERBOARDS (7 LOCATIONS x 4 LEVELS = 28 BOARDS)
+       ============================================================ */
+    .lb-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .db-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-arcade);
+      font-size: 6.5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--indigo);
+      color: var(--white);
+      border: 2px solid var(--indigo-dark);
+    }
+
+    .db-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--marigold-light);
+    }
+
+    .db-dot.live {
+      background: var(--success-bright);
+      box-shadow: 0 0 6px var(--success-bright);
+    }
+
+    .filter-group-label {
+      font-family: var(--font-arcade);
+      font-size: 7px;
+      color: var(--indigo);
+      text-align: left;
+      margin: 8px 0 5px;
+    }
+
+    .tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+
+    .tab-bar.levels {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .tab-btn {
+      font-family: var(--font-arcade);
+      font-size: 7px;
+      padding: 7px 7px;
+      border-radius: 7px;
+      border: 2px solid var(--indigo);
+      background: var(--white);
+      color: var(--indigo);
+      cursor: pointer;
+      flex: 1 1 auto;
+      min-width: 66px;
+      transition: all 0.1s ease;
+      box-shadow: 0 2px 0 var(--indigo-dark);
+    }
+
+    .tab-btn.active {
+      background: var(--indigo);
+      color: var(--white);
+      border-color: var(--indigo-dark);
+    }
+
+    .lb-list {
+      background: var(--white);
+      color: var(--indigo);
+      border: 3px solid var(--indigo);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: inset 0 2px 4px rgba(20, 17, 54, 0.08);
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 38px 1fr 64px 52px;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      border-bottom: 1px solid #E2E8F0;
+      text-align: left;
+    }
+
+    .lb-row:last-child {
+      border-bottom: none;
+    }
+
+    .lb-row.header {
+      background: var(--indigo);
+      font-family: var(--font-arcade);
+      font-size: 6.5px;
+      color: var(--white);
+      padding: 8px 10px;
+      border-bottom: none;
+    }
+
+    .lb-row.current-player {
+      background: #FEF3C7;
+      border-left: 5px solid var(--marigold);
+      font-weight: 800;
+      color: var(--indigo-dark);
+    }
+
+    .lb-rank {
+      font-family: var(--font-arcade);
+      font-size: 9px;
+      color: var(--indigo);
+    }
+
+    .lb-score {
+      font-family: var(--font-arcade);
+      font-size: 9px;
+      color: var(--indigo);
+      text-align: right;
+    }
+
+    .lb-time {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .lb-empty {
+      padding: 18px 12px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       END SCREEN & 9:16 INSTAGRAM STORY SHARE CARD PREVIEW
+       ============================================================ */
+    .end-section {
+      padding: 18px;
+      text-align: center;
+    }
+
+    .end-badge {
+      display: inline-block;
+      font-family: var(--font-arcade);
+      font-size: 8px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--indigo);
+      border: 2px solid var(--indigo-dark);
+      color: var(--white);
+      margin-bottom: 8px;
+      box-shadow: 0 3px 0 var(--indigo-dark);
+    }
+
+    .victory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 12px 0 16px;
+    }
+
+    .victory-stat {
+      background: var(--indigo);
+      border: 3px solid var(--indigo-dark);
+      border-radius: 10px;
+      padding: 10px 5px;
+      box-shadow: 0 4px 0 var(--indigo-dark);
+    }
+
+    .victory-stat .v-lbl {
+      font-family: var(--font-arcade);
+      font-size: 6px;
+      color: var(--marigold-light);
+      margin-bottom: 6px;
+    }
+
+    .victory-stat .v-val {
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      color: var(--white);
+    }
+
+    .end-columns {
+      display: grid;
+      grid-template-columns: 195px 1fr;
+      gap: 16px;
+      align-items: start;
+      margin: 14px 0 16px;
+      text-align: left;
+    }
+
+    .share-preview-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+
+    #share-card-preview {
+      display: block;
+      width: 100%;
+      max-width: 195px;
+      aspect-ratio: 9 / 16;
+      border-radius: 12px;
+      border: 4px solid var(--indigo);
+      box-shadow: 0 6px 0 var(--indigo-dark), 0 12px 26px rgba(20, 17, 54, 0.35);
+      background: var(--indigo);
+    }
+
+    .share-caption {
+      font-family: var(--font-arcade);
+      font-size: 6.8px;
+      color: var(--indigo);
+      text-align: center;
+    }
+
+    /* ============================================================
+       SNES RPG QUESTION MODAL (CRISP WHITE CARD + DEEP INDIGO TEXT)
+       ============================================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 15, 51, 0.84);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 40;
+    }
+
+    .rpg-modal {
+      width: 100%;
+      max-width: 500px;
+      background: var(--white);
+      color: var(--indigo);
+      border: 5px solid var(--indigo);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow:
+        inset 0 0 0 4px var(--marigold),
+        0 8px 0 var(--indigo-dark),
+        0 20px 44px rgba(0, 0, 0, 0.65);
+      animation: modalPop 0.16s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .rpg-badge {
+      display: inline-block;
+      font-family: var(--font-arcade);
+      font-size: 7.5px;
+      color: var(--indigo);
+      background: var(--marigold);
+      border: 2.5px solid var(--indigo);
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+
+    .modal-back-btn {
+      font-family: var(--font-arcade);
+      font-size: 7.5px;
+      color: var(--indigo);
+      background: var(--snow);
+      border: 2.5px solid var(--indigo);
+      border-radius: 7px;
+      padding: 7px 10px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--indigo-dark);
+      transition: transform 0.08s ease, background 0.1s ease;
+    }
+
+    .modal-back-btn:hover:not(:disabled) {
+      background: #FEF3C7;
+    }
+
+    .modal-back-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--indigo-dark);
+    }
+
+    .modal-back-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .rpg-prompt {
+      font-size: 1.06rem;
+      font-weight: 800;
+      line-height: 1.5;
+      color: var(--indigo);
+      margin: 0 0 16px;
+    }
+
+    .mc-options {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .mc-btn {
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 9px;
+      border: 3px solid var(--indigo);
+      background: var(--snow);
+      color: var(--indigo);
+      font-family: var(--font-body);
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 3px 0 rgba(33, 29, 84, 0.22);
+      transition: background 0.1s, transform 0.08s;
+    }
+
+    .mc-btn:hover:not(:disabled) {
+      background: #FEF3C7;
+    }
+
+    .mc-btn:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+
+    .mc-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .mc-key {
+      font-family: var(--font-arcade);
+      font-size: 9px;
+      color: var(--white);
+      background: var(--indigo);
+      padding: 6px 8px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+
+    .word-tray,
+    .word-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 52px;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .word-tray {
+      background: #FFFBEB;
+      border: 3px dashed var(--marigold);
+    }
+
+    .word-pool {
+      background: #F1F5F9;
+      border: 2px solid #CBD5E1;
+    }
+
+    .word-chip {
+      padding: 8px 13px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 0.94rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: 2.5px solid var(--indigo);
+      background: var(--indigo);
+      color: var(--white);
+      box-shadow: 0 3px 0 var(--indigo-dark);
+    }
+
+    .word-chip.in-tray {
+      border-color: var(--indigo);
+      background: var(--marigold);
+      color: var(--indigo);
+      box-shadow: 0 3px 0 var(--indigo-dark);
+    }
+
+    .word-chip:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .scramble-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-clear {
+      font-family: var(--font-arcade);
+      font-size: 8.5px;
+      padding: 12px 14px;
+      border-radius: 9px;
+      border: 3px solid var(--indigo);
+      background: var(--snow);
+      color: var(--indigo);
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--indigo-dark);
+    }
+
+    .feedback-bar {
+      min-height: 24px;
+      margin-top: 12px;
+      font-family: var(--font-arcade);
+      font-size: 9px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .feedback-ok { color: var(--success); }
+    .feedback-err { color: var(--danger); }
+
+    /* ============================================================
+       RESPONSIVE BREAKPOINTS
+       ============================================================ */
+    @media (max-width: 580px) {
+      .bottom-dock {
+        flex-direction: column;
+        text-align: center;
+      }
+      .legend-row {
+        justify-content: center;
+      }
+      .hud-top-row {
+        justify-content: center;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .victory-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .end-columns {
+        grid-template-columns: 1fr;
+      }
+      #share-card-preview {
+        max-width: 215px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="game-shell">
+    <!-- ============================================================
+         TOP HUD BAR (LOGO PILL, ← MENU BUTTON & DEEP INDIGO STAT TILES)
+         ============================================================ -->
+    <header class="snes-frame hud-bar">
+      <div class="hud-top-row">
+        <div class="hud-left-cluster">
+          <!-- Logo Placement #2: Top-Left HUD Bezel (White Pill) -->
+          <div id="hud-logo-slot" class="logo-pill" aria-label="Academia Británica Logo"></div>
+          <button id="hud-menu-btn" class="hud-menu-btn" type="button" aria-label="Return to title menu">← Menu</button>
+        </div>
+
+        <div class="hud-stats">
+          <div class="stat-pill">
+            <span class="stat-label">SCORE</span>
+            <span class="stat-value" id="hud-score">0</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">STREAK</span>
+            <span class="stat-value" id="hud-streak">0★</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">BAUBLES</span>
+            <span class="stat-value" id="hud-baubles">0/6</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">TIME</span>
+            <span class="stat-value" id="hud-timer">00:00</span>
+          </div>
+          <button id="mute-btn" class="mute-btn" type="button" aria-label="Toggle sound">🔊</button>
+        </div>
+      </div>
+
+      <!-- Live Lantern Boost Countdown Bar (8 seconds) -->
+      <div id="lantern-hud" class="lantern-bar-wrap hidden">
+        <span class="lantern-bar-label">🏮 LANTERN BOOST</span>
+        <div class="lantern-bar-track">
+          <div id="lantern-bar-fill" class="lantern-bar-fill"></div>
+        </div>
+        <span class="lantern-bar-label" id="lantern-sec">8.0s</span>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         GAMEPLAY VIEWPORT (15x15 16-BIT CANVAS + TITLE & LEADERBOARDS)
+         ============================================================ -->
+    <section id="gameplay-section" class="viewport-wrap">
+      <canvas id="game-canvas" width="600" height="600"></canvas>
+
+      <!-- 1. TITLE / SETUP OVERLAY -->
+      <div id="title-overlay" class="overlay-screen">
+        <div class="arcade-card">
+          <!-- Logo Placement #1: Prominent Title Screen White Pill -->
+          <div id="title-logo-slot" class="logo-pill large" style="margin: 0 auto 4px;"></div>
+
+          <h1 class="arcade-title">PANDA'S<br/>CHRISTMAS MAZE</h1>
+          <p class="arcade-subtitle">
+            Can you help Jonny the Panda find the AB Christmas Tree? Watch out for slippery ice, grumpy snowmen and spiky holly!!
+          </p>
+
+          <div class="form-group">
+            <label for="player-name">FIRST NAME OR NICKNAME</label>
+            <input id="player-name" class="retro-input" type="text" maxlength="24" placeholder="e.g. Sofía, Mateo, Lucía..." autocomplete="off" />
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="academy-select">LOCATION / ACADEMY</label>
+              <select id="academy-select" class="retro-select">
+                <option value="Sierra">Sierra</option>
+                <option value="Centro">Centro</option>
+                <option value="Poniente">Poniente</option>
+                <option value="Huelva">Huelva</option>
+                <option value="Almanzor">Almanzor</option>
+                <option value="Trigueros">Trigueros</option>
+                <option value="Guest">Guest</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="level-select">ENGLISH LEVEL</label>
+              <select id="level-select" class="retro-select">
+                <option value="Juniors">Juniors</option>
+                <option value="B1" selected>B1</option>
+                <option value="B2">B2</option>
+                <option value="C1">C1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btn-row" style="margin-top: 14px;">
+            <button id="start-btn" class="btn-arcade" type="button">▶ START QUEST</button>
+            <button id="open-lb-btn" class="btn-arcade white-btn" type="button">🏆 LEADERBOARDS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. LEADERBOARDS MODAL OVERLAY (28 BOARDS: 7 LOCATIONS x 4 LEVELS) -->
+      <div id="lb-overlay" class="overlay-screen hidden">
+        <div class="arcade-card">
+          <div class="lb-header-row">
+            <h2 class="arcade-title" style="margin: 0; font-size: 13px;">🏆 LEADERBOARDS</h2>
+            <span class="db-status-badge" id="modal-db-status">
+              <span class="db-dot"></span><span>DEMO MODE</span>
+            </span>
+          </div>
+
+          <div class="filter-group-label">LOCATION</div>
+          <div id="modal-academy-tabs" class="tab-bar"></div>
+
+          <div class="filter-group-label">ENGLISH LEVEL</div>
+          <div id="modal-level-tabs" class="tab-bar levels"></div>
+
+          <div id="modal-lb-list" class="lb-list"></div>
+
+          <button id="close-lb-btn" class="btn-arcade" type="button">◀ BACK TO TITLE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         BOTTOM DOCK: LEGEND + RESPONSIVE SNES D-PAD
+         ============================================================ -->
+    <section id="controls-dock" class="snes-frame bottom-dock">
+      <div class="hint-box">
+        <div><strong>QUEST</strong> Unlock 6 golden gates to reach the sparkly Christmas tree!</div>
+        <div class="legend-row">
+          <span class="legend-chip">🔑 Gate: Quiz</span>
+          <span class="legend-chip">❄️ Ice: Slide</span>
+          <span class="legend-chip">🌿 Holly: -25</span>
+          <span class="legend-chip">⛄ Snowman: -30</span>
+          <span class="legend-chip">🟡 Bauble: +35</span>
+          <span class="legend-chip">🏮 Lantern: 8s</span>
+        </div>
+      </div>
+
+      <div class="dpad" aria-label="Directional controls">
+        <div></div>
+        <button class="dpad-btn" data-dir="up" type="button" aria-label="Move up">▲</button>
+        <div></div>
+        <button class="dpad-btn" data-dir="left" type="button" aria-label="Move left">◀</button>
+        <div class="dpad-centre"></div>
+        <button class="dpad-btn" data-dir="right" type="button" aria-label="Move right">▶</button>
+        <div></div>
+        <button class="dpad-btn" data-dir="down" type="button" aria-label="Move down">▼</button>
+        <div></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         END SCREEN: STATS + 9:16 STORY SHARE CARD + LEADERBOARD
+         ============================================================ -->
+    <section id="end-section" class="snes-frame end-section hidden">
+      <div class="end-badge" id="end-badge-text">SIERRA • B1 • RANK #1</div>
+      <h2 class="arcade-title" style="margin-top: 2px;">🎄 MERRY CHRISTMAS!</h2>
+      <p class="arcade-subtitle" id="end-summary-text" style="margin-bottom: 10px;"></p>
+
+      <div class="victory-grid">
+        <div class="victory-stat">
+          <div class="v-lbl">FINAL SCORE</div>
+          <div class="v-val" id="end-score">0</div>
+        </div>
+        <div class="victory-stat">
+          <div class="v-lbl">BEST STREAK</div>
+          <div class="v-val" id="end-streak">0★</div>
+        </div>
+        <div class="victory-stat">
+          <div class="v-lbl">BAUBLES</div>
+          <div class="v-val" id="end-baubles">0/6</div>
+        </div>
+        <div class="victory-stat">
+          <div class="v-lbl">TIME</div>
+          <div class="v-val" id="end-time">00:00</div>
+        </div>
+      </div>
+
+      <div class="end-columns">
+        <!-- Hidden 1080x1920 Canvas rendered into a crisp 9:16 preview <img> -->
+        <div class="share-preview-box">
+          <canvas id="share-card-canvas" width="1080" height="1920" class="hidden"></canvas>
+          <img id="share-card-preview" alt="9:16 Instagram Story Share Card Preview" />
+          <div class="share-caption">9:16 STORY SHARE CARD</div>
+        </div>
+
+        <div>
+          <div class="lb-header-row" style="margin-bottom: 2px;">
+            <span class="filter-group-label" style="margin: 0;">LEADERBOARD</span>
+            <span class="db-status-badge" id="end-db-status">
+              <span class="db-dot"></span><span>DEMO MODE</span>
+            </span>
+          </div>
+
+          <div class="filter-group-label">LOCATION</div>
+          <div id="end-academy-tabs" class="tab-bar"></div>
+
+          <div class="filter-group-label">LEVEL</div>
+          <div id="end-level-tabs" class="tab-bar levels"></div>
+
+          <div id="end-lb-list" class="lb-list" style="max-height: 205px;"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="save-card-btn" class="btn-arcade" type="button">📸 SAVE STORY CARD (PNG)</button>
+        <button id="whatsapp-btn" class="btn-arcade whatsapp" type="button">💬 CHALLENGE ON WHATSAPP</button>
+      </div>
+      <div class="btn-row">
+        <button id="play-again-btn" class="btn-arcade white-btn" type="button">↻ PLAY AGAIN</button>
+        <button id="change-setup-btn" class="btn-arcade white-btn" type="button">⚙ CHANGE LOCATION / LEVEL</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       SNES RPG QUESTION MODAL (WITH "BACK TO GAME" & ESCAPE SUPPORT)
+       ============================================================ -->
+  <div id="question-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="rpg-modal">
+      <div class="modal-top-bar">
+        <div class="rpg-badge" id="q-badge">MAGIC GATE</div>
+        <button id="modal-back-btn" class="modal-back-btn" type="button" aria-label="Close question and return to game">← Back to Game</button>
+      </div>
+      <h3 class="rpg-prompt" id="q-prompt"></h3>
+      <div id="q-body"></div>
+      <div class="feedback-bar" id="q-feedback"></div>
+    </div>
+  </div>
+  <script>
+    /* ============================================================
+       1. CONFIGURATION BLOCK
+       ============================================================ */
+    const CONFIG = {
+      ACADEMY_LOGO_URL: './assets/Xmaslogo1.png',
+      SUPABASE_URL: 'https://ehhkjhyanmovymjqlxwo.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGtqaHlhbm1vdnltanFseHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODI3NzQsImV4cCI6MjA4Mjk1ODc3NH0.LIbusFxccfDl_Jxf3NO0CIKo4WRUA-88R9bQwQ1QWuk'
+    };
+
+    const LOCATIONS = ["Sierra", "Centro", "Poniente", "Huelva", "Almanzor", "Trigueros", "Guest"];
+    const LEVELS = ["Juniors", "B1", "B2", "C1"];
+    const STORAGE_KEY = "ab_xmas_maze_scores_v4";
+
+    /* ============================================================
+       2. SUPABASE V2 CLIENT INITIALISATION & LIVE/DEMO INDICATOR
+       ============================================================ */
+    let supabaseClient = null;
+    let isLiveDB = false;
+
+    function initSupabase() {
+      const hasValidKeys =
+        Boolean(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY) &&
+        /^https?:\/\//i.test(CONFIG.SUPABASE_URL.trim());
+
+      if (hasValidKeys && window.supabase && typeof window.supabase.createClient === "function") {
+        try {
+          supabaseClient = window.supabase.createClient(
+            CONFIG.SUPABASE_URL.trim(),
+            CONFIG.SUPABASE_ANON_KEY.trim()
+          );
+          isLiveDB = true;
+        } catch (err) {
+          console.warn("Supabase init failed, falling back to Demo Mode:", err);
+          supabaseClient = null;
+          isLiveDB = false;
+        }
+      } else {
+        isLiveDB = false;
+      }
+      updateDbStatusBadges();
+    }
+
+    function updateDbStatusBadges() {
+      ["modal-db-status", "end-db-status"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = isLiveDB
+          ? `<span class="db-dot live"></span><span>Live DB</span>`
+          : `<span class="db-dot"></span><span>Demo Mode</span>`;
+      });
+    }
+
+    /* ============================================================
+       3. ACADEMIA BRITÁNICA LOGO LOADER (WITH AUTOMATIC SVG/CANVAS FALLBACK)
+       ============================================================ */
+    let loadedLogoImage = null;
+
+    function getFallbackLogoSVG() {
+      return `
+        <svg class="logo-fallback-svg" viewBox="0 0 264 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Academia Británica">
+          <!-- Marigold Yellow Speech Bubble -->
+          <circle cx="34" cy="33" r="28" fill="#F7B12C"/>
+          <polygon points="28,58 43,58 31,71" fill="#F7B12C"/>
+          <!-- Crisp White AB Mark -->
+          <path d="M16 44 L24 22 L30 22 L38 44 L32 44 L27 29 L22 44 Z" fill="#FFFFFF"/>
+          <path d="M39 22 H50 C55 22 57 25 57 28 C57 31 55 32.5 53 33 C56 33.8 58 36 58 39 C58 42.5 55 44 50 44 H39 Z M44 26.5 V31 H49.5 C51 31 52 30 52 28.8 C52 27.3 51 26.5 49.5 26.5 Z M44 35 V40 H50 C51.8 40 52.8 39 52.8 37.5 C52.8 36 51.8 35 50 35 Z" fill="#FFFFFF"/>
+          <!-- Deep Indigo Wordmark -->
+          <text x="72" y="33" fill="#211D54" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-weight="600" font-size="25" letter-spacing="-0.4">Academia</text>
+          <text x="72" y="59" fill="#211D54" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-weight="800" font-size="27" letter-spacing="-0.4">Británica</text>
+        </svg>
+      `;
+    }
+
+    function initBrandingLogos() {
+      const slots = [
+        document.getElementById("title-logo-slot"),
+        document.getElementById("hud-logo-slot")
+      ];
+
+      function renderFallback(slot) {
+        slot.innerHTML = getFallbackLogoSVG();
+      }
+
+      if (!CONFIG.ACADEMY_LOGO_URL) {
+        slots.forEach(renderFallback);
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        loadedLogoImage = img;
+        slots.forEach(slot => {
+          slot.innerHTML = "";
+          const el = document.createElement("img");
+          el.src = CONFIG.ACADEMY_LOGO_URL;
+          el.alt = "Academia Británica";
+          slot.appendChild(el);
+        });
+      };
+      img.onerror = () => {
+        loadedLogoImage = null;
+        slots.forEach(renderFallback);
+      };
+      img.src = CONFIG.ACADEMY_LOGO_URL;
+    }
+
+    /* ============================================================
+       4. 16-BIT WEB AUDIO CHIPTUNE SOUND ENGINE
+       ============================================================ */
+    const SoundFX = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function ensureCtx() {
+        if (muted) return null;
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) ctx = new AudioCtx();
+        }
+        if (ctx && ctx.state === "suspended") {
+          ctx.resume().catch(() => {});
+        }
+        return ctx;
+      }
+
+      function tone(freq, duration, type = "square", vol = 0.065, delay = 0) {
+        const audio = ensureCtx();
+        if (!audio) return;
+        const t0 = audio.currentTime + delay;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t0);
+        gain.gain.setValueAtTime(vol, t0);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start(t0);
+        osc.stop(t0 + duration);
+      }
+
+      return {
+        toggleMute() {
+          muted = !muted;
+          return muted;
+        },
+        step() {
+          tone(220, 0.04, "triangle", 0.045);
+          tone(310, 0.03, "sine", 0.025, 0.015);
+        },
+        bump() {
+          tone(95, 0.08, "square", 0.06);
+          tone(70, 0.08, "triangle", 0.06, 0.035);
+        },
+        iceSlide() {
+          const audio = ensureCtx();
+          if (!audio) return;
+          const now = audio.currentTime;
+          const osc = audio.createOscillator();
+          const gain = audio.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(680, now);
+          osc.frequency.exponentialRampToValueAtTime(1240, now + 0.16);
+          gain.gain.setValueAtTime(0.055, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.connect(gain);
+          gain.connect(audio.destination);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        },
+        hazardHit() {
+          tone(190, 0.10, "sawtooth", 0.085, 0);
+          tone(135, 0.14, "square", 0.085, 0.07);
+          tone(92, 0.20, "sawtooth", 0.08, 0.15);
+        },
+        bauble() {
+          tone(987.77, 0.09, "square", 0.065, 0);
+          tone(1318.51, 0.16, "triangle", 0.08, 0.07);
+        },
+        lantern() {
+          [440, 554.37, 659.25, 880, 1108.73].forEach((n, i) => {
+            tone(n, 0.13, "triangle", 0.075, i * 0.055);
+          });
+        },
+        gateEncounter() {
+          tone(392, 0.08, "square", 0.06, 0);
+          tone(523.25, 0.08, "square", 0.06, 0.07);
+          tone(659.25, 0.15, "triangle", 0.075, 0.14);
+        },
+        correct() {
+          [523.25, 659.25, 783.99, 1046.5].forEach((n, i) => {
+            tone(n, 0.14, "square", 0.07, i * 0.07);
+          });
+        },
+        wrong() {
+          tone(165, 0.14, "sawtooth", 0.075, 0);
+          tone(125, 0.22, "sawtooth", 0.075, 0.11);
+        },
+        victory() {
+          const melody = [
+            { f: 523.25, d: 0.13, t: 0.00 },
+            { f: 659.25, d: 0.13, t: 0.13 },
+            { f: 783.99, d: 0.13, t: 0.26 },
+            { f: 1046.5, d: 0.26, t: 0.39 },
+            { f: 987.77, d: 0.13, t: 0.67 },
+            { f: 1046.5, d: 0.44, t: 0.82 }
+          ];
+          melody.forEach(m => {
+            tone(m.f, m.d, "square", 0.07, m.t);
+            tone(m.f / 2, m.d, "triangle", 0.055, m.t);
+          });
+        }
+      };
+    })();
+
+    /* ============================================================
+       5. 15x15 VERIFIED SOLVABLE MAZE, 6 GATES, PICKUPS & HAZARDS
+       ============================================================
+       0 = Regular Snow Path
+       1 = Deep Indigo Snow-Capped Wall
+       2 = Mandatory English Question Gate (6 total)
+       3 = Big Sparkly Christmas Tree (centre 7,7)
+       4 = Central 3x3 Snowy Plaza (rows 6..8, cols 6..8)
+       5 = Slippery Ice Patch (includes 2 directional ice-to-holly traps!)
+       6 = Golden Bauble Pickup (+35 pts, 6 total)
+       7 = Lantern Boost Pickup (8s visibility radius 2 -> 4.5, 3 total)
+       8 = Spiky Holly Bush Hazard (-25 pts, streak reset, red flash, bounce back)
+    */
+    const GRID_SIZE = 15;
+    const LOGICAL_SIZE = 600;
+    const TILE = LOGICAL_SIZE / GRID_SIZE; // 40px
+    const TOTAL_BAUBLES = 6;
+
+    const BASE_MAZE = [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 5, 0, 0, 6, 1, 1, 1, 0, 1, 1, 1, 0, 1], // Start (1,1), Ice (1,2), Bauble (1,5)
+      [1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 6, 0, 1], // Snowman #1 patrol (2,7..10), Bauble (2,12)
+      [1, 7, 0, 5, 8, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1], // Lantern (3,1), Ice Trap #1 (3,3) -> Holly (3,4) if entered from left!
+      [1, 1, 0, 0, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 1], // Gate 1 (4,6)
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1], // Gate 2 (5,13)
+      [1, 7, 0, 0, 2, 0, 4, 4, 4, 6, 1, 7, 0, 0, 1], // Lantern (6,1), Gate 5 (6,4), Plaza, Bauble (6,9), Lantern (6,11)
+      [1, 0, 8, 0, 1, 0, 4, 3, 4, 0, 1, 0, 0, 0, 1], // Holly (7,2), Central Tree (7,7)
+      [1, 0, 0, 0, 1, 0, 4, 2, 4, 0, 1, 8, 5, 0, 1], // Final Gate 6 (8,7), Snowman #3 patrol (6..9,9), Ice Trap #2 (8,12) -> Holly (8,11)!
+      [1, 6, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1], // Bauble (9,1)
+      [1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 6, 1], // Gate 4 (10,2), Bauble (10,13)
+      [1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1], // Gate 3 (11,11)
+      [1, 1, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 1], // Ice (12,3), Snowman #2 patrol (12,4..10), Bauble (12,13)
+      [1, 1, 1, 1, 1, 1, 8, 0, 0, 1, 1, 1, 1, 1, 1], // Holly (13,6), Safe alcove (13,7..8)
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ];
+
+    /* 3 Patrolling Grumpy Snowmen Definitions */
+    const SNOWMEN_CONFIG = [
+      { id: 1, r1: 2, c1: 7, r2: 2, c2: 10, speed: 2.35, phase: 0.0 },
+      { id: 2, r1: 12, c1: 4, r2: 12, c2: 10, speed: 2.75, phase: 0.35 },
+      { id: 3, r1: 6, c1: 9, r2: 9, c2: 9, speed: 2.25, phase: 0.65 }
+    ];
+
+    /* ============================================================
+       6. 24 UNAMBIGUOUS BRITISH ENGLISH QUESTIONS (6 PER LEVEL)
+       Each level: 2 multiple_choice, 2 scramble, 2 fill_gap
+       ============================================================ */
+   
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+async function fetchLevelQuestions(level) {
+      if (!supabaseClient || !isLiveDB) {
+        console.warn("Supabase is not connected yet.");
+        return [];
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("xmas_maze_questions")
+          .select("*")
+          .eq("level", level)
+          .eq("active", true);
+
+        if (error) {
+          console.warn("Supabase question fetch error:", error.message);
+          return [];
+        }
+
+        const pool = (data || []).map(row => ({
+          id: row.id,
+          level: row.level,
+          type: row.type,
+          prompt: row.prompt,
+          payload: typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload
+        }));
+
+        return shuffleArray(pool).slice(0, 6);
+      } catch (err) {
+        console.warn("Network error fetching questions:", err);
+        return [];
+      }
+    }
+
+    /* ============================================================
+       7. LEADERBOARD SERVICE (SUPABASE `xmas_maze_scores` + LOCALSTORAGE)
+       ============================================================ */
+    function buildSeedLeaderboards() {
+      const namesPool = [
+        "Sofía", "Mateo", "Lucía", "Hugo", "Alba", "Pablo", "Carmen", "Leo",
+        "Valeria", "Daniel", "Paula", "Martín", "Noa", "Adrián", "Clara", "Javier",
+        "Elena", "Marcos", "Irene", "Diego", "Nuria", "Sergio"
+      ];
+      const entries = [];
+      let idxCounter = 0;
+
+      LOCATIONS.forEach((academy, aIdx) => {
+        LEVELS.forEach((level, lIdx) => {
+          [1040, 935, 840, 745].forEach((base, rIdx) => {
+            const name = namesPool[(idxCounter + aIdx * 3 + lIdx * 2) % namesPool.length];
+            idxCounter++;
+            entries.push({
+              id: `seed-${academy}-${level}-${rIdx}`,
+              player_name: name,
+              academy,
+              level,
+              score: base + ((aIdx * 17 + lIdx * 13) % 40),
+              best_streak: Math.max(1, 6 - rIdx),
+              time_seconds: 62 + rIdx * 15 + ((aIdx + lIdx) * 2),
+              created_at: new Date(Date.now() - (rIdx + 1) * 3600000 * 5).toISOString()
+            });
+          });
+        });
+      });
+      return entries;
+    }
+
+    function loadLocalScores() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (_) {}
+      const seeded = buildSeedLeaderboards();
+      saveLocalScores(seeded);
+      return seeded;
+    }
+
+    function saveLocalScores(entries) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      } catch (_) {}
+    }
+
+    async function submitScoreRecord(record) {
+      if (supabaseClient && isLiveDB) {
+        try {
+          const { data, error } = await supabaseClient
+            .from("xmas_maze_scores")
+            .insert([{
+              player_name: record.player_name,
+              academy: record.academy,
+              level: record.level,
+              score: record.score,
+              best_streak: record.best_streak,
+              time_seconds: record.time_seconds
+            }])
+            .select("id")
+            .single();
+
+          if (!error && data?.id) {
+            return { id: data.id, synced: true };
+          }
+          if (error) console.warn("Supabase score insert failed, storing locally:", error.message);
+        } catch (err) {
+          console.warn("Supabase insert network error, storing locally:", err);
+        }
+      }
+
+      const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const all = loadLocalScores();
+      all.push({ ...record, id: localId, created_at: new Date().toISOString() });
+      saveLocalScores(all);
+      return { id: localId, synced: false };
+    }
+
+    async function fetchLeaderboard(academy, level) {
+      if (supabaseClient && isLiveDB) {
+        try {
+          const { data, error } = await supabaseClient
+            .from("xmas_maze_scores")
+            .select("id, player_name, academy, level, score, best_streak, time_seconds, created_at")
+            .eq("academy", academy)
+            .eq("level", level)
+            .order("score", { ascending: false })
+            .order("time_seconds", { ascending: true })
+            .limit(10);
+
+          if (!error && Array.isArray(data)) {
+            return data;
+          }
+          if (error) console.warn("Supabase leaderboard read failed, using local:", error.message);
+        } catch (err) {
+          console.warn("Supabase leaderboard network error, using local:", err);
+        }
+      }
+
+      return loadLocalScores()
+        .filter(e => e.academy === academy && e.level === level)
+        .sort((a, b) => b.score - a.score || a.time_seconds - b.time_seconds)
+        .slice(0, 10);
+    }
+
+    async function renderLeaderboardWidget(academyTabsId, levelTabsId, listId, selectedAcademy, selectedLevel, highlightId, onFilterChange) {
+      const aContainer = document.getElementById(academyTabsId);
+      const lContainer = document.getElementById(levelTabsId);
+      const listEl = document.getElementById(listId);
+
+      aContainer.innerHTML = "";
+      LOCATIONS.forEach(loc => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tab-btn" + (loc === selectedAcademy ? " active" : "");
+        btn.textContent = loc.toUpperCase();
+        btn.addEventListener("click", () => onFilterChange(loc, selectedLevel));
+        aContainer.appendChild(btn);
+      });
+
+      lContainer.innerHTML = "";
+      LEVELS.forEach(lv => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tab-btn" + (lv === selectedLevel ? " active" : "");
+        btn.textContent = lv.toUpperCase();
+        btn.addEventListener("click", () => onFilterChange(selectedAcademy, lv));
+        lContainer.appendChild(btn);
+      });
+
+      listEl.innerHTML = `<div class="lb-empty">Loading scores...</div>`;
+      const rows = await fetchLeaderboard(selectedAcademy, selectedLevel);
+
+      listEl.innerHTML = `
+        <div class="lb-row header">
+          <span>#</span>
+          <span>PLAYER</span>
+          <span style="text-align:right;">SCORE</span>
+          <span style="text-align:right;">TIME</span>
+        </div>
+      `;
+
+      if (rows.length === 0) {
+        listEl.innerHTML += `<div class="lb-empty">No scores yet for ${escapeHtml(selectedAcademy)} (${escapeHtml(selectedLevel)}). Be the first!</div>`;
+        return rows;
+      }
+
+      rows.forEach((row, idx) => {
+        const div = document.createElement("div");
+        div.className = "lb-row" + (row.id === highlightId ? " current-player" : "");
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+        div.innerHTML = `
+          <span class="lb-rank">${medal}</span>
+          <span>${escapeHtml(row.player_name)}</span>
+          <span class="lb-score">${row.score}</span>
+          <span class="lb-time">${formatTime(row.time_seconds)}</span>
+        `;
+        listEl.appendChild(div);
+      });
+
+      return rows;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[ch]);
+    }
+
+    /* ============================================================
+       8. GAME STATE, SNOWMEN & PARTICLES
+       ============================================================ */
+    const canvas = document.getElementById("game-canvas");
+    const ctx = canvas.getContext("2d");
+
+    const hudScore = document.getElementById("hud-score");
+    const hudStreak = document.getElementById("hud-streak");
+    const hudBaubles = document.getElementById("hud-baubles");
+    const hudTimer = document.getElementById("hud-timer");
+    const lanternHud = document.getElementById("lantern-hud");
+    const lanternBarFill = document.getElementById("lantern-bar-fill");
+    const lanternSecEl = document.getElementById("lantern-sec");
+
+    const titleOverlay = document.getElementById("title-overlay");
+    const lbOverlay = document.getElementById("lb-overlay");
+    const gameplaySection = document.getElementById("gameplay-section");
+    const controlsDock = document.getElementById("controls-dock");
+    const endSection = document.getElementById("end-section");
+    const questionModal = document.getElementById("question-modal");
+
+    let state = {
+      phase: "title", // 'title' | 'playing' | 'modal' | 'victory'
+      playerName: "Panda Explorer",
+      academy: "Sierra",
+      level: "B1",
+      activeQuestions: [],
+      maze: [],
+      visited: [],
+      snowmen: [],
+      score: 0,
+      streak: 0,
+      bestStreak: 0,
+      baubles: 0,
+      nextQuestionIndex: 0,
+      startTime: 0,
+      elapsedSeconds: 0,
+      lanternRemaining: 0,
+      invulnRemaining: 0,
+      redFlashRemaining: 0,
+      activeGate: null,
+      questionStartTime: 0,
+      gateSolved: false,
+      lastRunId: null,
+      lastRank: 1,
+      heldDir: null,
+      panda: {
+        r: 1, c: 1, fromR: 1, fromC: 1,
+        renderX: TILE, renderY: TILE,
+        facing: "down",
+        moving: false,
+        sliding: false,
+        bouncing: false,
+        moveProgress: 1
+      }
+    };
+
+    const snowflakes = Array.from({ length: 70 }, () => ({
+      x: Math.random() * LOGICAL_SIZE,
+      y: Math.random() * LOGICAL_SIZE,
+      r: 1.5 + Math.random() * 2.1,
+      vy: 18 + Math.random() * 24,
+      vx: -8 + Math.random() * 16,
+      phase: Math.random() * Math.PI * 2
+    }));
+
+    let sparkles = [];
+    let floatingTexts = [];
+
+    function spawnSparkles(px, py, count, colours = ["#F7B12C", "#FFCB57", "#FFFFFF", "#38BDF8"]) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 28 + Math.random() * 88;
+        sparkles.push({
+          x: px, y: py,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp - 16,
+          life: 0.45 + Math.random() * 0.45,
+          maxLife: 0.9,
+          size: 2.5 + Math.random() * 3,
+          colour: colours[Math.floor(Math.random() * colours.length)]
+        });
+      }
+    }
+
+    function spawnFloatingText(px, py, text, colour = "#FFFFFF") {
+      floatingTexts.push({ x: px, y: py, text, colour, life: 1.05, maxLife: 1.05 });
+    }
+
+    /* ============================================================
+       9. RESPONSIVE CANVAS & BOARD INITIALISATION
+       ============================================================ */
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const size = Math.max(300, Math.round(rect.width * dpr));
+      if (canvas.width !== size || canvas.height !== size) {
+        canvas.width = size;
+        canvas.height = size;
+      }
+    }
+    window.addEventListener("resize", resizeCanvas);
+
+    function formatTime(totalSec) {
+      const m = Math.floor(totalSec / 60);
+      const s = Math.floor(totalSec % 60);
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    function initSnowmen() {
+        if (state.level === "Juniors") {
+            state.snowmen = [];
+            return;
+        }
+      state.snowmen = SNOWMEN_CONFIG.map(cfg => {
+        const dist = Math.hypot(cfg.r2 - cfg.r1, cfg.c2 - cfg.c1);
+        const startX = (cfg.c1 + (cfg.c2 - cfg.c1) * cfg.phase) * TILE;
+        const startY = (cfg.r1 + (cfg.r2 - cfg.r1) * cfg.phase) * TILE;
+        return {
+          ...cfg,
+          dist,
+          t: cfg.phase,
+          dir: 1,
+          x: startX,
+          y: startY
+        };
+      });
+    }
+
+    function initBoard() {
+      state.maze = BASE_MAZE.map(row => [...row]);
+      state.visited = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false));
+      initSnowmen();
+
+      state.score = 0;
+      state.streak = 0;
+      state.bestStreak = 0;
+      state.baubles = 0;
+      state.nextQuestionIndex = 0;
+      state.elapsedSeconds = 0;
+      state.lanternRemaining = 0;
+      state.invulnRemaining = 0;
+      state.redFlashRemaining = 0;
+      state.activeGate = null;
+      state.gateSolved = false;
+      state.heldDir = null;
+      sparkles = [];
+      floatingTexts = [];
+
+      state.panda = {
+        r: 1, c: 1, fromR: 1, fromC: 1,
+        renderX: TILE, renderY: TILE,
+        facing: "down",
+        moving: false,
+        sliding: false,
+        bouncing: false,
+        moveProgress: 1
+      };
+
+      revealAround(1, 1);
+      updateHud();
+    }
+
+    function returnToTitleMenu() {
+      state.phase = "title";
+      state.heldDir = null;
+      state.activeGate = null;
+      state.gateSolved = false;
+      state.lanternRemaining = 0;
+      state.invulnRemaining = 0;
+      state.redFlashRemaining = 0;
+
+      questionModal.classList.add("hidden");
+      endSection.classList.add("hidden");
+      lbOverlay.classList.add("hidden");
+      gameplaySection.classList.remove("hidden");
+      controlsDock.classList.remove("hidden");
+      titleOverlay.classList.remove("hidden");
+
+      initBoard();
+      resizeCanvas();
+    }
+
+    async function startQuest() {
+      const startBtn = document.getElementById("start-btn");
+      startBtn.disabled = true;
+      startBtn.textContent = "LOADING...";
+
+      const rawName = document.getElementById("player-name").value.trim();
+      state.playerName = rawName || "Panda Explorer";
+      state.academy = document.getElementById("academy-select").value;
+      state.level = document.getElementById("level-select").value;
+
+      state.activeQuestions = await fetchLevelQuestions(state.level);
+
+      startBtn.disabled = false;
+      startBtn.textContent = "▶ START QUEST";
+
+      if (state.activeQuestions.length === 0) {
+        alert(`No active questions found in Supabase for ${state.level}. Check your CONFIG keys or add questions to xmas_maze_questions first!`);
+        return;
+      }
+
+      initBoard();
+      state.phase = "playing";
+      state.startTime = performance.now();
+
+      gameplaySection.classList.remove("hidden");
+      controlsDock.classList.remove("hidden");
+      endSection.classList.add("hidden");
+      titleOverlay.classList.add("hidden");
+      lbOverlay.classList.add("hidden");
+      questionModal.classList.add("hidden");
+
+      resizeCanvas();
+      SoundFX.bauble();
+      updateHud();
+    }
+
+    function updateHud() {
+      hudScore.textContent = state.score;
+      hudStreak.textContent = `${state.streak}★`;
+      hudStreak.classList.toggle("streak-hot", state.streak >= 2);
+      hudBaubles.textContent = `${state.baubles}/${TOTAL_BAUBLES}`;
+      hudTimer.textContent = formatTime(state.elapsedSeconds);
+
+      if (state.lanternRemaining > 0) {
+        lanternHud.classList.remove("hidden");
+        const pct = Math.max(0, Math.min(100, (state.lanternRemaining / 8) * 100));
+        lanternBarFill.style.width = `${pct}%`;
+        lanternSecEl.textContent = `${state.lanternRemaining.toFixed(1)}s`;
+      } else {
+        lanternHud.classList.add("hidden");
+      }
+    }
+
+    function getVisibilityRadius() {
+      // Expands from 2 tiles to 4.5 tiles during Lantern Boost
+      return state.lanternRemaining > 0 ? 4.5 : 2.15;
+    }
+
+    function revealAround(r, c) {
+      const rad = getVisibilityRadius();
+      for (let rr = 0; rr < GRID_SIZE; rr++) {
+        for (let cc = 0; cc < GRID_SIZE; cc++) {
+          if (Math.hypot(rr - r, cc - c) <= rad) {
+            state.visited[rr][cc] = true;
+          }
+        }
+      }
+      if (r >= 6 && r <= 8 && c >= 6 && c <= 8) {
+        for (let rr = 6; rr <= 8; rr++) {
+          for (let cc = 6; cc <= 8; cc++) {
+            state.visited[rr][cc] = true;
+          }
+        }
+      }
+    }
+
+    /* ============================================================
+       10. MOVEMENT, ICE SLIDES, SPIKY HOLLY & GRUMPY SNOWMEN
+       ============================================================ */
+    const DIR_DELTAS = {
+      up: [-1, 0],
+      down: [1, 0],
+      left: [0, -1],
+      right: [0, 1]
+    };
+
+    function attemptMove(dir, isContinuationSlide = false) {
+      if (state.phase !== "playing" || state.panda.moving) return;
+      const delta = DIR_DELTAS[dir];
+      if (!delta) return;
+
+      state.panda.facing = dir;
+      const nr = state.panda.r + delta[0];
+      const nc = state.panda.c + delta[1];
+
+      if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) {
+        state.panda.sliding = false;
+        if (!isContinuationSlide) SoundFX.bump();
+        return;
+      }
+
+      const target = state.maze[nr][nc];
+
+      // Wall blocks movement
+      if (target === 1) {
+        state.panda.sliding = false;
+        if (!isContinuationSlide) SoundFX.bump();
+        return;
+      }
+
+      // Locked Question Gate opens modal while panda remains safely on its previous tile
+      if (target === 2) {
+        state.panda.sliding = false;
+        state.heldDir = null;
+        state.activeGate = { r: nr, c: nc };
+        SoundFX.gateEncounter();
+        openQuestionModal();
+        return;
+      }
+
+      // Move onto target tile (including Spiky Holly 8 so player visibly touches it and bounces back!)
+      state.panda.fromR = state.panda.r;
+      state.panda.fromC = state.panda.c;
+      state.panda.r = nr;
+      state.panda.c = nc;
+      state.panda.moving = true;
+      state.panda.bouncing = false;
+      state.panda.moveProgress = 0;
+
+      if (target === 5) {
+        if (!state.panda.sliding) SoundFX.iceSlide();
+        state.panda.sliding = true;
+      } else {
+        state.panda.sliding = false;
+        if (target !== 8) SoundFX.step();
+      }
+    }
+
+    function handleTileArrival(r, c) {
+      revealAround(r, c);
+      const tile = state.maze[r][c];
+      const cx = (c + 0.5) * TILE;
+      const cy = (r + 0.5) * TILE;
+
+      // Was this the return hop of a Spiky Holly bounce?
+      if (state.panda.bouncing) {
+        state.panda.bouncing = false;
+        return;
+      }
+
+      // Spiky Holly Bush Hazard (tile === 8): -25 pts, reset streak, red flash, bounce back!
+      if (tile === 8) {
+        state.panda.sliding = false;
+        state.heldDir = null;
+        state.score = Math.max(0, state.score - 25);
+        state.streak = 0;
+        state.redFlashRemaining = 0.36;
+        updateHud();
+
+        SoundFX.hazardHit();
+        spawnSparkles(cx, cy, 20, ["#EF4444", "#FCA5A5", "#166534"]);
+        spawnFloatingText(cx, cy - 10, "-25 HOLLY!", "#FCA5A5");
+
+        // Bounce panda smoothly back to its previous tile
+        const prevR = state.panda.fromR;
+        const prevC = state.panda.fromC;
+        state.panda.fromR = r;
+        state.panda.fromC = c;
+        state.panda.r = prevR;
+        state.panda.c = prevC;
+        state.panda.moving = true;
+        state.panda.bouncing = true;
+        state.panda.moveProgress = 0;
+        return;
+      }
+
+      // Golden Bauble (+35 pts)
+      if (tile === 6) {
+        state.maze[r][c] = 0;
+        state.baubles += 1;
+        state.score += 35;
+        SoundFX.bauble();
+        spawnSparkles(cx, cy, 18, ["#F7B12C", "#FFCB57", "#FFFFFF"]);
+        spawnFloatingText(cx, cy - 10, "+35", "#FFCB57");
+        updateHud();
+      }
+
+      // Lantern Boost (8s expanded visibility radius 2 -> 4.5 tiles)
+      if (tile === 7) {
+        state.maze[r][c] = 0;
+        state.lanternRemaining = 8.0;
+        revealAround(r, c);
+        SoundFX.lantern();
+        spawnSparkles(cx, cy, 24, ["#FFF3B0", "#F7B12C", "#FFFFFF"]);
+        spawnFloatingText(cx, cy - 10, "LANTERN!", "#FFF3B0");
+        updateHud();
+      }
+
+      // Central Christmas Tree Victory!
+      if (tile === 3) {
+        triggerVictory();
+        return;
+      }
+
+      // Slippery Ice continues sliding in the same direction
+      if (tile === 5 && state.phase === "playing") {
+        attemptMove(state.panda.facing, true);
+        return;
+      }
+
+      // Continue moving if directional input is held
+      if (state.heldDir && state.phase === "playing") {
+        attemptMove(state.heldDir, false);
+      }
+    }
+
+    function updateSnowmen(dt) {
+      const px = state.panda.renderX + TILE / 2;
+      const py = state.panda.renderY + TILE / 2;
+
+      state.snowmen.forEach(sm => {
+        if (state.phase === "playing" || state.phase === "victory") {
+          const stepT = (sm.speed / sm.dist) * dt;
+          sm.t += sm.dir * stepT;
+          if (sm.t >= 1) {
+            sm.t = 1;
+            sm.dir = -1;
+          } else if (sm.t <= 0) {
+            sm.t = 0;
+            sm.dir = 1;
+          }
+          sm.x = (sm.c1 + (sm.c2 - sm.c1) * sm.t) * TILE;
+          sm.y = (sm.r1 + (sm.r2 - sm.r1) * sm.t) * TILE;
+        }
+
+        // Check collision during active gameplay when not invulnerable
+        if (state.phase === "playing" && state.invulnRemaining <= 0) {
+          const sx = sm.x + TILE / 2;
+          const sy = sm.y + TILE / 2;
+          const dist = Math.hypot(px - sx, py - sy);
+
+          if (dist < TILE * 0.56) {
+            state.score = Math.max(0, state.score - 30);
+            state.streak = 0;
+            state.invulnRemaining = 1.5; // 1.5s blinking invulnerability so player is never trapped
+            state.redFlashRemaining = 0.36;
+            updateHud();
+
+            SoundFX.hazardHit();
+            spawnSparkles(px, py, 22, ["#EF4444", "#FFFFFF", "#38BDF8"]);
+            spawnFloatingText(px, py - 12, "-30 BRRR!", "#FCA5A5");
+          }
+        }
+      });
+    }
+
+    /* ============================================================
+       11. SNES RPG QUESTION MODAL ("BACK TO GAME" & ESCAPE CLOSE)
+       ============================================================ */
+    function normaliseAnswer(str) {
+      return String(str || "").trim().replace(/\s+/g, " ").toLowerCase();
+    }
+
+    function closeQuestionWithoutPenalty() {
+      if (state.phase !== "modal" || state.gateSolved) return;
+      questionModal.classList.add("hidden");
+      state.activeGate = null;
+      state.heldDir = null;
+      state.phase = "playing";
+      SoundFX.step();
+    }
+
+    function openQuestionModal() {
+      state.phase = "modal";
+      state.gateSolved = false;
+      state.questionStartTime = performance.now();
+
+      const backBtn = document.getElementById("modal-back-btn");
+      backBtn.disabled = false;
+
+      const q = state.activeQuestions[state.nextQuestionIndex % state.activeQuestions.length];
+      const payload = q.payload || {};
+
+      const typeLabelMap = {
+        multiple_choice: "MULTIPLE CHOICE",
+        scramble: "SENTENCE SCRAMBLE",
+        fill_gap: "FILL THE GAP"
+      };
+
+      document.getElementById("q-badge").textContent =
+        `${state.level.toUpperCase()} • ${typeLabelMap[q.type] || "ENGLISH GATE"}`;
+      document.getElementById("q-prompt").textContent = q.prompt;
+
+      const body = document.getElementById("q-body");
+      const feedback = document.getElementById("q-feedback");
+      body.innerHTML = "";
+      feedback.textContent = "";
+      feedback.className = "feedback-bar";
+
+      if (q.type === "multiple_choice") {
+        const list = document.createElement("div");
+        list.className = "mc-options";
+        const keys = ["A", "B", "C", "D"];
+        const options = Array.isArray(payload.options) ? payload.options : [];
+
+        options.forEach((opt, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mc-btn";
+          btn.innerHTML = `<span class="mc-key">${keys[i] || i + 1}</span><span>${escapeHtml(opt)}</span>`;
+          btn.addEventListener("click", () => {
+            handleAnswer(normaliseAnswer(opt) === normaliseAnswer(payload.answer), feedback);
+          });
+          list.appendChild(btn);
+        });
+        body.appendChild(list);
+      }
+
+      if (q.type === "scramble") {
+        const tray = document.createElement("div");
+        tray.className = "word-tray";
+        const pool = document.createElement("div");
+        pool.className = "word-pool";
+
+        const words = Array.isArray(payload.words) ? payload.words : [];
+        const wordItems = words.map((text, id) => ({ id, text }));
+        let chosen = [];
+
+        const validAnswers = [];
+        if (Array.isArray(payload.answers)) {
+          payload.answers.forEach(a => validAnswers.push(normaliseAnswer(a)));
+        }
+        if (typeof payload.answer === "string" && payload.answer.trim()) {
+          validAnswers.push(normaliseAnswer(payload.answer));
+        }
+
+        function renderChips() {
+          tray.innerHTML = "";
+          pool.innerHTML = "";
+
+          if (chosen.length === 0) {
+            const ph = document.createElement("span");
+            ph.style.color = "#525875";
+            ph.style.fontSize = "0.86rem";
+            ph.style.fontWeight = "600";
+            ph.style.alignSelf = "center";
+            ph.textContent = "Tap the words below in the right order...";
+            tray.appendChild(ph);
+          } else {
+            chosen.forEach((item, idx) => {
+              const chip = document.createElement("button");
+              chip.type = "button";
+              chip.className = "word-chip in-tray";
+              chip.textContent = item.text;
+              chip.disabled = state.gateSolved;
+              chip.addEventListener("click", () => {
+                if (state.gateSolved) return;
+                chosen.splice(idx, 1);
+                SoundFX.step();
+                renderChips();
+              });
+              tray.appendChild(chip);
+            });
+          }
+
+          wordItems.forEach(item => {
+            if (chosen.some(c => c.id === item.id)) return;
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "word-chip";
+            chip.textContent = item.text;
+            chip.disabled = state.gateSolved;
+            chip.addEventListener("click", () => {
+              if (state.gateSolved) return;
+              chosen.push(item);
+              SoundFX.step();
+              renderChips();
+            });
+            pool.appendChild(chip);
+          });
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "scramble-actions";
+
+        const clearBtn = document.createElement("button");
+        clearBtn.type = "button";
+        clearBtn.className = "btn-clear";
+        clearBtn.textContent = "CLEAR";
+        clearBtn.addEventListener("click", () => {
+          if (state.gateSolved) return;
+          chosen = [];
+          renderChips();
+        });
+
+        const checkBtn = document.createElement("button");
+        checkBtn.type = "button";
+        checkBtn.className = "btn-arcade";
+        checkBtn.textContent = "CHECK SENTENCE";
+        checkBtn.addEventListener("click", () => {
+          const attempt = normaliseAnswer(chosen.map(c => c.text).join(" "));
+          handleAnswer(validAnswers.includes(attempt), feedback);
+        });
+
+        actions.append(clearBtn, checkBtn);
+        renderChips();
+        body.append(tray, pool, actions);
+      }
+
+      if (q.type === "fill_gap") {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "retro-input";
+        input.placeholder = "Type the missing word...";
+        input.autocomplete = "off";
+        input.style.marginBottom = "10px";
+
+        const submitBtn = document.createElement("button");
+        submitBtn.type = "button";
+        submitBtn.className = "btn-arcade";
+        submitBtn.style.width = "100%";
+        submitBtn.textContent = "SUBMIT ANSWER";
+
+        const acceptedList = (Array.isArray(payload.accepted) ? payload.accepted : [payload.answer])
+          .filter(Boolean)
+          .map(normaliseAnswer);
+
+        const submitGap = () => {
+          if (state.gateSolved) return;
+          const val = normaliseAnswer(input.value);
+          handleAnswer(acceptedList.includes(val), feedback);
+        };
+
+        submitBtn.addEventListener("click", submitGap);
+        input.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitGap();
+          }
+        });
+
+        body.append(input, submitBtn);
+        setTimeout(() => input.focus(), 60);
+      }
+
+      questionModal.classList.remove("hidden");
+    }
+
+    function handleAnswer(isCorrect, feedbackEl) {
+      if (state.gateSolved) return;
+
+      if (isCorrect) {
+        state.gateSolved = true;
+        document.getElementById("modal-back-btn").disabled = true;
+        document.querySelectorAll("#q-body button, #q-body input").forEach(el => {
+          el.disabled = true;
+        });
+
+        const elapsed = (performance.now() - state.questionStartTime) / 1000;
+        state.streak += 1;
+        state.bestStreak = Math.max(state.bestStreak, state.streak);
+
+        const speedBonus = Math.max(0, Math.round(50 - elapsed * 4));
+        const streakBonus = (state.streak - 1) * 25;
+        const gained = 100 + speedBonus + streakBonus;
+        state.score += gained;
+        updateHud();
+
+        SoundFX.correct();
+        feedbackEl.className = "feedback-bar feedback-ok";
+        feedbackEl.textContent = `SPOT ON! +${gained} PTS`;
+
+        state.nextQuestionIndex += 1;
+
+        setTimeout(() => {
+          const gate = state.activeGate;
+          questionModal.classList.add("hidden");
+          state.phase = "playing";
+
+          if (gate) {
+            state.maze[gate.r][gate.c] = 0;
+            const gx = (gate.c + 0.5) * TILE;
+            const gy = (gate.r + 0.5) * TILE;
+            spawnSparkles(gx, gy, 28, ["#F7B12C", "#FFCB57", "#FFFFFF", "#4ADE80"]);
+            spawnFloatingText(gx, gy - 12, `+${gained}`, "#4ADE80");
+
+            state.panda.fromR = state.panda.r;
+            state.panda.fromC = state.panda.c;
+            state.panda.r = gate.r;
+            state.panda.c = gate.c;
+            state.panda.moving = true;
+            state.panda.sliding = false;
+            state.panda.bouncing = false;
+            state.panda.moveProgress = 0;
+            state.activeGate = null;
+          }
+        }, 700);
+      } else {
+        state.streak = 0;
+        state.score = Math.max(0, state.score - 30);
+        updateHud();
+        SoundFX.wrong();
+        feedbackEl.className = "feedback-bar feedback-err";
+        feedbackEl.textContent = "NOT QUITE! -30 PTS — TRY AGAIN";
+      }
+    }
+
+    /* ============================================================
+       12. VICTORY, SUPABASE SUBMISSION & 9:16 STORY SHARE CARD
+       ============================================================ */
+    let endLbFilter = { academy: "Sierra", level: "B1" };
+    let modalLbFilter = { academy: "Sierra", level: "B1" };
+
+    async function triggerVictory() {
+      state.phase = "victory";
+      state.heldDir = null;
+      state.panda.sliding = false;
+      state.score += 200; // Tree finish bonus
+      updateHud();
+
+      spawnSparkles(7.5 * TILE, 7.2 * TILE, 60, ["#F7B12C", "#FFCB57", "#EF4444", "#4ADE80", "#FFFFFF"]);
+      SoundFX.victory();
+
+      const runRecord = {
+        player_name: state.playerName,
+        academy: state.academy,
+        level: state.level,
+        score: state.score,
+        best_streak: state.bestStreak,
+        time_seconds: state.elapsedSeconds
+      };
+
+      const saved = await submitScoreRecord(runRecord);
+      state.lastRunId = saved.id;
+      endLbFilter = { academy: state.academy, level: state.level };
+
+      document.getElementById("end-summary-text").textContent =
+        `Brilliant work, ${state.playerName}! You reached the sparkly Christmas tree (+200 Finish Bonus).`;
+      document.getElementById("end-score").textContent = state.score;
+      document.getElementById("end-streak").textContent = `${state.bestStreak}★`;
+      document.getElementById("end-baubles").textContent = `${state.baubles}/${TOTAL_BAUBLES}`;
+      document.getElementById("end-time").textContent = formatTime(state.elapsedSeconds);
+
+      const boardRows = await refreshEndLeaderboard();
+      const idx = boardRows.findIndex(r => r.id === state.lastRunId);
+      state.lastRank = idx >= 0 ? idx + 1 : 1;
+
+      document.getElementById("end-badge-text").textContent =
+        `${state.academy.toUpperCase()} • ${state.level.toUpperCase()} • RANK #${state.lastRank}`;
+
+      renderShareCard9x16();
+
+      setTimeout(() => {
+        gameplaySection.classList.add("hidden");
+        controlsDock.classList.add("hidden");
+        endSection.classList.remove("hidden");
+      }, 650);
+    }
+
+    async function refreshEndLeaderboard() {
+      return await renderLeaderboardWidget(
+        "end-academy-tabs",
+        "end-level-tabs",
+        "end-lb-list",
+        endLbFilter.academy,
+        endLbFilter.level,
+        state.lastRunId,
+        async (ac, lv) => {
+          endLbFilter = { academy: ac, level: lv };
+          await refreshEndLeaderboard();
+        }
+      );
+    }
+
+    async function refreshModalLeaderboard() {
+      return await renderLeaderboardWidget(
+        "modal-academy-tabs",
+        "modal-level-tabs",
+        "modal-lb-list",
+        modalLbFilter.academy,
+        modalLbFilter.level,
+        state.lastRunId,
+        async (ac, lv) => {
+          modalLbFilter = { academy: ac, level: lv };
+          await refreshModalLeaderboard();
+        }
+      );
+    }
+
+    function roundRectPath(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.lineTo(x + w - r, y);
+      c.quadraticCurveTo(x + w, y, x + w, y + r);
+      c.lineTo(x + w, y + h - r);
+      c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      c.lineTo(x + r, y + h);
+      c.quadraticCurveTo(x, y + h, x, y + h - r);
+      c.lineTo(x, y + r);
+      c.quadraticCurveTo(x, y, x + r, y);
+      c.closePath();
+    }
+
+    /* Pure-Canvas Deterministic QR Matrix encoding window.location.href */
+    function drawPureCanvasQR(sctx, x, y, size, urlText) {
+      const modules = 25;
+      const cell = Math.floor(size / modules);
+      const actualSize = cell * modules;
+      const ox = x + Math.floor((size - actualSize) / 2);
+      const oy = y + Math.floor((size - actualSize) / 2);
+
+      sctx.fillStyle = "#FFFFFF";
+      roundRectPath(sctx, ox - 18, oy - 18, actualSize + 36, actualSize + 36, 18);
+      sctx.fill();
+
+      function drawFinder(fr, fc) {
+        for (let r = 0; r < 7; r++) {
+          for (let c = 0; c < 7; c++) {
+            const border = r === 0 || r === 6 || c === 0 || c === 6;
+            const inner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+            sctx.fillStyle = (border || inner) ? "#211D54" : "#FFFFFF";
+            sctx.fillRect(ox + (fc + c) * cell, oy + (fr + r) * cell, cell, cell);
+          }
+        }
+      }
+
+      let hash = 2166136261;
+      for (let i = 0; i < urlText.length; i++) {
+        hash ^= urlText.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+
+      for (let r = 0; r < modules; r++) {
+        for (let c = 0; c < modules; c++) {
+          const inTL = r < 8 && c < 8;
+          const inTR = r < 8 && c >= modules - 8;
+          const inBL = r >= modules - 8 && c < 8;
+          if (inTL || inTR || inBL) continue;
+
+          if (r === 6 || c === 6) {
+            if ((r + c) % 2 === 0) {
+              sctx.fillStyle = "#211D54";
+              sctx.fillRect(ox + c * cell, oy + r * cell, cell, cell);
+            }
+            continue;
+          }
+
+          hash = (Math.imul(hash ^ (r * 31 + c * 17), 1103515245) + 12345) >>> 0;
+          if ((hash % 100) < 48) {
+            sctx.fillStyle = "#211D54";
+            sctx.fillRect(ox + c * cell, oy + r * cell, cell, cell);
+          }
+        }
+      }
+
+      drawFinder(0, 0);
+      drawFinder(0, modules - 7);
+      drawFinder(modules - 7, 0);
+    }
+
+    /* Draw Crisp White Academia Británica Logo Pill on Share Card Canvas */
+    function drawShareCardLogoPill(sctx, centerX, topY) {
+      const pillW = 680;
+      const pillH = 156;
+      const pillX = centerX - pillW / 2;
+
+      sctx.fillStyle = "#141136";
+      roundRectPath(sctx, pillX, topY + 12, pillW, pillH, 78);
+      sctx.fill();
+
+      sctx.fillStyle = "#FFFFFF";
+      roundRectPath(sctx, pillX, topY, pillW, pillH, 78);
+      sctx.fill();
+      sctx.strokeStyle = "#211D54";
+      sctx.lineWidth = 8;
+      sctx.stroke();
+
+      if (loadedLogoImage) {
+        const maxW = pillW - 90;
+        const maxH = pillH - 36;
+        const ratio = Math.min(maxW / loadedLogoImage.width, maxH / loadedLogoImage.height);
+        const lw = loadedLogoImage.width * ratio;
+        const lh = loadedLogoImage.height * ratio;
+        sctx.drawImage(loadedLogoImage, centerX - lw / 2, topY + (pillH - lh) / 2, lw, lh);
+      } else {
+        const bx = pillX + 112;
+        const by = topY + 72;
+
+        sctx.fillStyle = "#F7B12C";
+        sctx.beginPath();
+        sctx.arc(bx, by, 52, 0, Math.PI * 2);
+        sctx.fill();
+        sctx.beginPath();
+        sctx.moveTo(bx - 12, by + 44);
+        sctx.lineTo(bx + 16, by + 44);
+        sctx.lineTo(bx - 6, by + 68);
+        sctx.closePath();
+        sctx.fill();
+
+        sctx.fillStyle = "#FFFFFF";
+        sctx.font = '800 50px "Plus Jakarta Sans", sans-serif';
+        sctx.textAlign = "center";
+        sctx.fillText("AB", bx, by + 17);
+
+        sctx.fillStyle = "#211D54";
+        sctx.textAlign = "left";
+        sctx.font = '600 46px "Plus Jakarta Sans", sans-serif';
+        sctx.fillText("Academia", bx + 78, by - 4);
+        sctx.font = '800 50px "Plus Jakarta Sans", sans-serif';
+        sctx.fillText("Británica", bx + 78, by + 46);
+      }
+    }
+
+    /* Render 1080x1920 Vertical 9:16 PNG Share Card onto Hidden Canvas & Update Preview Img */
+    function renderShareCard9x16() {
+      const sc = document.getElementById("share-card-canvas");
+      const sctx = sc.getContext("2d");
+      const W = 1080;
+      const H = 1920;
+
+      // 1. Deep Indigo Snowy Winter Base
+      const bg = sctx.createLinearGradient(0, 380, 0, H);
+      bg.addColorStop(0, "#211D54");
+      bg.addColorStop(0.65, "#191542");
+      bg.addColorStop(1, "#120F33");
+      sctx.fillStyle = bg;
+      sctx.fillRect(0, 0, W, H);
+
+      // 2. Marigold Yellow Hero Header Banner
+      const hdr = sctx.createLinearGradient(0, 0, 0, 440);
+      hdr.addColorStop(0, "#FFCB57");
+      hdr.addColorStop(1, "#F7B12C");
+      sctx.fillStyle = hdr;
+      sctx.fillRect(0, 0, W, 430);
+
+      sctx.fillStyle = "#FFFFFF";
+      sctx.fillRect(0, 424, W, 10);
+      sctx.fillStyle = "#141136";
+      sctx.fillRect(0, 434, W, 10);
+
+      // Snowflakes across Deep Indigo body
+      for (let i = 0; i < 90; i++) {
+        const sx = (i * 137) % W;
+        const sy = 465 + ((i * 211) % (H - 490));
+        const sr = (i % 3 === 0) ? 6 : 4;
+        sctx.fillStyle = i % 5 === 0 ? "rgba(247, 177, 44, 0.78)" : "rgba(255, 255, 255, 0.55)";
+        sctx.fillRect(sx, sy, sr, sr);
+      }
+
+      // Outer Marigold Yellow Frame
+      sctx.strokeStyle = "#F7B12C";
+      sctx.lineWidth = 14;
+      roundRectPath(sctx, 36, 36, W - 72, H - 72, 34);
+      sctx.stroke();
+
+      // 3. White Logo Pill in Header
+      drawShareCardLogoPill(sctx, W / 2, 82);
+
+      // Large Display Title in White w/ Deep Indigo 16-bit Pixel Shadow
+      sctx.textAlign = "center";
+      sctx.font = 'bold 42px "Press Start 2P", monospace';
+      sctx.fillStyle = "#211D54";
+      sctx.fillText("PANDA'S", W / 2 + 5, 316);
+      sctx.fillText("CHRISTMAS MAZE", W / 2 + 5, 378);
+      sctx.fillStyle = "#FFFFFF";
+      sctx.fillText("PANDA'S", W / 2, 310);
+      sctx.fillText("CHRISTMAS MAZE", W / 2, 372);
+
+      // 4. Hero Pixel Scene (Sparkly Christmas Tree + Santa-Hat Panda)
+      const sceneGlow = sctx.createRadialGradient(W / 2, 705, 20, W / 2, 705, 285);
+      sceneGlow.addColorStop(0, "rgba(247, 177, 44, 0.42)");
+      sceneGlow.addColorStop(0.55, "rgba(247, 177, 44, 0.14)");
+      sceneGlow.addColorStop(1, "rgba(33, 29, 84, 0)");
+      sctx.fillStyle = sceneGlow;
+      sctx.beginPath();
+      sctx.arc(W / 2, 705, 285, 0, Math.PI * 2);
+      sctx.fill();
+
+      sctx.save();
+      sctx.translate(W / 2 - 44, 755);
+      sctx.scale(4.6, 4.6);
+      drawTreeArt(sctx, 0, 0, 1200);
+      sctx.restore();
+
+      sctx.save();
+      sctx.translate(W / 2 + 124, 804);
+      sctx.scale(5.2, 5.2);
+      drawPandaArt(sctx, 0, 0, "down", 0, 0);
+      sctx.restore();
+
+      // 5. Location & Level Pill Badge (Marigold Yellow w/ Crisp Deep Indigo Text)
+      const badgeText = `${state.academy.toUpperCase()} • ${state.level.toUpperCase()}`;
+      sctx.fillStyle = "#F7B12C";
+      roundRectPath(sctx, 190, 932, 700, 74, 37);
+      sctx.fill();
+      sctx.strokeStyle = "#FFFFFF";
+      sctx.lineWidth = 6;
+      sctx.stroke();
+
+      sctx.font = 'bold 26px "Press Start 2P", monospace';
+      sctx.fillStyle = "#211D54";
+      sctx.fillText(badgeText, W / 2, 980);
+
+      // Player Name
+      sctx.fillStyle = "#FFFFFF";
+      sctx.font = '800 58px "Plus Jakarta Sans", sans-serif';
+      sctx.fillText(state.playerName, W / 2, 1084);
+
+      // 6. Score Highlight Panel
+      sctx.fillStyle = "#141136";
+      roundRectPath(sctx, 100, 1126, 880, 276, 26);
+      sctx.fill();
+      sctx.strokeStyle = "#F7B12C";
+      sctx.lineWidth = 7;
+      sctx.stroke();
+
+      sctx.fillStyle = "#FFCB57";
+      sctx.font = 'bold 22px "Press Start 2P", monospace';
+      sctx.fillText("FINAL SCORE", W / 2, 1180);
+
+      sctx.fillStyle = "#FFFFFF";
+      sctx.font = 'bold 82px "Press Start 2P", monospace';
+      sctx.fillText(String(state.score), W / 2, 1286);
+
+      sctx.fillStyle = "#FFCB57";
+      sctx.font = 'bold 21px "Press Start 2P", monospace';
+      sctx.fillText(
+        `RANK #${state.lastRank}  •  STREAK ${state.bestStreak}★  •  ${formatTime(state.elapsedSeconds)}`,
+        W / 2,
+        1364
+      );
+
+      // 7. Pure-Canvas QR Code encoding window.location.href + CTA
+      drawPureCanvasQR(sctx, (W - 255) / 2, 1468, 255, window.location.href);
+
+      sctx.fillStyle = "#F7B12C";
+      sctx.font = 'bold 25px "Press Start 2P", monospace';
+      sctx.fillText("SCAN TO BEAT MY SCORE!", W / 2, 1796);
+
+      sctx.fillStyle = "#FFFFFF";
+      sctx.font = '600 26px "Plus Jakarta Sans", sans-serif';
+      sctx.fillText("Academia Británica • Christmas Challenge", W / 2, 1844);
+
+      // Update visible crisp preview image on End Screen
+      const previewImg = document.getElementById("share-card-preview");
+      if (previewImg) {
+        previewImg.src = sc.toDataURL("image/png");
+      }
+    }
+
+    /* ============================================================
+       13. 16-BIT PIXEL-ART RENDERING ENGINE
+       ============================================================ */
+    function drawTile(r, c, val, time) {
+      const x = c * TILE;
+      const y = r * TILE;
+
+      if (val === 1) {
+        // 3D Snow-Capped Deep Indigo Brickwork Wall
+        ctx.fillStyle = "#141136";
+        ctx.fillRect(x, y + TILE - 12, TILE, 12);
+        ctx.fillStyle = "#1C184A";
+        ctx.fillRect(x + 2, y + TILE - 10, TILE - 4, 8);
+
+        ctx.fillStyle = "#211D54";
+        ctx.fillRect(x, y, TILE, TILE - 12);
+        ctx.fillStyle = "#2D2870";
+        ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 16);
+
+        ctx.fillStyle = "#181440";
+        ctx.fillRect(x + 2, y + 19, TILE - 4, 2);
+        ctx.fillRect(x + 19, y + 14, 2, 14);
+
+        // Crisp snow cap
+        ctx.fillStyle = "#E0F2FE";
+        ctx.fillRect(x + 2, y + 2, TILE - 4, 13);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(x + 4, y + 3, TILE - 8, 7);
+
+        // Snow icicle drips
+        ctx.fillStyle = "#BAE6FD";
+        ctx.fillRect(x + 5, y + 15, 6, 4);
+        ctx.fillRect(x + 17, y + 15, 7, 5);
+        ctx.fillRect(x + 29, y + 15, 6, 4);
+
+        ctx.fillStyle = "rgba(18, 15, 51, 0.45)";
+        ctx.fillRect(x, y + TILE - 2, TILE, 2);
+      } else if (val === 4 || val === 3) {
+        // Central 3x3 Snowy Courtyard Plaza
+        ctx.fillStyle = (r + c) % 2 === 0 ? "#EFF6FF" : "#FFFFFF";
+        ctx.fillRect(x, y, TILE, TILE);
+        ctx.strokeStyle = "rgba(247, 177, 44, 0.55)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x + 1.5, y + 1.5, TILE - 3, TILE - 3);
+
+        ctx.fillStyle = "rgba(247, 177, 44, 0.85)";
+        ctx.fillRect(x + 3, y + 3, 3, 3);
+        ctx.fillRect(x + TILE - 6, y + TILE - 6, 3, 3);
+      } else if (val === 5) {
+        // Slippery Reflective Cyan Ice Patch
+        ctx.fillStyle = "#7DD3FC";
+        ctx.fillRect(x, y, TILE, TILE);
+        ctx.fillStyle = "#BAE6FD";
+        ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+        ctx.beginPath();
+        ctx.moveTo(x + 5, y + TILE - 4);
+        ctx.lineTo(x + TILE - 12, y + 4);
+        ctx.lineTo(x + TILE - 5, y + 4);
+        ctx.lineTo(x + 12, y + TILE - 4);
+        ctx.closePath();
+        ctx.fill();
+
+        const glint = 0.4 + 0.6 * Math.sin(time * 0.006 + r + c);
+        ctx.fillStyle = `rgba(255, 255, 255, ${glint})`;
+        ctx.fillRect(x + 7, y + 7, 4, 4);
+
+        ctx.strokeStyle = "#38BDF8";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
+      } else {
+        // Crisp White Snow Path
+        ctx.fillStyle = (r + c) % 2 === 0 ? "#F1F5F9" : "#FFFFFF";
+        ctx.fillRect(x, y, TILE, TILE);
+
+        ctx.fillStyle = "rgba(33, 29, 84, 0.07)";
+        ctx.fillRect(x + 4, y + 6, 12, 8);
+        ctx.fillRect(x + 22, y + 22, 12, 8);
+        ctx.fillRect(x + 6, y + 27, 9, 7);
+
+        if (val === 2) drawMagicGate(x, y, time);
+        if (val === 6) drawGoldenBauble(x, y, time, r + c);
+        if (val === 7) drawLanternPickup(x, y, time);
+        if (val === 8) drawSpikyHolly(x, y, time, r + c);
+      }
+    }
+
+    function drawMagicGate(x, y, time) {
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.005);
+      const cx = x + TILE / 2;
+      const cy = y + TILE / 2;
+
+      const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 22);
+      grad.addColorStop(0, `rgba(247, 177, 44, ${0.48 + pulse * 0.28})`);
+      grad.addColorStop(1, "rgba(247, 177, 44, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(x - 3, y - 3, TILE + 6, TILE + 6);
+
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(x + 3, y + 5, 7, 30);
+      ctx.fillRect(x + TILE - 10, y + 5, 7, 30);
+      ctx.fillStyle = "#F7B12C";
+      ctx.fillRect(x + 2, y + 3, 9, 4);
+      ctx.fillRect(x + TILE - 11, y + 3, 9, 4);
+
+      ctx.fillStyle = "#F7B12C";
+      ctx.fillRect(x + 10, y + 13, TILE - 20, 4);
+      ctx.fillRect(x + 10, y + 23, TILE - 20, 4);
+
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(cx - 9, cy - 9, 18, 18);
+      ctx.strokeStyle = "#F7B12C";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cx - 9, cy - 9, 18, 18);
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = 'bold 12px "Press Start 2P", monospace';
+      ctx.textAlign = "center";
+      ctx.fillText("?", cx + 1, cy + 5);
+    }
+
+    function drawGoldenBauble(x, y, time, offset) {
+      const bob = Math.sin(time * 0.005 + offset) * 2;
+      const cx = x + TILE / 2;
+      const cy = y + TILE / 2 + bob;
+
+      const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, 16);
+      glow.addColorStop(0, "rgba(247, 177, 44, 0.58)");
+      glow.addColorStop(1, "rgba(247, 177, 44, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(cx - 3, cy - 10, 6, 3);
+
+      ctx.fillStyle = "#D98F0E";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#F7B12C";
+      ctx.beginPath();
+      ctx.arc(cx - 1, cy - 1, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(cx - 4, cy - 4, 3, 3);
+    }
+
+    function drawLanternPickup(x, y, time) {
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.007);
+      const bob = Math.sin(time * 0.0045) * 1.8;
+      const cx = x + TILE / 2;
+      const cy = y + TILE / 2 + bob;
+
+      const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, 20);
+      glow.addColorStop(0, `rgba(255, 203, 87, ${0.72 + pulse * 0.25})`);
+      glow.addColorStop(1, "rgba(247, 177, 44, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(cx - 6, cy - 10, 12, 3);
+      ctx.fillRect(cx - 7, cy + 7, 14, 3);
+      ctx.fillRect(cx - 2, cy - 13, 4, 3);
+
+      ctx.fillStyle = "#F7B12C";
+      ctx.fillRect(cx - 5, cy - 7, 10, 14);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(cx - 2.5, cy - 4, 5, 8);
+    }
+
+    /* Static Spiky Holly Bush Hazard (Dark-Green Prickly Leaves + Red Berries) */
+    function drawSpikyHolly(x, y, time, offset) {
+      const cx = x + TILE / 2;
+      const cy = y + TILE / 2;
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.006 + offset);
+
+      // Subtle danger warning shadow under bush
+      ctx.fillStyle = "rgba(20, 17, 54, 0.22)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 12, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 4 Prickly Dark-Green Holly Leaves with Sharp Pixel Spikes
+      const leaves = [
+        { ang: -0.65, len: 15, wid: 7, col: "#14532D" },
+        { ang: 0.65, len: 15, wid: 7, col: "#166534" },
+        { ang: Math.PI - 0.65, len: 15, wid: 7, col: "#14532D" },
+        { ang: Math.PI + 0.65, len: 15, wid: 7, col: "#166534" }
+      ];
+
+      leaves.forEach(lf => {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(lf.ang);
+
+        ctx.fillStyle = lf.col;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(lf.len * 0.45, -lf.wid);
+        ctx.lineTo(lf.len * 0.7, -lf.wid * 0.45);
+        ctx.lineTo(lf.len + 2, 0); // sharp tip spike
+        ctx.lineTo(lf.len * 0.7, lf.wid * 0.45);
+        ctx.lineTo(lf.len * 0.45, lf.wid);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crisp light-green leaf vein & thorn glint
+        ctx.fillStyle = "#4ADE80";
+        ctx.fillRect(3, -1, lf.len - 4, 1.5);
+        ctx.restore();
+      });
+
+      // 3 Bright Red Holly Berries in the centre
+      const berries = [
+        { dx: -3.5, dy: 2 },
+        { dx: 3.5, dy: 2 },
+        { dx: 0, dy: -3.5 }
+      ];
+      berries.forEach(b => {
+        ctx.fillStyle = "#991B1B";
+        ctx.beginPath();
+        ctx.arc(cx + b.dx, cy + b.dy, 4.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = pulse > 0.5 ? "#EF4444" : "#DC2626";
+        ctx.beginPath();
+        ctx.arc(cx + b.dx - 0.5, cy + b.dy - 0.5, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(cx + b.dx - 2, cy + b.dy - 2, 1.6, 1.6);
+      });
+    }
+
+    /* Animated Patrolling Grumpy Snowman with Scowling Eyebrows & Carrot Nose */
+    function drawGrumpySnowman(sm, time) {
+      const bob = Math.abs(Math.sin(time * 0.009 + sm.id)) * 2.5;
+      const cx = sm.x + TILE / 2;
+      const cy = sm.y + TILE / 2 - bob;
+
+      // Ground shadow
+      ctx.fillStyle = "rgba(20, 17, 54, 0.34)";
+      ctx.beginPath();
+      ctx.ellipse(cx, sm.y + TILE - 5, 13, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bottom snowball
+      ctx.fillStyle = "#CBD5E1";
+      ctx.beginPath();
+      ctx.arc(cx, cy + 7, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(cx - 1, cy + 6, 10.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Coal buttons
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(cx - 1.5, cy + 3, 3, 3);
+      ctx.fillRect(cx - 1.5, cy + 9, 3, 3);
+
+      // Stick arms waving angrily
+      const armWave = Math.sin(time * 0.012 + sm.id) * 3;
+      ctx.strokeStyle = "#78350F";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, cy + 2);
+      ctx.lineTo(cx - 17, cy - 4 + armWave);
+      ctx.moveTo(cx + 10, cy + 2);
+      ctx.lineTo(cx + 17, cy - 4 - armWave);
+      ctx.stroke();
+
+      // Head snowball
+      ctx.fillStyle = "#E2E8F0";
+      ctx.beginPath();
+      ctx.arc(cx, cy - 7, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(cx - 0.8, cy - 7.5, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Deep Indigo Top Hat with Marigold Band
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(cx - 10, cy - 16, 20, 3);
+      ctx.fillRect(cx - 6, cy - 24, 12, 8);
+      ctx.fillStyle = "#F7B12C";
+      ctx.fillRect(cx - 6, cy - 18, 12, 2);
+
+      // Angry glowing eyes & V-shaped scowling eyebrows
+      ctx.fillStyle = "#DC2626";
+      ctx.fillRect(cx - 5, cy - 9, 2.5, 2.5);
+      ctx.fillRect(cx + 2.5, cy - 9, 2.5, 2.5);
+
+      ctx.strokeStyle = "#211D54";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 6.5, cy - 12);
+      ctx.lineTo(cx - 1.5, cy - 9.5);
+      ctx.moveTo(cx + 6.5, cy - 12);
+      ctx.lineTo(cx + 1.5, cy - 9.5);
+      ctx.stroke();
+
+      // Pointy orange carrot nose
+      ctx.fillStyle = "#F97316";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 7);
+      ctx.lineTo(cx + 7, cy - 5.5);
+      ctx.lineTo(cx, cy - 4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Grumpy frown
+      ctx.fillStyle = "#211D54";
+      ctx.fillRect(cx - 4, cy - 1.5, 8, 2);
+      ctx.fillRect(cx - 5, cy - 0.5, 2, 2);
+      ctx.fillRect(cx + 3, cy - 0.5, 2, 2);
+    }
+
+    function drawTreeArt(targetCtx, cx, cy, time) {
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.0045);
+
+      const glow = targetCtx.createRadialGradient(cx, cy - 8, 8, cx, cy - 8, 76);
+      glow.addColorStop(0, `rgba(247, 177, 44, ${0.46 + pulse * 0.16})`);
+      glow.addColorStop(0.55, `rgba(247, 177, 44, ${0.18 + pulse * 0.08})`);
+      glow.addColorStop(1, "rgba(247, 177, 44, 0)");
+      targetCtx.fillStyle = glow;
+      targetCtx.beginPath();
+      targetCtx.arc(cx, cy - 8, 76, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      targetCtx.fillStyle = "rgba(18, 15, 51, 0.34)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(cx, cy + 18, 28, 9, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      targetCtx.fillStyle = "#5C3317";
+      targetCtx.fillRect(cx - 6, cy + 5, 12, 14);
+      targetCtx.fillStyle = "#854D0E";
+      targetCtx.fillRect(cx - 2.5, cy + 5, 3.5, 13);
+
+      const tiers = [
+        { topY: cy - 16, botY: cy + 10, halfW: 29, col: "#14532D", hi: "#1E7A43" },
+        { topY: cy - 32, botY: cy - 3, halfW: 22, col: "#166534", hi: "#22C55E" },
+        { topY: cy - 45, botY: cy - 18, halfW: 15, col: "#15803D", hi: "#4ADE80" }
+      ];
+
+      tiers.forEach(t => {
+        targetCtx.fillStyle = t.col;
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx, t.topY);
+        targetCtx.lineTo(cx - t.halfW, t.botY);
+        targetCtx.lineTo(cx + t.halfW, t.botY);
+        targetCtx.closePath();
+        targetCtx.fill();
+
+        targetCtx.fillStyle = t.hi;
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx, t.topY + 2);
+        targetCtx.lineTo(cx + t.halfW - 3, t.botY - 2);
+        targetCtx.lineTo(cx + 2, t.botY - 2);
+        targetCtx.closePath();
+        targetCtx.fill();
+
+        targetCtx.fillStyle = "#FFFFFF";
+        targetCtx.fillRect(cx - t.halfW + 1, t.botY - 3, 6, 3);
+        targetCtx.fillRect(cx + t.halfW - 7, t.botY - 3, 6, 3);
+      });
+
+      // Presents under tree
+      targetCtx.fillStyle = "#DC2626";
+      targetCtx.fillRect(cx - 21, cy + 9, 10, 9);
+      targetCtx.fillStyle = "#F7B12C";
+      targetCtx.fillRect(cx - 17, cy + 9, 2, 9);
+
+      targetCtx.fillStyle = "#211D54";
+      targetCtx.fillRect(cx + 11, cy + 10, 10, 8);
+      targetCtx.fillStyle = "#F7B12C";
+      targetCtx.fillRect(cx + 15, cy + 10, 2, 8);
+
+      const bulbs = [
+        { dx: -14, dy: 2, col: "#EF4444", ph: 0 },
+        { dx: 0, dy: 4, col: "#F7B12C", ph: 1.1 },
+        { dx: 14, dy: 2, col: "#4ADE80", ph: 2.2 },
+        { dx: -10, dy: -10, col: "#FFCB57", ph: 0.7 },
+        { dx: 4, dy: -12, col: "#EF4444", ph: 1.8 },
+        { dx: 11, dy: -8, col: "#38BDF8", ph: 2.9 },
+        { dx: -6, dy: -23, col: "#4ADE80", ph: 1.4 },
+        { dx: 6, dy: -22, col: "#F7B12C", ph: 2.6 },
+        { dx: 0, dy: -32, col: "#EF4444", ph: 0.4 }
+      ];
+
+      bulbs.forEach(b => {
+        const tw = 0.5 + 0.5 * Math.sin(time * 0.008 + b.ph);
+        targetCtx.save();
+        targetCtx.globalAlpha = tw;
+        targetCtx.fillStyle = b.col;
+        targetCtx.beginPath();
+        targetCtx.arc(cx + b.dx, cy + b.dy, 2.8, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#FFFFFF";
+        targetCtx.fillRect(cx + b.dx - 1, cy + b.dy - 1, 1.5, 1.5);
+        targetCtx.restore();
+      });
+
+      // Glowing Marigold Star on top
+      const starY = cy - 48;
+      const starScale = 1 + 0.16 * Math.sin(time * 0.007);
+      targetCtx.save();
+      targetCtx.translate(cx, starY);
+      targetCtx.scale(starScale, starScale);
+
+      const sg = targetCtx.createRadialGradient(0, 0, 1, 0, 0, 14);
+      sg.addColorStop(0, "rgba(255, 255, 255, 0.96)");
+      sg.addColorStop(0.5, "rgba(247, 177, 44, 0.75)");
+      sg.addColorStop(1, "rgba(247, 177, 44, 0)");
+      targetCtx.fillStyle = sg;
+      targetCtx.beginPath();
+      targetCtx.arc(0, 0, 14, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      targetCtx.fillStyle = "#F7B12C";
+      targetCtx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? 7.5 : 3.2;
+        const a = (i * Math.PI) / 5 - Math.PI / 2;
+        const sx = Math.cos(a) * r;
+        const sy = Math.sin(a) * r;
+        if (i === 0) targetCtx.moveTo(sx, sy);
+        else targetCtx.lineTo(sx, sy);
+      }
+      targetCtx.closePath();
+      targetCtx.fill();
+      targetCtx.restore();
+    }
+
+    function drawPandaArt(targetCtx, cx, cy, facing, stepOffset, bob) {
+      const y = cy - bob;
+
+      targetCtx.fillStyle = "rgba(18, 15, 51, 0.35)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(cx, cy + 14, 11, 4.5, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      targetCtx.fillStyle = "#141136";
+      targetCtx.fillRect(cx - 8, y + 9 + stepOffset, 5, 5);
+      targetCtx.fillRect(cx + 3, y + 9 - stepOffset, 5, 5);
+
+      targetCtx.fillStyle = "#141136";
+      targetCtx.fillRect(cx - 10, y + 1, 20, 10);
+      targetCtx.fillStyle = "#FFFFFF";
+      targetCtx.fillRect(cx - 7, y + 3, 14, 7);
+
+      // Marigold Yellow Scarf
+      targetCtx.fillStyle = "#F7B12C";
+      targetCtx.fillRect(cx - 9, y + 1, 18, 3.5);
+      targetCtx.fillRect(cx + 3, y + 3.5, 3.5, 5);
+
+      targetCtx.fillStyle = "#141136";
+      targetCtx.fillRect(cx - 11, y - 12, 6, 6);
+      targetCtx.fillRect(cx + 5, y - 12, 6, 6);
+
+      targetCtx.fillStyle = "#FFFFFF";
+      targetCtx.fillRect(cx - 10, y - 10, 20, 12);
+      targetCtx.fillRect(cx - 8, y - 12, 16, 15);
+
+      if (facing === "up") {
+        targetCtx.fillStyle = "#E2E8F0";
+        targetCtx.fillRect(cx - 2.5, y + 5, 5, 3.5);
+      } else {
+        const sx = facing === "left" ? -2 : facing === "right" ? 2 : 0;
+        targetCtx.fillStyle = "#141136";
+        targetCtx.fillRect(cx - 7 + sx, y - 6, 5, 4.5);
+        targetCtx.fillRect(cx + 2 + sx, y - 6, 5, 4.5);
+
+        targetCtx.fillStyle = "#FFFFFF";
+        targetCtx.fillRect(cx - 5.5 + sx, y - 5, 1.8, 1.8);
+        targetCtx.fillRect(cx + 3.5 + sx, y - 5, 1.8, 1.8);
+
+        targetCtx.fillStyle = "#141136";
+        targetCtx.fillRect(cx - 1.5 + sx, y - 1.5, 3, 2);
+
+        targetCtx.fillStyle = "rgba(244, 114, 182, 0.72)";
+        targetCtx.fillRect(cx - 8.5 + sx, y - 1.5, 2.5, 2);
+        targetCtx.fillRect(cx + 6 + sx, y - 1.5, 2.5, 2);
+      }
+
+      // Red Santa Hat
+      targetCtx.fillStyle = "#DC2626";
+      targetCtx.fillRect(cx - 9, y - 17, 18, 5);
+      targetCtx.fillRect(cx - 6, y - 20, 12, 3.5);
+      targetCtx.fillRect(cx - 2, y - 22, 7, 2.5);
+
+      targetCtx.fillStyle = "#FFFFFF";
+      targetCtx.fillRect(cx - 10, y - 12, 20, 2.5);
+      const pomX = facing === "left" ? cx - 9 : cx + 7;
+      targetCtx.fillRect(pomX, y - 21, 3.5, 3.5);
+    }
+
+    function drawFogOfWar(time) {
+      const px = state.panda.renderX + TILE / 2;
+      const py = state.panda.renderY + TILE / 2;
+      const visRad = getVisibilityRadius();
+
+      // 3-State Fog of War (Unexplored Deep Indigo mist vs. dimly lit visited vs. lantern light)
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          const tx = (c + 0.5) * TILE;
+          const ty = (r + 0.5) * TILE;
+          const dist = Math.hypot(tx - px, ty - py) / TILE;
+
+          let alpha = 0;
+          if (dist <= visRad - 0.3) {
+            alpha = 0;
+          } else if (dist <= visRad + 0.65) {
+            const blend = (dist - (visRad - 0.3)) / 0.95;
+            alpha = state.visited[r][c] ? blend * 0.52 : blend * 0.94;
+          } else {
+            alpha = state.visited[r][c] ? 0.52 : 0.94;
+          }
+
+          if (alpha > 0.01) {
+            ctx.fillStyle = state.visited[r][c]
+              ? `rgba(33, 29, 84, ${alpha})`
+              : `rgba(18, 15, 51, ${alpha})`;
+            ctx.fillRect(c * TILE, r * TILE, TILE + 0.6, TILE + 0.6);
+          }
+        }
+      }
+
+      // Warm Marigold-Yellow Lantern Glow around Panda
+      const glowRadius = TILE * (visRad + 0.45);
+      const lantern = ctx.createRadialGradient(px, py, 8, px, py, glowRadius);
+      lantern.addColorStop(0, state.lanternRemaining > 0
+        ? "rgba(255, 203, 87, 0.36)"
+        : "rgba(247, 177, 44, 0.24)");
+      lantern.addColorStop(0.55, "rgba(247, 177, 44, 0.09)");
+      lantern.addColorStop(1, "rgba(247, 177, 44, 0)");
+      ctx.fillStyle = lantern;
+      ctx.beginPath();
+      ctx.arc(px, py, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Faint golden shimmer near central Christmas tree at (7, 7)
+      const treeX = 7.5 * TILE;
+      const treeY = 7.5 * TILE;
+      const distTree = Math.hypot(px - treeX, py - treeY) / TILE;
+      if (distTree < 5.0 && !state.visited[7][7]) {
+        const prox = 1 - distTree / 5.0;
+        const sh = 0.72 + 0.28 * Math.sin(time * 0.005);
+        const hint = ctx.createRadialGradient(treeX, treeY, 4, treeX, treeY, TILE * 2.4);
+        hint.addColorStop(0, `rgba(247, 177, 44, ${0.46 * prox * sh})`);
+        hint.addColorStop(1, "rgba(247, 177, 44, 0)");
+        ctx.fillStyle = hint;
+        ctx.beginPath();
+        ctx.arc(treeX, treeY, TILE * 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function updateAndDrawParticles(dt, time) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.76)";
+      snowflakes.forEach(s => {
+        s.y += s.vy * dt;
+        s.x += (s.vx + Math.sin(time * 0.0015 + s.phase) * 9) * dt;
+        if (s.y > LOGICAL_SIZE) { s.y = -4; s.x = Math.random() * LOGICAL_SIZE; }
+        if (s.x < 0) s.x = LOGICAL_SIZE;
+        if (s.x > LOGICAL_SIZE) s.x = 0;
+        ctx.fillRect(Math.round(s.x), Math.round(s.y), s.r, s.r);
+      });
+
+      if (state.visited[7][7] && Math.random() < 0.25) {
+        sparkles.push({
+          x: 7.5 * TILE + (-24 + Math.random() * 48),
+          y: 7.5 * TILE + (-38 + Math.random() * 40),
+          vx: -6 + Math.random() * 12,
+          vy: -16 - Math.random() * 18,
+          life: 0.7,
+          maxLife: 0.7,
+          size: 2.6,
+          colour: Math.random() > 0.4 ? "#F7B12C" : "#FFFFFF"
+        });
+      }
+
+      for (let i = sparkles.length - 1; i >= 0; i--) {
+        const sp = sparkles[i];
+        sp.life -= dt;
+        if (sp.life <= 0) { sparkles.splice(i, 1); continue; }
+        sp.x += sp.vx * dt;
+        sp.y += sp.vy * dt;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, sp.life / sp.maxLife);
+        ctx.fillStyle = sp.colour;
+        ctx.fillRect(sp.x - sp.size / 2, sp.y - sp.size / 2, sp.size, sp.size);
+        ctx.restore();
+      }
+
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= dt;
+        if (ft.life <= 0) { floatingTexts.splice(i, 1); continue; }
+        ft.y -= 26 * dt;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ft.life / ft.maxLife);
+        ctx.font = 'bold 11px "Press Start 2P", monospace';
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#141136";
+        ctx.fillText(ft.text, ft.x + 2, ft.y + 2);
+        ctx.fillStyle = ft.colour;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      }
+    }
+
+    /* ============================================================
+       14. MAIN 60FPS GAME LOOP
+       ============================================================ */
+    let lastTs = 0;
+
+    function gameLoop(ts) {
+      if (!lastTs) lastTs = ts;
+      const dt = Math.min((ts - lastTs) / 1000, 0.05);
+      lastTs = ts;
+
+      if (state.phase === "playing" || state.phase === "modal") {
+        const sec = Math.floor((ts - state.startTime) / 1000);
+        if (sec !== state.elapsedSeconds) {
+          state.elapsedSeconds = sec;
+          hudTimer.textContent = formatTime(sec);
+        }
+      }
+
+      if (state.phase === "playing" && state.lanternRemaining > 0) {
+        state.lanternRemaining = Math.max(0, state.lanternRemaining - dt);
+        updateHud();
+      }
+
+      if (state.invulnRemaining > 0) {
+        state.invulnRemaining = Math.max(0, state.invulnRemaining - dt);
+      }
+
+      if (state.redFlashRemaining > 0) {
+        state.redFlashRemaining = Math.max(0, state.redFlashRemaining - dt);
+      }
+
+      // Smooth tile-to-tile movement / sliding / bouncing
+      if (state.panda.moving) {
+        const tileDuration = state.panda.sliding ? 0.09 : state.panda.bouncing ? 0.11 : 0.13;
+        state.panda.moveProgress += dt / tileDuration;
+        if (state.panda.moveProgress >= 1) {
+          state.panda.moveProgress = 1;
+          state.panda.moving = false;
+          state.panda.renderX = state.panda.c * TILE;
+          state.panda.renderY = state.panda.r * TILE;
+          handleTileArrival(state.panda.r, state.panda.c);
+        } else {
+          const t = state.panda.moveProgress;
+          state.panda.renderX = (state.panda.fromC + (state.panda.c - state.panda.fromC) * t) * TILE;
+          state.panda.renderY = (state.panda.fromR + (state.panda.r - state.panda.fromR) * t) * TILE;
+        }
+      } else if (state.heldDir && state.phase === "playing") {
+        attemptMove(state.heldDir, false);
+      }
+
+      // Update patrolling snowmen & check collisions
+      updateSnowmen(dt);
+
+      const scale = canvas.width / LOGICAL_SIZE;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+
+      ctx.fillStyle = "#120F33";
+      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+
+      // Draw maze tiles
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          drawTile(r, c, state.maze[r][c], ts);
+        }
+      }
+
+      // Draw Big Sparkly Central Christmas Tree at (7, 7)
+      drawTreeArt(ctx, 7.5 * TILE, 7.5 * TILE, ts);
+
+      // Draw Patrolling Grumpy Snowmen
+      state.snowmen.forEach(sm => drawGrumpySnowman(sm, ts));
+
+      // Draw Panda (blinks during 1.5s invulnerability after snowman hit)
+      const p = state.panda;
+      const blinkSkip = state.invulnRemaining > 0 && Math.floor(ts / 85) % 2 === 0;
+      if (!blinkSkip) {
+        const bob = p.moving
+          ? (p.sliding ? 0 : Math.sin(p.moveProgress * Math.PI) * 4.5)
+          : Math.sin(ts * 0.005) * 1.1;
+        const stepOff = p.moving && !p.sliding ? Math.sin(p.moveProgress * Math.PI * 2) * 2.5 : 0;
+        drawPandaArt(ctx, p.renderX + TILE / 2, p.renderY + TILE / 2, p.facing, stepOff, bob);
+      }
+
+      // Fog of war + snow + sparkles
+      drawFogOfWar(ts);
+      updateAndDrawParticles(dt, ts);
+
+      // Retro red damage flash overlay when pricked by Holly or bumped by Snowman
+      if (state.redFlashRemaining > 0) {
+        const flashAlpha = (state.redFlashRemaining / 0.36) * 0.42;
+        ctx.fillStyle = `rgba(220, 38, 38, ${flashAlpha})`;
+        ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* ============================================================
+       15. CONTROLS & UI EVENT LISTENERS
+       ============================================================ */
+    const keyMap = {
+      ArrowUp: "up", w: "up", W: "up",
+      ArrowDown: "down", s: "down", S: "down",
+      ArrowLeft: "left", a: "left", A: "left",
+      ArrowRight: "right", d: "right", D: "right"
+    };
+
+    window.addEventListener("keydown", e => {
+      // Escape closes open question modal without penalty
+      if (e.key === "Escape" && state.phase === "modal") {
+        e.preventDefault();
+        closeQuestionWithoutPenalty();
+        return;
+      }
+
+      // Strictly ignore movement keys when typing in text inputs or outside active play
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (state.phase !== "playing") return;
+
+      const dir = keyMap[e.key];
+      if (dir) {
+        e.preventDefault();
+        state.heldDir = dir;
+        attemptMove(dir, false);
+      }
+    });
+
+    window.addEventListener("keyup", e => {
+      const dir = keyMap[e.key];
+      if (dir && state.heldDir === dir) state.heldDir = null;
+    });
+
+    // Mobile SNES D-Pad
+    document.querySelectorAll(".dpad-btn").forEach(btn => {
+      const dir = btn.dataset.dir;
+      const press = e => {
+        e.preventDefault();
+        if (state.phase !== "playing") return;
+        state.heldDir = dir;
+        attemptMove(dir, false);
+      };
+      const release = () => {
+        if (state.heldDir === dir) state.heldDir = null;
+      };
+      btn.addEventListener("pointerdown", press);
+      btn.addEventListener("pointerup", release);
+      btn.addEventListener("pointerleave", release);
+      btn.addEventListener("pointercancel", release);
+    });
+
+    // Touch Swipe on Canvas
+    let swipeX = 0, swipeY = 0;
+    canvas.addEventListener("touchstart", e => {
+      if (e.touches.length !== 1) return;
+      swipeX = e.touches[0].clientX;
+      swipeY = e.touches[0].clientY;
+    }, { passive: true });
+
+    canvas.addEventListener("touchend", e => {
+      if (state.phase !== "playing" || !e.changedTouches.length) return;
+      const dx = e.changedTouches[0].clientX - swipeX;
+      const dy = e.changedTouches[0].clientY - swipeY;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) return;
+      attemptMove(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"), false);
+    }, { passive: true });
+
+    // Navigation & Title Controls
+    document.getElementById("start-btn").addEventListener("click", startQuest);
+    document.getElementById("player-name").addEventListener("keydown", e => {
+      if (e.key === "Enter") startQuest();
+    });
+
+    document.getElementById("hud-menu-btn").addEventListener("click", returnToTitleMenu);
+    document.getElementById("modal-back-btn").addEventListener("click", closeQuestionWithoutPenalty);
+
+    document.getElementById("open-lb-btn").addEventListener("click", async () => {
+      modalLbFilter = {
+        academy: document.getElementById("academy-select").value,
+        level: document.getElementById("level-select").value
+      };
+      titleOverlay.classList.add("hidden");
+      lbOverlay.classList.remove("hidden");
+      await refreshModalLeaderboard();
+    });
+
+    document.getElementById("close-lb-btn").addEventListener("click", () => {
+      lbOverlay.classList.add("hidden");
+      titleOverlay.classList.remove("hidden");
+    });
+
+    document.getElementById("mute-btn").addEventListener("click", () => {
+      const m = SoundFX.toggleMute();
+      document.getElementById("mute-btn").textContent = m ? "🔇" : "🔊";
+    });
+
+    // End Screen Actions
+    document.getElementById("save-card-btn").addEventListener("click", () => {
+      const sc = document.getElementById("share-card-canvas");
+      const link = document.createElement("a");
+      link.download = `academia-britanica-christmas-maze-${state.academy.toLowerCase()}-${state.level.toLowerCase()}.png`;
+      link.href = sc.toDataURL("image/png");
+      link.click();
+    });
+
+    document.getElementById("whatsapp-btn").addEventListener("click", () => {
+      const url = window.location.href;
+      const msg = `🐼🎄 I scored ${state.score} points (Rank #${state.lastRank}) in Academia Británica's Christmas Panda Maze for ${state.academy} (${state.level})! Can you beat my English score? ${url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+    });
+
+    document.getElementById("play-again-btn").addEventListener("click", startQuest);
+    document.getElementById("change-setup-btn").addEventListener("click", returnToTitleMenu);
+
+    // Boot Engine
+    window.onload = function () {
+      initSupabase();
+      initBrandingLogos();
+      loadLocalScores();
+      resizeCanvas();
+      initBoard();
+      requestAnimationFrame(gameLoop);
+    };
+  </script>
+</body>
+</html>
