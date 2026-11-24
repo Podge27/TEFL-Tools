@@ -299,6 +299,20 @@
       overflow-y: auto;
     }
 
+    .viewport-wrap.setup-mode {
+      aspect-ratio: auto;
+    }
+
+    .viewport-wrap.setup-mode #game-canvas {
+      position: absolute;
+      inset: 0;
+    }
+
+    .viewport-wrap.setup-mode .overlay-screen {
+      position: relative;
+      inset: auto;
+    }
+
     /* Marigold Yellow Hero Card */
     .arcade-card {
       width: 100%;
@@ -999,9 +1013,6 @@
       .hud-top-row {
         justify-content: center;
       }
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
       .victory-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -1062,7 +1073,7 @@
     <!-- ============================================================
          GAMEPLAY VIEWPORT (15x15 16-BIT CANVAS + TITLE & LEADERBOARDS)
          ============================================================ -->
-    <section id="gameplay-section" class="viewport-wrap">
+    <section id="gameplay-section" class="viewport-wrap setup-mode">
       <canvas id="game-canvas" width="600" height="600"></canvas>
 
       <!-- 1. TITLE / SETUP OVERLAY -->
@@ -1139,7 +1150,7 @@
     <!-- ============================================================
          BOTTOM DOCK: LEGEND + RESPONSIVE SNES D-PAD
          ============================================================ -->
-    <section id="controls-dock" class="snes-frame bottom-dock">
+   <section id="controls-dock" class="snes-frame bottom-dock hidden">
       <div class="hint-box">
         <div><strong>QUEST</strong> Unlock 6 golden gates to reach the sparkly Christmas tree!</div>
         <div class="legend-row">
@@ -1901,7 +1912,8 @@ async function fetchLevelQuestions(level) {
       endSection.classList.add("hidden");
       lbOverlay.classList.add("hidden");
       gameplaySection.classList.remove("hidden");
-      controlsDock.classList.remove("hidden");
+      gameplaySection.classList.add("setup-mode");
+      controlsDock.classList.add("hidden");
       titleOverlay.classList.remove("hidden");
 
       initBoard();
@@ -1933,6 +1945,7 @@ async function fetchLevelQuestions(level) {
       state.startTime = performance.now();
 
       gameplaySection.classList.remove("hidden");
+      gameplaySection.classList.remove("setup-mode");
       controlsDock.classList.remove("hidden");
       endSection.classList.add("hidden");
       titleOverlay.classList.add("hidden");
